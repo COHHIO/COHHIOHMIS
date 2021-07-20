@@ -1,0 +1,30 @@
+Package: COHHIOHMIS
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Genelle",
+           family = "Denzin",
+           role = c("cre", "aut"),
+           email = "genelledenzin@cohhio.org")
+Description: An open-source Homeless Management Information System (HMIS) custom reporting project
+License: AGPL-3
+Imports: 
+    cli,
+    devtools,
+    dplyr,
+    feather,
+    fs,
+    janitor,
+    lubridate,
+    plotly,
+    purrr,
+    readxl,
+    rlang,
+    scales,
+    sf
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+URL: https://github.com/COHHIO/COHHIO_HMIS
+BugReports: https://github.com/COHHIO/COHHIO_HMIS/issues
