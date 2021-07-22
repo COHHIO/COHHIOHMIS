@@ -12,6 +12,10 @@
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
 
+
+
+
+
 # stop_with_instructions ----
 # Wed Mar 24 16:38:01 2021
 #' @title Stop daily update with an informative error
@@ -34,8 +38,6 @@ stop_with_instructions <- function(...) {
 #' @description Provides informative messages and timing for 00_copy_images.R
 #' @param ... Messages to console
 #' @param cenv the calling environment
-#' @importFrom stringr str_detect
-#' @importFrom cli cli_process_start cli_status_update col_blue cat_rule, cat_boxx cli_process_done
 #' @export
 
 increment <- function(..., cenv = rlang::caller_env()) {
