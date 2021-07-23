@@ -36,5 +36,5 @@ vignettes/*.pdf
 *.knit.md
 
 data/*
-Looker.ini
+inst/auth/*
 pkg_commands.R

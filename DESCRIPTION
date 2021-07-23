@@ -20,6 +20,7 @@ Imports:
     purrr,
     readxl,
     rlang,
+    RPushbullet,
     scales
 Encoding: UTF-8
 LazyData: true

@@ -32,7 +32,7 @@ dates <- function(hud, write = FALSE) {
 
   # Dates from Metadata -----------------------------------------------------
 
-  Export <- hud$Export("disk", write = write)
+  Export <- hud$Export(path = "data/API", write = write)
 
   meta_HUDCSV_Export_Date <- Export[["ExportDate"]][1]
   meta_HUDCSV_Export_Start <- Export[["ExportStartDate"]][1]
@@ -60,14 +60,19 @@ dates <- function(hud, write = FALSE) {
 
   calc_2_yrs_prior_range <- lubridate::interval(calc_2_yrs_prior_start,
                                                 calc_2_yrs_prior_end)
-  if()
-    stop_with_instructions("The HUD CSV Export was not run on the correct date range.
-                         Please rerun.\n")
+  #TODO
+  # Ensure an update on each of these files each day:
+  # Client
+  # Enrollment
+  # Export
+  # Exit
+  # Services
+  if(meta_HUDCSV_Export_Start != Sys.Date() |
+     meta_HUDCSV_Export_End != Sys.Date())
+    stop_with_instructions("The HUD CSV Export update process errored. Please rerun.\n")
 
 
   if(meta_Rmisc_last_run_date != Sys.Date())
-    stop_with_instructions("The RMisc2.xlsx file is not up to date. Please run
-                         this ART report and overwrite the current RMisc2.xlsx
-                         with the new one.")
+    stop_with_instructions("The RMisc Look update process errored.")
   environment()
 }

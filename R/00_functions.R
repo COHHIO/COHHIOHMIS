@@ -14,8 +14,6 @@
 
 
 
-
-
 # stop_with_instructions ----
 # Wed Mar 24 16:38:01 2021
 #' @title Stop daily update with an informative error
@@ -23,13 +21,17 @@
 #' @param ... Error Messages to print to the console
 #' @importFrom cli cli_alert_danger cli_alert_info col_red
 #' @export
-stop_with_instructions <- function(...) {
-  cli::cli_alert_danger(cli::col_red(paste0(..., collapse = "\n")))
+stop_with_instructions <- function(..., error = FALSE) {
+  .msg <- paste0(..., collapse = "\n")
+  cli::cli_alert_danger(cli::col_red(.msg))
+  #TODO Who to reference for help? This will display if the app crashes
   cli::cli_alert_info(
-    "See instructions for details:\n
-    https://docs.google.com/document/d/1iT_dgf0HtBzGOO8PqFNvyS_djA78JcYZsWaeZQYJC9E/edit#heading=h.xvdv7715aoi1"
+    "Please contact sholsen@alumni.emory.edu for help!"
   )
-  stop("See above.", call. = FALSE)
+  if (error)
+    stop(.msg, call. = FALSE)
+  else
+    RPushbullet::pbPost(title = "COHHIO Error", body = .msg)
 }
 
 # increment ----

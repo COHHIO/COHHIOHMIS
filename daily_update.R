@@ -1,5 +1,5 @@
 devtools::load_all("C:/Users/Administrator/Documents/R/Contributor_Repos/COHHIO/hud.export")
-hud <- hud.export::hud_export$new("Looker.ini")
+hud <- hud.export::hud_export$new("inst/auth/Looker.ini")
 directory <- "data"
 dates_env <- dates(hud, write = TRUE)
 increment("Importing raw HMIS data\n")
