@@ -1,4 +1,4 @@
-dates <- function(hud, write = FALSE) {
+dates <- function(hud, .write = FALSE) {
 
   hc_data_goes_back_to <- lubridate::mdy("01012019")
 
@@ -32,19 +32,20 @@ dates <- function(hud, write = FALSE) {
 
   # Dates from Metadata -----------------------------------------------------
 
-  Export <- hud$Export(path = "data/API", write = write)
+  Export <- hud$Export(path = dirs$export, .write = .write)
 
   meta_HUDCSV_Export_Date <- Export[["ExportDate"]][1]
   meta_HUDCSV_Export_Start <- Export[["ExportStartDate"]][1]
   meta_HUDCSV_Export_End <- Export[["ExportEndDate"]][1]
 
 
-
-  meta_Rmisc_last_run_date <- lubridate::floor_date(file.info("data/RMisc2.xlsx")$mtime,
-                                                    unit = "day")
+  purrr::map(hud.export::.hud_extras, hud_last_updated)
+  # meta_Rmisc_last_run_date <-
+  #   lubridate::floor_date(file.info("data/RMisc2.xlsx")$mtime,
+  #                         unit = "day")
 
   # Calculated Dates --------------------------------------------------------
-  Exit <- hud$Exit(write = write)
+  Exit <- hud$Exit(.write = .write)
    calc_data_goes_back_to <-
     Exit %>%
     dplyr::arrange(ExitDate) %>%
@@ -60,13 +61,10 @@ dates <- function(hud, write = FALSE) {
 
   calc_2_yrs_prior_range <- lubridate::interval(calc_2_yrs_prior_start,
                                                 calc_2_yrs_prior_end)
-  #TODO
-  # Ensure an update on each of these files each day:
-  # Client
-  # Enrollment
-  # Export
-  # Exit
-  # Services
+
+
+
+
   if(meta_HUDCSV_Export_Start != Sys.Date() |
      meta_HUDCSV_Export_End != Sys.Date())
     stop_with_instructions("The HUD CSV Export update process errored. Please rerun.\n")

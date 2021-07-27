@@ -15,81 +15,74 @@
 # PLEASE NOTE THIS SCRIPT OVERWRITES THE CLIENT.CSV FILE ON YOUR HARD DRIVE!
 # IT REPLACES THE NAMES AND SSNS WITH DATA QUALITY SIGNIFIERS!
 # IT CAN BE RUN ON A CLEAN CLIENT.CSV FILE OR ONE THAT'S BEEN OVERWRITTEN.
+
+#' @title Redact PII from Client HUD Export
+#' @description This redacts all PII (except DOB) from Client HUD Export
+#' @param Client \code{(tibble)} Client HUD Export
+#' @return \code{(tibble)} Redacted Client HUD Export
+#' @export
+
+Client_redact <- function(Client) {
+  Client %>%
+    # our fake Client IDs are 5 and 4216
+    dplyr::filter(!PersonalID %in% c(5, 4216)) %>%
+    dplyr::mutate(
+      FirstName = dplyr::case_when(
+        NameDataQuality %in% c(8, 9) ~ "DKR",
+        NameDataQuality == 2 ~ "Partial",
+        NameDataQuality == 99 |
+          is.na(NameDataQuality) |
+          FirstName == "Anonymous" ~ "Missing",
+        !(
+          NameDataQuality %in% c(2, 8, 9, 99) |
+            is.na(NameDataQuality) |
+            FirstName == "Anonymous"
+        ) ~ "ok"
+      ),
+      LastName = NULL,
+      MiddleName = NULL,
+      NameSuffix = NULL,
+      SSN = dplyr::case_when(
+        (is.na(SSN) & !SSNDataQuality %in% c(8, 9)) |
+          is.na(SSNDataQuality) | SSNDataQuality == 99 ~ "Missing",
+        SSNDataQuality %in% c(8, 9) ~ "DKR",
+        (nchar(SSN) != 9 & SSNDataQuality != 2) |
+          substr(SSN, 1, 3) %in% c("000", "666") |
+          substr(SSN, 1, 1) == 9 |
+          substr(SSN, 4, 5) == "00" |
+          substr(SSN, 6, 9) == "0000" |
+          SSNDataQuality == 2 |
+          SSN %in% c(
+            111111111,
+            222222222,
+            333333333,
+            444444444,
+            555555555,
+            777777777,
+            888888888,
+            123456789
+          ) ~ "Invalid",
+        SSNDataQuality == 2 & nchar(SSN) != 9 ~ "Incomplete"
+      )
+    ) %>%
+    dplyr::mutate(SSN = dplyr::case_when(is.na(SSN) ~ "ok",!is.na(SSN) ~ SSN))
+}
+
 get_export <- function(hud) {
   # Service Areas -----------------------------------------------------------
-  #TODO ASk origin of this csv
-  ServiceAreas <- readr::read_csv("~/R/Contributor_Repos/COHHIO/COHHIO_HMIS/public_data/ServiceAreas.csv",
-                                  col_types = "ccccccccccccc") %>%
-    dplyr::mutate(County = dplyr::if_else(County == "Vanwert", "Van Wert", County))
+  ServiceAreas <- hud.export::hud_load("ServiceAreas.feather", public_dir)
 
   # Affiliation -------------------------------------------------------------
 
   Affiliation <- hud$Affiliation()
 
   # Client ------------------------------------------------------------------
-  #' @title Redact PII from Client HUD Export
-  #' @description This redacts all PII (except DOB) from Client HUD Export
-  #' @param Client \code{(tibble)} Client HUD Export
-  #' @return \code{(tibble)} Redacted Client HUD Export
-
-
-
-  Client_redact <- function(Client) {
-    Client %>%
-      # our fake Client IDs are 5 and 4216
-      dplyr::filter(!PersonalID %in% c(5, 4216)) %>%
-      dplyr::mutate(
-        FirstName = dplyr::case_when(
-          NameDataQuality %in% c(8, 9) ~ "DKR",
-          NameDataQuality == 2 ~ "Partial",
-          NameDataQuality == 99 |
-            is.na(NameDataQuality) |
-            FirstName == "Anonymous" ~ "Missing",
-          !(
-            NameDataQuality %in% c(2, 8, 9, 99) |
-              is.na(NameDataQuality) |
-              FirstName == "Anonymous"
-          ) ~ "ok"
-        ),
-        LastName = NULL,
-        MiddleName = NULL,
-        NameSuffix = NULL,
-        SSN = dplyr::case_when(
-          (is.na(SSN) & !SSNDataQuality %in% c(8, 9)) |
-            is.na(SSNDataQuality) | SSNDataQuality == 99 ~ "Missing",
-          SSNDataQuality %in% c(8, 9) ~ "DKR",
-          (nchar(SSN) != 9 & SSNDataQuality != 2) |
-            substr(SSN, 1, 3) %in% c("000", "666") |
-            substr(SSN, 1, 1) == 9 |
-            substr(SSN, 4, 5) == "00" |
-            substr(SSN, 6, 9) == "0000" |
-            SSNDataQuality == 2 |
-            SSN %in% c(
-              111111111,
-              222222222,
-              333333333,
-              444444444,
-              555555555,
-              777777777,
-              888888888,
-              123456789
-            ) ~ "Invalid",
-          SSNDataQuality == 2 & nchar(SSN) != 9 ~ "Incomplete"
-        )
-      ) %>%
-      dplyr::mutate(SSN = dplyr::case_when(is.na(SSN) ~ "ok",!is.na(SSN) ~ SSN))
-  }
-
-
-
-
-
 
   Client <- hud$Client()
   # this saves Client as a feather file with redacted PII as a security measure.
   if(ncol(Client) == 36) {
     Client <- Client_redact(Client)
-    hud.export::to_feather(Client, c("data", "API"))
+    hud.export::hud_feather(Client, c("data", "API"))
   }
 
 
@@ -124,7 +117,7 @@ get_export <- function(hud) {
 
   #TODO Replicate Rmisc sheet 3 in Looker
   provider_extras <- readxl::read_xlsx(
-    paste0(directory, "/RMisc2.xlsx"),
+    paste0("data", "/RMisc2.xlsx"),
     sheet = 3,
     col_types = c("numeric", replicate(16, "text"))
   ) %>%
