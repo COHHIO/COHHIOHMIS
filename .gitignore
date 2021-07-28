@@ -38,3 +38,4 @@ vignettes/*.pdf
 data/*
 inst/auth/*
 pkg_commands.R
+Looker.ini
