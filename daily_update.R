@@ -1,10 +1,10 @@
-devtools::load_all("C:/Users/Administrator/Documents/R/Contributor_Repos/COHHIO/hud.export")
+devtools::load_all("../hud.export")
 hud <- hud.export::hud_export$new("inst/auth/Looker.ini")
 dirs <- list(export = "data/API",
              public = "data/public",
              spdat = "data/spdat")
 
-hud$update_all(path = dirs$export)
+hud$get_all(path = dirs$export)
 dates_env <- dates(hud, .write = TRUE)
 increment("Importing raw HMIS data\n")
 #TODO Where does public_data come from
