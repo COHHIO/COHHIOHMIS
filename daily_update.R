@@ -1,12 +1,12 @@
 devtools::load_all("../hud.export")
 # This is the default directory tree used by hud_export. It can be changed and amended and passed to hud_export in the `dirs` argument if necessary.
-dirs <- list(export = "data/API",
+dirs <- list(export = "data/export",
              public = "data/public",
              spdat = "data/spdat",
              extra = "data/extra")
 hud <- hud.export::hud_export$new("inst/auth/Looker.ini")
 
-hud$get_all()
+hud$update_all()
 dates_env <- dates(hud, .write = TRUE)
 increment("Importing raw HMIS data\n")
 #TODO Where does public_data come from
