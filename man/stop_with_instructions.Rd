@@ -4,7 +4,7 @@
 \alias{stop_with_instructions}
 \title{Stop daily update with an informative error}
 \usage{
-stop_with_instructions(...)
+stop_with_instructions(..., error = FALSE)
 }
 \arguments{
 \item{...}{Error Messages to print to the console}

@@ -36,6 +36,6 @@ vignettes/*.pdf
 *.knit.md
 
 data/*
-inst/auth/*
+inst/*
 pkg_commands.R
 Looker.ini
