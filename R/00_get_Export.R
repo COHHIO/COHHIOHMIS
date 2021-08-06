@@ -68,9 +68,9 @@ Client_redact <- function(Client) {
     dplyr::mutate(SSN = dplyr::case_when(is.na(SSN) ~ "ok",!is.na(SSN) ~ SSN))
 }
 
-get_export <- function(hud) {
+load_export <- function(hud) {
   # Service Areas -----------------------------------------------------------
-  ServiceAreas <- clarity.looker::hud_load("ServiceAreas.feather", public_dir)
+  ServiceAreas <- clarity.looker::hud_load("ServiceAreas.feather", dirs$public)
 
   # Affiliation -------------------------------------------------------------
 
@@ -82,7 +82,7 @@ get_export <- function(hud) {
   # this saves Client as a feather file with redacted PII as a security measure.
   if(ncol(Client) == 36) {
     Client <- Client_redact(Client)
-    clarity.looker::hud_feather(Client, c("data", "API"))
+    clarity.looker::hud_feather(Client, dirs$export)
   }
 
 
@@ -115,6 +115,8 @@ get_export <- function(hud) {
 
   Project <- clarity_api$Project()
 
+
+  provider_extras <- clarity_api$Project_extras()
   #TODO Replicate Rmisc sheet 3 in Looker
   provider_extras <- readxl::read_xlsx(
     paste0("data", "/RMisc2.xlsx"),

@@ -2,9 +2,21 @@ devtools::load_all("../clarity.looker")
 devtools::load_all("../hud.extract")
 devtools::load_all("../../lookr")
 # This is the default directory tree used by hud_export. It can be changed and amended and passed to hud_export in the `dirs` argument if necessary.
-hud.export::dirs
+clarity.looker::dirs
 clarity_api <- clarity.looker::clarity_api$new("inst/auth/Looker.ini")
 clarity_api$get_export() # only need to run once
+
+.hud_extra_data <- purrr::map(.hud_extras, ~{
+  if (!is.null(.x$look)) {
+    out <- clarity_api$api$getLook(.x$look["since2019"])
+    rlang::env_get_list(out, c("updated_at", "description", "public_url", "url"))
+  }
+})
+
+.hud_extra_data$Project_extras
+.hud_extras <- purrr::map2(.hud_extras, .hud_extra_data, ~{
+  purrr::list_modify(.x, !!!.y)
+})
 looks <- purrr::imap(looks, ~{
   rlang::eval_bare(rlang::expr(clarity_api[[!!.y]](look_type = "parity")))
 })
