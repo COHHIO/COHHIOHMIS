@@ -181,8 +181,8 @@ app_deps_to_disk <- rlang::new_function(
 
 
       purrr::walk2(self$app_objs, paths, ~purrr::iwalk(.x, path = .y, ~{
-        .fp <- file.path(path, paste0(.y, hud.export::file_io_ext(.x)))
-        rlang::exec(hud.export::file_io_fn(.x), .x, .fp)
+        .fp <- file.path(path, paste0(.y, clarity.looker::file_io_ext(.x)))
+        rlang::exec(clarity.looker::file_io_fn(.x), .x, .fp)
         cli::cli_alert_success(.y, " saved to ", .fp)
       }))
       # make the execution environment the baseenv for these functions to avoid inadvertently grabbing variables or functions from the environment inside the app where it will be executed
@@ -219,13 +219,15 @@ app_env <- R6::R6Class(
   "app_env",
   public = list(
     #' @description Gather the objects passed to \code{app_env}s internal environment to be passed to subsequent functions. Save app dependencies into a list.
-    #' @param ... \code{(objects)} Dependencies for subsequent functions
+    #' @param ... \code{(objects)} Dependencies for subsequent functions. Use \code{"everything"} to capture all objects from the parent environment.
     gather_deps = function(...,
                            app_deps = self$app_deps,
                            env = rlang::caller_env()) {
       # must be forced to get the calling environment where the user called it since env isn't used until inside the purrr::map call
       force(env)
       .work_deps <- rlang::dots_list(...)
+      if (length(.work_deps) == 1 && .work_deps[1] == "everything")
+        .work_deps <- rlang::env_get_list(env, ls(env, all.names = TRUE))
       private$work_deps <-
         append(private$work_deps, names(.work_deps)) %>%
         {

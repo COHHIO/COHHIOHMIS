@@ -1,4 +1,7 @@
-dates <- function(hud, .write = FALSE) {
+dates <- function(
+  clarity_api = get0("clarity_api", envir = rlang::caller_env()),
+  app_env = get0("app_env", envir = rlang::caller_env()),
+  .write = FALSE) {
 
   hc_data_goes_back_to <- lubridate::mdy("01012019")
 
@@ -32,20 +35,20 @@ dates <- function(hud, .write = FALSE) {
 
   # Dates from Metadata -----------------------------------------------------
 
-  Export <- hud$Export(path = dirs$export, .write = .write)
+  Export <- clarity_api$Export(.write = .write)
 
   meta_HUDCSV_Export_Date <- Export[["ExportDate"]][1]
   meta_HUDCSV_Export_Start <- Export[["ExportStartDate"]][1]
   meta_HUDCSV_Export_End <- Export[["ExportEndDate"]][1]
 
 
-  purrr::map(hud.export::.hud_extras, hud_last_updated)
+  purrr::map(names(clarity.looker::.hud_extras), hud_last_updated, path = clarity.looker::dirs$extras)
   # meta_Rmisc_last_run_date <-
   #   lubridate::floor_date(file.info("data/RMisc2.xlsx")$mtime,
   #                         unit = "day")
 
   # Calculated Dates --------------------------------------------------------
-  Exit <- hud$Exit(.write = .write)
+  Exit <- clarity_api$Exit(.write = .write)
    calc_data_goes_back_to <-
     Exit %>%
     dplyr::arrange(ExitDate) %>%

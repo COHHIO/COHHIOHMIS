@@ -70,19 +70,19 @@ Client_redact <- function(Client) {
 
 get_export <- function(hud) {
   # Service Areas -----------------------------------------------------------
-  ServiceAreas <- hud.export::hud_load("ServiceAreas.feather", public_dir)
+  ServiceAreas <- clarity.looker::hud_load("ServiceAreas.feather", public_dir)
 
   # Affiliation -------------------------------------------------------------
 
-  Affiliation <- hud$Affiliation()
+  Affiliation <- clarity_api$Affiliation()
 
   # Client ------------------------------------------------------------------
 
-  Client <- hud$Client()
+  Client <- clarity_api$Client()
   # this saves Client as a feather file with redacted PII as a security measure.
   if(ncol(Client) == 36) {
     Client <- Client_redact(Client)
-    hud.export::hud_feather(Client, c("data", "API"))
+    clarity.looker::hud_feather(Client, c("data", "API"))
   }
 
 
@@ -100,12 +100,12 @@ get_export <- function(hud) {
 
   # Disabilities ------------------------------------------------------------
 
-  Disabilities <- hud$Disabilities()
+  Disabilities <- clarity_api$Disabilities()
 
 
   # EmploymentEducation -----------------------------------------------------
 
-  EmploymentEducation <- hud$EmploymentEducation()
+  EmploymentEducation <- clarity_api$EmploymentEducation()
 
   # Exit --------------------------------------------------------------------
 
@@ -113,7 +113,7 @@ get_export <- function(hud) {
 
   # Project -----------------------------------------------------------------
 
-  Project <- hud$Project()
+  Project <- clarity_api$Project()
 
   #TODO Replicate Rmisc sheet 3 in Looker
   provider_extras <- readxl::read_xlsx(
@@ -198,7 +198,7 @@ get_export <- function(hud) {
   # EnrollmentCoC -----------------------------------------------------------
 
   EnrollmentCoC <-
-    hud$EnrollmentCoC
+    clarity_api$EnrollmentCoC
 
   # VeteranCE --------------------------------------------------------------
 
@@ -214,7 +214,7 @@ get_export <- function(hud) {
 
   # Enrollment --------------------------------------------------------------
 
-  Enrollment <- hud$Enrollment()
+  Enrollment <- clarity_api$Enrollment()
 
   # from sheets 1 and 2, getting EE-related data, joining both to En --------
 
@@ -328,32 +328,32 @@ get_export <- function(hud) {
   # Funder ------------------------------------------------------------------
 
   Funder <-
-    hud$Funder()
+    clarity_api$Funder()
 
   # HealthAndDV -------------------------------------------------------------
 
   HealthAndDV <-
-    hud$HealthAndDV()
+    clarity_api$HealthAndDV()
 
   # IncomeBenefits ----------------------------------------------------------
 
   IncomeBenefits <-
-    hud$IncomeBenefits()
+    clarity_api$IncomeBenefits()
 
   # Inventory ---------------------------------------------------------------
 
   Inventory <-
-    hud$Inventory()
+    clarity_api$Inventory()
 
   # Organization ------------------------------------------------------------
 
   Organization <-
-    hud$Organization()
+    clarity_api$Organization()
 
   # ProjectCoC --------------------------------------------------------------
 
   ProjectCoC <-
-    hud$ProjectCoC()
+    clarity_api$ProjectCoC()
 
   # Case Manager Records ----------------------------------------------------
 

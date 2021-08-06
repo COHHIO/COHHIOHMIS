@@ -1,18 +1,16 @@
-devtools::load_all("../hud.export")
+devtools::load_all("../clarity.looker")
 devtools::load_all("../hud.extract")
 devtools::load_all("../../lookr")
 # This is the default directory tree used by hud_export. It can be changed and amended and passed to hud_export in the `dirs` argument if necessary.
-dirs <- list(export = "data/export",
-             public = "data/public",
-             spdat = "data/spdat",
-             extras = "data/extras")
-hud <- hud.export::hud_export$new("inst/auth/Looker.ini")
-#hud$get_all() # only need to run once
+hud.export::dirs
+clarity_api <- clarity.looker::clarity_api$new("inst/auth/Looker.ini")
+clarity_api$get_export() # only need to run once
 looks <- purrr::imap(looks, ~{
-  rlang::eval_bare(rlang::expr(hud$export[[!!.y]](look_type = "parity")))
+  rlang::eval_bare(rlang::expr(clarity_api[[!!.y]](look_type = "parity")))
 })
-
-dates_env <- dates(hud, .write = TRUE)
+# update all
+clarity_api$update_export()
+dates_env <- dates(clarity_api, .write = TRUE)
 increment("Importing raw HMIS data\n")
 #TODO Where does public_data come from
 # list.files(full.names = TRUE, "~/R/Contributor_Repos/COHHIO/COHHIO_HMIS/public_data") %>%
