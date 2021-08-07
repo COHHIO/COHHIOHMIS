@@ -116,22 +116,13 @@ load_export <- function(hud) {
   Project <- clarity_api$Project()
 
 
-  provider_extras <- clarity_api$Project_extras()
-  #TODO Replicate Rmisc sheet 3 in Looker
-  provider_extras <- readxl::read_xlsx(
-    paste0("data", "/RMisc2.xlsx"),
-    sheet = 3,
-    col_types = c("numeric", replicate(16, "text"))
-  ) %>%
-    dplyr::mutate(
-      ProjectRegion = dplyr::if_else(
-        ProviderRegion != "Homeless Planning Region 10",
-        stringr::str_remove(ProviderRegion, "0"),
-        ProviderRegion
-      ),
-      ProviderRegion = NULL,
-      OrganizationName = stringr::str_remove(OrganizationName, "\\(.*\\)")
-    )
+  provider_extras <- clarity_api$Project_extras() %>% {setNames(., nm = stringr::str_split(.hud_extras$Project_extras$description,  "\\,\\s")[[1]])} %>%
+    dplyr::mutate(Geocode = as.numeric(Geocode)) %>%
+    dplyr::left_join(hud_load("geocodes", dirs$public), by = "Geocode") %>%
+    dplyr::left_join(hud_load("Regions", dirs$public), by = "County")
+
+provider_extras %>%
+  dplyr::filter(is.na(County)) %>% View
 
   #TODO replicate Sheet 17 in looker
   provider_geo <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"),

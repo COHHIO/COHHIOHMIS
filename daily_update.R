@@ -6,12 +6,7 @@ clarity.looker::dirs
 clarity_api <- clarity.looker::clarity_api$new("inst/auth/Looker.ini")
 clarity_api$get_export() # only need to run once
 
-.hud_extra_data <- purrr::map(.hud_extras, ~{
-  if (!is.null(.x$look)) {
-    out <- clarity_api$api$getLook(.x$look["since2019"])
-    rlang::env_get_list(out, c("updated_at", "description", "public_url", "url"))
-  }
-})
+
 
 .hud_extra_data$Project_extras
 .hud_extras <- purrr::map2(.hud_extras, .hud_extra_data, ~{
