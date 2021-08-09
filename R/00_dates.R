@@ -75,5 +75,6 @@ dates <- function(
 
   if(meta_Rmisc_last_run_date != Sys.Date())
     stop_with_instructions("The RMisc Look update process errored.")
-  environment()
+  app_env$gather_deps("everything")
+  app_env
 }

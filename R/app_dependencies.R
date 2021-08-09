@@ -144,7 +144,7 @@ app_deps <- list(
   )
 )
 
-app_deps_to_disk <- rlang::new_function(
+write_deps_to_disk <- rlang::new_function(
   args =
     rlang::pairlist2(
       app_deps = rlang::expr(self$app_deps),
@@ -245,7 +245,7 @@ app_env <- R6::R6Class(
     #' @description Pass all dependencies saved from previous functions to an environment for use
     #' @param nms \code{(character)} of the names of the dependencies to load into the `env`. **Default** load all previously stored objects.
     #' @param env \code{(environment)} to pass dependencies to. **Default** the calling environment
-    add_deps_to_env = function(nms, env = rlang::caller_env()) {
+    merge_deps_to_env = function(nms, env = rlang::caller_env()) {
       if (missing(nms))
         nms <- private$work_deps
       rlang::env_bind(env,!!!rlang::env_get_list(self, nms))
@@ -254,7 +254,7 @@ app_env <- R6::R6Class(
     #' @param app_deps \code{(named list)} with each name corresponding to an app with each item containing a character vector of the app dependencies. **Default** the `app_deps` stored in the public field \code{app_env$app_deps}.
     #' @param paths \code{(named list)} Paths to write app dependencies to, one path for each app in `app_deps` (in the same order).
     #' @param accessor \code{(function)} An accessor function that will be used to read the files from disk in the live app.
-    app_deps_to_disk = app_deps_to_disk,
+    write_app_deps = write_deps_to_disk,
     #' @field \code{(list)} with all app dependencies as objects
     app_objs = NULL,
     #' @field \code{(list)} with all app dependencies as character vectors
@@ -265,7 +265,7 @@ app_env <- R6::R6Class(
     }))
   ),
   private = list(
-    #' @field Save a vector of the names of working dependencies that have been saved for future reference when \code{$add_deps_to_env} is called.
+    #' @field Save a vector of the names of working dependencies that have been saved for future reference when \code{$merge_deps_to_env} is called.
     work_deps = c()
   )
 )

@@ -5,19 +5,14 @@ devtools::load_all("../../lookr")
 clarity.looker::dirs
 clarity_api <- clarity.looker::clarity_api$new("inst/auth/Looker.ini")
 clarity_api$get_export() # only need to run once
+clarity_api$get_extras()
+app_env <- app_env$new()
 
 
 
-.hud_extra_data$Project_extras
-.hud_extras <- purrr::map2(.hud_extras, .hud_extra_data, ~{
-  purrr::list_modify(.x, !!!.y)
-})
-looks <- purrr::imap(looks, ~{
-  rlang::eval_bare(rlang::expr(clarity_api[[!!.y]](look_type = "parity")))
-})
 # update all
 clarity_api$update_export()
-dates_env <- dates(clarity_api, .write = TRUE)
+dates_env <- dates(.write = TRUE)
 increment("Importing raw HMIS data\n")
 #TODO Where does public_data come from
 # list.files(full.names = TRUE, "~/R/Contributor_Repos/COHHIO/COHHIO_HMIS/public_data") %>%
