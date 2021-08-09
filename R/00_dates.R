@@ -42,10 +42,6 @@ dates <- function(
   meta_HUDCSV_Export_End <- Export[["ExportEndDate"]][1]
 
 
-  purrr::map(names(clarity.looker::.hud_extras), hud_last_updated, path = clarity.looker::dirs$extras)
-  # meta_Rmisc_last_run_date <-
-  #   lubridate::floor_date(file.info("data/RMisc2.xlsx")$mtime,
-  #                         unit = "day")
 
   # Calculated Dates --------------------------------------------------------
   Exit <- clarity_api$Exit(.write = .write)
@@ -73,8 +69,22 @@ dates <- function(
     stop_with_instructions("The HUD CSV Export update process errored. Please rerun.\n")
 
 
-  if(meta_Rmisc_last_run_date != Sys.Date())
-    stop_with_instructions("The RMisc Look update process errored.")
+  #  Check recency of Extras ----
+  # Mon Aug 09 17:09:43 2021
+  extras_last_update <- hud_last_updated(path = dirs$extras)
+
+  extra_info <- list(missing = setdiff(names(.hud_extras), stringr::str_remove(names(extras_last_update), "\\.feather$")),
+                     not_updated = purrr::keep(extras_last_update, ~!lubridate::`%within%`(.x, lubridate::interval(lubridate::floor_date(Sys.Date(), "day") - 1, Sys.time()))))
+
+  purrr::iwalk(extra_info, ~{
+    if (is_legit(extra_info$missing))
+      stop_with_instructions(paste0("The following *_extra files are missing", paste0(extra_info$missing, collapse = ", ")))
+    if (!is_legit(extra_info$not_updated))
+      stop_with_instructions(paste0("The following files are not up to date: ", purrr::imap_chr(extra_info$not_update, ~paste0(paste0(.y,": ", .x), collapse = "\n"))))
+  })
+  # Gather Dependencies ----
+  # Mon Aug 09 17:09:52 2021
+
   app_env$gather_deps("everything")
   app_env
 }

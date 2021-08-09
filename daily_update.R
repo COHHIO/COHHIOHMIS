@@ -12,7 +12,7 @@ app_env <- app_env$new()
 
 # update all
 clarity_api$update_export()
-dates_env <- dates(.write = TRUE)
+app_env <- dates(.write = TRUE)
 increment("Importing raw HMIS data\n")
 #TODO Where does public_data come from
 # list.files(full.names = TRUE, "~/R/Contributor_Repos/COHHIO/COHHIO_HMIS/public_data") %>%

@@ -225,7 +225,7 @@ app_env <- R6::R6Class(
                            env = rlang::caller_env()) {
       # must be forced to get the calling environment where the user called it since env isn't used until inside the purrr::map call
       force(env)
-      .work_deps <- rlang::dots_list(...)
+      .work_deps <- rlang::dots_list(..., .named = TRUE)
       if (length(.work_deps) == 1 && .work_deps[1] == "everything")
         .work_deps <- rlang::env_get_list(env, ls(env, all.names = TRUE))
       private$work_deps <-
@@ -233,13 +233,16 @@ app_env <- R6::R6Class(
         {
           .[!duplicated(.)]
         }
-      rlang::env_bind(self,!!!.work_deps)
+      rlang::env_bind(self$.__enclos_env__,!!!.work_deps)
       self$app_objs <- purrr::imap(app_deps, ~ {
         .deps <-
           purrr::compact(rlang::env_get_list(env, .x, default = NULL))
-        app_objs <- purrr::list_modify(self$app_objs, !!!.deps)
-        cli::cli_alert_success(paste0(.y, " dependencies saved: ", paste0(names(.deps), collapse = ", ")))
-        app_objs
+        if (is_legit(.deps)) {
+          app_objs <- purrr::list_modify(self$app_objs, !!!.deps)
+          cli::cli_alert_success(paste0(.y, " dependencies saved: ", paste0(names(.deps), collapse = ", ")))
+          app_objs
+        }
+
       })
     },
     #' @description Pass all dependencies saved from previous functions to an environment for use
@@ -248,7 +251,7 @@ app_env <- R6::R6Class(
     merge_deps_to_env = function(nms, env = rlang::caller_env()) {
       if (missing(nms))
         nms <- private$work_deps
-      rlang::env_bind(env,!!!rlang::env_get_list(self, nms))
+      rlang::env_bind(env,!!!rlang::env_get_list(self$.__enclos_env__, nms))
     },
     #' @description Write app dependencies to disk
     #' @param app_deps \code{(named list)} with each name corresponding to an app with each item containing a character vector of the app dependencies. **Default** the `app_deps` stored in the public field \code{app_env$app_deps}.
@@ -267,6 +270,7 @@ app_env <- R6::R6Class(
   private = list(
     #' @field Save a vector of the names of working dependencies that have been saved for future reference when \code{$merge_deps_to_env} is called.
     work_deps = c()
-  )
+  ),
+  lock_objects = FALSE
 )
 
