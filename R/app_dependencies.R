@@ -259,9 +259,9 @@ app_env <- R6::R6Class(
     #' @param accessor \code{(function)} An accessor function that will be used to read the files from disk in the live app.
     write_app_deps = write_deps_to_disk,
     #' @field \code{(list)} with all app dependencies as objects
-    app_objs = NULL,
+    app_objs = list(),
     #' @field \code{(list)} with all app dependencies as character vectors
-    app_deps = NULL,
+    app_deps = c(),
     #' @description Instantiate with default app dependencies to be collected (if they exist) each time \code{$gather_deps} is called
     initialize = rlang::new_function(list(app_deps = rlang::expr(!!app_deps)), body = base::quote({
       self$app_deps <- app_deps

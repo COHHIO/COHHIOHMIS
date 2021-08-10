@@ -68,17 +68,20 @@ Client_redact <- function(Client) {
     dplyr::mutate(SSN = dplyr::case_when(is.na(SSN) ~ "ok",!is.na(SSN) ~ SSN))
 }
 
-load_export <- function(hud) {
+load_export <- function(clarity_api = get0("clarity_api", envir = rlang::caller_env()),
+                        app_env = get0("app_env", envir = rlang::caller_env()),
+                        .write = FALSE,
+                        error = FALSE) {
   # Service Areas -----------------------------------------------------------
   ServiceAreas <- clarity.looker::hud_load("ServiceAreas.feather", dirs$public)
 
   # Affiliation -------------------------------------------------------------
 
-  Affiliation <- clarity_api$Affiliation()
+  Affiliation <- clarity_api$Affiliation(.write = .write)
 
   # Client ------------------------------------------------------------------
 
-  Client <- clarity_api$Client()
+  Client <- clarity_api$Client(.write = .write)
   # this saves Client as a feather file with redacted PII as a security measure.
   if(ncol(Client) == 36) {
     Client <- Client_redact(Client)
@@ -100,12 +103,12 @@ load_export <- function(hud) {
 
   # Disabilities ------------------------------------------------------------
 
-  Disabilities <- clarity_api$Disabilities()
+  Disabilities <- clarity_api$Disabilities(.write = .write)
 
 
   # EmploymentEducation -----------------------------------------------------
 
-  EmploymentEducation <- clarity_api$EmploymentEducation()
+  EmploymentEducation <- clarity_api$EmploymentEducation(.write = .write)
 
   # Exit --------------------------------------------------------------------
 
@@ -113,12 +116,12 @@ load_export <- function(hud) {
 
   # Project -----------------------------------------------------------------
 
-  Project <- clarity_api$Project()
+  Project <- clarity_api$Project(.write = .write)
 
 
-  provider_extras <- clarity_api$Project_extras() %>% {setNames(., nm = stringr::str_split(.hud_extras$Project_extras$description,  "\\,\\s")[[1]])} %>%
-    dplyr::mutate(Geocode = as.numeric(Geocode)) %>%
-    dplyr::left_join(hud_load("geocodes", dirs$public), by = "Geocode") %>%
+  provider_extras <- clarity_api$Project_extras(.write = .write) |>  setNames(nm = stringr::str_split(clarity_api$Project_extras(details = TRUE)$description,  "\\,\\s")[[1]])  |>
+    dplyr::left_join(hud_load("geocodes", dirs$public) |> dplyr::filter(Type == "County"), by = c(Geocode = "GeographicCode")) |>
+    dplyr::rename(County = "Name") |>
     dplyr::left_join(hud_load("Regions", dirs$public), by = "County")
 
 provider_extras %>%

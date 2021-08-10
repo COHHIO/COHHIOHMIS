@@ -1,7 +1,8 @@
-dates <- function(
-  clarity_api = get0("clarity_api", envir = rlang::caller_env()),
-  app_env = get0("app_env", envir = rlang::caller_env()),
-  .write = FALSE) {
+dates <- function(clarity_api = get0("clarity_api", envir = rlang::caller_env()),
+                  app_env = get0("app_env", envir = rlang::caller_env()),
+                  .write = FALSE,
+                  error = FALSE
+) {
 
   hc_data_goes_back_to <- lubridate::mdy("01012019")
 
@@ -34,6 +35,8 @@ dates <- function(
   hc_first_vaccine_administered_in_us <- lubridate::mdy("12142020")
 
   # Dates from Metadata -----------------------------------------------------
+  if (hud_last_updated("Export", path = dirs$export) < lubridate::floor_date(Sys.Date(), "day") && !.write)
+    .write = TRUE
 
   Export <- clarity_api$Export(.write = .write)
 
@@ -44,6 +47,9 @@ dates <- function(
 
 
   # Calculated Dates --------------------------------------------------------
+  if (hud_last_updated("Exit", path = dirs$export) < lubridate::floor_date(Sys.Date(), "day") && !.write)
+    .write = TRUE
+
   Exit <- clarity_api$Exit(.write = .write)
    calc_data_goes_back_to <-
     Exit %>%
@@ -64,9 +70,9 @@ dates <- function(
 
 
 
-  if(meta_HUDCSV_Export_Start != Sys.Date() |
+  if(meta_HUDCSV_Export_Start != hc_data_goes_back_to |
      meta_HUDCSV_Export_End != Sys.Date())
-    stop_with_instructions("The HUD CSV Export update process errored. Please rerun.\n")
+    stop_with_instructions("The HUD CSV Export update process errored. Please rerun.\n", error = error)
 
 
   #  Check recency of Extras ----
@@ -76,11 +82,13 @@ dates <- function(
   extra_info <- list(missing = setdiff(names(.hud_extras), stringr::str_remove(names(extras_last_update), "\\.feather$")),
                      not_updated = purrr::keep(extras_last_update, ~!lubridate::`%within%`(.x, lubridate::interval(lubridate::floor_date(Sys.Date(), "day") - 1, Sys.time()))))
 
+  meta_Rmisc_last_run_date <- mean(do.call(c, extras_last_update))
   purrr::iwalk(extra_info, ~{
+
     if (is_legit(extra_info$missing))
-      stop_with_instructions(paste0("The following *_extra files are missing", paste0(extra_info$missing, collapse = ", ")))
-    if (!is_legit(extra_info$not_updated))
-      stop_with_instructions(paste0("The following files are not up to date: ", purrr::imap_chr(extra_info$not_update, ~paste0(paste0(.y,": ", .x), collapse = "\n"))))
+      stop_with_instructions(paste0("The following *_extra files are missing ", paste0(extra_info$missing, collapse = ", ")), error = error)
+    if (is_legit(extra_info$not_updated))
+      stop_with_instructions(paste0("The following files are not up to date: ", purrr::imap_chr(extra_info$not_update, ~paste0(paste0(.y,": ", .x), collapse = "\n"))), error = error)
   })
   # Gather Dependencies ----
   # Mon Aug 09 17:09:52 2021
