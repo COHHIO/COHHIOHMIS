@@ -70,18 +70,17 @@ Client_redact <- function(Client) {
 
 load_export <- function(clarity_api = get0("clarity_api", envir = rlang::caller_env()),
                         app_env = get0("app_env", envir = rlang::caller_env()),
-                        .write = FALSE,
                         error = FALSE) {
   # Service Areas -----------------------------------------------------------
   ServiceAreas <- clarity.looker::hud_load("ServiceAreas.feather", dirs$public)
 
   # Affiliation -------------------------------------------------------------
 
-  Affiliation <- clarity_api$Affiliation(.write = .write)
+  Affiliation <- clarity_api$Affiliation()
 
   # Client ------------------------------------------------------------------
 
-  Client <- clarity_api$Client(.write = .write)
+  Client <- clarity_api$Client()
   # this saves Client as a feather file with redacted PII as a security measure.
   if(ncol(Client) == 36) {
     Client <- Client_redact(Client)
@@ -103,12 +102,12 @@ load_export <- function(clarity_api = get0("clarity_api", envir = rlang::caller_
 
   # Disabilities ------------------------------------------------------------
 
-  Disabilities <- clarity_api$Disabilities(.write = .write)
+  Disabilities <- clarity_api$Disabilities()
 
 
   # EmploymentEducation -----------------------------------------------------
 
-  EmploymentEducation <- clarity_api$EmploymentEducation(.write = .write)
+  EmploymentEducation <- clarity_api$EmploymentEducation()
 
   # Exit --------------------------------------------------------------------
 
@@ -116,16 +115,43 @@ load_export <- function(clarity_api = get0("clarity_api", envir = rlang::caller_
 
   # Project -----------------------------------------------------------------
 
-  Project <- clarity_api$Project(.write = .write)
+  Project <- clarity_api$Project()
 
+  geocodes <- hud_load("geocodes", dirs$public)
 
-  provider_extras <- clarity_api$Project_extras(.write = .write) |>  setNames(nm = stringr::str_split(clarity_api$Project_extras(details = TRUE)$description,  "\\,\\s")[[1]])  |>
-    dplyr::left_join(hud_load("geocodes", dirs$public) |> dplyr::filter(Type == "County"), by = c(Geocode = "GeographicCode")) |>
-    dplyr::rename(County = "Name") |>
-    dplyr::left_join(hud_load("Regions", dirs$public), by = "County")
+  provider_extras <- clarity_api$Project_extras() |>  setNames(nm = stringr::str_split(clarity_api$Project_extras(details = TRUE)$description,  "\\,\\s")[[1]])
+  provider_extras <- provider_extras |>
+    dplyr::left_join(geocodes, by = c(Geocode = "GeographicCode"))
 
-provider_extras %>%
-  dplyr::filter(is.na(County)) %>% View
+fill_geocodes <- provider_extras %>%
+  dplyr::filter(is.na(County)) |>
+  dplyr::distinct(Geocode, .keep_all = TRUE)
+if (nrow(fill_geocodes) > 0) {
+  ggmap::register_google(key = Sys.getenv("GGMAP_GOOGLE_API_KEY"))
+  fill_geocodes <- slider::slide_dfr(fill_geocodes, ~{
+    r <- purrr::keep(.x, ~!is.na(.x))
+    .args <- purrr::list_modify(r[names(r) %in% c("Address", "City", "State", "ZIP")], State = "OH")
+    out <- ggmap::geocode(glue::glue_data(.args, "{Address}, {City}, {State}, {ZIP}"), output = "all")
+    .county <- purrr::keep(out$results[[1]]$address_components, ~any(stringr::str_detect(purrr::flatten(.x), "County")))[[1]]$short_name |>
+      stringr::str_remove("\\sCounty")
+    .x$County <- purrr::when(.county,
+                UU::is_legit(.) ~ .county,
+                ~ NA)
+      .x
+  })
+
+  for (rn in 1:nrow(fill_geocodes)) {
+    row <- fill_geocodes[rn,]
+    geocodes <- geocodes |>
+      tibble::add_row(GeographicCode = row$Geocode, State = "OH", County = row$County)
+  }
+  feather::write_feather(geocodes, hud_filename("geocodes", dirs$public))
+  provider_extras <- provider_extras |>
+    dplyr::left_join(geocodes, by = c(Geocode = "GeographicCode"))
+}
+
+provider_extras<- provider_extras |>
+  dplyr::left_join(hud_load("Regions", dirs$public), by = "County")
 
   #TODO replicate Sheet 17 in looker
   provider_geo <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"),
