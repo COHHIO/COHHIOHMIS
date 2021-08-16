@@ -1,3 +1,7 @@
+# Must set GGMAP_GOOGLE_API_KEY in .Renviron, see ?ggmap::register_google for details
+# Set this option to bypass errors in ggmap
+options(ggmap = list(google = list(second_limit = 50L,
+                                   day_limit = 2500)))
 devtools::load_all("../clarity.looker")
 devtools::load_all("../../lookr")
 #devtools::load_all("../hud.extract")

@@ -117,16 +117,25 @@ load_export <- function(clarity_api = get0("clarity_api", envir = rlang::caller_
 
   Project <- clarity_api$Project()
 
+  # geocodes is created by `hud.extract` using the hud_geocodes.R functions
   geocodes <- hud_load("geocodes", dirs$public)
 
-  provider_extras <- clarity_api$Project_extras() |>  setNames(nm = stringr::str_split(clarity_api$Project_extras(details = TRUE)$description,  "\\,\\s")[[1]])
+  # provider_extras ----
+  # Rminor: Coordinated Entry Access Points [CEAP]
+  # Thu Aug 12 14:23:50 2021
+  provider_extras <- clarity_api$Project_extras() |>
+    # This assumes that the Description for the file maintains an up to date list of column names separated by ,\\s
+    setNames(nm = stringr::str_split(clarity_api$Project_extras(details = TRUE)$description,  "\\,\\s")[[1]])
+  # This should map a county to every geocode
   provider_extras <- provider_extras |>
-    dplyr::left_join(geocodes, by = c(Geocode = "GeographicCode"))
+    dplyr::left_join(geocodes |> dplyr::select(GeographicCode, County), by = c(Geocode = "GeographicCode"))
 
-fill_geocodes <- provider_extras %>%
+  # Some geocodes may be legacy and County will be NA - the following looks these geocodes up on the Google Geocode API via `ggmap`
+fill_geocodes <- provider_extras |>
   dplyr::filter(is.na(County)) |>
   dplyr::distinct(Geocode, .keep_all = TRUE)
 if (nrow(fill_geocodes) > 0) {
+  # This environment variable must be set in the .Renviron file (at the project level preferably). Be sure to add .Renviron to .gitignore/.Rbuildignore if the file resides in the project directory
   ggmap::register_google(key = Sys.getenv("GGMAP_GOOGLE_API_KEY"))
   fill_geocodes <- slider::slide_dfr(fill_geocodes, ~{
     r <- purrr::keep(.x, ~!is.na(.x))
@@ -150,38 +159,26 @@ if (nrow(fill_geocodes) > 0) {
     dplyr::left_join(geocodes, by = c(Geocode = "GeographicCode"))
 }
 
-provider_extras<- provider_extras |>
+provider_extras <- provider_extras |>
   dplyr::left_join(hud_load("Regions", dirs$public), by = "County")
 
-  #TODO replicate Sheet 17 in looker
-  provider_geo <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"),
-                                    sheet = 17)
+# Missing Regions
+missing_region <- provider_extras |>
+  dplyr::filter(is.na(Region))
+missing_region |>
+  dplyr::pull(County) |>
+  unique()
+# TODO Handle missing regions by using Counties Served columns to determine which Regions it falls into.
 
-  provider_tel <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"),
-                                    sheet = 18) %>%
-    dplyr::filter(ProjectTelPrimary == "Yes")
+CEAPs <- provider_extras |>
+  dplyr::filter(Type == "Coordinated Entry") |>
+  tidyr::pivot_longer(tidyselect::starts_with("AP"), names_to = "TargetPop", names_pattern = "(?<=^APCounties)(\\w+)", values_to = "CountiesServed")
+  # Missing County Served data
+# CEAPs |>
+#   dplyr::group_by(ProjectID, Name) |>
+#   dplyr::summarise(Missing_County = sum(is.na(`County/ies`))) |>
+#   dplyr::filter(Missing_County > 2)
 
-  provider_services <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"),
-                                         sheet = 19) %>%
-    tidyr::separate(ProjectServicesCounties,
-                    into = paste0("county", 1:80),
-                    sep = ", ",
-                    fill = "right") %>%
-    tidyr::pivot_longer(cols = dplyr::starts_with("county"),
-                        names_to = "DeleteThis",
-                        values_to = "County") %>%
-    dplyr::filter(!is.na(County) | ProjectServices == "Homeless Diversion Programs") %>%
-    dplyr::select(-DeleteThis) %>% unique() %>%
-    dplyr::mutate(TargetPop = dplyr::case_when(
-      ProjectServices == "Homeless Diversion Programs" ~ "General",
-      ProjectServices == "Veteran Benefits Assistance" ~ "Veterans",
-      ProjectServices == "Runaway/Homeless Youth Counseling" ~ "Youth (ages 0-24)")) %>%
-    dplyr::select(ProjectID, County, TargetPop) %>%
-    dplyr::left_join(provider_geo %>% dplyr::select(-ProjectAreaServed), by = "ProjectID") %>%
-    dplyr::mutate(CountiesServed =
-                    dplyr::if_else(TargetPop == "General", ProjectCountyServed, County)) %>%
-    unique() %>%
-    dplyr::select(ProjectID, TargetPop, CountiesServed)
 
   coc_scoring <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"),
                                    sheet = 13,
@@ -190,20 +187,16 @@ provider_extras<- provider_extras |>
                                                  "numeric",
                                                  "numeric",
                                                  "numeric"))
-
+  #COMBAK
   coc_scoring <- coc_scoring %>%
     dplyr::mutate(DateReceivedPPDocs = as.Date(DateReceivedPPDocs, origin = "1899-12-30"))
 
   Project <- Project %>%
     dplyr::select(-ProjectName) %>%
     dplyr::left_join(provider_extras, by = "ProjectID") %>%
-    dplyr::left_join(coc_scoring, by = "ProjectID") %>%
-    dplyr::left_join(provider_tel[c("ProjectID", "ProjectTelType", "ProjectTelNo")],
-                     by = "ProjectID") %>%
-    dplyr::mutate(HMISParticipatingProject = dplyr::if_else(UsesSP == "Yes", 1, 0)) %>%
-    dplyr::select(-UsesSP)
+    dplyr::left_join(coc_scoring, by = "ProjectID")
 
-  rm(coc_scoring, provider_tel)
+
 
   # Regions
   #TODO What is the origin of this CSV
