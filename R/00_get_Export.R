@@ -109,13 +109,11 @@ load_export <- function(clarity_api = get0("clarity_api", envir = rlang::caller_
 
   EmploymentEducation <- clarity_api$EmploymentEducation()
 
-  # Exit --------------------------------------------------------------------
 
-  # Already loaded in 00_dates.R
+
+
 
   # Project -----------------------------------------------------------------
-
-  Project <- clarity_api$Project()
 
   # geocodes is created by `hud.extract` using the hud_geocodes.R functions
   geocodes <- hud_load("geocodes", dirs$public)
@@ -194,10 +192,9 @@ APs <- slider::slide_dfr(APs, ~{
 }) |>
   dplyr::distinct_all()
 
-  Project <- Project %>%
-    dplyr::mutate(ProjectID = as.numeric(ProjectID)) |>
-    dplyr::select(-ProjectName) %>%
-    dplyr::left_join(provider_extras, by = "ProjectID")
+Project <- clarity_api$Project() |>
+  dplyr::select(-ProjectCommonName) |>
+  dplyr::left_join(provider_extras, by = "ProjectID")
 
   # EnrollmentCoC -----------------------------------------------------------
 
@@ -207,58 +204,61 @@ APs <- slider::slide_dfr(APs, ~{
   # VeteranCE --------------------------------------------------------------
 
   # COMBAK When Client_extras has data
-  VeteranCE <- clarity_api$Client_extras()
-
-  VeteranCE <-
+  VeteranCE <- setNames(clarity_api$Client_extras(), get_colnames("Client_extras")) |>
     dplyr::mutate(
-      VeteranCE,
       DateVeteranIdentified = as.Date(DateVeteranIdentified, origin = "1899-12-30"),
       ExpectedPHDate = as.Date(ExpectedPHDate, origin = "1899-12-30")
     )
 
   # Enrollment --------------------------------------------------------------
 
-  Enrollment <- clarity_api$Enrollment()
-
   # from sheets 1 and 2, getting EE-related data, joining both to En --------
 
-  Enrollment_extras <- clarity_api$Enrollment_extras(.write = TRUE) |>
-    setNames(nm = clarity_api$Enrollment_extras(details = TRUE))
+  Enrollment_extras <- clarity_api$Enrollment_extras() |>
+    setNames(nm = get_colnames("Enrollment_extras"))
 
-  Enrollment <- Enrollment %>%
-    dplyr::inner_join(Enrollment_extras, by = "EnrollmentID") %>%
-    dplyr::left_join(VeteranCE %>% dplyr::select(EnrollmentID, PHTrack, ExpectedPHDate),
-                     by = "EnrollmentID")
+  Enrollment <- clarity_api$Enrollment()
+  # Exit ----
+  # Wed Aug 18 13:58:02 2021
+  app_env$merge_deps_to_env("Exit")
 
-  rm(counties)
+  Enrollment <- Enrollment |>
+    dplyr::inner_join(Enrollment_extras, by = "EnrollmentID")  |>
+    # Join Veteran data
+    dplyr::left_join(VeteranCE  |>  dplyr::select(EnrollmentID, PHTrack, ExpectedPHDate), by = "EnrollmentID") |>
+    # Join Exit data (formerly small_exit)
 
-  # Adding Exit Data to Enrollment because I'm not tryin to have one-to-one
-  # relationships in this!
-
-  small_exit <- Exit %>% dplyr::select(EnrollmentID,
-                                       ExitDate,
-                                       Destination,
-                                       OtherDestination)
-
-  Enrollment <- dplyr::left_join(Enrollment, small_exit, by = "EnrollmentID") %>%
+    dplyr::left_join(
+      Exit %>% dplyr::select(EnrollmentID,
+                                                     ExitDate,
+                                                     Destination,
+                                                     OtherDestination) |>
+        dplyr::mutate(EnrollmentID = as.numeric(EnrollmentID))
+      ,
+      by = "EnrollmentID"
+    ) |>
     dplyr::mutate(ExitAdjust = dplyr::if_else(is.na(ExitDate) |
                                                 ExitDate > lubridate::today(),
                                               lubridate::today(), ExitDate))
 
-  rm(small_exit)
 
-  # Adding ProjectType to Enrollment too bc we need EntryAdjust & MoveInAdjust
-  small_project <- Project %>%
-    dplyr::select(ProjectID, ProjectType, ProjectName)
+
+
 
   # getting HH information
   # only doing this for RRH and PSHs since Move In Date doesn't matter for ES, etc.
+  app_env$merge_deps_to_env("hc_psh_started_collecting_move_in_date")
+  small_project <- Project %>%
+    dplyr::select(ProjectID, ProjectType, ProjectName)
   HHMoveIn <- Enrollment %>%
-    dplyr::left_join(small_project, by = "ProjectID") %>%
+    dplyr::left_join(
+      # Adding ProjectType to Enrollment too bc we need EntryAdjust & MoveInAdjust
+      small_project,
+      by = "ProjectID") %>%
     dplyr::filter(ProjectType %in% c(3, 9, 13)) %>%
     dplyr::mutate(
       AssumedMoveIn = dplyr::if_else(
-        lubridate::ymd(EntryDate) < hc_psh_started_collecting_move_in_date &
+        EntryDate < hc_psh_started_collecting_move_in_date &
           ProjectType %in% c(3, 9),
         1,
         0
@@ -267,12 +267,12 @@ APs <- slider::slide_dfr(APs, ~{
         AssumedMoveIn == 1 ~ EntryDate,
         AssumedMoveIn == 0 &
           ProjectType %in% c(3, 9) &
-          lubridate::ymd(EntryDate) <= lubridate::ymd(MoveInDate) &
-          lubridate::ymd(ExitAdjust) > lubridate::ymd(MoveInDate) ~ MoveInDate,
+          EntryDate <= MoveInDate &
+          ExitAdjust > MoveInDate ~ MoveInDate,
         # the Move-In Dates must fall between the Entry and ExitAdjust to be
         # considered valid and for PSH the hmid cannot = ExitDate
-        lubridate::ymd(MoveInDate) <= lubridate::ymd(ExitAdjust) &
-          lubridate::ymd(MoveInDate) >= lubridate::ymd(EntryDate) &
+          MoveInDate <= ExitAdjust &
+          MoveInDate >= EntryDate &
           ProjectType == 13 ~ MoveInDate
       )
     ) %>%
@@ -297,10 +297,10 @@ APs <- slider::slide_dfr(APs, ~{
     dplyr::left_join(small_project, by = "ProjectID") %>%
     dplyr::left_join(HHEntry, by = "HouseholdID") %>%
     dplyr::mutate(
-      MoveInDateAdjust = dplyr::if_else(!is.na(HHMoveIn) &
-                                          lubridate::ymd(HHMoveIn) <= lubridate::ymd(ExitAdjust),
-                                        dplyr::if_else(lubridate::ymd(EntryDate) <= lubridate::ymd(HHMoveIn),
-                                                       HHMoveIn, EntryDate),
+      MoveInDateAdjust = dplyr::if_else(
+        !is.na(HHMoveIn) & HHMoveIn <= ExitAdjust,
+        dplyr::if_else(EntryDate <= HHMoveIn,
+                       HHMoveIn, EntryDate),
                                         NA_real_),
       EntryAdjust = dplyr::case_when(
         ProjectType %in% c(1, 2, 4, 8, 12) ~ EntryDate,
@@ -313,14 +313,13 @@ APs <- slider::slide_dfr(APs, ~{
 
   # Client Location
 
-  y <- EnrollmentCoC %>%
-    dplyr::filter(DataCollectionStage == 1) %>%
-    dplyr::select(EnrollmentID, "ClientLocation" = CoCCode)
-
   Enrollment <- Enrollment %>%
-    dplyr::left_join(y, by = "EnrollmentID")
+    dplyr::left_join(
+      EnrollmentCoC %>%
+        dplyr::filter(DataCollectionStage == 1) %>%
+        dplyr::select(EnrollmentID, "ClientLocation" = CoCCode),
+      by = "EnrollmentID")
 
-  rm(y)
 
   # Event <-
   #   read_csv(paste0(directory, "/Event.csv"),
