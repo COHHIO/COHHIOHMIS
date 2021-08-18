@@ -206,3 +206,12 @@ freeze_pe <- function(dir, overwrite = FALSE) {
   }
   return(out)
 }
+
+get_colnames <- function(x) {
+
+  rlang::eval_bare(rlang::expr(`$`(clarity_api, !!x)(details = TRUE))) |>
+    {\(x) {stringr::str_split(x$description,  "\\,\\s")[[1]]}}()
+}
+
+
+

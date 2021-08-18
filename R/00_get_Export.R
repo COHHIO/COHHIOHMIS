@@ -125,7 +125,7 @@ load_export <- function(clarity_api = get0("clarity_api", envir = rlang::caller_
   # Thu Aug 12 14:23:50 2021
   provider_extras <- clarity_api$Project_extras() |>
     # This assumes that the Description for the file maintains an up to date list of column names separated by ,\\s
-    setNames(nm = stringr::str_split(clarity_api$Project_extras(details = TRUE)$description,  "\\,\\s")[[1]])
+    setNames(nm = get_colnames("Project_extras"))
   # This should map a county to every geocode
   provider_extras <- provider_extras |>
     dplyr::left_join(geocodes |> dplyr::select(GeographicCode, County), by = c(Geocode = "GeographicCode"))
@@ -206,8 +206,8 @@ APs <- slider::slide_dfr(APs, ~{
 
   # VeteranCE --------------------------------------------------------------
 
-  VeteranCE <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"),
-                                 sheet = 14)
+  # COMBAK When Client_extras has data
+  VeteranCE <- clarity_api$Client_extras()
 
   VeteranCE <-
     dplyr::mutate(
@@ -222,10 +222,11 @@ APs <- slider::slide_dfr(APs, ~{
 
   # from sheets 1 and 2, getting EE-related data, joining both to En --------
 
-  counties <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 1)#
+  Enrollment_extras <- clarity_api$Enrollment_extras(.write = TRUE) |>
+    setNames(nm = clarity_api$Enrollment_extras(details = TRUE))
 
   Enrollment <- Enrollment %>%
-    dplyr::inner_join(counties, by = "EnrollmentID") %>%
+    dplyr::inner_join(Enrollment_extras, by = "EnrollmentID") %>%
     dplyr::left_join(VeteranCE %>% dplyr::select(EnrollmentID, PHTrack, ExpectedPHDate),
                      by = "EnrollmentID")
 
