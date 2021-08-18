@@ -159,8 +159,14 @@ if (nrow(fill_geocodes) > 0) {
     dplyr::left_join(geocodes, by = c(Geocode = "GeographicCode"))
 }
 
+Regions <- hud_load("Regions", dirs$public) |>
+  dplyr::arrange(Region) |>
+  dplyr::mutate(RegionName = dplyr::if_else(
+    Region == 0,
+    "Mahoning County CoC",
+    paste("Homeless Planning Region", Region)))
 provider_extras <- provider_extras |>
-  dplyr::left_join(hud_load("Regions", dirs$public), by = "County")
+  dplyr::left_join(Regions |> dplyr::select(- RegionName), by = "County")
 
 # Missing Regions
 missing_region <- provider_extras |>
@@ -170,50 +176,33 @@ missing_region |>
   unique()
 # TODO Handle missing regions by using Counties Served columns to determine which Regions it falls into.
 
-CEAPs <- provider_extras |>
+APs <- provider_extras |>
+  dplyr::select( !tidyselect::starts_with("CoCComp") & !Geocode:ZIP) |>
   dplyr::filter(Type == "Coordinated Entry") |>
-  tidyr::pivot_longer(tidyselect::starts_with("AP"), names_to = "TargetPop", names_pattern = "(?<=^APCounties)(\\w+)", values_to = "CountiesServed")
-  # Missing County Served data
-# CEAPs |>
-#   dplyr::group_by(ProjectID, Name) |>
-#   dplyr::summarise(Missing_County = sum(is.na(`County/ies`))) |>
-#   dplyr::filter(Missing_County > 2)
+  tidyr::pivot_longer(tidyselect::starts_with("AP"), names_to = "TargetPop", names_pattern = "(?<=^APCounties)(\\w+)", values_to = "CountiesServed") |>
+  dplyr::filter(!is.na(CountiesServed)) |>
+  dplyr::select(!tidyselect::starts_with("AP") & !Type)
 
+# Programs serve multiple Counties which may fall into multiple regions. This creates a row for each Region served by a Program such that Coordinated Entry Access Points will show all the appropriate programs when filtering by Region.
+# @Rm
+APs <- slider::slide_dfr(APs, ~{
+  .counties <- trimws(stringr::str_split(.x$CountiesServed, ",\\s")[[1]])
 
-  coc_scoring <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"),
-                                   sheet = 13,
-                                   col_types = c("numeric",
-                                                 "numeric",
-                                                 "numeric",
-                                                 "numeric",
-                                                 "numeric"))
-  #COMBAK
-  coc_scoring <- coc_scoring %>%
-    dplyr::mutate(DateReceivedPPDocs = as.Date(DateReceivedPPDocs, origin = "1899-12-30"))
+  .x |>
+    dplyr::select(- Region) |>
+    cbind(Region = unique(Regions$Region[Regions$County %in% .counties]))
+}) |>
+  dplyr::distinct_all()
 
   Project <- Project %>%
+    dplyr::mutate(ProjectID = as.numeric(ProjectID)) |>
     dplyr::select(-ProjectName) %>%
-    dplyr::left_join(provider_extras, by = "ProjectID") %>%
-    dplyr::left_join(coc_scoring, by = "ProjectID")
-
-
-
-  # Regions
-  #TODO What is the origin of this CSV
-  regions <- readr::read_csv("public_data/Regions.csv",
-                             col_types = "cn") %>%
-    dplyr::arrange(Region) %>%
-    dplyr::mutate(RegionName = dplyr::if_else(
-      Region == 0,
-      "Mahoning County CoC",
-      paste("Homeless Planning Region", Region)))
-  #
-  # Project <- left_join(project_county, regions, by = "County")
+    dplyr::left_join(provider_extras, by = "ProjectID")
 
   # EnrollmentCoC -----------------------------------------------------------
 
   EnrollmentCoC <-
-    clarity_api$EnrollmentCoC
+    clarity_api$EnrollmentCoC()
 
   # VeteranCE --------------------------------------------------------------
 
