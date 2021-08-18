@@ -9,7 +9,7 @@ devtools::load_all("../../lookr")
 clarity.looker::dirs
 clarity_api <- clarity.looker::clarity_api$new("inst/auth/Looker.ini")
 clarity_api$get_export() # only need to run once
-clarity_api$get_extras()
+clarity_api$get_extras(.write = TRUE)
 Rm_env <- app_env$new()
 
 
