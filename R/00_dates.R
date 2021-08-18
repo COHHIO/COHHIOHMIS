@@ -1,6 +1,5 @@
 dates <- function(clarity_api = get0("clarity_api", envir = rlang::caller_env()),
                   app_env = get0("app_env", envir = rlang::caller_env()),
-                  .write = FALSE,
                   error = FALSE
 ) {
 
@@ -35,10 +34,9 @@ dates <- function(clarity_api = get0("clarity_api", envir = rlang::caller_env())
   hc_first_vaccine_administered_in_us <- lubridate::mdy("12142020")
 
   # Dates from Metadata -----------------------------------------------------
-  if (hud_last_updated("Export", path = dirs$export) < lubridate::floor_date(Sys.Date(), "day") && !.write)
-    .write = TRUE
 
-  Export <- clarity_api$Export(.write = .write)
+
+  Export <- clarity_api$Export()
 
   meta_HUDCSV_Export_Date <- Export[["ExportDate"]][1]
   meta_HUDCSV_Export_Start <- Export[["ExportStartDate"]][1]
@@ -47,10 +45,9 @@ dates <- function(clarity_api = get0("clarity_api", envir = rlang::caller_env())
 
 
   # Calculated Dates --------------------------------------------------------
-  if (hud_last_updated("Exit", path = dirs$export) < lubridate::floor_date(Sys.Date(), "day") && !.write)
-    .write = TRUE
 
-  Exit <- clarity_api$Exit(.write = .write)
+
+  Exit <- clarity_api$Exit()
    calc_data_goes_back_to <-
     Exit %>%
     dplyr::arrange(ExitDate) %>%
@@ -85,10 +82,10 @@ dates <- function(clarity_api = get0("clarity_api", envir = rlang::caller_env())
   meta_Rmisc_last_run_date <- mean(do.call(c, extras_last_update))
   purrr::iwalk(extra_info, ~{
 
-    if (is_legit(extra_info$missing))
+    if (UU::is_legit(extra_info$missing))
       stop_with_instructions(paste0("The following *_extra files are missing ", paste0(extra_info$missing, collapse = ", ")), error = error)
-    if (is_legit(extra_info$not_updated))
-      stop_with_instructions(paste0("The following files are not up to date: ", purrr::imap_chr(extra_info$not_update, ~paste0(paste0(.y,": ", .x), collapse = "\n"))), error = error)
+    if (UU::is_legit(extra_info$not_updated))
+      stop_with_instructions(paste0("The following files are not up to date: ", paste0(purrr::imap_chr(extra_info$not_update, ~paste0(.y,": ", .x)), collapse = "\n")), error = error)
   })
   # Gather Dependencies ----
   # Mon Aug 09 17:09:52 2021
