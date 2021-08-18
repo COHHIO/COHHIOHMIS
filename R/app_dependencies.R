@@ -222,27 +222,36 @@ app_env <- R6::R6Class(
     #' @param ... \code{(objects)} Dependencies for subsequent functions. Use \code{"everything"} to capture all objects from the parent environment.
     gather_deps = function(...,
                            app_deps = self$app_deps,
-                           env = rlang::caller_env()) {
+                           env = rlang::caller_env(),
+                           .args = names(rlang::fn_fmls(rlang::call_fn(rlang::call_standardise(match.call(call = sys.call(1))))))) {
       # must be forced to get the calling environment where the user called it since env isn't used until inside the purrr::map call
       force(env)
+      force(.args)
       .work_deps <- rlang::dots_list(..., .named = TRUE)
       if (length(.work_deps) == 1 && .work_deps[1] == "everything")
-        .work_deps <- rlang::env_get_list(env, ls(env, all.names = TRUE))
+        .work_deps <- rlang::env_get_list(env, ls(env, all.names = TRUE) |> stringr::str_subset(negate = TRUE, pattern = paste0("(?:",.args,")", collapse = "|")))
+      .new_wdeps <- names(.work_deps)
       private$work_deps <-
-        append(private$work_deps, names(.work_deps)) %>%
+        append(private$work_deps, .new_wdeps) %>%
         {
           .[!duplicated(.)]
         }
+      cli::cli({
+        cli::cli_h2("Global")
+        cli::cli_alert_success(paste0("dependencies saved: ", paste0(.new_wdeps, collapse = ", ")))
+      })
       rlang::env_bind(self$.__enclos_env__,!!!.work_deps)
       self$app_objs <- purrr::imap(app_deps, ~ {
         .deps <-
           purrr::compact(rlang::env_get_list(env, .x, default = NULL))
-        if (is_legit(.deps)) {
+        if (UU::is_legit(.deps)) {
           app_objs <- purrr::list_modify(self$app_objs, !!!.deps)
-          cli::cli_alert_success(paste0(.y, " dependencies saved: ", paste0(names(.deps), collapse = ", ")))
+          cli::cli({
+            cli::col_blue(cli::cli_h2(.y))
+            cli::cli_alert_success(paste0(" dependencies saved: ", paste0(names(.deps), collapse = ", ")))
+          })
           app_objs
         }
-
       })
     },
     #' @description Pass all dependencies saved from previous functions to an environment for use
