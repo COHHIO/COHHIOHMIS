@@ -67,6 +67,168 @@ Client_redact <- function(Client) {
     ) %>%
     dplyr::mutate(SSN = dplyr::case_when(is.na(SSN) ~ "ok",!is.na(SSN) ~ SSN))
 }
+provider_extras_helpers <- list(
+  add_regions = function(provider_extras, dirs) {
+    # geocodes is created by `hud.extract` using the hud_geocodes.R functions
+    geocodes <- hud_load("geocodes", dirs$public)
+    # This should map a county to every geocode
+    provider_extras <- provider_extras |>
+      dplyr::left_join(geocodes |> dplyr::select(GeographicCode, County), by = c(Geocode = "GeographicCode"))
+
+    # Some geocodes may be legacy and County will be NA - the following looks these geocodes up on the Google Geocode API via `ggmap`
+    fill_geocodes <- provider_extras |>
+      dplyr::filter(is.na(County)) |>
+      dplyr::distinct(Geocode, .keep_all = TRUE)
+    if (nrow(fill_geocodes) > 0) {
+      # This environment variable must be set in the .Renviron file (at the project level preferably). Be sure to add .Renviron to .gitignore/.Rbuildignore if the file resides in the project directory
+      ggmap::register_google(key = Sys.getenv("GGMAP_GOOGLE_API_KEY"))
+      fill_geocodes <- slider::slide_dfr(fill_geocodes, ~{
+        r <- purrr::keep(.x, ~!is.na(.x))
+        .args <- purrr::list_modify(r[names(r) %in% c("Address", "City", "State", "ZIP")], State = "OH")
+        out <- ggmap::geocode(glue::glue_data(.args, "{Address}, {City}, {State}, {ZIP}"), output = "all")
+        .county <- purrr::keep(out$results[[1]]$address_components, ~any(stringr::str_detect(purrr::flatten(.x), "County")))[[1]]$short_name |>
+          stringr::str_remove("\\sCounty")
+        .x$County <- purrr::when(.county,
+                                 UU::is_legit(.) ~ .county,
+                                 ~ NA)
+        .x
+      })
+
+      for (rn in 1:nrow(fill_geocodes)) {
+        row <- fill_geocodes[rn,]
+        geocodes <- geocodes |>
+          tibble::add_row(GeographicCode = row$Geocode, State = "OH", County = row$County)
+      }
+      feather::write_feather(geocodes, hud_filename("geocodes", dirs$public))
+      provider_extras <- provider_extras |>
+        dplyr::left_join(geocodes, by = c(Geocode = "GeographicCode"))
+    }
+
+    Regions <- hud_load("Regions", dirs$public)
+
+    provider_extras <- provider_extras |>
+      dplyr::left_join(Regions |> dplyr::select(- RegionName), by = "County")
+
+    # Missing Regions
+    # missing_region <- provider_extras |>
+    #   dplyr::filter(is.na(Region))
+    # missing_region |>
+    #   dplyr::pull(County) |>
+    #   unique()
+    provider_extras
+  },
+  create_APs = function(provider_extras, dirs) {
+    Regions <- hud_load("Regions", dirs$public)
+    APs <- provider_extras |>
+      dplyr::select( !tidyselect::starts_with("CoCComp") & !Geocode:ZIP) |>
+      dplyr::filter(Type == "Coordinated Entry") |>
+      tidyr::pivot_longer(tidyselect::starts_with("AP"), names_to = "TargetPop", names_pattern = "(?<=^APCounties)(\\w+)", values_to = "CountiesServed") |>
+      dplyr::filter(!is.na(CountiesServed)) |>
+      dplyr::select(!tidyselect::starts_with("AP") & !Type)
+
+    # Programs serve multiple Counties which may fall into multiple regions. This creates a row for each Region served by a Program such that Coordinated Entry Access Points will show all the appropriate programs when filtering by Region.
+    # @Rm
+    APs <- slider::slide_dfr(APs, ~{
+      .counties <- trimws(stringr::str_split(.x$CountiesServed, ",\\s")[[1]])
+
+      .x |>
+        dplyr::select(- Region) |>
+        cbind(Region = unique(Regions$Region[Regions$County %in% .counties]))
+    }) |>
+      dplyr::distinct_all()
+
+    APs
+  }
+)
+Enrollment_helpers <- list(
+  add_Household = function(Enrollment, Project, app_env) {
+    # getting HH information
+    # only doing this for RRH and PSHs since Move In Date doesn't matter for ES, etc.
+    app_env$merge_deps_to_env("hc_psh_started_collecting_move_in_date")
+    small_project <- Project %>%
+      dplyr::select(ProjectID, ProjectType, ProjectName)
+    HHMoveIn <- Enrollment %>%
+      dplyr::left_join(
+        # Adding ProjectType to Enrollment too bc we need EntryAdjust & MoveInAdjust
+        small_project,
+        by = "ProjectID") %>%
+      dplyr::filter(ProjectType %in% c(3, 9, 13)) %>%
+      dplyr::mutate(
+        AssumedMoveIn = dplyr::if_else(
+          EntryDate < hc_psh_started_collecting_move_in_date &
+            ProjectType %in% c(3, 9),
+          1,
+          0
+        ),
+        ValidMoveIn = dplyr::case_when(
+          AssumedMoveIn == 1 ~ EntryDate,
+          AssumedMoveIn == 0 &
+            ProjectType %in% c(3, 9) &
+            EntryDate <= MoveInDate &
+            ExitAdjust > MoveInDate ~ MoveInDate,
+          # the Move-In Dates must fall between the Entry and ExitAdjust to be
+          # considered valid and for PSH the hmid cannot = ExitDate
+          MoveInDate <= ExitAdjust &
+            MoveInDate >= EntryDate &
+            ProjectType == 13 ~ MoveInDate
+        )
+      ) %>%
+      dplyr::filter(!is.na(ValidMoveIn)) %>%
+      dplyr::group_by(HouseholdID) %>%
+      dplyr::mutate(HHMoveIn = min(ValidMoveIn)) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(HouseholdID, HHMoveIn) %>%
+      unique()
+
+    HHEntry <- Enrollment %>%
+      dplyr::left_join(small_project, by = "ProjectID") %>%
+      dplyr::group_by(HouseholdID) %>%
+      dplyr::mutate(FirstEntry = min(EntryDate)) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(HouseholdID, "HHEntry" = FirstEntry) %>%
+      unique() %>%
+      dplyr::left_join(HHMoveIn, by = "HouseholdID")
+
+
+    Enrollment <- Enrollment %>%
+      dplyr::left_join(small_project, by = "ProjectID") %>%
+      dplyr::left_join(HHEntry, by = "HouseholdID") %>%
+      dplyr::mutate(
+        MoveInDateAdjust = dplyr::if_else(
+          !is.na(HHMoveIn) & HHMoveIn <= ExitAdjust,
+          dplyr::if_else(EntryDate <= HHMoveIn,
+                         HHMoveIn, EntryDate),
+          NA_real_),
+        EntryAdjust = dplyr::case_when(
+          ProjectType %in% c(1, 2, 4, 8, 12) ~ EntryDate,
+          ProjectType %in% c(3, 9, 13) &
+            !is.na(MoveInDateAdjust) ~ MoveInDateAdjust
+        )
+      )
+    Enrollment
+  },
+  add_VeteranCE = function(Enrollment, VeteranCE, app_env) {
+    app_env$merge_deps_to_env("Exit")
+
+    Enrollment |>
+      # Join Veteran data
+      dplyr::left_join(VeteranCE  |>  dplyr::select(EnrollmentID, PHTrack, ExpectedPHDate), by = "EnrollmentID") |>
+      # Join Exit data (formerly small_exit)
+
+      dplyr::left_join(
+        Exit %>% dplyr::select(EnrollmentID,
+                               ExitDate,
+                               Destination,
+                               OtherDestination) |>
+          dplyr::mutate(EnrollmentID = as.numeric(EnrollmentID))
+        ,
+        by = "EnrollmentID"
+      ) |>
+      dplyr::mutate(ExitAdjust = dplyr::if_else(is.na(ExitDate) |
+                                                  ExitDate > lubridate::today(),
+                                                lubridate::today(), ExitDate))
+  }
+)
 
 load_export <- function(clarity_api = get0("clarity_api", envir = rlang::caller_env()),
                         app_env = get0("app_env", envir = rlang::caller_env()),
@@ -114,83 +276,12 @@ load_export <- function(clarity_api = get0("clarity_api", envir = rlang::caller_
 
 
   # Project -----------------------------------------------------------------
-
-  # geocodes is created by `hud.extract` using the hud_geocodes.R functions
-  geocodes <- hud_load("geocodes", dirs$public)
-
-  # provider_extras ----
-  # Rminor: Coordinated Entry Access Points [CEAP]
+  # provider_extras
   # Thu Aug 12 14:23:50 2021
-  provider_extras <- clarity_api$Project_extras() |>
-    # This assumes that the Description for the file maintains an up to date list of column names separated by ,\\s
-    setNames(nm = get_colnames("Project_extras"))
-  # This should map a county to every geocode
-  provider_extras <- provider_extras |>
-    dplyr::left_join(geocodes |> dplyr::select(GeographicCode, County), by = c(Geocode = "GeographicCode"))
-
-  # Some geocodes may be legacy and County will be NA - the following looks these geocodes up on the Google Geocode API via `ggmap`
-fill_geocodes <- provider_extras |>
-  dplyr::filter(is.na(County)) |>
-  dplyr::distinct(Geocode, .keep_all = TRUE)
-if (nrow(fill_geocodes) > 0) {
-  # This environment variable must be set in the .Renviron file (at the project level preferably). Be sure to add .Renviron to .gitignore/.Rbuildignore if the file resides in the project directory
-  ggmap::register_google(key = Sys.getenv("GGMAP_GOOGLE_API_KEY"))
-  fill_geocodes <- slider::slide_dfr(fill_geocodes, ~{
-    r <- purrr::keep(.x, ~!is.na(.x))
-    .args <- purrr::list_modify(r[names(r) %in% c("Address", "City", "State", "ZIP")], State = "OH")
-    out <- ggmap::geocode(glue::glue_data(.args, "{Address}, {City}, {State}, {ZIP}"), output = "all")
-    .county <- purrr::keep(out$results[[1]]$address_components, ~any(stringr::str_detect(purrr::flatten(.x), "County")))[[1]]$short_name |>
-      stringr::str_remove("\\sCounty")
-    .x$County <- purrr::when(.county,
-                UU::is_legit(.) ~ .county,
-                ~ NA)
-      .x
-  })
-
-  for (rn in 1:nrow(fill_geocodes)) {
-    row <- fill_geocodes[rn,]
-    geocodes <- geocodes |>
-      tibble::add_row(GeographicCode = row$Geocode, State = "OH", County = row$County)
-  }
-  feather::write_feather(geocodes, hud_filename("geocodes", dirs$public))
-  provider_extras <- provider_extras |>
-    dplyr::left_join(geocodes, by = c(Geocode = "GeographicCode"))
-}
-
-Regions <- hud_load("Regions", dirs$public) |>
-  dplyr::arrange(Region) |>
-  dplyr::mutate(RegionName = dplyr::if_else(
-    Region == 0,
-    "Mahoning County CoC",
-    paste("Homeless Planning Region", Region)))
-provider_extras <- provider_extras |>
-  dplyr::left_join(Regions |> dplyr::select(- RegionName), by = "County")
-
-# Missing Regions
-missing_region <- provider_extras |>
-  dplyr::filter(is.na(Region))
-missing_region |>
-  dplyr::pull(County) |>
-  unique()
-# TODO Handle missing regions by using Counties Served columns to determine which Regions it falls into.
-
-APs <- provider_extras |>
-  dplyr::select( !tidyselect::starts_with("CoCComp") & !Geocode:ZIP) |>
-  dplyr::filter(Type == "Coordinated Entry") |>
-  tidyr::pivot_longer(tidyselect::starts_with("AP"), names_to = "TargetPop", names_pattern = "(?<=^APCounties)(\\w+)", values_to = "CountiesServed") |>
-  dplyr::filter(!is.na(CountiesServed)) |>
-  dplyr::select(!tidyselect::starts_with("AP") & !Type)
-
-# Programs serve multiple Counties which may fall into multiple regions. This creates a row for each Region served by a Program such that Coordinated Entry Access Points will show all the appropriate programs when filtering by Region.
-# @Rm
-APs <- slider::slide_dfr(APs, ~{
-  .counties <- trimws(stringr::str_split(.x$CountiesServed, ",\\s")[[1]])
-
-  .x |>
-    dplyr::select(- Region) |>
-    cbind(Region = unique(Regions$Region[Regions$County %in% .counties]))
-}) |>
-  dplyr::distinct_all()
+  provider_extras <- clarity_api$Project_extras()
+  provider_extras <- provider_extras_helpers$add_regions(provider_extras, dirs)
+  # Rminor: Coordinated Entry Access Points [CEAP]
+  APs <- provider_extras_helpers$create_APs(provider_extras, dirs)
 
 Project <- clarity_api$Project() |>
   dplyr::select(-ProjectCommonName) |>
@@ -201,133 +292,35 @@ Project <- clarity_api$Project() |>
   EnrollmentCoC <-
     clarity_api$EnrollmentCoC()
 
-  # VeteranCE --------------------------------------------------------------
 
-  # COMBAK When Client_extras has data
-  VeteranCE <- setNames(clarity_api$Client_extras(), get_colnames("Client_extras")) |>
-    dplyr::mutate(
-      DateVeteranIdentified = as.Date(DateVeteranIdentified, origin = "1899-12-30"),
-      ExpectedPHDate = as.Date(ExpectedPHDate, origin = "1899-12-30")
-    )
 
   # Enrollment --------------------------------------------------------------
 
   # from sheets 1 and 2, getting EE-related data, joining both to En --------
 
-  Enrollment_extras <- clarity_api$Enrollment_extras() |>
-    setNames(nm = get_colnames("Enrollment_extras"))
-
   Enrollment <- clarity_api$Enrollment()
-  # Exit ----
-  # Wed Aug 18 13:58:02 2021
-  app_env$merge_deps_to_env("Exit")
-
+  # Add Enrollment Extras
   Enrollment <- Enrollment |>
-    dplyr::inner_join(Enrollment_extras, by = "EnrollmentID")  |>
-    # Join Veteran data
-    dplyr::left_join(VeteranCE  |>  dplyr::select(EnrollmentID, PHTrack, ExpectedPHDate), by = "EnrollmentID") |>
-    # Join Exit data (formerly small_exit)
+    dplyr::inner_join(clarity_api$Enrollment_extras(), by = "EnrollmentID")
 
-    dplyr::left_join(
-      Exit %>% dplyr::select(EnrollmentID,
-                                                     ExitDate,
-                                                     Destination,
-                                                     OtherDestination) |>
-        dplyr::mutate(EnrollmentID = as.numeric(EnrollmentID))
-      ,
-      by = "EnrollmentID"
-    ) |>
-    dplyr::mutate(ExitAdjust = dplyr::if_else(is.na(ExitDate) |
-                                                ExitDate > lubridate::today(),
-                                              lubridate::today(), ExitDate))
+  Enrollment_helpers$add_Household(Enrollment, Project, app_env)
 
-
-
-
-
-  # getting HH information
-  # only doing this for RRH and PSHs since Move In Date doesn't matter for ES, etc.
-  app_env$merge_deps_to_env("hc_psh_started_collecting_move_in_date")
-  small_project <- Project %>%
-    dplyr::select(ProjectID, ProjectType, ProjectName)
-  HHMoveIn <- Enrollment %>%
-    dplyr::left_join(
-      # Adding ProjectType to Enrollment too bc we need EntryAdjust & MoveInAdjust
-      small_project,
-      by = "ProjectID") %>%
-    dplyr::filter(ProjectType %in% c(3, 9, 13)) %>%
+  # Veteran Client_extras ----
+  VeteranCE <- clarity_api$Client_extras() |>
     dplyr::mutate(
-      AssumedMoveIn = dplyr::if_else(
-        EntryDate < hc_psh_started_collecting_move_in_date &
-          ProjectType %in% c(3, 9),
-        1,
-        0
-      ),
-      ValidMoveIn = dplyr::case_when(
-        AssumedMoveIn == 1 ~ EntryDate,
-        AssumedMoveIn == 0 &
-          ProjectType %in% c(3, 9) &
-          EntryDate <= MoveInDate &
-          ExitAdjust > MoveInDate ~ MoveInDate,
-        # the Move-In Dates must fall between the Entry and ExitAdjust to be
-        # considered valid and for PSH the hmid cannot = ExitDate
-          MoveInDate <= ExitAdjust &
-          MoveInDate >= EntryDate &
-          ProjectType == 13 ~ MoveInDate
-      )
-    ) %>%
-    dplyr::filter(!is.na(ValidMoveIn)) %>%
-    dplyr::group_by(HouseholdID) %>%
-    dplyr::mutate(HHMoveIn = min(ValidMoveIn)) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(HouseholdID, HHMoveIn) %>%
-    unique()
-
-  HHEntry <- Enrollment %>%
-    dplyr::left_join(small_project, by = "ProjectID") %>%
-    dplyr::group_by(HouseholdID) %>%
-    dplyr::mutate(FirstEntry = min(EntryDate)) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(HouseholdID, "HHEntry" = FirstEntry) %>%
-    unique() %>%
-    dplyr::left_join(HHMoveIn, by = "HouseholdID")
-
-
-  Enrollment <- Enrollment %>%
-    dplyr::left_join(small_project, by = "ProjectID") %>%
-    dplyr::left_join(HHEntry, by = "HouseholdID") %>%
-    dplyr::mutate(
-      MoveInDateAdjust = dplyr::if_else(
-        !is.na(HHMoveIn) & HHMoveIn <= ExitAdjust,
-        dplyr::if_else(EntryDate <= HHMoveIn,
-                       HHMoveIn, EntryDate),
-                                        NA_real_),
-      EntryAdjust = dplyr::case_when(
-        ProjectType %in% c(1, 2, 4, 8, 12) ~ EntryDate,
-        ProjectType %in% c(3, 9, 13) &
-          !is.na(MoveInDateAdjust) ~ MoveInDateAdjust
-      )
+      DateVeteranIdentified = as.Date(DateVeteranIdentified, origin = "1899-12-30"),
+      ExpectedPHDate = as.Date(ExpectedPHDate, origin = "1899-12-30")
     )
 
-  rm(small_project, HHEntry)
+  Enrollment <- Enrollment_helpers$add_VeteranCE(Enrollment, VeteranCE, app_env)
 
-  # Client Location
-
+  # Add Client Location
   Enrollment <- Enrollment %>%
     dplyr::left_join(
       EnrollmentCoC %>%
         dplyr::filter(DataCollectionStage == 1) %>%
         dplyr::select(EnrollmentID, "ClientLocation" = CoCCode),
       by = "EnrollmentID")
-
-
-  # Event <-
-  #   read_csv(paste0(directory, "/Event.csv"),
-  #            col_types = "nnnDnnncDTTcTc") <- no data
-
-  # Export ------------------------------------------------------------------
-
-  # Already loaded in 00_dates.R
 
   # Funder ------------------------------------------------------------------
 
