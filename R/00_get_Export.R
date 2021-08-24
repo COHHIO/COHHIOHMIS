@@ -140,6 +140,9 @@ provider_extras_helpers <- list(
     APs
   }
 )
+
+
+
 Enrollment_helpers <- list(
   add_Household = function(Enrollment, Project, app_env) {
     # getting HH information
@@ -278,7 +281,7 @@ load_export <- function(clarity_api = get0("clarity_api", envir = rlang::caller_
   # Project -----------------------------------------------------------------
   # provider_extras
   # Thu Aug 12 14:23:50 2021
-  provider_extras <- clarity_api$Project_extras()
+  provider_extras <- clarity_api$`HUD Extras`$Project_extras()
   provider_extras <- provider_extras_helpers$add_regions(provider_extras, dirs)
   # Rminor: Coordinated Entry Access Points [CEAP]
   APs <- provider_extras_helpers$create_APs(provider_extras, dirs)
@@ -301,12 +304,12 @@ Project <- clarity_api$Project() |>
   Enrollment <- clarity_api$Enrollment()
   # Add Enrollment Extras
   Enrollment <- Enrollment |>
-    dplyr::inner_join(clarity_api$Enrollment_extras(), by = "EnrollmentID")
+    dplyr::inner_join(clarity_api$`HUD Extras`$Enrollment_extras(), by = "EnrollmentID")
 
   Enrollment_helpers$add_Household(Enrollment, Project, app_env)
 
   # Veteran Client_extras ----
-  VeteranCE <- clarity_api$Client_extras() |>
+  VeteranCE <- clarity_api$`HUD Extras`$Client_extras() |>
     dplyr::mutate(
       DateVeteranIdentified = as.Date(DateVeteranIdentified, origin = "1899-12-30"),
       ExpectedPHDate = as.Date(ExpectedPHDate, origin = "1899-12-30")
@@ -352,24 +355,12 @@ Project <- clarity_api$Project() |>
   ProjectCoC <-
     clarity_api$ProjectCoC()
 
-  # Case Manager Records ----------------------------------------------------
-
-  CaseManagers <-
-    readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 5) %>%
-    dplyr::mutate(
-      CMStartDate = as.Date(CMStartDate, origin = "1899-12-30"),
-      CMEndDate = as.Date(CMEndDate, origin = "1899-12-30")
-    )
-
-  # Interims ----------------------------------------------------------------
-
-  Interims <-
-    readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 20) %>%
-    dplyr::mutate(InterimDate = as.Date(InterimDate, origin = "1899-12-30"))
 
   # Contacts ----------------------------------------------------------------
   # only pulling in contacts made between an Entry Date and an Exit Date
 
+  #TODO https://github.com/COHHIO/COHHIO_HMIS/blob/597ebae7b304f63b879de2fd23035a71103e444f/05_Veterans_Active_List.R
+  # https://github.com/COHHIO/COHHIO_HMIS/blob/d7f2249d5a8333ddddb2181c8bf30553aa7e7038/04_DataQuality.R
   Contacts <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 4) %>%
     dplyr::mutate(
       ContactDate = lubridate::ymd(as.Date(ContactDate, origin = "1899-12-30")),
@@ -378,9 +369,7 @@ Project <- clarity_api$Project() |>
 
   # Scores ------------------------------------------------------------------
 
-  Scores <-  readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"),
-                               sheet = 12) %>%
-    dplyr::mutate(ScoreDate = as.Date(ScoreDate, origin = "1899-12-30"))
+  Scores <-  clarity_api$`HUD Extras`$Client_SPDAT_extras()
 
   # Offers -----------------------------------------------------------------
 

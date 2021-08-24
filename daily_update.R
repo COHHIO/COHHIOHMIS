@@ -12,7 +12,7 @@ jobs::jobscript({
   devtools::load_all("../clarity.looker")
   devtools::load_all("../../lookr")
   clarity_api$get_export(.write = TRUE) # only need to run once
-  clarity_api$get_extras(.write = TRUE)
+  clarity_api$get_folder_looks(clarity_api$folders$`HUD Extras`, .write = TRUE, path = dirs$extras)
 })
 
 Rm_env <- app_env$new()
@@ -23,6 +23,7 @@ Rm_env <- app_env$new()
 clarity_api$update_export()
 Rm_env <- dates(app_env = Rm_env)
 
+Rm_env <- Guidance(app_env = Rm_env)
 increment("Importing raw HMIS data\n")
 
 # list.files(full.names = TRUE, "~/R/Contributor_Repos/COHHIO/COHHIO_HMIS/public_data") %>%

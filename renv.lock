@@ -9,6 +9,18 @@
     ]
   },
   "Packages": {
+    "HMIS": {
+      "Package": "HMIS",
+      "Version": "0.0.0.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "HMIS",
+      "RemoteUsername": "COHHIO",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "399ccdba834dbd2f5b6142e94bf740ca1b83cc7c",
+      "Hash": "634c543e23cf694b05d8fe40c3423814"
+    },
     "MASS": {
       "Package": "MASS",
       "Version": "7.3-54",
@@ -25,10 +37,10 @@
     },
     "R6": {
       "Package": "R6",
-      "Version": "2.5.0",
+      "Version": "2.5.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "b203113193e70978a696b2809525649d"
+      "Hash": "470851b6d5d0ac559e9d01bb352b4021"
     },
     "RColorBrewer": {
       "Package": "RColorBrewer",

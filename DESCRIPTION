@@ -36,4 +36,6 @@ Collate:
     'app_dependencies.R'
     '00_functions.R'
     '00_get_Export.R'
+    '04_Guidance.R'
+    '04_DataQuality.R'
     'aaa_imports.R'
