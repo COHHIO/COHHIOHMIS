@@ -229,7 +229,7 @@ app_env <- R6::R6Class(
       force(.args)
       .work_deps <- rlang::dots_list(..., .named = TRUE)
       if (length(.work_deps) == 1 && .work_deps[1] == "everything")
-        .work_deps <- rlang::env_get_list(env, ls(env, all.names = TRUE) |> stringr::str_subset(negate = TRUE, pattern = paste0("(?:",.args,")", collapse = "|")))
+        .work_deps <- rlang::env_get_list(env, ls(env, all.names = TRUE) |> stringr::str_subset(negate = TRUE, pattern = paste0("(?:^",.args,"$)", collapse = "|")))
       .new_wdeps <- names(.work_deps)
       private$work_deps <-
         append(private$work_deps, .new_wdeps) %>%

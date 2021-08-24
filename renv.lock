@@ -86,8 +86,8 @@
       "RemoteUsername": "yogat3ch",
       "RemoteRepo": "UU",
       "RemoteRef": "main",
-      "RemoteSha": "920b8229a03016fdb991b69ea3913851427f5dc2",
-      "Hash": "e580430e7f7391de9a1a63bf0a82040f"
+      "RemoteSha": "24a764b95a904b7dfb33ff2a80041ae66dcd2fd5",
+      "Hash": "f438abe94880aa457dbe8c673439b817"
     },
     "askpass": {
       "Package": "askpass",
