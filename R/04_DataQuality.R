@@ -12,8 +12,15 @@
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
 
-DataQuality <- function(clarity_api = get0("clarity_api", envir = rlang::caller_env()),
-                        app_env = get0("app_env", envir = rlang::caller_env())) {
+DataQuality <- function(
+    clarity_api,
+    app_env,
+    e = rlang::caller_env()
+  ) {
+  if (missing(clarity_api))
+    clarity_api <- UU::find_by_class("clarity_api", e)
+  if (missing(app_env))
+    app_env <- UU::find_by_class("app_env", e)
   app_env$merge_deps_to_env()
 
 
