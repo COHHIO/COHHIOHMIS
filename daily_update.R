@@ -11,19 +11,18 @@ clarity_api <- clarity.looker::clarity_api$new("inst/auth/Looker.ini")
 jobs::jobscript({
   devtools::load_all("../clarity.looker")
   devtools::load_all("../../lookr")
-  clarity_api$get_export(.write = TRUE) # only need to run once
+  #clarity_api$get_export(.write = TRUE) # only need to run once
   clarity_api$get_folder_looks(clarity_api$folders$`HUD Extras`, .write = TRUE, path = dirs$extras)
 })
-
+# must load COHHIOHMIS
+devtools::load_all()
 Rm_env <- app_env$new()
 
 
+Rm_env <- dates()
 
-# update all
-clarity_api$update_export()
-Rm_env <- dates(app_env = Rm_env)
+Rm_env <- guidance()
 
-Rm_env <- Guidance(app_env = Rm_env)
 increment("Importing raw HMIS data\n")
 
 # list.files(full.names = TRUE, "~/R/Contributor_Repos/COHHIO/COHHIO_HMIS/public_data") %>%
