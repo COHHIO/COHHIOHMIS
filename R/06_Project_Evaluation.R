@@ -24,6 +24,7 @@ if (missing(clarity_api))
 if (missing(app_env))
   app_env <- UU::find_by_class("app_env", e)
 
+  # TODO update file names when PE Freeze happens
   load("pe_dataset_final/images/COHHIOHMIS.RData")
   load("pe_dataset_final/images/Data_Quality.RData")
   load("pe_dataset_final/images/cohorts.RData")

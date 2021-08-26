@@ -12,7 +12,7 @@
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
 
-# this script uses the COHHIOHMIS data to populate the QPR.
+# this script uses the HMIS data to populate the QPR.
 
 QPR_EEs <- function(
              clarity_api,

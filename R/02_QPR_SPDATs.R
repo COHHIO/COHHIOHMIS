@@ -12,7 +12,7 @@
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
 
-# this script uses the COHHIOHMIS data to compare the avg SPDAT score of
+# this script uses the HMIS data to compare the avg SPDAT score of
 # clients served in a county during the reporting period to the avg
 # SPDAt score of those who enrolled into a PSH or RRH project during the
 # reporting period.

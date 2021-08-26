@@ -192,6 +192,7 @@ freeze_pe <- function(dir, overwrite = FALSE) {
   dirs <- c(dir, file.path(dir, "images"))
   if (any(!purrr::map_lgl(dirs, dir.exists))) purrr::walk(dirs, dir.create)
 
+  # TODO needs update when project evaluation freeze comes around.
   files <- paste0(c("COHHIOHMIS", "Data_Quality", "cohorts"), ".Rdata")
   .a <- utils::askYesNo(paste0("Have ", paste0(files, collapse = ", ")," been created with today's data?"))
   if (.a) {

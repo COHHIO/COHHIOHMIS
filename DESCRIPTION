@@ -1,14 +1,19 @@
-Package: COHHIOHMIS
-Title: What the Package Does (One Line, Title Case)
+Package: Rm_data
+Title: Data munging dependencies for Rminor & Rminor_elevated Shiny apps
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "Genelle",
+    c(person(given = "Genelle",
            family = "Denzin",
+           role = c("aut"),
+           email = "genelledenzin@cohhio.org"),
+           person(given = "Stephen",
+           family = "Holsenbeck",
            role = c("cre", "aut"),
-           email = "genelledenzin@cohhio.org")
-Description: An open-source Homeless Management Information System (HMIS) custom reporting project
+           email = "stephenholsenbeck@cohhio.org"))
+Description: This provides workflows for munging and porting data dependencies to the open-source Homeless Management Information System (HMIS) custom reporting apps Rminor & Rminor_elevated
 License: AGPL-3
 Imports: 
+    clarity.looker,
     cli,
     devtools,
     dplyr,
@@ -17,6 +22,7 @@ Imports:
     ggmap,
     glue,
     janitor,
+    lookr,
     lubridate,
     plotly,
     purrr,
@@ -24,13 +30,18 @@ Imports:
     rlang,
     RPushbullet,
     scales,
-    slider
+    slider,
+    UU
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1.9001
-URL: https://github.com/COHHIO/COHHIO_HMIS
-BugReports: https://github.com/COHHIO/COHHIO_HMIS/issues
+URL: https://github.com/COHHIO/Rm_data
+BugReports: https://github.com/COHHIO/Rm_data/issues
+Remotes:
+    COHHIO/clarity.looker,
+    COHHIO/lookr,
+    yogat3ch/UU
 Collate: 
     '00_dates.R'
     '00_cohorts.R'
