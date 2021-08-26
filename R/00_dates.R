@@ -1,8 +1,13 @@
-dates <- function(clarity_api = get0("clarity_api", envir = rlang::caller_env()),
-                  app_env = get0("app_env", envir = rlang::caller_env()),
-                  error = FALSE
+dates <- function(clarity_api,
+                  app_env,
+                  error = FALSE,
+                  e = rlang::caller_env()
 ) {
 
+  if (missing(clarity_api))
+    clarity_api <- UU::find_by_class("clarity_api", e)
+  if (missing(app_env))
+    app_env <- UU::find_by_class("app_env", e)
   hc_data_goes_back_to <- lubridate::mdy("01012019")
 
   hc_check_dq_back_to <- lubridate::mdy("10012019") # the default ReportStart for DQ reporting

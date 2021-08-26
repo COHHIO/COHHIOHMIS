@@ -3535,5 +3535,6 @@ DataQuality <- function(
   rm(list = ls(pattern = "guidance_"))
 
   # WARNING save.image does not save the environment properly, save must be used.
-
+app_env$gather_deps()
+app_env
 }

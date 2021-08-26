@@ -366,8 +366,7 @@ Project <- clarity_api$Project() |>
   # Contacts ----------------------------------------------------------------
   # only pulling in contacts made between an Entry Date and an Exit Date
 
-  #TODO https://github.com/COHHIO/COHHIO_HMIS/blob/597ebae7b304f63b879de2fd23035a71103e444f/05_Veterans_Active_List.R
-  # https://github.com/COHHIO/COHHIO_HMIS/blob/d7f2249d5a8333ddddb2181c8bf30553aa7e7038/04_DataQuality.R
+  #TODO # Comes from CurrentLiving Situation
   Contacts <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 4) %>%
     dplyr::mutate(
       ContactDate = lubridate::ymd(as.Date(ContactDate, origin = "1899-12-30")),
@@ -413,6 +412,11 @@ Project <- clarity_api$Project() |>
 
   # COVID-19 ----------------------------------------------------------------
 
+  # TODO Update col name:
+  # https://github.com/COHHIO/COHHIO_HMIS/blob/d7f2249d5a8333ddddb2181c8bf30553aa7e7038/04_DataQuality.R#L339
+  # https://github.com/COHHIO/COHHIO_HMIS/blob/cbb4d0734e4b60f0cca38dc35a0f5a3f07eafe93/09_covid.R#L98
+  # https://github.com/COHHIO/COHHIO_HMIS/blob/cbb4d0734e4b60f0cca38dc35a0f5a3f07eafe93/09_covid.R#L297
+  # https://github.com/COHHIO/COHHIO_HMIS/blob/cbb4d0734e4b60f0cca38dc35a0f5a3f07eafe93/02_QPR_EEs.R#L249
   covid19 <-
     readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 6) %>%
     dplyr::filter(!PersonalID %in% c(5, 4216)) %>%
@@ -438,14 +442,16 @@ Project <- clarity_api$Project() |>
         ContactWithUnderCOVID19Investigation
       )
     ) %>%
-    dplyr::mutate_at(dplyr::vars(dplyr::matches("Symptom")), replace_yes_no) %>%
-    dplyr::mutate_at(dplyr::vars(dplyr::matches("HealthRisk")), replace_yes_no)
+    dplyr::mutate_at(dplyr::vars(dplyr::matches("S\\d")), replace_yes_no) %>%
+    dplyr::mutate_at(dplyr::vars(dplyr::matches("HR")), replace_yes_no)
 
   doses <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 21) %>%
     dplyr::mutate(
       COVID19DoseDate = lubridate::ymd(as.Date(COVID19DoseDate,
                                                origin = "1899-12-30"))) %>%
     dplyr::filter(!PersonalID %in% c(5, 4216))
+
+
 
   # Services ----------------------------------------------------------------
 

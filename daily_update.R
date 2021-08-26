@@ -11,7 +11,7 @@ clarity_api <- clarity.looker::clarity_api$new("inst/auth/Looker.ini")
 jobs::jobscript({
   devtools::load_all("../clarity.looker")
   devtools::load_all("../../lookr")
-  #clarity_api$get_export(.write = TRUE) # only need to run once
+  clarity_api$get_export(.write = TRUE) # only need to run once
   clarity_api$get_folder_looks(clarity_api$folders$`HUD Extras`, .write = TRUE, path = dirs$extras)
 })
 # must load COHHIOHMIS
@@ -20,8 +20,8 @@ Rm_env <- app_env$new()
 
 
 Rm_env <- dates()
-
 Rm_env <- guidance()
+
 
 increment("Importing raw HMIS data\n")
 
