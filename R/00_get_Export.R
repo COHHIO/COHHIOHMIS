@@ -524,6 +524,4 @@ Project <- clarity_api$Project() |>
 
 
 
-# Save it out -------------------------------------------------------------
-# WARNING save.image does not save the environment properly, save must be used.
 

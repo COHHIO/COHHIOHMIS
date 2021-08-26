@@ -1,16 +1,18 @@
-# Must set GGMAP_GOOGLE_API_KEY in .Renviron, see ?ggmap::register_google for details
+# Must set GGMAP_GOOGLE_API_KEY in .Renviron (should not be needed until 2022), see ?ggmap::register_google for details.
 # Set this option to bypass errors in ggmap
-options(ggmap = list(google = list(second_limit = 50L,
-                                   day_limit = 2500)))
-devtools::load_all("../clarity.looker")
-devtools::load_all("../../lookr")
+# options(ggmap = list(google = list(second_limit = 50L,
+#                                    day_limit = 2500)))
+# These are necessary when rapidly modifying these dependencies
+# devtools::load_all("../clarity.looker")
+# devtools::load_all("../../lookr")
 #devtools::load_all("../hud.extract")
 # This is the default directory tree used by hud_export. It can be changed and amended and passed to hud_export in the `dirs` argument if necessary.
 clarity.looker::dirs
-clarity_api <- clarity.looker::clarity_api$new("inst/auth/Looker.ini")
+RPushbullet::pbSetup(file.path("inst","auth","rpushbullet.json"))
+clarity_api <- clarity.looker::clarity_api$new(file.path("inst","auth","Looker.ini"))
 jobs::jobscript({
   devtools::load_all("../clarity.looker")
-  devtools::load_all("../../lookr")
+  devtools::load_all("../lookr")
   clarity_api$get_export(.write = TRUE) # only need to run once
   clarity_api$get_folder_looks(clarity_api$folders$`HUD Extras`, .write = TRUE, path = dirs$extras)
 })

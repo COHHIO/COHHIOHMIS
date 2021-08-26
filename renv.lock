@@ -86,8 +86,8 @@
       "RemoteUsername": "yogat3ch",
       "RemoteRepo": "UU",
       "RemoteRef": "main",
-      "RemoteSha": "24a764b95a904b7dfb33ff2a80041ae66dcd2fd5",
-      "Hash": "f438abe94880aa457dbe8c673439b817"
+      "RemoteSha": "a3dc54f6529781a8f3540153985ce820f7a21fe4",
+      "Hash": "c5277b3eba5ebed3719d3742e3ed14af"
     },
     "askpass": {
       "Package": "askpass",
@@ -162,8 +162,15 @@
     "clarity.looker": {
       "Package": "clarity.looker",
       "Version": "0.0.0.9000",
-      "Source": "unknown",
-      "Hash": "2c28620b3a4dd4d90c8750f3de5bf636"
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "COHHIO",
+      "RemoteRepo": "clarity.looker",
+      "RemoteRef": "main",
+      "RemoteSha": "0da1bef8d7a58a6a20c29b3a59d8630bb72aae5c",
+      "Remotes": "yogat3ch/UU, COHHIO/lookr",
+      "Hash": "3193ce41e26b5285123dba6492471f69"
     },
     "cli": {
       "Package": "cli",
@@ -507,8 +514,14 @@
     "lookr": {
       "Package": "lookr",
       "Version": "1.0.1",
-      "Source": "unknown",
-      "Hash": "2a97af2d32869c3e7e78147d36d068fd"
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "COHHIO",
+      "RemoteRepo": "lookr",
+      "RemoteRef": "master",
+      "RemoteSha": "9b69bbd7006dc2dea5264ddbc31a130206cac2dd",
+      "Hash": "1bfb09ad86c6c72bdb48d00fd0f9614b"
     },
     "lubridate": {
       "Package": "lubridate",
