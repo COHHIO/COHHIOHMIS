@@ -168,9 +168,9 @@
       "RemoteUsername": "COHHIO",
       "RemoteRepo": "clarity.looker",
       "RemoteRef": "main",
-      "RemoteSha": "0da1bef8d7a58a6a20c29b3a59d8630bb72aae5c",
+      "RemoteSha": "646c1cf5491aa16024aad3544f0f69cde3b5e8bb",
       "Remotes": "yogat3ch/UU, COHHIO/lookr",
-      "Hash": "3193ce41e26b5285123dba6492471f69"
+      "Hash": "3e33527bdb4ebc7dec62e8bb2629b2eb"
     },
     "cli": {
       "Package": "cli",
@@ -700,10 +700,10 @@
     },
     "readr": {
       "Package": "readr",
-      "Version": "2.0.0",
+      "Version": "2.0.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "849038f0839134ab35e719a9820005a6"
+      "Hash": "34807ea4fb5900386ddef904eef8bdb8"
     },
     "readxl": {
       "Package": "readxl",
@@ -920,10 +920,10 @@
     },
     "vroom": {
       "Package": "vroom",
-      "Version": "1.5.3",
+      "Version": "1.5.4",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "aac6012f34348b3ca6bf373fe7172b06"
+      "Hash": "1a23013f39e67bb57cbda6f4ddde5470"
     },
     "waldo": {
       "Package": "waldo",

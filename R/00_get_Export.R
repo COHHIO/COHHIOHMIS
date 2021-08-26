@@ -306,7 +306,7 @@ Project <- clarity_api$Project() |>
 
   # Enrollment --------------------------------------------------------------
 
-  # from sheets 1 and 2, getting EE-related data, joining both to En --------
+  # from sheets 1 and 2, getting EE-related data, joining both to En
 
   Enrollment <- clarity_api$Enrollment()
   # Add Enrollment Extras
@@ -367,6 +367,8 @@ Project <- clarity_api$Project() |>
   # only pulling in contacts made between an Entry Date and an Exit Date
 
   #TODO # Comes from CurrentLiving Situation
+  CurrentLivingSituation <- clarity_api$CurrentLivingSituation()
+
   Contacts <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 4) %>%
     dplyr::mutate(
       ContactDate = lubridate::ymd(as.Date(ContactDate, origin = "1899-12-30")),

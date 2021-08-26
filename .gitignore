@@ -2,6 +2,7 @@
 .Rhistory
 .Rapp.history
 .Renviron
+.reprex
 # Session Data files
 .RData
 

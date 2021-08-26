@@ -79,9 +79,9 @@ dates <- function(clarity_api,
 
   #  Check recency of Extras ----
   # Mon Aug 09 17:09:43 2021
-  extras_last_update <- hud_last_updated(path = dirs$extras)
+  extras_last_update <- clarity.looker::hud_last_updated(path = dirs$extras)
 
-  extra_info <- list(missing = setdiff(names(.hud_extras), stringr::str_remove(names(extras_last_update), "\\.feather$")),
+  extra_info <- list(missing = setdiff(names(clarity.looker::folder_looks(clarity_api$folders$`HUD Extras`)), stringr::str_remove(names(extras_last_update), "\\.feather$")),
                      not_updated = purrr::keep(extras_last_update, ~!lubridate::`%within%`(.x, lubridate::interval(lubridate::floor_date(Sys.Date(), "day") - 1, Sys.time()))))
 
   meta_Rmisc_last_run_date <- mean(do.call(c, extras_last_update))
