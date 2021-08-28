@@ -3,13 +3,13 @@
 # options(ggmap = list(google = list(second_limit = 50L,
 #                                    day_limit = 2500)))
 # These are necessary when rapidly modifying these dependencies
-devtools::load_all("../clarity.looker")
+
 # devtools::load_all("../../lookr")
 #devtools::load_all("../hud.extract")
 # This is the default directory tree used by hud_export. It can be changed and amended and passed to hud_export in the `dirs` argument if necessary.
 dirs <- clarity.looker::dirs
 RPushbullet::pbSetup(file.path("inst","auth","rpushbullet.json"))
-clarity_api <- clarity.looker::clarity_api$new(file.path("inst","auth","Looker.ini"))
+
 jobs::jobscript({
   # devtools::load_all("../clarity.looker")
   # devtools::load_all("../lookr")

@@ -46,6 +46,7 @@ Remotes:
     COHHIO/lookr,
     yogat3ch/UU
 Collate: 
+    'init_api.R'
     '00_dates.R'
     '00_cohorts.R'
     'app_dependencies.R'
