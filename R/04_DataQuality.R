@@ -12,6 +12,48 @@
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
 
+dependencies$DataQuality <-
+  c(
+    "calc_data_goes_back_to",
+    "Client",
+    "Contacts",
+    "covid19",
+    "Disabilities",
+    "dose_counts",
+    "doses",
+    "Enrollment",
+    "Funder",
+    "guidance_conflicting_hi",
+    "guidance_conflicting_income",
+    "guidance_conflicting_ncbs",
+    "guidance_dkr_data",
+    "guidance_missing_at_entry",
+    "guidance_missing_at_exit",
+    "guidance_missing_pii",
+    "guidance_referral_on_non_hoh",
+    "guidance_service_on_non_hoh",
+    "hc_began_requiring_spdats",
+    "hc_bos_start_vaccine_data",
+    "hc_check_dq_back_to",
+    "hc_first_vaccine_administered_in_us",
+    "hc_no_more_svcs_on_hh_members",
+    "hc_outreach_to_cls",
+    "hc_prior_living_situation_required",
+    "hc_project_eval_end",
+    "hc_project_eval_start",
+    "hc_unsheltered_data_start",
+    "HealthAndDV",
+    "IncomeBenefits",
+    "Inventory",
+    "living_situation",
+    "mahoning_projects",
+    "meta_HUDCSV_Export_End",
+    "Project",
+    "Referrals",
+    "Scores",
+    "Services",
+    "Users"
+  )
 DataQuality <- function(
     clarity_api,
     app_env,
@@ -24,6 +66,7 @@ DataQuality <- function(
   app_env$merge_deps_to_env()
 
 
+
   va_funded <- Funder %>%
     dplyr::filter(Funder %in% c(27, 30, 33, 37:42, 45)) %>%
     dplyr::select(ProjectID)
@@ -34,7 +77,7 @@ DataQuality <- function(
     dplyr::left_join(Inventory, by = "ProjectID") %>%
     dplyr::filter(ProjectID %in% c(1695, 2372) | (
       HMISParticipatingProject == 1 &
-        HMIS::operating_between(., lubridate::ymd(calc_data_goes_back_to), lubridate::ymd(meta_HUDCSV_Export_End)) &
+        HMIS::operating_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End) &
         (GrantType != "HOPWA" | is.na(GrantType)))
     ) %>%
     dplyr::select(
@@ -54,7 +97,7 @@ DataQuality <- function(
   # Clients to Check --------------------------------------------------------
 
   served_in_date_range <- Enrollment %>%
-    dplyr::filter(HMIS::served_between(., lubridate::ymd(calc_data_goes_back_to), lubridate::ymd(meta_HUDCSV_Export_End))) %>%
+    dplyr::filter(HMIS::served_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End)) %>%
     dplyr::left_join(Client %>%
                        dplyr::select(-DateCreated), by = "PersonalID") %>%
     dplyr::select(
@@ -152,12 +195,13 @@ DataQuality <- function(
         Issue == "Incomplete or Don't Know/Refused Name" ~ "Warning"
       ),
       Guidance = dplyr::if_else(Type == "Warning",
-                                guidance_dkr_data,
-                                guidance_missing_pii)
+                                guidance$dkr_data,
+                                guidance$missing_pii)
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
+  # TODO Check to ensure missing DOB are not present in imported.
   dq_dob <- served_in_date_range %>%
     dplyr::mutate(
       Issue = dplyr::case_when(
@@ -181,9 +225,9 @@ DataQuality <- function(
       being born. Correct either the Date of Birth or the Entry Date, whichever
       is incorrect.",
       Issue %in% c("Missing DOB", "Missing Date of Birth Data Quality") ~
-        guidance_missing_at_entry,
+        guidance$missing_at_entry,
       Issue == "Don't Know/Refused or Approx. Date of Birth" ~
-        guidance_dkr_data
+        guidance$dkr_data
       )
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
@@ -202,8 +246,8 @@ DataQuality <- function(
         Issue == "Don't Know/Refused SSN" ~ "Warning"
       ),
       Guidance = dplyr::case_when(
-        Issue == "Don't Know/Refused SSN" ~ guidance_dkr_data,
-        Issue == "Missing SSN" ~ guidance_missing_pii,
+        Issue == "Don't Know/Refused SSN" ~ guidance$dkr_data,
+        Issue == "Missing SSN" ~ guidance$missing_pii,
         Issue == "Invalid SSN" ~ "The Social Security Number does not conform with
       standards set by the Social Security Administration. This includes rules
       like every SSN is exactly 9 digits and cannot have certain number patterns.
@@ -225,8 +269,8 @@ DataQuality <- function(
         Issue == "Don't Know/Refused Race" ~ "Warning"
       ),
       Guidance = dplyr::if_else(Type == "Warning",
-                                guidance_dkr_data,
-                                guidance_missing_at_entry)
+                                guidance$dkr_data,
+                                guidance$missing_at_entry)
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
@@ -242,8 +286,8 @@ DataQuality <- function(
         Issue == "Don't Know/Refused Ethnicity" ~ "Warning"
       ),
       Guidance = dplyr::if_else(Type == "Warning",
-                                guidance_dkr_data,
-                                guidance_missing_at_entry)
+                                guidance$dkr_data,
+                                guidance$missing_at_entry)
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
@@ -259,8 +303,8 @@ DataQuality <- function(
         Issue == "Don't Know/Refused Gender" ~ "Warning"
       ),
       Guidance = dplyr::if_else(Type == "Warning",
-                                guidance_dkr_data,
-                                guidance_missing_at_entry)
+                                guidance$dkr_data,
+                                guidance$missing_at_entry)
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
@@ -289,8 +333,8 @@ DataQuality <- function(
       household exited to a destination that only veterans are eligible for, but
       the head of household appears to be not a veteran. Either the Veteran
       Status is incorrect or the Destination is incorrect.",
-      Issue == "Missing Veteran Status" ~ guidance_missing_pii,
-      Issue == "Don't Know/Refused Veteran Status" ~ guidance_dkr_data)
+      Issue == "Missing Veteran Status" ~ guidance$missing_pii,
+      Issue == "Don't Know/Refused Veteran Status" ~ guidance$dkr_data)
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
@@ -311,7 +355,7 @@ DataQuality <- function(
         ProjectID != 1695 &
         (
           is.na(ExitDate) |
-            lubridate::ymd(ExitDate) >= lubridate::ymd(hc_bos_start_vaccine_data)
+            ExitDate >= hc_bos_start_vaccine_data
         ) &
         (
           ConsentToVaccine == "Data not collected (HUD)" |
@@ -323,7 +367,7 @@ DataQuality <- function(
              ProjectType %in% c(3, 9, 13) &
                is.na(MoveInDateAdjust)
            ))
-    ) %>%
+    ) |>
     dplyr::mutate(Type = "Warning",
                   Issue = "Vaccine data not collected and client has exited",
                   Guidance = "Client was literally homeless on Feb 5th, 2021 or later and
@@ -344,7 +388,7 @@ DataQuality <- function(
         ProjectID != 1695 &
         (
           is.na(ExitDate) |
-            lubridate::ymd(ExitDate) >= lubridate::ymd(hc_bos_start_vaccine_data)
+            ExitDate >= hc_bos_start_vaccine_data
         ) &
         (
           ConsentToVaccine == "Data not collected (HUD)" |
@@ -371,7 +415,7 @@ DataQuality <- function(
   # Dose Warnings -----------------------------------------------------------
 
   dose_date_error <- doses %>%
-    dplyr::filter(COVID19DoseDate < lubridate::ymd(hc_first_vaccine_administered_in_us)) %>%
+    dplyr::filter(COVID19DoseDate < hc_first_vaccine_administered_in_us) %>%
     dplyr::left_join(served_in_date_range %>%
                        dplyr::filter(HMIS::served_between(., hc_bos_start_vaccine_data, lubridate::today())),
                      by = "PersonalID") %>%
@@ -390,7 +434,7 @@ DataQuality <- function(
     dplyr::mutate(LastDose = dplyr::lag(COVID19DoseDate, order_by = COVID19DoseDate)) %>%
     dplyr::filter(!is.na(LastDose)) %>%
     dplyr::mutate(DaysBetweenDoses = difftime(COVID19DoseDate, LastDose, units = "days")) %>%
-    dplyr::filter(COVID19DoseDate < lubridate::ymd(hc_first_vaccine_administered_in_us) |
+    dplyr::filter(COVID19DoseDate < hc_first_vaccine_administered_in_us |
                     DaysBetweenDoses < 20 |
                     (COVID19VaccineManufacturer == "Moderna") &
                     DaysBetweenDoses < 27) %>%
@@ -555,14 +599,14 @@ DataQuality <- function(
       PreviousStreetESSH
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    lubridate::ymd(EntryDate) >= lubridate::ymd(hc_prior_living_situation_required) &
+                    EntryDate >= hc_prior_living_situation_required &
                     is.na(DateToStreetESSH) &
                     LOSUnderThreshold == 1 &
                     PreviousStreetESSH == 1
     ) %>%
     dplyr::mutate(Issue = "Missing Approximate Date Homeless",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   missing_previous_street_ESSH <- served_in_date_range %>%
@@ -575,13 +619,13 @@ DataQuality <- function(
       LOSUnderThreshold
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    lubridate::ymd(EntryDate) >= lubridate::ymd(hc_prior_living_situation_required) &
+                    EntryDate >= hc_prior_living_situation_required &
                     is.na(PreviousStreetESSH) &
                     LOSUnderThreshold == 1
     ) %>%
     dplyr::mutate(Issue = "Missing Previously From Street, ES, or SH (Length of Time Homeless questions)",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   missing_residence_prior <- served_in_date_range %>%
@@ -593,7 +637,7 @@ DataQuality <- function(
                     (is.na(LivingSituation) | LivingSituation == 99)) %>%
     dplyr::mutate(Issue = "Missing Residence Prior",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   dkr_residence_prior <- served_in_date_range %>%
@@ -605,7 +649,7 @@ DataQuality <- function(
                     LivingSituation %in% c(8, 9)) %>%
     dplyr::mutate(Issue = "Don't Know/Refused Residence Prior",
                   Type = "Warning",
-                  Guidance = guidance_dkr_data) %>%
+                  Guidance = guidance$dkr_data) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   missing_LoS <- served_in_date_range %>%
@@ -632,7 +676,7 @@ DataQuality <- function(
                     LengthOfStay %in% c(8, 9)) %>%
     dplyr::mutate(Issue = "Don't Know/Refused Residence Prior",
                   Type = "Warning",
-                  Guidance = guidance_dkr_data) %>%
+                  Guidance = guidance$dkr_data) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   missing_months_times_homeless <- served_in_date_range %>%
@@ -644,7 +688,7 @@ DataQuality <- function(
       TimesHomelessPastThreeYears
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    lubridate::ymd(EntryDate) >= lubridate::ymd(hc_prior_living_situation_required) &
+                    EntryDate >= hc_prior_living_situation_required &
                     ProjectType %in% c(1, 4, 8) &
                     (
                       is.na(MonthsHomelessPastThreeYears) |
@@ -655,7 +699,7 @@ DataQuality <- function(
     ) %>%
     dplyr::mutate(Issue = "Missing Months or Times Homeless",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   dkr_months_times_homeless <- served_in_date_range %>%
@@ -667,7 +711,7 @@ DataQuality <- function(
       TimesHomelessPastThreeYears
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    lubridate::ymd(EntryDate) >= lubridate::ymd(hc_prior_living_situation_required) &
+                    EntryDate >= hc_prior_living_situation_required &
                     (
                       MonthsHomelessPastThreeYears %in% c(8, 9) |
                         TimesHomelessPastThreeYears %in% c(8, 9)
@@ -675,7 +719,7 @@ DataQuality <- function(
     ) %>%
     dplyr::mutate(Issue = "Don't Know/Refused Months or Times Homeless",
                   Type = "Warning",
-                  Guidance = guidance_dkr_data) %>%
+                  Guidance = guidance$dkr_data) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   invalid_months_times_homeless <- served_in_date_range %>%
@@ -690,7 +734,7 @@ DataQuality <- function(
     dplyr::filter(
       ProjectType != 12 &
         (RelationshipToHoH == 1 | AgeAtEntry > 17) &
-        lubridate::ymd(EntryDate) >= lubridate::ymd(hc_prior_living_situation_required) &
+        EntryDate >= hc_prior_living_situation_required &
         TimesHomelessPastThreeYears == 1 &
         !is.na(DateToStreetESSH)
     ) %>%
@@ -745,7 +789,7 @@ DataQuality <- function(
       TimesHomelessPastThreeYears
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    lubridate::ymd(EntryDate) >= lubridate::ymd(hc_prior_living_situation_required) &
+                    EntryDate >= hc_prior_living_situation_required &
                     # not req'd prior to this
                     ProjectType %in% c(2, 3, 6, 9, 10, 12, 13) &
                     (
@@ -798,7 +842,7 @@ DataQuality <- function(
       UserCreating
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    lubridate::ymd(EntryDate) > lubridate::ymd(hc_prior_living_situation_required) &
+                    EntryDate > hc_prior_living_situation_required &
                     (
                       MonthsHomelessPastThreeYears %in% c(8, 9) |
                         TimesHomelessPastThreeYears %in% c(8, 9) |
@@ -807,7 +851,7 @@ DataQuality <- function(
     ) %>%
     dplyr::mutate(Issue = "Don't Know/Refused Living Situation",
                   Type = "Warning",
-                  Guidance = guidance_dkr_data) %>%
+                  Guidance = guidance$dkr_data) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   # DisablingCondition at Entry
@@ -821,7 +865,7 @@ DataQuality <- function(
                     is.na(DisablingCondition)) %>%
     dplyr::mutate(Issue = "Missing Disabling Condition",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry)
+                  Guidance = guidance$missing_at_entry)
 
   missing_disabilities <- detail_missing_disabilities %>%
     dplyr::select(dplyr::all_of(vars_we_want))
@@ -895,14 +939,14 @@ DataQuality <- function(
 
   th_stayers_bos <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
-    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), lubridate::ymd(EntryDate)))) %>%
+    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate))) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 2 &
                     !ProjectID %in% c(mahoning_projects))
 
   th_stayers_mah <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
-    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), lubridate::ymd(EntryDate)))) %>%
+    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate))) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 2 &
                     ProjectID %in% c(mahoning_projects))
@@ -915,14 +959,14 @@ DataQuality <- function(
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 13 &
                     !ProjectID %in% c(mahoning_projects)) %>%
-    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), lubridate::ymd(EntryDate))))
+    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate)))
 
   rrh_stayers_mah <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 13 &
                     ProjectID %in% c(mahoning_projects)) %>%
-    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), lubridate::ymd(EntryDate))))
+    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate)))
 
   Top2_RRH_bos <- subset(rrh_stayers_bos, Days > stats::quantile(Days, prob = 1 - 2 / 100))
   Top2_RRH_mah <- subset(rrh_stayers_mah, Days > stats::quantile(Days, prob = 1 - 2 / 100))
@@ -932,14 +976,14 @@ DataQuality <- function(
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 1 &
                     !ProjectID %in% c(mahoning_projects)) %>%
-    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), lubridate::ymd(EntryDate))))
+    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate)))
 
   es_stayers_mah <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 1 &
                     ProjectID %in% c(mahoning_projects)) %>%
-    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), lubridate::ymd(EntryDate))))
+    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate)))
 
   Top2_ES_bos <- subset(es_stayers_bos, Days > stats::quantile(Days, prob = 1 - 2 / 100))
   Top2_ES_mah <- subset(es_stayers_mah, Days > stats::quantile(Days, prob = 1 - 2 / 100))
@@ -949,14 +993,14 @@ DataQuality <- function(
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 3 &
                     !ProjectID %in% c(mahoning_projects)) %>%
-    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), lubridate::ymd(EntryDate))))
+    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate)))
 
   psh_stayers_mah <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 3 &
                     ProjectID %in% c(mahoning_projects)) %>%
-    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), lubridate::ymd(EntryDate))))
+    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate)))
 
   Top1_PSH_bos <- subset(psh_stayers_bos, Days > stats::quantile(Days, prob = 1 - 1 / 100))
   Top1_PSH_mah <- subset(psh_stayers_mah, Days > stats::quantile(Days, prob = 1 - 1 / 100))
@@ -966,14 +1010,14 @@ DataQuality <- function(
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 12 &
                     !ProjectID %in% c(mahoning_projects)) %>%
-    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), lubridate::ymd(EntryDate))))
+    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate)))
 
   hp_stayers_mah <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 12 &
                     ProjectID %in% c(mahoning_projects)) %>%
-    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), lubridate::ymd(EntryDate))))
+    dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate)))
 
   Top5_HP_bos <- subset(hp_stayers_bos, Days > stats::quantile(Days, prob = 1 - 5 / 100))
   Top10_HP_mah <- subset(hp_stayers_mah, Days > stats::quantile(Days, prob = 90 / 100))
@@ -1271,7 +1315,7 @@ DataQuality <- function(
                        is.na(AgeAtEntry))) %>%
     dplyr::mutate(Issue = "Missing County of Prior Residence",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   # Check Eligibility, Project Type, Residence Prior ------------------------
@@ -1291,7 +1335,7 @@ DataQuality <- function(
     dplyr::filter(
       RelationshipToHoH == 1 &
         AgeAtEntry > 17 &
-        lubridate::ymd(EntryDate) > lubridate::ymd(hc_check_eligibility_back_to) &
+        EntryDate > hc_check_eligibility_back_to &
         (ProjectType %in% c(3, 4, 8, 9, 10, 12, 13) |
            (ProjectType == 2 & (is.na(GrantType) | GrantType != "RHY"))) &
         (
@@ -1431,7 +1475,7 @@ DataQuality <- function(
     dplyr::filter(Destination %in% c(8, 9)) %>%
     dplyr::mutate(Issue = "Don't Know/Refused Destination",
                   Type = "Warning",
-                  Guidance = guidance_dkr_data) %>%
+                  Guidance = guidance$dkr_data) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   # Missing PATH Data -------------------------------------------------------
@@ -1461,7 +1505,7 @@ DataQuality <- function(
                     (is.na(LengthOfStay) | LengthOfStay == 99)) %>%
     dplyr::mutate(Issue = "Missing Residence Prior Length of Stay (PATH)",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
 
@@ -1489,7 +1533,7 @@ DataQuality <- function(
                     )) %>%
     dplyr::mutate(Issue = "PATH Status at Exit Missing or Incomplete",
                   Type = "Error",
-                  Guidance = guidance_missing_at_exit) %>%
+                  Guidance = guidance$missing_at_exit) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   #* Status Determination at Exit
@@ -1590,7 +1634,7 @@ DataQuality <- function(
                     is.na(ConnectionWithSOAR)) %>%
     dplyr::mutate(Issue = "Missing Connection with SOAR at Exit",
                   Type = "Error",
-                  Guidance = guidance_missing_at_exit) %>%
+                  Guidance = guidance$missing_at_exit) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   rm(smallIncomeSOAR)
@@ -1604,11 +1648,11 @@ DataQuality <- function(
   small_contacts <- Contacts %>%
     dplyr::left_join(served_in_date_range, by = "PersonalID") %>%
     dplyr::filter(
-      lubridate::ymd(ContactDate) >= lubridate::ymd(EntryDate) &
-        lubridate::ymd(ContactDate) <= lubridate::ymd(ExitAdjust) &
+      ContactDate >= EntryDate &
+        ContactDate <= ExitAdjust &
         ((
           RecordType == "Outreach" &
-            lubridate::ymd(ContactDate) < lubridate::ymd(hc_outreach_to_cls)
+            ContactDate < hc_outreach_to_cls
         ) |
           RecordType == "CLS")
     ) %>%
@@ -1644,13 +1688,13 @@ DataQuality <- function(
 
   first_contact <- Contacts %>%
     dplyr::filter((RecordType == "Outreach" &
-                     lubridate::ymd(ContactDate) < lubridate::ymd(hc_outreach_to_cls)) |
+                     ContactDate < hc_outreach_to_cls) |
                     RecordType == "CLS") %>%
     dplyr::left_join(served_in_date_range, by = "PersonalID") %>%
     dplyr::select(PersonalID, EntryDate, ExitAdjust, ExitDate, ContactDate, ProjectName,
                   EntryDate, ExitAdjust) %>%
-    dplyr::filter(lubridate::ymd(ContactDate) >= lubridate::ymd(EntryDate) &
-                    lubridate::ymd(ContactDate) <= lubridate::ymd(ExitAdjust)) %>%
+    dplyr::filter(ContactDate >= EntryDate &
+                    ContactDate <= ExitAdjust) %>%
     dplyr::group_by(PersonalID, ProjectName, EntryDate, ExitDate) %>%
     dplyr::arrange(ContactDate) %>%
     dplyr::slice(1L)
@@ -1700,11 +1744,11 @@ DataQuality <- function(
   # day they moved in. So they're excused from this prior to Move In Date's existence.
 
   future_ees <- served_in_date_range %>%
-    dplyr::filter(lubridate::ymd(EntryDate) > lubridate::ymd_hms(DateCreated) &
+    dplyr::filter(EntryDate > lubridate::ymd_hms(DateCreated) &
                     (ProjectType %in% c(1, 2, 4, 8, 13) |
                        (
                          ProjectType %in% c(3, 9) &
-                           lubridate::ymd(EntryDate) >= lubridate::ymd(hc_psh_started_collecting_move_in_date)
+                           EntryDate >= hc_psh_started_collecting_move_in_date
                        )))  %>%
     dplyr::mutate(
       Issue = "Future Entry Date",
@@ -1717,7 +1761,7 @@ DataQuality <- function(
     dplyr::select(dplyr::all_of(vars_we_want))
 
   future_exits <- served_in_date_range %>%
-    dplyr::filter(lubridate::ymd(ExitDate) > lubridate::today()) %>%
+    dplyr::filter(ExitDate > lubridate::today()) %>%
     dplyr::mutate(
       Issue = "Future Exit Date",
       Type = "Error",
@@ -1785,11 +1829,11 @@ DataQuality <- function(
                   ExitAdjust,
                   ScoreDate,
                   Score) %>%
-    dplyr::filter(lubridate::ymd(ScoreDate) + lubridate::days(365) > lubridate::ymd(EntryDate) &
+    dplyr::filter(ScoreDate + lubridate::days(365) > EntryDate &
                     # score is < 1 yr old
-                    lubridate::ymd(ScoreDate) < lubridate::ymd(ExitAdjust)) %>%  # score is prior to Exit
+                    ScoreDate < ExitAdjust) %>%  # score is prior to Exit
     dplyr::group_by(EnrollmentID) %>%
-    dplyr::slice_max(lubridate::ymd(ScoreDate)) %>%
+    dplyr::slice_max(ScoreDate) %>%
     dplyr::slice_max(Score) %>%
     dplyr::distinct() %>%
     dplyr::ungroup() %>%
@@ -1799,7 +1843,7 @@ DataQuality <- function(
     dplyr::anti_join(served_in_date_range, ees_with_spdats, by = "EnrollmentID") %>%
     dplyr::filter(
       ProjectType %in% c(2, 3, 9, 13) &
-        lubridate::ymd(EntryDate) > lubridate::ymd(hc_began_requiring_spdats) &
+        EntryDate > hc_began_requiring_spdats &
         # only looking at 1/1/2019 forward
         RelationshipToHoH == 1 &
         (CurrentlyFleeing != 1 |
@@ -1819,15 +1863,15 @@ DataQuality <- function(
 
   lh_without_spdat <- served_in_date_range %>%
     dplyr::filter(is.na(PHTrack) | PHTrack != "Self Resolve" |
-                    lubridate::ymd(ExpectedPHDate) < lubridate::today()) %>%
+                    ExpectedPHDate < lubridate::today()) %>%
     dplyr::anti_join(ees_with_spdats, by = "EnrollmentID") %>%
     dplyr::filter(
       ProjectType %in% c(1, 4, 8) &
         VeteranStatus != 1 &
         RelationshipToHoH == 1 &
-        lubridate::ymd(EntryDate) < lubridate::today() - lubridate::days(8) &
+        EntryDate < lubridate::today() - lubridate::days(8) &
         is.na(ExitDate) &
-        lubridate::ymd(EntryDate) > lubridate::ymd(hc_began_requiring_spdats)
+        EntryDate > hc_began_requiring_spdats
     ) %>%
     dplyr::mutate(
       Issue = "HoHs in shelter for 8+ days without SPDAT",
@@ -1885,7 +1929,7 @@ DataQuality <- function(
                        is.na(IncomeFromAnySource))) %>%
     dplyr::mutate(Issue = "Income Missing at Entry",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   smallIncome <- IncomeBenefits %>%
@@ -1958,7 +2002,7 @@ DataQuality <- function(
                     )) %>%
     dplyr::mutate(Issue = "Conflicting Income yes/no at Entry",
                   Type = "Error",
-                  Guidance = guidance_conflicting_income) %>%
+                  Guidance = guidance$conflicting_income) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   # Not calculating Conflicting Income Amounts bc they're calculating the TMI from the
@@ -1985,7 +2029,7 @@ DataQuality <- function(
                        is.na(IncomeFromAnySource))) %>%
     dplyr::mutate(Issue = "Income Missing at Exit",
                   Type = "Error",
-                  Guidance = guidance_missing_at_exit) %>%
+                  Guidance = guidance$missing_at_exit) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   conflicting_income_exit <- income_subs %>%
@@ -1998,7 +2042,7 @@ DataQuality <- function(
                     )) %>%
     dplyr::mutate(Issue = "Conflicting Income yes/no at Exit",
                   Type = "Error",
-                  Guidance = guidance_conflicting_income) %>%
+                  Guidance = guidance$conflicting_income) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   rm(income_subs)
@@ -2230,7 +2274,7 @@ DataQuality <- function(
                        is.na(InsuranceFromAnySource))) %>%
     dplyr::mutate(Issue = "Health Insurance Missing at Entry",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   missing_health_insurance_exit <- served_in_date_range %>%
@@ -2244,7 +2288,7 @@ DataQuality <- function(
                        is.na(InsuranceFromAnySource))) %>%
     dplyr::mutate(Issue = "Health Insurance Missing at Exit",
                   Type = "Error",
-                  Guidance = guidance_missing_at_exit) %>%
+                  Guidance = guidance$missing_at_exit) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   health_insurance_subs <- served_in_date_range %>%
@@ -2283,7 +2327,7 @@ DataQuality <- function(
                     )) %>%
     dplyr::mutate(Issue = "Conflicting Health Insurance yes/no at Entry",
                   Type = "Error",
-                  Guidance = guidance_conflicting_hi) %>%
+                  Guidance = guidance$conflicting_hi) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   conflicting_health_insurance_exit <- health_insurance_subs %>%
@@ -2297,7 +2341,7 @@ DataQuality <- function(
     dplyr::mutate(
       Issue = "Conflicting Health Insurance yes/no at Exit",
       Type = "Error",
-      Guidance = guidance_conflicting_hi
+      Guidance = guidance$conflicting_hi
     ) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
@@ -2378,7 +2422,7 @@ DataQuality <- function(
     ) %>%
     dplyr::mutate(Issue = "Non-cash Benefits Missing at Entry",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   conflicting_ncbs_entry <- served_in_date_range %>%
@@ -2397,7 +2441,7 @@ DataQuality <- function(
                     )) %>%
     dplyr::mutate(Issue = "Conflicting Non-cash Benefits yes/no at Entry",
                   Type = "Error",
-                  Guidance = guidance_conflicting_ncbs) %>%
+                  Guidance = guidance$conflicting_ncbs) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
 
@@ -2438,7 +2482,7 @@ DataQuality <- function(
     ) %>%
     dplyr::mutate(Issue = "Non-cash Benefits Missing at Exit",
                   Type = "Error",
-                  Guidance = guidance_missing_at_exit) %>%
+                  Guidance = guidance$missing_at_exit) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   conflicting_ncbs_exit <- served_in_date_range %>%
@@ -2459,7 +2503,7 @@ DataQuality <- function(
                     )) %>%
     dplyr::mutate(Issue = "Conflicting Non-cash Benefits yes/no at Exit",
                   Type = "Error",
-                  Guidance = guidance_conflicting_ncbs) %>%
+                  Guidance = guidance$conflicting_ncbs) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   rm(ncb_subs)
@@ -2502,13 +2546,13 @@ DataQuality <- function(
                   GrantType) %>%
     dplyr::filter(
       RelationshipToHoH != 1 &
-        lubridate::ymd(EntryDate) >= lubridate::ymd(hc_no_more_svcs_on_hh_members) &
+        EntryDate >= hc_no_more_svcs_on_hh_members &
         (GrantType != "SSVF" | is.na(GrantType))
     ) %>%
     dplyr::semi_join(Services, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::mutate(Issue = "Service Transaction on a Non Head of Household",
                   Type = "Warning",
-                  Guidance = guidance_service_on_non_hoh) %>%
+                  Guidance = guidance$service_on_non_hoh) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   services_on_hh_members_ssvf <- served_in_date_range %>%
@@ -2521,9 +2565,10 @@ DataQuality <- function(
     dplyr::semi_join(Services, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::mutate(Issue = "Service Transaction on a Non Head of Household (SSVF)",
                   Type = "Error",
-                  Guidance = guidance_service_on_non_hoh) %>%
+                  Guidance = guidance$service_on_non_hoh) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
+  # TODO Deprecate
   referrals_on_hh_members <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars_prep),
                   RelationshipToHoH,
@@ -2535,7 +2580,7 @@ DataQuality <- function(
                      by = c("PersonalID", "ProjectName" = "ProviderCreating")) %>%
     dplyr::mutate(Issue = "Referral on a Non Head of Household",
                   Type = "Warning",
-                  Guidance = guidance_referral_on_non_hoh) %>%
+                  Guidance = guidance$referral_on_non_hoh) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   referrals_on_hh_members_ssvf <- served_in_date_range %>%
@@ -2548,7 +2593,7 @@ DataQuality <- function(
     dplyr::semi_join(Referrals, by = c("PersonalID")) %>%
     dplyr::mutate(Issue = "Referral on a Non Head of Household (SSVF)",
                   Type = "Error",
-                  Guidance = guidance_referral_on_non_hoh) %>%
+                  Guidance = guidance$referral_on_non_hoh) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   # Stray Services (fall outside EE) ----------------------------------------
@@ -2754,7 +2799,7 @@ DataQuality <- function(
 
   long_unsheltered <- unsheltered_enrollments %>%
     dplyr::filter(is.na(ExitDate) &
-                    lubridate::ymd(EntryDate) < lubridate::today() - lubridate::days(30))
+                    EntryDate < lubridate::today() - lubridate::days(30))
 
   unsheltered_referred <- Referrals %>%
     dplyr::filter(ProviderCreating == "Unsheltered Clients - OUTREACH")
@@ -2836,7 +2881,7 @@ DataQuality <- function(
         is.na(YearEnteredService) ~ "Missing Year Entered Service",
         YearEnteredService > lubridate::year(lubridate::today()) ~ "Incorrect Year Entered Service"),
       Type = "Error",
-      Guidance = guidance_missing_at_entry
+      Guidance = guidance$missing_at_entry
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
@@ -2848,7 +2893,7 @@ DataQuality <- function(
         is.na(YearSeparated) ~ "Missing Year Separated",
         YearSeparated > lubridate::year(lubridate::today()) ~ "Incorrect Year Separated"),
       Type = "Error",
-      Guidance = guidance_missing_at_entry
+      Guidance = guidance$missing_at_entry
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
@@ -2870,7 +2915,7 @@ DataQuality <- function(
     ) %>%
     dplyr::mutate(Issue = "Missing War(s)",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::filter(!is.na(Issue)) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
@@ -2879,7 +2924,7 @@ DataQuality <- function(
                     is.na(MilitaryBranch)) %>%
     dplyr::mutate(Issue = "Missing Military Branch",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::filter(!is.na(Issue)) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
@@ -2887,7 +2932,7 @@ DataQuality <- function(
     dplyr::filter(VeteranStatus == 1 & is.na(DischargeStatus)) %>%
     dplyr::mutate(Issue = "Missing Discharge Status",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::filter(!is.na(Issue)) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
@@ -2907,7 +2952,7 @@ DataQuality <- function(
         DischargeStatus %in% c(8, 9) ~ "Missing Discharge Status"
       ),
       Type = "Warning",
-      Guidance = guidance_dkr_data
+      Guidance = guidance$dkr_data
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
@@ -2917,7 +2962,7 @@ DataQuality <- function(
                     is.na(PercentAMI)) %>%
     dplyr::mutate(Issue = "Missing Percent AMI",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   ssvf_missing_vamc <- ssvf_served_in_date_range %>%
@@ -2925,7 +2970,7 @@ DataQuality <- function(
                     is.na(VAMCStation)) %>%
     dplyr::mutate(Issue = "Missing VAMC Station Number",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   ssvf_missing_address <- ssvf_served_in_date_range %>%
@@ -2938,7 +2983,7 @@ DataQuality <- function(
                     )) %>%
     dplyr::mutate(Issue = "Missing Some or All of Last Permanent Address",
                   Type = "Error",
-                  Guidance = guidance_missing_at_entry) %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
   # TEMPORARILY NOT REQUIRED FOR COVID-19 REASONS
@@ -2949,7 +2994,7 @@ DataQuality <- function(
   #               is.na(ThresholdScore))) %>%
   #   mutate(Issue = "Missing HP Screening or Threshold Score",
   #          Type = "Error",
-  #          Guidance = guidance_missing_at_entry) %>%
+  #          Guidance = guidance$missing_at_entry) %>%
   #   select(all_of(vars_we_want))
 
 
@@ -3173,14 +3218,14 @@ DataQuality <- function(
   # for CoC-wide DQ tab
 
   dq_past_year <- dq_main %>%
-    dplyr::filter(HMIS::served_between(., format.Date(hc_check_dq_back_to, "%m-%d-%Y"),
-                                       format.Date(lubridate::today(), "%m-%d-%Y"))) %>%
+    dplyr::filter(HMIS::served_between(., hc_check_dq_back_to,
+                                       lubridate::today())) %>%
     dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
 
   # for project evaluation reporting
 
   dq_for_pe <- dq_main %>%
-    dplyr::filter(HMIS::served_between(., lubridate::ymd(hc_project_eval_start), lubridate::ymd(hc_project_eval_end))) %>%
+    dplyr::filter(HMIS::served_between(., hc_project_eval_start, hc_project_eval_end)) %>%
     dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
 
   projects_current_hmis <- projects_current_hmis %>%
@@ -3296,7 +3341,7 @@ DataQuality <- function(
 
   dq_data_unsheltered_high <- dq_unsheltered %>%
     dplyr::filter(Type == "High Priority",
-                  HMIS::served_between(., lubridate::ymd(hc_unsheltered_data_start), lubridate::ymd(meta_HUDCSV_Export_End))) %>%
+                  HMIS::served_between(., hc_unsheltered_data_start, meta_HUDCSV_Export_End)) %>%
     dplyr::select(PersonalID, HouseholdID, DefaultProvider) %>%
     unique() %>%
     dplyr::group_by(DefaultProvider) %>%
@@ -3532,7 +3577,7 @@ DataQuality <- function(
     veteran_missing_discharge_status
   )
   rm(list = ls(pattern = "dq_data_"))
-  rm(list = ls(pattern = "guidance_"))
+  rm(list = ls(pattern = "guidance$"))
 
   # WARNING save.image does not save the environment properly, save must be used.
 app_env$gather_deps()

@@ -46,10 +46,11 @@ Remotes:
     COHHIO/lookr,
     yogat3ch/UU
 Collate: 
+    'aaa_imports.R'
     'init_api.R'
+    'app_dependencies.R'
     '00_dates.R'
     '00_cohorts.R'
-    'app_dependencies.R'
     '00_functions.R'
     '00_get_Export.R'
     '01_Bed_Unit_Utilization.R'
@@ -63,4 +64,3 @@ Collate:
     '07_SPMs.R'
     '08_Active_List.R'
     '09_covid.R'
-    'aaa_imports.R'

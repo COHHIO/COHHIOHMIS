@@ -150,6 +150,8 @@ Enrollment_helpers <- list(
     app_env$merge_deps_to_env("hc_psh_started_collecting_move_in_date")
     small_project <- Project %>%
       dplyr::select(ProjectID, ProjectType, ProjectName)
+    # TODO Check to see if Enrollment data has the MoveInDate
+    # TODO Does Move-in Date in Clarity auto-populate from previous enrollments?
     HHMoveIn <- Enrollment %>%
       dplyr::left_join(
         # Adding ProjectType to Enrollment too bc we need EntryAdjust & MoveInAdjust
@@ -197,6 +199,7 @@ Enrollment_helpers <- list(
       dplyr::left_join(small_project, by = "ProjectID") %>%
       dplyr::left_join(HHEntry, by = "HouseholdID") %>%
       dplyr::mutate(
+        # Puts EntryDate as MoveInDate for projects that don't use a MoveInDate
         MoveInDateAdjust = dplyr::if_else(
           !is.na(HHMoveIn) & HHMoveIn <= ExitAdjust,
           dplyr::if_else(EntryDate <= HHMoveIn,
@@ -369,7 +372,7 @@ Project <- clarity_api$Project() |>
   #TODO # Comes from CurrentLiving Situation
   CurrentLivingSituation <- clarity_api$CurrentLivingSituation()
 
-  Contacts <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 4) %>%
+  Contacts <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 4)  |>
     dplyr::mutate(
       ContactDate = lubridate::ymd(as.Date(ContactDate, origin = "1899-12-30")),
       ContactProvider = stringr::str_remove(ContactProvider, "\\(.*\\)")
@@ -385,31 +388,6 @@ Project <- clarity_api$Project() |>
     readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 7) %>%
     dplyr::mutate(AcceptDeclineDate = lubridate::ymd(as.Date(AcceptDeclineDate, origin = "1899-12-30")),
                   OfferDate = lubridate::ymd(as.Date(OfferDate, origin = "1899-12-30")))
-
-  # Users ------------------------------------------------------------------
-  Users <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"),
-                             sheet = 2,#
-                             range = readxl::cell_cols("A:H")) %>%
-    dplyr::mutate(DefaultProvider = stringr::str_remove(DefaultProvider, "\\(.*\\)"),
-                  UserCreatedDate = lubridate::ymd(as.Date(UserCreatedDate, origin = "1899-12-30"))) %>%
-    dplyr::left_join(provider_extras, by = c("DefaultProvider" = "ProjectName")) %>%
-    dplyr::select(
-      UserCreating,
-      UserID,
-      UserName,
-      UserTelephone,
-      UserEmail,
-      UserActive,
-      UserCreatedDate,
-      DefaultProvider,
-      "UserCounty" = ProjectCounty,
-      "UserRegion" = ProjectRegion
-    )
-
-  rm(provider_extras)
-
-  # some users don't have a County bc their Default Provider doesn't have an
-  # address.
 
 
   # COVID-19 ----------------------------------------------------------------

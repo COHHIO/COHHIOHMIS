@@ -140,7 +140,12 @@ app_deps <- list(
     "vaccine_needs_second_dose",
     "vaccine_status",
     "validation",
-    "veteran_active_list"
+    Veterans = c(
+    "veteran_active_list",
+    "permanently_housed_vets",
+    "entered_past_90_vets",
+    "new_gpd_vets"
+    )
   )
 )
 
@@ -282,4 +287,6 @@ app_env <- R6::R6Class(
   ),
   lock_objects = FALSE
 )
+
+dependencies <- list()
 
