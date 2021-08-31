@@ -28,8 +28,8 @@ if (missing(app_env))
   load("pe_dataset_final/images/COHHIOHMIS.RData")
   load("pe_dataset_final/images/Data_Quality.RData")
   load("pe_dataset_final/images/cohorts.RData")
-  # hc_project_eval_start <- mdy("01012019") # for comparison purposes
-  # hc_project_eval_end <- mdy("12312019")
+  # hc$project_eval_start <- mdy("01012019") # for comparison purposes
+  # hc$project_eval_end <- mdy("12312019")
   # rlang::env_binding_lock(environment(), ls())
 
 # loading in scoring rubric
@@ -48,9 +48,9 @@ coc_funded <- Funder %>%
            ProjectID != 2408 & # project too new
            (ProjectID %in% c(keepers, retired) |
               (
-                lubridate::ymd(StartDate) <= lubridate::ymd(hc_project_eval_end) &
+                lubridate::ymd(StartDate) <= lubridate::ymd(hc$project_eval_end) &
                   (is.na(EndDate) |
-                     lubridate::ymd(EndDate) >= lubridate::ymd(hc_project_eval_end))
+                     lubridate::ymd(EndDate) >= lubridate::ymd(hc$project_eval_end))
               ))) %>%
   dplyr::select(ProjectID, Funder, StartDate, EndDate) %>%
   dplyr::left_join(Project[c("ProjectID",
@@ -142,7 +142,7 @@ vars_to_the_apps <- c(
 # clients served during date range
 
 pe_clients_served <-  co_clients_served %>%
-  dplyr::filter(HMIS::served_between(., hc_project_eval_start, hc_project_eval_end)) %>%
+  dplyr::filter(HMIS::served_between(., hc$project_eval_start, hc$project_eval_end)) %>%
   dplyr::select("PersonalID", "ProjectID", "EnrollmentID") %>%
   dplyr::inner_join(pe_coc_funded, by = "ProjectID") %>%
   dplyr::left_join(Client, by = "PersonalID") %>%
@@ -167,7 +167,7 @@ pe_clients_served <-  co_clients_served %>%
 hoh_exits_to_deceased <- pe_clients_served %>%
   dplyr::filter(Destination == 24 &
            RelationshipToHoH == 1 &
-           HMIS::exited_between(., hc_project_eval_start, hc_project_eval_end)) %>%
+           HMIS::exited_between(., hc$project_eval_start, hc$project_eval_end)) %>%
   dplyr::group_by(AltProjectID) %>%
   dplyr::summarise(HoHDeaths = dplyr::n()) %>%
   dplyr::ungroup() %>%
@@ -195,7 +195,7 @@ pe_adults_entered <-  co_adults_served %>%
   dplyr::group_by(HouseholdID) %>%
   dplyr::mutate(HHEntryDate = min(EntryDate)) %>%
   dplyr::ungroup() %>%
-  dplyr::filter(HMIS::entered_between(., hc_project_eval_start, hc_project_eval_end) &
+  dplyr::filter(HMIS::entered_between(., hc$project_eval_start, hc$project_eval_end) &
            EntryDate == HHEntryDate) %>%
   # group_by(PersonalID, AltProjectID) %>%
   # arrange(desc(ymd(EntryDate))) %>%
@@ -209,7 +209,7 @@ pe_adults_entered <-  co_adults_served %>%
 ## for vispdat measure
 
 pe_hohs_entered <-  co_hohs_entered %>%
-  dplyr::filter(HMIS::entered_between(., hc_project_eval_start, hc_project_eval_end)) %>%
+  dplyr::filter(HMIS::entered_between(., hc$project_eval_start, hc$project_eval_end)) %>%
   dplyr::select("PersonalID", "ProjectID", "EnrollmentID") %>%
   dplyr::inner_join(pe_coc_funded, by = "ProjectID") %>%
   dplyr::left_join(Client, by = "PersonalID") %>%
@@ -235,8 +235,8 @@ pe_hohs_entered <-  co_hohs_entered %>%
 
 pe_adults_moved_in_leavers <-  co_adults_moved_in_leavers %>%
   dplyr::filter(
-    HMIS::stayed_between(., hc_project_eval_start, hc_project_eval_end) &
-      HMIS::exited_between(., hc_project_eval_start, hc_project_eval_end)
+    HMIS::stayed_between(., hc$project_eval_start, hc$project_eval_end) &
+      HMIS::exited_between(., hc$project_eval_start, hc$project_eval_end)
   ) %>%
   dplyr::select("PersonalID", "ProjectID", "EnrollmentID") %>%
   dplyr::inner_join(pe_coc_funded, by = "ProjectID") %>%
@@ -260,7 +260,7 @@ pe_adults_moved_in_leavers <-  co_adults_moved_in_leavers %>%
 #Adults who moved in and were served during date range
 
 # pe_adults_moved_in <-  co_adults_moved_in %>%
-#   filter(stayed_between(., hc_project_eval_start, hc_project_eval_end)) %>%
+#   filter(stayed_between(., hc$project_eval_start, hc$project_eval_end)) %>%
 #   select("PersonalID", "ProjectID", "EnrollmentID") %>%
 #   inner_join(pe_coc_funded, by = "ProjectID") %>%
 #   left_join(Client, by = "PersonalID") %>%
@@ -283,8 +283,8 @@ pe_adults_moved_in_leavers <-  co_adults_moved_in_leavers %>%
 # Clients who moved in and exited during date range
 
 pe_clients_moved_in_leavers <-  co_clients_moved_in_leavers %>%
-  dplyr::filter(HMIS::stayed_between(., hc_project_eval_start, hc_project_eval_end) &
-           HMIS::exited_between(., hc_project_eval_start, hc_project_eval_end)) %>%
+  dplyr::filter(HMIS::stayed_between(., hc$project_eval_start, hc$project_eval_end) &
+           HMIS::exited_between(., hc$project_eval_start, hc$project_eval_end)) %>%
   dplyr::select("PersonalID", "ProjectID", "EnrollmentID") %>%
   dplyr::inner_join(pe_coc_funded, by = "ProjectID") %>%
   dplyr::left_join(Client, by = "PersonalID") %>%
@@ -307,7 +307,7 @@ pe_clients_moved_in_leavers <-  co_clients_moved_in_leavers %>%
 # Heads of Household who were served during date range
 
 pe_hohs_served <- co_hohs_served %>%
-  dplyr::filter(HMIS::served_between(., hc_project_eval_start, hc_project_eval_end)) %>%
+  dplyr::filter(HMIS::served_between(., hc$project_eval_start, hc$project_eval_end)) %>%
   dplyr::select("PersonalID", "ProjectID", "EnrollmentID") %>%
   dplyr::inner_join(pe_coc_funded, by = "ProjectID") %>%
   dplyr::left_join(Client, by = "PersonalID") %>%
@@ -327,8 +327,8 @@ pe_hohs_served <- co_hohs_served %>%
   dplyr::distinct(PersonalID, AltProjectName, .keep_all = TRUE) # no dupes w/in a project
 
 pe_hohs_served_leavers <- co_hohs_served %>%
-  dplyr::filter(HMIS::served_between(., hc_project_eval_start, hc_project_eval_end) &
-           HMIS::exited_between(., hc_project_eval_start, hc_project_eval_end)) %>%
+  dplyr::filter(HMIS::served_between(., hc$project_eval_start, hc$project_eval_end) &
+           HMIS::exited_between(., hc$project_eval_start, hc$project_eval_end)) %>%
   dplyr::select("PersonalID", "ProjectID", "EnrollmentID") %>%
   dplyr::inner_join(pe_coc_funded, by = "ProjectID") %>%
   dplyr::left_join(Client, by = "PersonalID") %>%
@@ -351,8 +351,8 @@ pe_hohs_served_leavers <- co_hohs_served %>%
 # Heads of Household who moved in and exited during date range
 
 pe_hohs_moved_in_leavers <-  co_hohs_moved_in_leavers %>%
-  dplyr::filter(HMIS::stayed_between(., hc_project_eval_start, hc_project_eval_end) &
-           HMIS::exited_between(., hc_project_eval_start, hc_project_eval_end)) %>%
+  dplyr::filter(HMIS::stayed_between(., hc$project_eval_start, hc$project_eval_end) &
+           HMIS::exited_between(., hc$project_eval_start, hc$project_eval_end)) %>%
   dplyr::select("PersonalID", "ProjectID", "EnrollmentID") %>%
   dplyr::inner_join(pe_coc_funded, by = "ProjectID") %>%
   dplyr::left_join(Client, by = "PersonalID") %>%
@@ -619,106 +619,106 @@ summary_pe_coc_scoring <- pe_coc_funded %>%
     PrioritizationWorkgroupScore = tidyr::replace_na(PrioritizationWorkgroupScore, 0),
     PrioritizationWorkgroupPossible = 5,
     PrioritizationWorkgroupMath = dplyr::case_when(
-      lubridate::today() <= lubridate::ymd(hc_project_eval_docs_due) &
+      lubridate::today() <= lubridate::ymd(hc$project_eval_docs_due) &
         is.na(DateReceivedPPDocs) ~
         paste0(
           "Documents either not yet received or not yet processed. They are due ",
-          format(hc_project_eval_docs_due, "%A %b %e, %Y"),
+          format(hc$project_eval_docs_due, "%A %b %e, %Y"),
           "."
         ),
-      lubridate::today() > lubridate::ymd(hc_project_eval_docs_due) &
+      lubridate::today() > lubridate::ymd(hc$project_eval_docs_due) &
         is.na(DateReceivedPPDocs) ~
         paste0(
           "Documentation either not yet received or not yet processed by the
                CoC Team. They were due ",
-          format(hc_project_eval_docs_due, "%A %b %e, %Y"),
+          format(hc$project_eval_docs_due, "%A %b %e, %Y"),
           "."
         ),
-      lubridate::ymd(DateReceivedPPDocs) > lubridate::ymd(hc_project_eval_docs_due) ~
+      lubridate::ymd(DateReceivedPPDocs) > lubridate::ymd(hc$project_eval_docs_due) ~
         "Documentation received past deadline.",
-      lubridate::ymd(DateReceivedPPDocs) <= lubridate::ymd(hc_project_eval_docs_due) ~
+      lubridate::ymd(DateReceivedPPDocs) <= lubridate::ymd(hc$project_eval_docs_due) ~
         "Your documentation was reviewed by the CoC team and scored. Please contact
       ohioboscoc@cohhio.org if you have questions about your scoring."
     ),
     HousingFirstPossible = 15,
     HousingFirstDQ = dplyr::case_when(
-      lubridate::ymd(DateReceivedPPDocs) <= lubridate::ymd(hc_project_eval_docs_due) &
+      lubridate::ymd(DateReceivedPPDocs) <= lubridate::ymd(hc$project_eval_docs_due) &
         is.na(HousingFirstScore) ~ 3,
       is.na(DateReceivedPPDocs) &
         is.na(HousingFirstScore) ~ 2,
       is.na(DateReceivedPPDocs) &
         !is.na(HousingFirstScore) ~ 4,
-      lubridate::ymd(DateReceivedPPDocs) > lubridate::ymd(hc_project_eval_docs_due) ~ 5
+      lubridate::ymd(DateReceivedPPDocs) > lubridate::ymd(hc$project_eval_docs_due) ~ 5
     ),
     HousingFirstScore = dplyr::case_when(
       is.na(DateReceivedPPDocs) |
         is.na(HousingFirstScore) ~ -10,
-      lubridate::ymd(DateReceivedPPDocs) > lubridate::ymd(hc_project_eval_docs_due) ~ -10,
-      lubridate::ymd(DateReceivedPPDocs) <= lubridate::ymd(hc_project_eval_docs_due) ~ HousingFirstScore
+      lubridate::ymd(DateReceivedPPDocs) > lubridate::ymd(hc$project_eval_docs_due) ~ -10,
+      lubridate::ymd(DateReceivedPPDocs) <= lubridate::ymd(hc$project_eval_docs_due) ~ HousingFirstScore
     ),
     HousingFirstMath = dplyr::case_when(
-      lubridate::today() <= lubridate::ymd(hc_project_eval_docs_due) &
+      lubridate::today() <= lubridate::ymd(hc$project_eval_docs_due) &
         is.na(DateReceivedPPDocs) ~
         paste0(
           "Documents either not yet received or not yet processed. They are
                due ",
-          format(hc_project_eval_docs_due, "%A %b %e, %Y"),
+          format(hc$project_eval_docs_due, "%A %b %e, %Y"),
           "."
         ),
-      lubridate::today() > lubridate::ymd(hc_project_eval_docs_due) &
+      lubridate::today() > lubridate::ymd(hc$project_eval_docs_due) &
         is.na(DateReceivedPPDocs) ~
         paste0(
           "Documentation either not yet received or not yet processed by the
                CoC Team. They were due ",
-          format(hc_project_eval_docs_due, "%A %b %e, %Y"),
+          format(hc$project_eval_docs_due, "%A %b %e, %Y"),
           "."
         ),
-      lubridate::ymd(DateReceivedPPDocs) > lubridate::ymd(hc_project_eval_docs_due) ~
+      lubridate::ymd(DateReceivedPPDocs) > lubridate::ymd(hc$project_eval_docs_due) ~
         "Documentation received past deadline.",
-      lubridate::ymd(DateReceivedPPDocs) <= lubridate::ymd(hc_project_eval_docs_due) ~
+      lubridate::ymd(DateReceivedPPDocs) <= lubridate::ymd(hc$project_eval_docs_due) ~
         "Your documentation was reviewed by the CoC team and scored. Please contact
       ohioboscoc@cohhio.org if you have questions about your scoring."
     ),
     ChronicPrioritizationDQ = dplyr::case_when(
-      lubridate::ymd(DateReceivedPPDocs) <= lubridate::ymd(hc_project_eval_docs_due) &
+      lubridate::ymd(DateReceivedPPDocs) <= lubridate::ymd(hc$project_eval_docs_due) &
         is.na(ChronicPrioritizationScore) ~ 3,
       is.na(DateReceivedPPDocs) &
         is.na(ChronicPrioritizationScore) ~ 2,
       is.na(DateReceivedPPDocs) &
         !is.na(ChronicPrioritizationScore) ~ 4,
-      lubridate::ymd(DateReceivedPPDocs) > lubridate::ymd(hc_project_eval_docs_due) ~ 5
+      lubridate::ymd(DateReceivedPPDocs) > lubridate::ymd(hc$project_eval_docs_due) ~ 5
     ),
     ChronicPrioritizationPossible = dplyr::if_else(ProjectType == 3, 10, NULL),
     ChronicPrioritizationScore =
       dplyr::case_when(
-        lubridate::ymd(DateReceivedPPDocs) <= lubridate::ymd(hc_project_eval_docs_due) &
+        lubridate::ymd(DateReceivedPPDocs) <= lubridate::ymd(hc$project_eval_docs_due) &
           ProjectType == 3 &
           !is.na(ChronicPrioritizationScore) ~ ChronicPrioritizationScore,
         is.na(DateReceivedPPDocs) &
           ProjectType == 3 &
           is.na(ChronicPrioritizationScore) ~ -5,
-        lubridate::ymd(DateReceivedPPDocs) > lubridate::ymd(hc_project_eval_docs_due) &
+        lubridate::ymd(DateReceivedPPDocs) > lubridate::ymd(hc$project_eval_docs_due) &
           ProjectType == 3 ~ -5
       ),
     ChronicPrioritizationMath = dplyr::case_when(
-      lubridate::today() <= lubridate::ymd(hc_project_eval_docs_due) &
+      lubridate::today() <= lubridate::ymd(hc$project_eval_docs_due) &
         is.na(DateReceivedPPDocs) ~
         paste0(
           "Documents either not yet received or not yet processed. They are due ",
-          format(hc_project_eval_docs_due, "%A %b %e, %Y"),
+          format(hc$project_eval_docs_due, "%A %b %e, %Y"),
           "."
         ),
-      lubridate::today() > lubridate::ymd(hc_project_eval_docs_due) &
+      lubridate::today() > lubridate::ymd(hc$project_eval_docs_due) &
         is.na(DateReceivedPPDocs) ~
         paste0(
           "Documentation either not yet received or not yet processed by the
                CoC Team. They were due ",
-          format(hc_project_eval_docs_due, "%A %b %e, %Y"),
+          format(hc$project_eval_docs_due, "%A %b %e, %Y"),
           "."
         ),
-      lubridate::ymd(DateReceivedPPDocs) > lubridate::ymd(hc_project_eval_docs_due) ~
+      lubridate::ymd(DateReceivedPPDocs) > lubridate::ymd(hc$project_eval_docs_due) ~
         "Documentation received past deadline.",
-      lubridate::ymd(DateReceivedPPDocs) <= lubridate::ymd(hc_project_eval_docs_due) ~
+      lubridate::ymd(DateReceivedPPDocs) <= lubridate::ymd(hc$project_eval_docs_due) ~
         "Your documentation was reviewed by the CoC team and scored. Please contact
       ohioboscoc@cohhio.org if you have questions about your scoring."
     )
@@ -760,11 +760,11 @@ pe_exits_to_ph <- pe_hohs_served %>%
              by = c("AltProjectName", "ProjectType", "AltProjectID")) %>%
   dplyr::left_join(data_quality_flags, by = "AltProjectName") %>%
   dplyr::filter((ProjectType %in% c(2, 8, 13) &
-            HMIS::exited_between(., hc_project_eval_start, hc_project_eval_end)) |
+            HMIS::exited_between(., hc$project_eval_start, hc$project_eval_end)) |
            ProjectType == 3) %>% # filtering out non-PSH stayers
   dplyr::mutate(
     DestinationGroup = dplyr::case_when(
-      is.na(Destination) | lubridate::ymd(ExitAdjust) > lubridate::ymd(hc_project_eval_end) ~
+      is.na(Destination) | lubridate::ymd(ExitAdjust) > lubridate::ymd(hc$project_eval_end) ~
         "Still in Program at Report End Date",
       Destination %in% c(temp_destinations) ~ "Temporary",
       Destination %in% c(perm_destinations) ~ "Permanent",
@@ -877,7 +877,7 @@ summary_pe_exits_to_ph <- pe_exits_to_ph %>%
 #       TRUE ~ 0
 #     ),
 #     DestinationGroup = case_when(
-#       is.na(Destination) | ymd(ExitAdjust) > ymd(hc_project_eval_end) ~
+#       is.na(Destination) | ymd(ExitAdjust) > ymd(hc$project_eval_end) ~
 #         "Still in Program at Report End Date",
 #       Destination %in% c(1, 2, 12, 13, 14, 16, 18, 27) ~ "Temporary",
 #       Destination %in% c(3, 10:11, 19:21, 28, 31, 33:34) ~ "Household's Own Housing",

@@ -147,7 +147,7 @@ Enrollment_helpers <- list(
   add_Household = function(Enrollment, Project, app_env) {
     # getting HH information
     # only doing this for RRH and PSHs since Move In Date doesn't matter for ES, etc.
-    app_env$merge_deps_to_env("hc_psh_started_collecting_move_in_date")
+    app_env$merge_deps_to_env("hc$psh_started_collecting_move_in_date")
     small_project <- Project %>%
       dplyr::select(ProjectID, ProjectType, ProjectName)
     # TODO Check to see if Enrollment data has the MoveInDate
@@ -160,7 +160,7 @@ Enrollment_helpers <- list(
       dplyr::filter(ProjectType %in% c(3, 9, 13)) %>%
       dplyr::mutate(
         AssumedMoveIn = dplyr::if_else(
-          EntryDate < hc_psh_started_collecting_move_in_date &
+          EntryDate < hc$psh_started_collecting_move_in_date &
             ProjectType %in% c(3, 9),
           1,
           0

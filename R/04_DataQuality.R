@@ -32,16 +32,16 @@ dependencies$DataQuality <-
     "guidance_missing_pii",
     "guidance_referral_on_non_hoh",
     "guidance_service_on_non_hoh",
-    "hc_began_requiring_spdats",
-    "hc_bos_start_vaccine_data",
-    "hc_check_dq_back_to",
-    "hc_first_vaccine_administered_in_us",
-    "hc_no_more_svcs_on_hh_members",
-    "hc_outreach_to_cls",
-    "hc_prior_living_situation_required",
-    "hc_project_eval_end",
-    "hc_project_eval_start",
-    "hc_unsheltered_data_start",
+    "hc$began_requiring_spdats",
+    "hc$bos_start_vaccine_data",
+    "hc$check_dq_back_to",
+    "hc$first_vaccine_administered_in_us",
+    "hc$no_more_svcs_on_hh_members",
+    "hc$outreach_to_cls",
+    "hc$prior_living_situation_required",
+    "hc$project_eval_end",
+    "hc$project_eval_start",
+    "hc$unsheltered_data_start",
     "HealthAndDV",
     "IncomeBenefits",
     "Inventory",
@@ -347,7 +347,7 @@ DataQuality <- function(
     dplyr::select(PersonalID, "Doses" = n)
 
   missing_vaccine_exited <- served_in_date_range %>%
-    dplyr::filter(HMIS::served_between(., hc_bos_start_vaccine_data, lubridate::today())) %>%
+    dplyr::filter(HMIS::served_between(., hc$bos_start_vaccine_data, lubridate::today())) %>%
     dplyr::left_join(covid19[c("PersonalID", "ConsentToVaccine", "VaccineConcerns")],
                      by = "PersonalID") %>%
     dplyr::left_join(dose_counts, by = "PersonalID") %>%
@@ -357,7 +357,7 @@ DataQuality <- function(
         ProjectID != 1695 &
         (
           is.na(ExitDate) |
-            ExitDate >= hc_bos_start_vaccine_data
+            ExitDate >= hc$bos_start_vaccine_data
         ) &
         (
           ConsentToVaccine == "Data not collected (HUD)" |
@@ -390,7 +390,7 @@ DataQuality <- function(
         ProjectID != 1695 &
         (
           is.na(ExitDate) |
-            ExitDate >= hc_bos_start_vaccine_data
+            ExitDate >= hc$bos_start_vaccine_data
         ) &
         (
           ConsentToVaccine == "Data not collected (HUD)" |
@@ -417,9 +417,9 @@ DataQuality <- function(
   # Dose Warnings -----------------------------------------------------------
 
   dose_date_error <- doses %>%
-    dplyr::filter(COVID19DoseDate < hc_first_vaccine_administered_in_us) %>%
+    dplyr::filter(COVID19DoseDate < hc$first_vaccine_administered_in_us) %>%
     dplyr::left_join(served_in_date_range %>%
-                       dplyr::filter(HMIS::served_between(., hc_bos_start_vaccine_data, lubridate::today())),
+                       dplyr::filter(HMIS::served_between(., hc$bos_start_vaccine_data, lubridate::today())),
                      by = "PersonalID") %>%
     dplyr::mutate(Type = "Error",
                   Issue = "Vaccine Date Incorrect",
@@ -436,12 +436,12 @@ DataQuality <- function(
     dplyr::mutate(LastDose = dplyr::lag(COVID19DoseDate, order_by = COVID19DoseDate)) %>%
     dplyr::filter(!is.na(LastDose)) %>%
     dplyr::mutate(DaysBetweenDoses = difftime(COVID19DoseDate, LastDose, units = "days")) %>%
-    dplyr::filter(COVID19DoseDate < hc_first_vaccine_administered_in_us |
+    dplyr::filter(COVID19DoseDate < hc$first_vaccine_administered_in_us |
                     DaysBetweenDoses < 20 |
                     (COVID19VaccineManufacturer == "Moderna") &
                     DaysBetweenDoses < 27) %>%
     dplyr::left_join(served_in_date_range %>%
-                       dplyr::filter(HMIS::served_between(., hc_bos_start_vaccine_data, lubridate::today())),
+                       dplyr::filter(HMIS::served_between(., hc$bos_start_vaccine_data, lubridate::today())),
                      by = "PersonalID") %>%
     dplyr::mutate(Type = "Warning",
                   Issue = "Vaccine Dates or Vaccine Manufacturer Questionable",
@@ -471,7 +471,7 @@ DataQuality <- function(
     ) %>%
     dplyr::filter(differs == TRUE) %>%
     dplyr::left_join(served_in_date_range %>%
-                       dplyr::filter(HMIS::served_between(., hc_bos_start_vaccine_data, lubridate::today())),
+                       dplyr::filter(HMIS::served_between(., hc$bos_start_vaccine_data, lubridate::today())),
                      by = "PersonalID") %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
@@ -479,7 +479,7 @@ DataQuality <- function(
     dplyr::filter(stringr::str_starts(COVID19VaccineManufacturer, "Client doesn't know") &
                     COVID19VaccineDocumentation != "Self-report") %>%
     dplyr::left_join(served_in_date_range %>%
-                       dplyr::filter(HMIS::served_between(., hc_bos_start_vaccine_data, lubridate::today())),
+                       dplyr::filter(HMIS::served_between(., hc$bos_start_vaccine_data, lubridate::today())),
                      by = "PersonalID") %>%
     dplyr::mutate(Type = "Error",
                   Issue = "Incorrect Vaccine Manufacturer or Incorrect Documentation Type",
@@ -492,7 +492,7 @@ DataQuality <- function(
     dplyr::filter(stringr::str_starts(COVID19VaccineManufacturer, "Client doesn't know") &
                     COVID19VaccineDocumentation == "Self-report") %>%
     dplyr::left_join(served_in_date_range %>%
-                       dplyr::filter(HMIS::served_between(., hc_bos_start_vaccine_data, lubridate::today())),
+                       dplyr::filter(HMIS::served_between(., hc$bos_start_vaccine_data, lubridate::today())),
                      by = "PersonalID") %>%
     dplyr::mutate(Type = "Warning",
                   Issue = "Unknown Vaccine Manufacturer",
@@ -601,7 +601,7 @@ DataQuality <- function(
       PreviousStreetESSH
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    EntryDate >= hc_prior_living_situation_required &
+                    EntryDate >= hc$prior_living_situation_required &
                     is.na(DateToStreetESSH) &
                     LOSUnderThreshold == 1 &
                     PreviousStreetESSH == 1
@@ -621,7 +621,7 @@ DataQuality <- function(
       LOSUnderThreshold
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    EntryDate >= hc_prior_living_situation_required &
+                    EntryDate >= hc$prior_living_situation_required &
                     is.na(PreviousStreetESSH) &
                     LOSUnderThreshold == 1
     ) %>%
@@ -690,7 +690,7 @@ DataQuality <- function(
       TimesHomelessPastThreeYears
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    EntryDate >= hc_prior_living_situation_required &
+                    EntryDate >= hc$prior_living_situation_required &
                     ProjectType %in% c(1, 4, 8) &
                     (
                       is.na(MonthsHomelessPastThreeYears) |
@@ -713,7 +713,7 @@ DataQuality <- function(
       TimesHomelessPastThreeYears
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    EntryDate >= hc_prior_living_situation_required &
+                    EntryDate >= hc$prior_living_situation_required &
                     (
                       MonthsHomelessPastThreeYears %in% c(8, 9) |
                         TimesHomelessPastThreeYears %in% c(8, 9)
@@ -736,7 +736,7 @@ DataQuality <- function(
     dplyr::filter(
       ProjectType != 12 &
         (RelationshipToHoH == 1 | AgeAtEntry > 17) &
-        EntryDate >= hc_prior_living_situation_required &
+        EntryDate >= hc$prior_living_situation_required &
         TimesHomelessPastThreeYears == 1 &
         !is.na(DateToStreetESSH)
     ) %>%
@@ -791,7 +791,7 @@ DataQuality <- function(
       TimesHomelessPastThreeYears
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    EntryDate >= hc_prior_living_situation_required &
+                    EntryDate >= hc$prior_living_situation_required &
                     # not req'd prior to this
                     ProjectType %in% c(2, 3, 6, 9, 10, 12, 13) &
                     (
@@ -844,7 +844,7 @@ DataQuality <- function(
       UserCreating
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    EntryDate > hc_prior_living_situation_required &
+                    EntryDate > hc$prior_living_situation_required &
                     (
                       MonthsHomelessPastThreeYears %in% c(8, 9) |
                         TimesHomelessPastThreeYears %in% c(8, 9) |
@@ -1337,7 +1337,7 @@ DataQuality <- function(
     dplyr::filter(
       RelationshipToHoH == 1 &
         AgeAtEntry > 17 &
-        EntryDate > hc_check_eligibility_back_to &
+        EntryDate > hc$check_eligibility_back_to &
         (ProjectType %in% c(3, 4, 8, 9, 10, 12, 13) |
            (ProjectType == 2 & (is.na(GrantType) | GrantType != "RHY"))) &
         (
@@ -1654,7 +1654,7 @@ DataQuality <- function(
         ContactDate <= ExitAdjust &
         ((
           RecordType == "Outreach" &
-            ContactDate < hc_outreach_to_cls
+            ContactDate < hc$outreach_to_cls
         ) |
           RecordType == "CLS")
     ) %>%
@@ -1690,7 +1690,7 @@ DataQuality <- function(
 
   first_contact <- Contacts %>%
     dplyr::filter((RecordType == "Outreach" &
-                     ContactDate < hc_outreach_to_cls) |
+                     ContactDate < hc$outreach_to_cls) |
                     RecordType == "CLS") %>%
     dplyr::left_join(served_in_date_range, by = "PersonalID") %>%
     dplyr::select(PersonalID, EntryDate, ExitAdjust, ExitDate, ContactDate, ProjectName,
@@ -1750,7 +1750,7 @@ DataQuality <- function(
                     (ProjectType %in% c(1, 2, 4, 8, 13) |
                        (
                          ProjectType %in% c(3, 9) &
-                           EntryDate >= hc_psh_started_collecting_move_in_date
+                           EntryDate >= hc$psh_started_collecting_move_in_date
                        )))  %>%
     dplyr::mutate(
       Issue = "Future Entry Date",
@@ -1846,7 +1846,7 @@ DataQuality <- function(
     dplyr::anti_join(served_in_date_range, ees_with_spdats, by = "EnrollmentID") %>%
     dplyr::filter(
       ProjectType %in% c(2, 3, 9, 13) &
-        EntryDate > hc_began_requiring_spdats &
+        EntryDate > hc$began_requiring_spdats &
         # only looking at 1/1/2019 forward
         RelationshipToHoH == 1 &
         (CurrentlyFleeing != 1 |
@@ -1874,7 +1874,7 @@ DataQuality <- function(
         RelationshipToHoH == 1 &
         EntryDate < lubridate::today() - lubridate::days(8) &
         is.na(ExitDate) &
-        EntryDate > hc_began_requiring_spdats
+        EntryDate > hc$began_requiring_spdats
     ) %>%
     dplyr::mutate(
       Issue = "HoHs in shelter for 8+ days without SPDAT",
@@ -2549,7 +2549,7 @@ DataQuality <- function(
                   GrantType) %>%
     dplyr::filter(
       RelationshipToHoH != 1 &
-        EntryDate >= hc_no_more_svcs_on_hh_members &
+        EntryDate >= hc$no_more_svcs_on_hh_members &
         (GrantType != "SSVF" | is.na(GrantType))
     ) %>%
     dplyr::semi_join(Services, by = c("PersonalID", "EnrollmentID")) %>%
@@ -3223,14 +3223,14 @@ DataQuality <- function(
   # for CoC-wide DQ tab
 
   dq_past_year <- dq_main %>%
-    dplyr::filter(HMIS::served_between(., hc_check_dq_back_to,
+    dplyr::filter(HMIS::served_between(., hc$check_dq_back_to,
                                        lubridate::today())) %>%
     dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
 
   # for project evaluation reporting
 
   dq_for_pe <- dq_main %>%
-    dplyr::filter(HMIS::served_between(., hc_project_eval_start, hc_project_eval_end)) %>%
+    dplyr::filter(HMIS::served_between(., hc$project_eval_start, hc$project_eval_end)) %>%
     dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
 
   projects_current_hmis <- projects_current_hmis %>%
@@ -3346,7 +3346,7 @@ DataQuality <- function(
 
   dq_data_unsheltered_high <- dq_unsheltered %>%
     dplyr::filter(Type == "High Priority",
-                  HMIS::served_between(., hc_unsheltered_data_start, meta_HUDCSV_Export_End)) %>%
+                  HMIS::served_between(., hc$unsheltered_data_start, meta_HUDCSV_Export_End)) %>%
     dplyr::select(PersonalID, HouseholdID, DefaultProvider) %>%
     unique() %>%
     dplyr::group_by(DefaultProvider) %>%

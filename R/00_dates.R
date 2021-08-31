@@ -8,35 +8,37 @@ dates <- function(clarity_api,
     clarity_api <- UU::find_by_class("clarity_api", e)
   if (missing(app_env))
     app_env <- UU::find_by_class("app_env", e)
-  hc_data_goes_back_to <- lubridate::mdy("01012019")
+  hc <- purrr::map(list(
+    data_goes_back_to = "01012019",
 
-  hc_check_dq_back_to <- lubridate::mdy("10012019") # the default ReportStart for DQ reporting
+    check_dq_back_to = "10012019", # the default ReportStart for DQ reporting
 
-  hc_project_eval_start <- lubridate::mdy("01012020")
+    project_eval_start = "01012020",
 
-  hc_project_eval_end <- lubridate::mdy("12312020")
+    project_eval_end = "12312020",
 
-  hc_project_eval_docs_due <- lubridate::mdy("04232021")
+    project_eval_docs_due = "04232021",
 
-  hc_bos_start_vaccine_data <- lubridate::mdy("02052021")
+    bos_start_vaccine_data = "02052021",
 
-  hc_psh_started_collecting_move_in_date <- lubridate::mdy("10012017")
+    psh_started_collecting_move_in_date = "10012017",
 
-  hc_began_collecting_covid_data <- lubridate::mdy("04012020")
+    began_collecting_covid_data = "04012020",
 
-  hc_outreach_to_cls <- lubridate::mdy("10012019")
+    outreach_to_cls = "10012019",
 
-  hc_began_requiring_spdats <- lubridate::mdy("01012019")
+    began_requiring_spdats = "01012019",
 
-  hc_unsheltered_data_start <- lubridate::mdy("01012019")
+    unsheltered_data_start = "01012019",
 
-  hc_prior_living_situation_required <- lubridate::mdy("10012016")
+    prior_living_situation_required = "10012016",
 
-  hc_check_eligibility_back_to <- lubridate::mdy("10012016")
+    check_eligibility_back_to = "10012016",
 
-  hc_no_more_svcs_on_hh_members <- lubridate::mdy("02012019")
+    no_more_svcs_on_hh_members = "02012019",
 
-  hc_first_vaccine_administered_in_us <- lubridate::mdy("12142020")
+    first_vaccine_administered_in_us = "12142020"
+  ), lubridate::mdy)
 
   # Dates from Metadata -----------------------------------------------------
 
@@ -72,7 +74,7 @@ dates <- function(clarity_api,
 
 
 
-  if(meta_HUDCSV_Export_Start != hc_data_goes_back_to |
+  if(meta_HUDCSV_Export_Start != hc$data_goes_back_to |
      meta_HUDCSV_Export_End != Sys.Date())
     stop_with_instructions("The HUD CSV Export update process errored. Please rerun.\n", error = error)
 
