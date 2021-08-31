@@ -23,25 +23,8 @@ dependencies$DataQuality <-
     "doses",
     "Enrollment",
     "Funder",
-    "guidance_conflicting_hi",
-    "guidance_conflicting_income",
-    "guidance_conflicting_ncbs",
-    "guidance_dkr_data",
-    "guidance_missing_at_entry",
-    "guidance_missing_at_exit",
-    "guidance_missing_pii",
-    "guidance_referral_on_non_hoh",
-    "guidance_service_on_non_hoh",
-    "hc$began_requiring_spdats",
-    "hc$bos_start_vaccine_data",
-    "hc$check_dq_back_to",
-    "hc$first_vaccine_administered_in_us",
-    "hc$no_more_svcs_on_hh_members",
-    "hc$outreach_to_cls",
-    "hc$prior_living_situation_required",
-    "hc$project_eval_end",
-    "hc$project_eval_start",
-    "hc$unsheltered_data_start",
+    "guidance",
+    "hc",
     "HealthAndDV",
     "IncomeBenefits",
     "Inventory",
@@ -1651,12 +1634,8 @@ DataQuality <- function(
     dplyr::left_join(served_in_date_range, by = "PersonalID") %>%
     dplyr::filter(
       ContactDate >= EntryDate &
-        ContactDate <= ExitAdjust &
-        ((
-          RecordType == "Outreach" &
-            ContactDate < hc$outreach_to_cls
-        ) |
-          RecordType == "CLS")
+      ContactDate <= ExitAdjust &
+      ContactDate < hc$outreach_to_cls
     ) %>%
     dplyr::group_by(PersonalID, ProjectName, EntryDate, ExitDate) %>%
     dplyr::summarise(ContactCount = dplyr::n()) %>%
@@ -1689,9 +1668,7 @@ DataQuality <- function(
   ## filtered out because they should be using CLS subs past that date.
 
   first_contact <- Contacts %>%
-    dplyr::filter((RecordType == "Outreach" &
-                     ContactDate < hc$outreach_to_cls) |
-                    RecordType == "CLS") %>%
+    dplyr::filter(ContactDate < hc$outreach_to_cls) %>%
     dplyr::left_join(served_in_date_range, by = "PersonalID") %>%
     dplyr::select(PersonalID, EntryDate, ExitAdjust, ExitDate, ContactDate, ProjectName,
                   EntryDate, ExitAdjust) %>%

@@ -369,14 +369,7 @@ Project <- clarity_api$Project() |>
   # Contacts ----------------------------------------------------------------
   # only pulling in contacts made between an Entry Date and an Exit Date
 
-  #TODO # Comes from CurrentLiving Situation
-  CurrentLivingSituation <- clarity_api$CurrentLivingSituation()
-
-  Contacts <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 4)  |>
-    dplyr::mutate(
-      ContactDate = lubridate::ymd(as.Date(ContactDate, origin = "1899-12-30")),
-      ContactProvider = stringr::str_remove(ContactProvider, "\\(.*\\)")
-    )
+  Contacts <- clarity_api$`HUD Extras`$Contact_extras()
 
   # Scores ------------------------------------------------------------------
 
