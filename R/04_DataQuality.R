@@ -292,6 +292,7 @@ DataQuality <- function(
     dplyr::filter(!is.na(Issue)) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
+  #TODO Change for FY 2022
   dq_gender <- served_in_date_range %>%
     dplyr::mutate(
       Issue = dplyr::case_when(
@@ -340,6 +341,7 @@ DataQuality <- function(
     dplyr::select(dplyr::all_of(vars_we_want))
 
   # Missing Vaccine data ----------------------------------------------------
+  #TODO C19 Column names need to be updated
   dose_counts <- doses %>%
     dplyr::count(PersonalID) %>%
     dplyr::select(PersonalID, "Doses" = n)
@@ -1775,6 +1777,7 @@ DataQuality <- function(
 
   # Incorrect Entry Exit Type -----------------------------------------------
   # check ART report for exact logic.
+  # TODO Remove for Clarity
   incorrect_ee_type <- served_in_date_range %>%
     dplyr::filter(
       (
@@ -2764,6 +2767,7 @@ DataQuality <- function(
       LivingSituation
     )
 
+  # TODO Remove for Clarity users
   unsheltered_not_unsheltered <- unsheltered_enrollments %>%
     dplyr::filter(LivingSituation != 16) %>%
     dplyr::mutate(
@@ -2999,6 +3003,7 @@ DataQuality <- function(
 
 
   # All together now --------------------------------------------------------
+
 
   dq_main <- rbind(
     aps_with_ees,
