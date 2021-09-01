@@ -251,11 +251,11 @@ load_export <- function(
 
   # Affiliation -------------------------------------------------------------
 
-  Affiliation <- clarity_api$Affiliation()
+  Affiliation <- cl_api$Affiliation()
 
   # Client ------------------------------------------------------------------
 
-  Client <- clarity_api$Client()
+  Client <- cl_api$Client()
   # this saves Client as a feather file with redacted PII as a security measure.
   if(ncol(Client) == 36) {
     Client <- Client_redact(Client)
@@ -277,12 +277,12 @@ load_export <- function(
 
   # Disabilities ------------------------------------------------------------
 
-  Disabilities <- clarity_api$Disabilities()
+  Disabilities <- cl_api$Disabilities()
 
 
   # EmploymentEducation -----------------------------------------------------
 
-  EmploymentEducation <- clarity_api$EmploymentEducation()
+  EmploymentEducation <- cl_api$EmploymentEducation()
 
 
 
@@ -291,19 +291,19 @@ load_export <- function(
   # Project -----------------------------------------------------------------
   # provider_extras
   # Thu Aug 12 14:23:50 2021
-  provider_extras <- clarity_api$`HUD Extras`$Project_extras()
+  provider_extras <- cl_api$`HUD Extras`$Project_extras()
   provider_extras <- provider_extras_helpers$add_regions(provider_extras, dirs)
   # Rminor: Coordinated Entry Access Points [CEAP]
   APs <- provider_extras_helpers$create_APs(provider_extras, dirs)
 
-Project <- clarity_api$Project() |>
+Project <- cl_api$Project() |>
   dplyr::select(-ProjectCommonName) |>
   dplyr::left_join(provider_extras, by = "ProjectID")
 
   # EnrollmentCoC -----------------------------------------------------------
 
   EnrollmentCoC <-
-    clarity_api$EnrollmentCoC()
+    cl_api$EnrollmentCoC()
 
 
 
@@ -311,15 +311,15 @@ Project <- clarity_api$Project() |>
 
   # from sheets 1 and 2, getting EE-related data, joining both to En
 
-  Enrollment <- clarity_api$Enrollment()
+  Enrollment <- cl_api$Enrollment()
   # Add Enrollment Extras
   Enrollment <- Enrollment |>
-    dplyr::inner_join(clarity_api$`HUD Extras`$Enrollment_extras(), by = "EnrollmentID")
+    dplyr::inner_join(cl_api$`HUD Extras`$Enrollment_extras(), by = "EnrollmentID")
 
   Enrollment_helpers$add_Household(Enrollment, Project, app_env)
 
   # Veteran Client_extras ----
-  VeteranCE <- clarity_api$`HUD Extras`$Client_extras() |>
+  VeteranCE <- cl_api$`HUD Extras`$Client_extras() |>
     dplyr::mutate(
       DateVeteranIdentified = as.Date(DateVeteranIdentified, origin = "1899-12-30"),
       ExpectedPHDate = as.Date(ExpectedPHDate, origin = "1899-12-30")
@@ -338,42 +338,42 @@ Project <- clarity_api$Project() |>
   # Funder ------------------------------------------------------------------
 
   Funder <-
-    clarity_api$Funder()
+    cl_api$Funder()
 
   # HealthAndDV -------------------------------------------------------------
 
   HealthAndDV <-
-    clarity_api$HealthAndDV()
+    cl_api$HealthAndDV()
 
   # IncomeBenefits ----------------------------------------------------------
 
   IncomeBenefits <-
-    clarity_api$IncomeBenefits()
+    cl_api$IncomeBenefits()
 
   # Inventory ---------------------------------------------------------------
 
   Inventory <-
-    clarity_api$Inventory()
+    cl_api$Inventory()
 
   # Organization ------------------------------------------------------------
 
   Organization <-
-    clarity_api$Organization()
+    cl_api$Organization()
 
   # ProjectCoC --------------------------------------------------------------
 
   ProjectCoC <-
-    clarity_api$ProjectCoC()
+    cl_api$ProjectCoC()
 
 
   # Contacts ----------------------------------------------------------------
   # only pulling in contacts made between an Entry Date and an Exit Date
 
-  Contacts <- clarity_api$`HUD Extras`$Contact_extras()
+  Contacts <- cl_api$`HUD Extras`$Contact_extras()
 
   # Scores ------------------------------------------------------------------
 
-  Scores <-  clarity_api$`HUD Extras`$Client_SPDAT_extras()
+  Scores <-  cl_api$`HUD Extras`$Client_SPDAT_extras()
 
   # Offers -----------------------------------------------------------------
 
@@ -390,39 +390,11 @@ Project <- clarity_api$Project() |>
   # https://github.com/COHHIO/COHHIO_HMIS/blob/cbb4d0734e4b60f0cca38dc35a0f5a3f07eafe93/09_covid.R#L98
   # https://github.com/COHHIO/COHHIO_HMIS/blob/cbb4d0734e4b60f0cca38dc35a0f5a3f07eafe93/09_covid.R#L297
   # https://github.com/COHHIO/COHHIO_HMIS/blob/cbb4d0734e4b60f0cca38dc35a0f5a3f07eafe93/02_QPR_EEs.R#L249
-  covid19 <-
-    readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 6) %>%
-    dplyr::filter(!PersonalID %in% c(5, 4216)) %>%
-    dplyr::mutate(
-      COVID19AssessmentDate = lubridate::ymd(as.Date(COVID19AssessmentDate,
-                                                     origin = "1899-12-30")),
-      ContactWithConfirmedDate = lubridate::ymd(as.Date(ContactWithConfirmedDate,
-                                                        origin = "1899-12-30")),
-      ContactWithUnderInvestigationDate = lubridate::ymd(
-        as.Date(ContactWithUnderInvestigationDate,
-                origin = "1899-12-30")
-      ),
-      TestDate = lubridate::ymd(as.Date(TestDate,
-                                        origin = "1899-12-30")),
-      DateUnderInvestigation = lubridate::ymd(as.Date(DateUnderInvestigation,
-                                                      origin = "1899-12-30")),
-      Tested = replace_yes_no(Tested),
-      UnderInvestigation = replace_yes_no(UnderInvestigation),
-      ContactWithConfirmedCOVID19Patient = replace_yes_no(
-        ContactWithConfirmedCOVID19Patient
-      ),
-      ContactWithUnderCOVID19Investigation = replace_yes_no(
-        ContactWithUnderCOVID19Investigation
-      )
-    ) %>%
-    dplyr::mutate_at(dplyr::vars(dplyr::matches("S\\d")), replace_yes_no) %>%
-    dplyr::mutate_at(dplyr::vars(dplyr::matches("HR")), replace_yes_no)
+  covid19 <- cl_api$`HUD Extras`$Client_COVID_extras() |>
+    dplyr::mutate(dplyr::across(.f = replace_yes_no))
 
-  doses <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 21) %>%
-    dplyr::mutate(
-      COVID19DoseDate = lubridate::ymd(as.Date(COVID19DoseDate,
-                                               origin = "1899-12-30"))) %>%
-    dplyr::filter(!PersonalID %in% c(5, 4216))
+
+  doses <- cl_api$`HUD Extras`$Client_Doses_extras()
 
 
 

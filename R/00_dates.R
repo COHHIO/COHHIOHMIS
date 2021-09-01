@@ -43,7 +43,7 @@ dates <- function(clarity_api,
   # Dates from Metadata -----------------------------------------------------
 
 
-  Export <- clarity_api$Export()
+  Export <- cl_api$Export()
 
   meta_HUDCSV_Export_Date <- Export[["ExportDate"]][1]
   meta_HUDCSV_Export_Start <- Export[["ExportStartDate"]][1]
@@ -54,7 +54,7 @@ dates <- function(clarity_api,
   # Calculated Dates --------------------------------------------------------
 
 
-  Exit <- clarity_api$Exit()
+  Exit <- cl_api$Exit()
    calc_data_goes_back_to <-
     Exit %>%
     dplyr::arrange(ExitDate) %>%
@@ -83,7 +83,7 @@ dates <- function(clarity_api,
   # Mon Aug 09 17:09:43 2021
   extras_last_update <- clarity.looker::hud_last_updated(path = dirs$extras)
 
-  extra_info <- list(missing = setdiff(names(clarity.looker::folder_looks(clarity_api$folders$`HUD Extras`)), stringr::str_remove(names(extras_last_update), "\\.feather$")),
+  extra_info <- list(missing = setdiff(names(clarity.looker::folder_looks(cl_api$folders$`HUD Extras`)), stringr::str_remove(names(extras_last_update), "\\.feather$")),
                      not_updated = purrr::keep(extras_last_update, ~!lubridate::`%within%`(.x, lubridate::interval(lubridate::floor_date(Sys.Date(), "day") - 1, Sys.time()))))
 
   meta_Rmisc_last_run_date <- mean(do.call(c, extras_last_update))
