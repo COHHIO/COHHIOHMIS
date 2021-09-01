@@ -62,9 +62,9 @@ increment <- function(..., cenv = rlang::caller_env()) {
   # previous run
   if (file.exists(.lt_path) && is.null(cenv$.last_timer)) {
     cenv$.last_timer <- readRDS(.lt_path)
-    cenv$.total_time <- difftime(tail(cenv$.last_timer, 1)$ts,
-                                 head(cenv$.last_timer, 1)$ts, units = "mins")
-    cenv$.total_steps <- tail(cenv$.last_timer, 1)$step
+    cenv$.total_time <- difftime(utils::tail(cenv$.last_timer, 1)$ts,
+                                 utils::head(cenv$.last_timer, 1)$ts, units = "mins")
+    cenv$.total_steps <- utils::tail(cenv$.last_timer, 1)$step
     cli::cli_status_update(cenv$.update,
                            cli::col_blue("Expected time of completion: ",
                                          Sys.time() + cenv$.total_time))
@@ -106,8 +106,8 @@ increment <- function(..., cenv = rlang::caller_env()) {
     return(.lt_path)
   }
   # If no previous timer data, just give the elapsed time
-  .elapsed <- round(difftime(tail(cenv$.timer, 1)$ts,
-                             head(cenv$.timer, 1)$ts, units = "mins"),2)
+  .elapsed <- round(difftime(utils::tail(cenv$.timer, 1)$ts,
+                             utils::head(cenv$.timer, 1)$ts, units = "mins"),2)
   if (is.null(cenv$.last_timer)) {
     cli::cli_status_update(cenv$.update,
                            cli::col_grey("Time elapsed: ", .elapsed, " mins"))
@@ -197,9 +197,9 @@ freeze_pe <- function(dir, overwrite = FALSE) {
   .a <- utils::askYesNo(paste0("Have ", paste0(files, collapse = ", ")," been created with today's data?"))
   if (.a) {
     .d_files <- list.files("data", full.names = TRUE, pattern = "csv$|xlsx$")
-    .d_copied <- copy_lgl(.d_files, dirs[1], overwrite)
+    .d_copied <- Rm_data::copy_lgl(.d_files, dirs[1], overwrite)
     .rd_files <- grep(paste0(paste0("(?:",files,"$)"), collapse = "|"), list.files("images", full.names = TRUE), value = TRUE, ignore.case = TRUE, perl = TRUE)
-    .rd_copied <- copy_lgl(.rd_files, dirs[2], overwrite)
+    .rd_copied <- Rm_data::copy_lgl(.rd_files, dirs[2], overwrite)
     out <- list(data = file.path(dirs[1], basename(.d_files[.d_copied])),
                 rdata = file.path(dirs[2], basename(.rd_files[.rd_copied])))
   } else {
@@ -212,7 +212,7 @@ freeze_pe <- function(dir, overwrite = FALSE) {
 
 
 living_situation <- function(ReferenceNo) {
-  case_when(
+  dplyr::case_when(
     ReferenceNo == 1 ~ "Emergency shelter/ h/motel paid for by a third party/Host Home shelter",
     ReferenceNo == 2 ~ "Transitional housing",
     ReferenceNo == 3 ~ "Permanent housing (other than RRH) for formerly homeless persons",
@@ -255,7 +255,7 @@ living_situation <- function(ReferenceNo) {
 }
 
 project_type <- function(ReferenceNo){
-  case_when(
+  dplyr::case_when(
     ReferenceNo == 1 ~ "Emergency Shelter",
     ReferenceNo == 2 ~ "Transitional Housing",
     ReferenceNo == 3 ~ "Permanent Supportive Housing",
@@ -269,11 +269,15 @@ project_type <- function(ReferenceNo){
 }
 
 replace_yes_no <- function(column_name) {
-  if_else(column_name == "No" | is.na(column_name), 0, 1)
+  if (inherits(column_name, "character") && all(names(table(column_name)) %in% c("Yes", "No"))) {
+    out <- dplyr::if_else(column_name == "No" | is.na(column_name), 0, 1)
+  } else {
+    out <- column_name
+  }
 }
 
 enhanced_yes_no_translator <- function(ReferenceNo) {
-  case_when(
+  dplyr::case_when(
     ReferenceNo == 0 ~ "No",
     ReferenceNo == 1 ~ "Yes",
     ReferenceNo == 8 ~ "Client doesn't know",
@@ -285,7 +289,7 @@ enhanced_yes_no_translator <- function(ReferenceNo) {
 # this function translates the HUD .csv 1.7 and 1.8 lists
 # and returns yes, no, or unknown as appropriate
 translate_HUD_yes_no <- function(column_name){
-  case_when(
+  dplyr::case_when(
     column_name == 1 ~ "Yes",
     column_name == 0 ~ "No",
     column_name %in% c(8, 9, 99) ~ "Unknown"
@@ -306,55 +310,55 @@ chronic_determination <- function(.data, aged_in = FALSE) {
   if (all((needed_cols) %in% colnames(.data))) {
     return(
       .data %>%
-        mutate(DaysHomelessInProject = difftime(ymd(ExitAdjust),
-                                                ymd(EntryDate),
-                                                units = "days"),
-               DaysHomelessBeforeEntry = difftime(ymd(EntryDate),
-                                                  if_else(
-                                                    is.na(ymd(DateToStreetESSH)),
-                                                    ymd(EntryDate),
-                                                    ymd(DateToStreetESSH)
-                                                  ),
-                                                  units = "days"),
-               ChronicStatus =
-                 case_when(
-                   ((ymd(DateToStreetESSH) + days(365) <= ymd(EntryDate) &
-                       !is.na(DateToStreetESSH)) |
-                      (
-                        MonthsHomelessPastThreeYears %in% c(112, 113) &
-                          TimesHomelessPastThreeYears == 4 &
-                          !is.na(MonthsHomelessPastThreeYears) &
-                          !is.na(TimesHomelessPastThreeYears)
-                      )
-                   ) &
-                     DisablingCondition == 1 &
-                     !is.na(DisablingCondition) ~ "Chronic",
-                   ProjectType %in% c(1, 8) &
-                     ymd(DateToStreetESSH) + days(365) > ymd(EntryDate) &
-                     !is.na(DateToStreetESSH) &
-                     DaysHomelessBeforeEntry + DaysHomelessInProject >= 365 ~ "Aged In",
-                   ((
-                     ymd(DateToStreetESSH) + days(365) <= ymd(EntryDate) &
-                       !is.na(DateToStreetESSH)
-                   ) |
-                     (
-                       MonthsHomelessPastThreeYears %in% c(110:113) &
-                         TimesHomelessPastThreeYears%in% c(3, 4) &
-                         !is.na(MonthsHomelessPastThreeYears) &
-                         !is.na(TimesHomelessPastThreeYears)
-                     )
-                   ) &
-                     DisablingCondition == 1 &
-                     !is.na(DisablingCondition) ~ "Nearly Chronic",
-                   TRUE ~ "Not Chronic"),
-               ChronicStatus = case_when(aged_in ~ ChronicStatus,
-                                         TRUE ~ if_else(ChronicStatus == "Aged In",
-                                                        "Chronic",
-                                                        ChronicStatus)),
-               ChronicStatus = factor(
-                 ChronicStatus,
-                 ordered = TRUE,
-                 levels = chronicity_levels)))
+        dplyr::mutate(DaysHomelessInProject = difftime(lubridate::ymd(ExitAdjust),
+                                                       lubridate::ymd(EntryDate),
+                                                       units = "days"),
+                      DaysHomelessBeforeEntry = difftime(lubridate::ymd(EntryDate),
+                                                         dplyr::if_else(
+                                                           is.na(lubridate::ymd(DateToStreetESSH)),
+                                                           lubridate::ymd(EntryDate),
+                                                           lubridate::ymd(DateToStreetESSH)
+                                                         ),
+                                                         units = "days"),
+                      ChronicStatus =
+                        dplyr::case_when(
+                          ((lubridate::ymd(DateToStreetESSH) + lubridate::days(365) <= lubridate::ymd(EntryDate) &
+                              !is.na(DateToStreetESSH)) |
+                             (
+                               MonthsHomelessPastThreeYears %in% c(112, 113) &
+                                 TimesHomelessPastThreeYears == 4 &
+                                 !is.na(MonthsHomelessPastThreeYears) &
+                                 !is.na(TimesHomelessPastThreeYears)
+                             )
+                          ) &
+                            DisablingCondition == 1 &
+                            !is.na(DisablingCondition) ~ "Chronic",
+                          ProjectType %in% c(1, 8) &
+                            lubridate::ymd(DateToStreetESSH) + lubridate::days(365) > lubridate::ymd(EntryDate) &
+                            !is.na(DateToStreetESSH) &
+                            DaysHomelessBeforeEntry + DaysHomelessInProject >= 365 ~ "Aged In",
+                          ((
+                            lubridate::ymd(DateToStreetESSH) + lubridate::days(365) <= lubridate::ymd(EntryDate) &
+                              !is.na(DateToStreetESSH)
+                          ) |
+                            (
+                              MonthsHomelessPastThreeYears %in% c(110:113) &
+                                TimesHomelessPastThreeYears%in% c(3, 4) &
+                                !is.na(MonthsHomelessPastThreeYears) &
+                                !is.na(TimesHomelessPastThreeYears)
+                            )
+                          ) &
+                            DisablingCondition == 1 &
+                            !is.na(DisablingCondition) ~ "Nearly Chronic",
+                          TRUE ~ "Not Chronic"),
+                      ChronicStatus = dplyr::case_when(aged_in ~ ChronicStatus,
+                                                       TRUE ~ dplyr::if_else(ChronicStatus == "Aged In",
+                                                                             "Chronic",
+                                                                             ChronicStatus)),
+                      ChronicStatus = factor(
+                        ChronicStatus,
+                        ordered = TRUE,
+                        levels = chronicity_levels)))
   }
 
   else {
@@ -376,36 +380,36 @@ long_term_homeless_determination <- function(.data) {
   if (all((needed_cols) %in% colnames(.data))) {
     return(
       .data %>%
-        mutate(DaysHomelessInProject = difftime(ymd(ExitAdjust),
-                                                ymd(EntryDate),
-                                                units = "days"),
-               DaysHomelessBeforeEntry = difftime(ymd(EntryDate),
-                                                  if_else(
-                                                    is.na(ymd(DateToStreetESSH)),
-                                                    ymd(EntryDate),
-                                                    ymd(DateToStreetESSH)
-                                                  ),
-                                                  units = "days"),
-               LongTermStatus =
-                 case_when(
-                   ((ymd(DateToStreetESSH) + days(365) <= ymd(EntryDate) &
-                       !is.na(DateToStreetESSH)) |
-                      (
-                        MonthsHomelessPastThreeYears %in% c(112, 113) &
-                          TimesHomelessPastThreeYears == 4 &
-                          !is.na(MonthsHomelessPastThreeYears) &
-                          !is.na(TimesHomelessPastThreeYears)
-                      )
-                   ) |
-                     ProjectType %in% c(1, 8) &
-                     ymd(DateToStreetESSH) + days(365) > ymd(EntryDate) &
-                     !is.na(DateToStreetESSH) &
-                     DaysHomelessBeforeEntry + DaysHomelessInProject >= 365 ~ "Long Term",
-                   TRUE ~ "Not Long Term"),
-               LongTermStatus = factor(
-                 LongTermStatus,
-                 ordered = TRUE,
-                 levels = c("Long Term", "Not Long Term"))))
+        dplyr::mutate(DaysHomelessInProject = difftime(lubridate::ymd(ExitAdjust),
+                                                       lubridate::ymd(EntryDate),
+                                                       units = "days"),
+                      DaysHomelessBeforeEntry = difftime(lubridate::ymd(EntryDate),
+                                                         dplyr::if_else(
+                                                           is.na(lubridate::ymd(DateToStreetESSH)),
+                                                           lubridate::ymd(EntryDate),
+                                                           lubridate::ymd(DateToStreetESSH)
+                                                         ),
+                                                         units = "days"),
+                      LongTermStatus =
+                        dplyr::case_when(
+                          ((lubridate::ymd(DateToStreetESSH) + lubridate::days(365) <= lubridate::ymd(EntryDate) &
+                              !is.na(DateToStreetESSH)) |
+                             (
+                               MonthsHomelessPastThreeYears %in% c(112, 113) &
+                                 TimesHomelessPastThreeYears == 4 &
+                                 !is.na(MonthsHomelessPastThreeYears) &
+                                 !is.na(TimesHomelessPastThreeYears)
+                             )
+                          ) |
+                            ProjectType %in% c(1, 8) &
+                            lubridate::ymd(DateToStreetESSH) + lubridate::days(365) > lubridate::ymd(EntryDate) &
+                            !is.na(DateToStreetESSH) &
+                            DaysHomelessBeforeEntry + DaysHomelessInProject >= 365 ~ "Long Term",
+                          TRUE ~ "Not Long Term"),
+                      LongTermStatus = factor(
+                        LongTermStatus,
+                        ordered = TRUE,
+                        levels = c("Long Term", "Not Long Term"))))
   }
 
   else {
