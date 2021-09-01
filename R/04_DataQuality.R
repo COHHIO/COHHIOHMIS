@@ -331,7 +331,7 @@ DataQuality <- function(
 
   missing_vaccine_exited <- served_in_date_range %>%
     dplyr::filter(HMIS::served_between(., hc$bos_start_vaccine_data, lubridate::today())) %>%
-    dplyr::left_join(covid19[c("PersonalID", "ConsentToVaccine", "VaccineConcerns")],
+    dplyr::left_join(covid19[c("PersonalID", "C19ConsentToVaccine", "C19VaccineConcerns")],
                      by = "PersonalID") %>%
     dplyr::left_join(dose_counts, by = "PersonalID") %>%
     dplyr::filter(
@@ -343,8 +343,8 @@ DataQuality <- function(
             ExitDate >= hc$bos_start_vaccine_data
         ) &
         (
-          ConsentToVaccine == "Data not collected (HUD)" |
-            is.na(ConsentToVaccine)
+          C19ConsentToVaccine == "Data not collected (HUD)" |
+            is.na(C19ConsentToVaccine)
         ) &
         is.na(Doses) &
         (ProjectType %in% c(1, 2, 4, 8) |
@@ -364,7 +364,7 @@ DataQuality <- function(
     dplyr::select(dplyr::all_of(vars_we_want))
 
   missing_vaccine_current <- served_in_date_range %>%
-    dplyr::left_join(covid19[c("PersonalID", "ConsentToVaccine", "VaccineConcerns")],
+    dplyr::left_join(covid19[c("PersonalID", "C19ConsentToVaccine", "C19VaccineConcerns")],
                      by = "PersonalID") %>%
     dplyr::left_join(dose_counts, by = "PersonalID") %>%
     dplyr::filter(
@@ -376,8 +376,8 @@ DataQuality <- function(
             ExitDate >= hc$bos_start_vaccine_data
         ) &
         (
-          ConsentToVaccine == "Data not collected (HUD)" |
-            is.na(ConsentToVaccine)
+          C19ConsentToVaccine == "Data not collected (HUD)" |
+            is.na(C19ConsentToVaccine)
         ) &
         is.na(Doses) &
         (ProjectType %in% c(1, 2, 4, 8) |
@@ -400,7 +400,7 @@ DataQuality <- function(
   # Dose Warnings -----------------------------------------------------------
 
   dose_date_error <- doses %>%
-    dplyr::filter(COVID19DoseDate < hc$first_vaccine_administered_in_us) %>%
+    dplyr::filter(C19DoseDate < hc$first_vaccine_administered_in_us) %>%
     dplyr::left_join(served_in_date_range %>%
                        dplyr::filter(HMIS::served_between(., hc$bos_start_vaccine_data, lubridate::today())),
                      by = "PersonalID") %>%
@@ -409,6 +409,7 @@ DataQuality <- function(
                   Guidance = "Vaccination date precedes the vaccine being available in the US.") %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
+  # TODO Revise with new dose data coming in from Clarity
   dose_date_warning <- doses %>%
     dplyr::group_by(PersonalID) %>%
     dplyr::summarise(Doses = dplyr::n()) %>%
@@ -416,12 +417,12 @@ DataQuality <- function(
     dplyr::filter(Doses > 1) %>%
     dplyr::left_join(doses, by = "PersonalID") %>%
     dplyr::group_by(PersonalID) %>%
-    dplyr::mutate(LastDose = dplyr::lag(COVID19DoseDate, order_by = COVID19DoseDate)) %>%
+    dplyr::mutate(LastDose = dplyr::lag(C19DoseDate, order_by = C19DoseDate)) %>%
     dplyr::filter(!is.na(LastDose)) %>%
-    dplyr::mutate(DaysBetweenDoses = difftime(COVID19DoseDate, LastDose, units = "days")) %>%
-    dplyr::filter(COVID19DoseDate < hc$first_vaccine_administered_in_us |
+    dplyr::mutate(DaysBetweenDoses = difftime(C19DoseDate, LastDose, units = "days")) %>%
+    dplyr::filter(C19DoseDate < hc$first_vaccine_administered_in_us |
                     DaysBetweenDoses < 20 |
-                    (COVID19VaccineManufacturer == "Moderna") &
+                    (C19VaccineManufacturer == "Moderna") &
                     DaysBetweenDoses < 27) %>%
     dplyr::left_join(served_in_date_range %>%
                        dplyr::filter(HMIS::served_between(., hc$bos_start_vaccine_data, lubridate::today())),
@@ -442,8 +443,8 @@ DataQuality <- function(
     dplyr::left_join(doses, by = "PersonalID") %>%
     dplyr::group_by(PersonalID) %>%
     dplyr::mutate(
-      minManufacturer = min(COVID19VaccineManufacturer),
-      maxManufacturer = max(COVID19VaccineManufacturer),
+      minManufacturer = min(C19VaccineManufacturer),
+      maxManufacturer = max(C19VaccineManufacturer),
       differs = minManufacturer != maxManufacturer,
       Type = "Error",
       Issue = "Client received different vaccines",
@@ -459,8 +460,8 @@ DataQuality <- function(
     dplyr::select(dplyr::all_of(vars_we_want))
 
   unknown_manufacturer_error <- doses %>%
-    dplyr::filter(stringr::str_starts(COVID19VaccineManufacturer, "Client doesn't know") &
-                    COVID19VaccineDocumentation != "Self-report") %>%
+    dplyr::filter(stringr::str_starts(C19VaccineManufacturer, "Client doesn't know") &
+                    C19VaccineDocumentation != "Self-report") %>%
     dplyr::left_join(served_in_date_range %>%
                        dplyr::filter(HMIS::served_between(., hc$bos_start_vaccine_data, lubridate::today())),
                      by = "PersonalID") %>%
@@ -472,8 +473,8 @@ DataQuality <- function(
     dplyr::select(dplyr::all_of(vars_we_want))
 
   unknown_manufacturer_warning <- doses %>%
-    dplyr::filter(stringr::str_starts(COVID19VaccineManufacturer, "Client doesn't know") &
-                    COVID19VaccineDocumentation == "Self-report") %>%
+    dplyr::filter(stringr::str_starts(C19VaccineManufacturer, "Client doesn't know") &
+                    C19VaccineDocumentation == "Self-report") %>%
     dplyr::left_join(served_in_date_range %>%
                        dplyr::filter(HMIS::served_between(., hc$bos_start_vaccine_data, lubridate::today())),
                      by = "PersonalID") %>%

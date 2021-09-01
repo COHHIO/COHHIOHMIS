@@ -259,14 +259,14 @@ get_res_prior <- Enrollment %>%
 
 covid_clients <- covid19 %>%
   dplyr::mutate(
-    COVID19AssessmentDate = lubridate::ymd(COVID19AssessmentDate),
-    ContactWithConfirmedDate = lubridate::ymd(ContactWithConfirmedDate),
-    ContactWithUnderInvestigationDate = lubridate::ymd(ContactWithUnderInvestigationDate),
-    TestDate = lubridate::ymd(TestDate),
-    DateUnderInvestigation = lubridate::ymd(DateUnderInvestigation)
+    C19AssessmentDate = lubridate::ymd(C19AssessmentDate),
+    C19ContactWithConfirmedDate = lubridate::ymd(C19ContactWithConfirmedDate),
+    C19ContactWithIllDate = lubridate::ymd(C19ContactWithIllDate),
+    C19TestDate = lubridate::ymd(C19TestDate),
+    C19InvestigationDate = lubridate::ymd(C19InvestigationDate)
   ) %>%
-  dplyr::filter(lubridate::ymd(COVID19AssessmentDate) >= lubridate::ymd("20200401") &
-           lubridate::ymd(COVID19AssessmentDate) <= lubridate::today()) %>%
+  dplyr::filter(lubridate::ymd(C19AssessmentDate) >= lubridate::ymd("20200401") &
+           lubridate::ymd(C19AssessmentDate) <= lubridate::today()) %>%
   dplyr::left_join(get_res_prior, by = "PersonalID") %>%
   dplyr::mutate(LivingSituationDescr = living_situation(LivingSituation)) %>%
   dplyr::as_tibble() %>%
@@ -275,29 +275,29 @@ covid_clients <- covid19 %>%
       (
         Tested == 1 &
           TestResults == "Positive" &
-          lubridate::ymd(TestDate) > lubridate::today() - lubridate::days(14) &
-          !is.na(TestDate)
+          lubridate::ymd(C19TestDate) > lubridate::today() - lubridate::days(14) &
+          !is.na(C19TestDate)
       ) |
         # if tested positive in the past 14 days ^^
         (
-          UnderInvestigation == 1 &
-            lubridate::ymd(DateUnderInvestigation) > lubridate::today() - lubridate::days(14)
+          C19UnderInvestigation == 1 &
+            lubridate::ymd(C19InvestigationDate) > lubridate::today() - lubridate::days(14)
         ) |
         (
-          ContactWithConfirmedCOVID19Patient == 1 &
+          C19ContactWithConfirmed == 1 &
             (
-              lubridate::ymd(ContactWithConfirmedDate) >
+              lubridate::ymd(C19ContactWithConfirmedDate) >
                 lubridate::today() - lubridate::days(14) |
-                is.na(ContactWithConfirmedDate)
+                is.na(C19ContactWithConfirmedDate)
               # contact with definite COVID-19 in the past 14 days ^^
             )
         ) |
         (
-          ContactWithUnderCOVID19Investigation == 1 &
+          C19ContactWithIll == 1 &
             (
-              lubridate::ymd(ContactWithUnderInvestigationDate) >
+              lubridate::ymd(C19ContactWithIllDate) >
                 lubridate::today() - lubridate::days(14) |
-                is.na(ContactWithUnderInvestigationDate)
+                is.na(C19ContactWithIllDate)
             )
           # contact date with maybe COVID-19 was within the past 14 days ^^
         ) |
@@ -322,12 +322,12 @@ covid_clients <- covid19 %>%
             Symptom2Weak) > 0 ~ 1, # "Needs Isolation/Quarantine"
       # if the client has any symptoms at all ^^
       (
-        HealthRiskHistoryOfRespiratoryIllness +
-          HealthRiskChronicIllness +
-          HealthRiskOver65 +
-          HealthRiskKidneyDisease +
-          HealthRiskImmunocompromised +
-          HealthRiskSmoke > 0
+        HRHistoryOfRespiratoryIllness +
+          HRChronicIllness +
+          HROver65 +
+          HRKidneyDisease +
+          HRImmunocompromised +
+          HRSmoke > 0
       )  ~ 2, # "Has Health Risk(s)",
       # if the client has any risks at all ^^
       TRUE ~ 4 # "No Known Risks or Exposure"

@@ -45,11 +45,11 @@ if (missing(app_env))
 # who's already been vaccinated?
 
 one_dose_and_done <- doses %>%
-  dplyr::filter(COVID19VaccineManufacturer == "Johnson & Johnson") %>%
-  dplyr::select(PersonalID, COVID19DoseDate) %>%
+  dplyr::filter(C19VaccineManufacturer == "Johnson & Johnson") %>%
+  dplyr::select(PersonalID, C19DoseDate) %>%
   dplyr::group_by(PersonalID) %>%
-  dplyr::slice_max(COVID19DoseDate) %>%
-  dplyr::select(PersonalID, "LastDose" = COVID19DoseDate) %>%
+  dplyr::slice_max(C19DoseDate) %>%
+  dplyr::select(PersonalID, "LastDose" = C19DoseDate) %>%
   unique()
 
 complete <- doses %>%
@@ -59,9 +59,9 @@ complete <- doses %>%
   dplyr::filter(Doses > 1) %>%
   dplyr::left_join(doses, by = "PersonalID") %>%
   dplyr::group_by(PersonalID) %>%
-  dplyr::mutate(LastDose = dplyr::lag(COVID19DoseDate, order_by = COVID19DoseDate)) %>%
+  dplyr::mutate(LastDose = dplyr::lag(C19DoseDate, order_by = C19DoseDate)) %>%
   dplyr::filter(!is.na(LastDose)) %>%
-  dplyr::mutate(DaysBetweenDoses = difftime(COVID19DoseDate, LastDose, units = "days")) %>%
+  dplyr::mutate(DaysBetweenDoses = difftime(C19DoseDate, LastDose, units = "days")) %>%
   dplyr::filter(DaysBetweenDoses >= 20) %>%
   dplyr::select(PersonalID, LastDose) %>%
   unique() %>%
@@ -91,7 +91,7 @@ most_recent_entries <- co_clients_served %>%
 # cohort of clients = current, over 16, and literally homeless in any ptc
 current_over16_lh <- most_recent_entries %>%
   dplyr::select(CountyServed, PersonalID, ProjectName) %>%
-  dplyr::left_join(covid19[c("PersonalID", "ConsentToVaccine", "VaccineConcerns")],
+  dplyr::left_join(covid19[c("PersonalID", "C19ConsentToVaccine", "C19VaccineConcerns")],
             by = "PersonalID") %>%
   dplyr::left_join(complete, by = "PersonalID") %>%
   dplyr::mutate(HasAllDoses = dplyr::if_else(is.na(HasAllDoses),
@@ -107,14 +107,14 @@ total_lh_by_county <- current_over16_lh %>%
 # getting consent data on everyone, getting data ready to turn
 consent_status <- current_over16_lh %>%
   dplyr::mutate(
-    ConsentToVaccine = dplyr::if_else(is.na(ConsentToVaccine),
+    C19ConsentToVaccine = dplyr::if_else(is.na(C19ConsentToVaccine),
                                "Data not collected (HUD)",
-                               ConsentToVaccine),
+                               C19ConsentToVaccine),
     Status = dplyr::case_when(
       HasAllDoses == "Yes" ~ "Has All Doses",
-      ConsentToVaccine == "Yes (HUD)" ~ "Answered Yes to Consent question",
-      !ConsentToVaccine %in% c("Yes (HUD)", "No (HUD)") ~ "Consent Unknown",
-      ConsentToVaccine == "No (HUD)" ~ "Answered No to Consent question"))
+      C19ConsentToVaccine == "Yes (HUD)" ~ "Answered Yes to Consent question",
+      !C19ConsentToVaccine %in% c("Yes (HUD)", "No (HUD)") ~ "Consent Unknown",
+      C19ConsentToVaccine == "No (HUD)" ~ "Answered No to Consent question"))
 
 # turning the data so each Status has its own column and it's by County
 consent_status_by_county <- consent_status %>%
@@ -183,15 +183,15 @@ vaccine_needs_second_dose <- dose_counts %>%
   dplyr::filter(Doses == 1) %>%
   dplyr::left_join(doses, by = "PersonalID") %>%
   dplyr::left_join(most_recent_entries, by = "PersonalID") %>%
-  dplyr::filter(COVID19VaccineManufacturer != "Johnson & Johnson") %>%
+  dplyr::filter(C19VaccineManufacturer != "Johnson & Johnson") %>%
   dplyr::mutate(
     NextDoseNeededDate = dplyr::case_when(
-      COVID19VaccineManufacturer == "Moderna" ~
-        lubridate::ymd(COVID19DoseDate) + lubridate::days(28),
-      COVID19VaccineManufacturer == "Pfizer" ~
-        lubridate::ymd(COVID19DoseDate) + lubridate::days(21),
-      stringr::str_starts(COVID19VaccineManufacturer, "Client doesn't know") == TRUE ~
-        lubridate::ymd(COVID19DoseDate) + lubridate::days(28)
+      C19VaccineManufacturer == "Moderna" ~
+        lubridate::ymd(C19DoseDate) + lubridate::days(28),
+      C19VaccineManufacturer == "Pfizer" ~
+        lubridate::ymd(C19DoseDate) + lubridate::days(21),
+      stringr::str_starts(C19VaccineManufacturer, "Client doesn't know") == TRUE ~
+        lubridate::ymd(C19DoseDate) + lubridate::days(28)
     ),
     CurrentLocation = dplyr::case_when(
       is.na(EntryDate) ~ dplyr::if_else(
@@ -245,7 +245,7 @@ vaccine_needs_second_dose <- dose_counts %>%
     PersonalID,
     HouseholdID,
     CountyServed,
-    COVID19VaccineManufacturer,
+    C19VaccineManufacturer,
     AgeAtEntry,
     VeteranStatus,
     NextDoseNeededDate,
@@ -290,12 +290,12 @@ vaccine_status <- co_clients_served_county_guesses %>%
   dplyr::mutate(HasAllDoses = dplyr::if_else(is.na(HasAllDoses), "No", HasAllDoses)) %>%
   dplyr::left_join(vaccine_needs_second_dose[c("PersonalID", "HouseholdID", "HowSoon")],
             by = c("HouseholdID", "PersonalID")) %>%
-  dplyr::left_join(covid19[c("PersonalID", "ConsentToVaccine")],
+  dplyr::left_join(covid19[c("PersonalID", "C19ConsentToVaccine")],
             by = c("PersonalID")) %>%
   dplyr::mutate(
-    ConsentToVaccine = dplyr::if_else(is.na(ConsentToVaccine),
+    C19ConsentToVaccine = dplyr::if_else(is.na(C19ConsentToVaccine),
                                "Data not collected",
-                               ConsentToVaccine),
+                               C19ConsentToVaccine),
     AgeAtEntry = dplyr::case_when(
       AgeAtEntry < 12 ~ "0-11",
       AgeAtEntry < 16 ~ "12-15",
@@ -310,11 +310,11 @@ vaccine_status <- co_clients_served_county_guesses %>%
       FullyVaccinated == "Yes" ~ "Fully vaccinated",
       HasAllDoses == "Yes" ~ "Has all doses",
       !is.na(HowSoon) ~ "Needs 2nd dose",
-      ConsentToVaccine == "Yes (HUD)" ~ "Not vaccinated, would consent",
-      ConsentToVaccine == "No (HUD)" ~ "Not vaccinated, would not consent",
-      !ConsentToVaccine %in% c("Yes (HUD)", "No (HUD)", "Data not collected") ~
+      C19ConsentToVaccine == "Yes (HUD)" ~ "Not vaccinated, would consent",
+      C19ConsentToVaccine == "No (HUD)" ~ "Not vaccinated, would not consent",
+      !C19ConsentToVaccine %in% c("Yes (HUD)", "No (HUD)", "Data not collected") ~
         "Not vaccinated, consent unknown",
-      ConsentToVaccine == "Data not collected" ~ "Data not collected"
+      C19ConsentToVaccine == "Data not collected" ~ "Data not collected"
     ),
     VaccineStatus = factor(VaccineStatus, levels = c(
       "Fully vaccinated",
@@ -343,10 +343,10 @@ vaccine_status <- co_clients_served_county_guesses %>%
  # Concerns ----------------------------------------------------------------
 #
 # concerns <- covid19 %>%
-#   select(PersonalID, ConsentToVaccine, VaccineConcerns) %>%
-#   filter(ConsentToVaccine != "Yes (HUD)" & !is.na(VaccineConcerns))
+#   select(PersonalID, C19ConsentToVaccine, C19VaccineConcerns) %>%
+#   filter(C19ConsentToVaccine != "Yes (HUD)" & !is.na(C19VaccineConcerns))
 #
-# text <- concerns$VaccineConcerns
+# text <- concerns$C19VaccineConcerns
 #
 # text <- tolower(text)
 #

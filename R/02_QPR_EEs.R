@@ -50,7 +50,7 @@ smallProject <- Project %>%
          ProjectCounty,
          ProjectRegion) %>%
   dplyr::filter(HMISParticipatingProject == 1 &
-           HMIS::operating_between(., lubridate::ymd(calc_data_goes_back_to), lubridate::ymd(meta_HUDCSV_Export_End)) &
+           HMIS::operating_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End) &
            !is.na(ProjectRegion) &
            ProjectType %in% c(1:4, 8:9, 12:14)) %>%
   dplyr::mutate(
@@ -108,7 +108,7 @@ smallEnrollment <- smallEnrollment %>%
 qpr_leavers <- smallProject %>%
   dplyr::left_join(smallEnrollment, by = "ProjectID") %>%
   dplyr::filter((!is.na(ExitDate) | ProjectType %in% c(3, 9, 12)) &
-           HMIS::served_between(., lubridate::ymd(calc_data_goes_back_to), lubridate::ymd(meta_HUDCSV_Export_End)) &
+           HMIS::served_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End) &
            RelationshipToHoH == 1) %>%
   dplyr::mutate(
     DestinationGroup = dplyr::case_when(
@@ -120,13 +120,13 @@ qpr_leavers <- smallProject %>%
     ),
     DaysinProject = difftime(ExitAdjust, EntryDate, units = "days")
   ) %>%
-  dplyr::filter(HMIS::stayed_between(., lubridate::ymd(calc_data_goes_back_to), lubridate::ymd(meta_HUDCSV_Export_End))) %>%
+  dplyr::filter(HMIS::stayed_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End)) %>%
   dplyr::arrange(ProjectName)
 
 qpr_rrh_enterers <- smallProject %>%
   dplyr::left_join(smallEnrollment, by = "ProjectID") %>%
   dplyr::filter(ProjectType == 13 &
-           HMIS::entered_between(., lubridate::ymd(calc_data_goes_back_to), lubridate::ymd(meta_HUDCSV_Export_End)) &
+           HMIS::entered_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End) &
            RelationshipToHoH == 1) %>%
   dplyr::mutate(
     DaysToHouse = difftime(MoveInDateAdjust, EntryDate, units = "days"),
@@ -143,7 +143,7 @@ smallMainstreamBenefits <- IncomeBenefits %>%
 
 qpr_benefits <- smallProject %>%
   dplyr::left_join(smallEnrollment, by = "ProjectID") %>%
-  dplyr::filter(HMIS::exited_between(., lubridate::ymd(calc_data_goes_back_to), lubridate::ymd(meta_HUDCSV_Export_End)) &
+  dplyr::filter(HMIS::exited_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End) &
            RelationshipToHoH == 1) %>%
   dplyr::left_join(smallMainstreamBenefits, by = "EnrollmentID") %>%
   dplyr::select(ProjectName, FriendlyProjectName, PersonalID, HouseholdID, EntryDate,
@@ -185,7 +185,7 @@ smallIncomeDiff <-
 
 qpr_income <- smallProject %>%
   dplyr::left_join(smallEnrollment, by = "ProjectID") %>%
-  dplyr::filter(HMIS::served_between(., lubridate::ymd(calc_data_goes_back_to), lubridate::ymd(meta_HUDCSV_Export_End)) &
+  dplyr::filter(HMIS::served_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End) &
            RelationshipToHoH == 1) %>%
   dplyr::left_join(smallIncomeDiff, by = "EnrollmentID") %>%
   dplyr::select(ProjectName, FriendlyProjectName, PersonalID, HouseholdID, EntryDate,
@@ -247,48 +247,48 @@ get_res_prior <- validation %>%
 
 covid19_plot <- covid19 %>%
   dplyr::left_join(get_res_prior, by = "PersonalID") %>%
-  dplyr::filter(lubridate::ymd(COVID19AssessmentDate) >= lubridate::mdy("04012020") &
-           lubridate::ymd(COVID19AssessmentDate) <= lubridate::today())
+  dplyr::filter(C19AssessmentDate >= lubridate::mdy("04012020") &
+           C19AssessmentDate <= lubridate::today())
 
 priority <- covid19_plot %>%
   dplyr::mutate(
     Priority = dplyr::case_when(
       # if tested positive
       (
-        Tested == 1 &
-          TestResults == "Positive" &
-          lubridate::ymd(TestDate) > lubridate::ymd(COVID19AssessmentDate) - lubridate::days(14) &
-          !is.na(TestDate)
+        C19Tested == 1 &
+          C19TestResults == "Positive" &
+          C19TestDate > C19AssessmentDate - lubridate::days(14) &
+          !is.na(C19TestDate)
       ) |
         # if under investigation
         (
-          UnderInvestigation == 1 &
-            lubridate::ymd(DateUnderInvestigation) > lubridate::ymd(COVID19AssessmentDate) - lubridate::days(14)
+          C19UnderInvestigation == 1 &
+            C19InvestigationDate > C19AssessmentDate - lubridate::days(14)
         ) |
         # contact with COVID-19
         (
-          ContactWithConfirmedCOVID19Patient == 1 &
+          C19ContactWithConfirmed == 1 &
             (
-              lubridate::ymd(ContactWithConfirmedDate) >
-                lubridate::ymd(COVID19AssessmentDate) - lubridate::days(14) |
-                is.na(ContactWithConfirmedDate)
+              C19ContactWithConfirmedDate >
+                C19AssessmentDate - lubridate::days(14) |
+                is.na(C19ContactWithConfirmedDate)
             )
           # compares contact date to the assessment date too since we want to
           # see severity at the time of assessment
         ) |
         (
-          ContactWithUnderCOVID19Investigation == 1 &
+          C19ContactWithIll == 1 &
             (
-              lubridate::ymd(ContactWithUnderInvestigationDate) >
-                lubridate::ymd(COVID19AssessmentDate) - lubridate::days(14) |
-                is.na(ContactWithUnderInvestigationDate)
+              C19ContactWithIllDate >
+                C19AssessmentDate - lubridate::days(14) |
+                is.na(C19ContactWithIllDate)
             )
         ) |
         # if the client came from jail or nursing home
         (
           LivingSituation %in% c(7, 25) &
-            EntryDate > lubridate::ymd(COVID19AssessmentDate) - lubridate::days(14) &
-            EntryDate <= lubridate::ymd(COVID19AssessmentDate)
+            EntryDate > C19AssessmentDate - lubridate::days(14) &
+            EntryDate <= C19AssessmentDate
         ) |
         # if the client has any symptoms at all
         (
@@ -307,12 +307,12 @@ priority <- covid19_plot %>%
         ) > 0 ~ "Needs Isolation/Quarantine",
       # if the client has any risks at all
       (
-        HealthRiskHistoryOfRespiratoryIllness +
-          HealthRiskChronicIllness +
-          HealthRiskOver65 +
-          HealthRiskKidneyDisease +
-          HealthRiskImmunocompromised +
-          HealthRiskSmoke > 0
+        HRHistoryOfRespiratoryIllness +
+          HRChronicIllness +
+          HROver65 +
+          HRKidneyDisease +
+          HRImmunocompromised +
+          HRSmoke > 0
       )  ~ "Has Health Risk(s)",
       TRUE ~ "No Known Risks or Exposure"
       # everyone else lands here ^
@@ -321,16 +321,16 @@ priority <- covid19_plot %>%
     Priority = factor(Priority, levels = c("Needs Isolation/Quarantine",
                                            "Has Health Risk(s)",
                                            "No Known Risks or Exposure")),
-    Month = paste0(lubridate::year(COVID19AssessmentDate),
+    Month = paste0(lubridate::year(C19AssessmentDate),
                    stringr::str_pad(
-                     lubridate::month(COVID19AssessmentDate),
+                     lubridate::month(C19AssessmentDate),
                      width = 2,
                      pad = "0"
                    )),
     Month = as.numeric(factor(Month)),
-    MonthOf = format.Date(COVID19AssessmentDate, "%b %Y")
+    MonthOf = format.Date(C19AssessmentDate, "%b %Y")
   ) %>%
-  dplyr::filter(lubridate::month(COVID19AssessmentDate) != lubridate::month(lubridate::today()))
+  dplyr::filter(lubridate::month(C19AssessmentDate) != lubridate::month(lubridate::today()))
 
 priority_plot <- priority %>%
   dplyr::select(PersonalID, MonthOf, Month, Priority) %>%
@@ -359,25 +359,25 @@ covid19_status <- covid19_plot %>%
     COVID19Status = dplyr::case_when(
       Tested == 1 &
         TestResults == "Positive" &
-        lubridate::ymd(TestDate) > lubridate::ymd(COVID19AssessmentDate) - lubridate::days(14) &
-        !is.na(TestDate) ~ "Positive",
+        C19TestDate > C19AssessmentDate - lubridate::days(14) &
+        !is.na(C19TestDate) ~ "Positive",
       # testing positive in the 14 days prior to assessment is the only way to
       # land in this bucket
       (
-        ContactWithConfirmedCOVID19Patient == 1 &
+        C19ContactWithConfirmed == 1 &
           (
-            lubridate::ymd(ContactWithConfirmedDate) >
-              lubridate::ymd(COVID19AssessmentDate) - lubridate::days(14) |
-              is.na(ContactWithConfirmedDate)
+            C19ContactWithConfirmedDate >
+              C19AssessmentDate - lubridate::days(14) |
+              is.na(C19ContactWithConfirmedDate)
           )
         # compares contact date to date of the assessment
       ) |
         (
-          ContactWithUnderCOVID19Investigation == 1 &
+          C19ContactWithIll == 1 &
             (
-              lubridate::ymd(ContactWithUnderInvestigationDate) >
-                lubridate::ymd(COVID19AssessmentDate) - lubridate::days(14) |
-                is.na(ContactWithUnderInvestigationDate)
+              C19ContactWithIllDate >
+                C19AssessmentDate - lubridate::days(14) |
+                is.na(C19ContactWithIllDate)
             )
         ) |
         (
@@ -396,8 +396,8 @@ covid19_status <- covid19_plot %>%
         ) > 0
       |
         (
-          UnderInvestigation == 1 &
-            lubridate::ymd(DateUnderInvestigation) > lubridate::ymd(COVID19AssessmentDate) - lubridate::days(14)
+          C19UnderInvestigation == 1 &
+            C19InvestigationDate > C19AssessmentDate - lubridate::days(14)
         ) ~
         "May Have COVID-19",
       # being Under Investigation (past 14 days), any Symptom, or any Contact
@@ -411,16 +411,16 @@ covid19_status <- covid19_plot %>%
                  "May Have COVID-19",
                  "Positive")
     ),
-    Month = paste0(lubridate::year(COVID19AssessmentDate),
+    Month = paste0(lubridate::year(C19AssessmentDate),
                    stringr::str_pad(
-                     lubridate::month(COVID19AssessmentDate),
+                     lubridate::month(C19AssessmentDate),
                      width = 2,
                      pad = "0"
                    )),
     Month = as.numeric(factor(Month)),
-    MonthOf = format.Date(COVID19AssessmentDate, "%b %Y")
+    MonthOf = format.Date(C19AssessmentDate, "%b %Y")
   ) %>%
-  dplyr::filter(lubridate::month(COVID19AssessmentDate) != lubridate::month(lubridate::today()))
+  dplyr::filter(lubridate::month(C19AssessmentDate) != lubridate::month(lubridate::today()))
 
 covid19_status_plot <- covid19_status %>%
   dplyr::select(PersonalID, MonthOf, Month, COVID19Status) %>%
