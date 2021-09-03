@@ -9,7 +9,11 @@ Authors@R:
            person(given = "Stephen",
            family = "Holsenbeck",
            role = c("cre", "aut"),
-           email = "stephenholsenbeck@cohhio.org"))
+           email = "stephenholsenbeck@cohhio.org"),
+           person(given = "Gwen",
+           family = "Beebe",
+           email = "gwenbeebe@gmail.com",
+           role = "con"))
 Description: This provides workflows for munging and porting data dependencies to the open-source Homeless Management Information System (HMIS) custom reporting apps Rminor & Rminor_elevated
 License: AGPL-3
 Imports: 
@@ -47,11 +51,12 @@ Remotes:
     yogat3ch/UU
 Collate: 
     'aaa_imports.R'
-    'init_api.R'
     'app_dependencies.R'
+    'init_R6.R'
     '00_dates.R'
     '00_cohorts.R'
     '00_functions.R'
+    '00_get_Export_utils.R'
     '00_get_Export.R'
     '01_Bed_Unit_Utilization.R'
     '02_QPR_EEs.R'
