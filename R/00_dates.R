@@ -98,5 +98,4 @@ dates <- function(clarity_api,
   # Mon Aug 09 17:09:52 2021
 
   app_env$gather_deps("everything")
-  app_env
 }

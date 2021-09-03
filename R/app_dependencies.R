@@ -86,14 +86,7 @@ app_deps <- list(
     "dq_plot_warnings",
     "dq_providers",
     "enhanced_yes_no_translator",
-    "hc_began_collecting_covid_data",
-    "hc_bos_start_vaccine_data",
-    "hc_check_dq_back_to",
-    "hc_data_goes_back_to",
-    "hc_project_eval_start",
-    "hc_project_eval_end",
-    "hc_project_eval_docs_due",
-    "hc_psh_started_collecting_move_in_date",
+    "hc",
     "HUD_specs",
     "living_situation",
     "meta_HUDCSV_Export_Date",
@@ -135,20 +128,21 @@ app_deps <- list(
     "vaccine_status",
     "validation",
     Veterans = c(
-    "veteran_active_list",
-    "permanently_housed_vets",
-    "entered_past_90_vets",
-    "new_gpd_vets"
+      "veteran_active_list",
+      "permanently_housed_vets",
+      "entered_past_90_vets",
+      "new_gpd_vets"
     )
   )
 )
-
 write_deps_to_disk <- rlang::new_function(
   args =
     rlang::pairlist2(
       app_deps = rlang::expr(self$app_deps),
-      paths = rlang::expr(purrr::imap_chr(self$app_deps, ~
-                                file.path("data", "db", .y))),
+      paths = rlang::expr(purrr::imap_chr(
+        self$app_deps, ~
+          file.path("data", "db", .y)
+      )),
       accessor = function(x = as.character(match.call()[[1]]),
                           path = "data/db",
                           ...) {
@@ -166,42 +160,49 @@ write_deps_to_disk <- rlang::new_function(
     ),
   body =
     base::quote({
-      .missing <- purrr::map_depth(app_deps, 2, ~ is.null(self$app_objs[[.x]]))
+      .missing <-
+        purrr::map_depth(app_deps, 2, ~ is.null(self$app_objs[[.x]]))
       # Stop if dependencies are missing
       if (any(purrr::flatten_lgl(.missing)))
-        stop(paste0(purrr::imap_chr(.missing, ~{
-          paste0("The following objects are missing from ", .y,": ", paste0(app_deps[.x], collapse = ", "))
+        stop(paste0(purrr::imap_chr(.missing, ~ {
+          paste0("The following objects are missing from ",
+                 .y,
+                 ": ",
+                 paste0(app_deps[.x], collapse = ", "))
         }), collapse = "\n"))
 
-      purrr::walk(paths, ~{
+      purrr::walk(paths, ~ {
         if (!dir.exists(.x))
           stop("`path` directory does not exist")
       })
 
 
-      purrr::walk2(self$app_objs, paths, ~purrr::iwalk(.x, path = .y, ~{
-        .fp <- file.path(path, paste0(.y, clarity.looker::file_io_ext(.x)))
-        rlang::exec(clarity.looker::file_io_fn(.x), .x, .fp)
-        cli::cli_alert_success(.y, " saved to ", .fp)
-      }))
+      purrr::walk2(self$app_objs, paths, ~ purrr::iwalk(.x, path = .y, ~
+                                                          {
+                                                            .fp <- file.path(path, paste0(.y, clarity.looker::file_io_ext(.x)))
+                                                            rlang::exec(clarity.looker::file_io_fn(.x), .x, .fp)
+                                                            cli::cli_alert_success(.y, " saved to ", .fp)
+                                                          }))
       # make the execution environment the baseenv for these functions to avoid inadvertently grabbing variables or functions from the environment inside the app where it will be executed
       rlang::fn_env(accessor) <- rlang::env(baseenv())
       # replace the objects with the accessor function
-      accessors <- purrr::map2(self$app_objs, paths, ~purrr::imap(.x, path = .y, ~{
-        .fmls <- rlang::fn_fmls(accessor)
-        .fmls$path = path
-        rlang::fn_fmls(accessor) <- .fmls
-        accessor
-      }))
+      accessors <-
+        purrr::map2(self$app_objs, paths, ~ purrr::imap(.x, path = .y, ~ {
+          .fmls <- rlang::fn_fmls(accessor)
+          .fmls$path = path
+          rlang::fn_fmls(accessor) <- .fmls
+          accessor
+        }))
 
-      accessors <- purrr::map2(self$app_objs, paths, ~purrr::imap(.x, path = .y, ~{
-        .fmls <- rlang::fn_fmls(accessor)
-        .fmls$path = path
-        rlang::fn_fmls(accessor) <- .fmls
-        accessor
-      }))
+      accessors <-
+        purrr::map2(self$app_objs, paths, ~ purrr::imap(.x, path = .y, ~ {
+          .fmls <- rlang::fn_fmls(accessor)
+          .fmls$path = path
+          rlang::fn_fmls(accessor) <- .fmls
+          accessor
+        }))
 
-      purrr::pwalk(list(accessors, paths, names(accessors)), ~saveRDS(.x, file.path(.y, paste0(..3, ".rds"))))
+      purrr::pwalk(list(accessors, paths, names(accessors)), ~ saveRDS(.x, file.path(.y, paste0(..3, ".rds"))))
     })
 
 )
@@ -216,35 +217,52 @@ write_deps_to_disk <- rlang::new_function(
 
 app_env <- R6::R6Class(
   "app_env",
-  public = list(
+  public = rlang::list2(
     #' @description Gather the objects passed to \code{app_env}s internal environment to be passed to subsequent functions. Save app dependencies into a list.
-    #' @param ... \code{(objects)} Dependencies for subsequent functions. Use \code{"everything"} to capture all objects from the parent environment.
+    #' @param ... \code{(objects)} Dependencies for subsequent functions, passed as objects and not character vector of names. Use \code{"everything"} to capture all objects from the parent environment.
     gather_deps = function(...,
                            app_deps = self$app_deps,
                            env = rlang::caller_env(),
-                           .args = names(rlang::fn_fmls(rlang::call_fn(rlang::call_standardise(match.call(call = sys.call(1))))))) {
+                           .args = names(rlang::fn_fmls(rlang::call_fn(rlang::call_standardise(
+                             match.call(call = sys.call(1))
+                           ))))) {
       # must be forced to get the calling environment where the user called it since env isn't used until inside the purrr::map call
       force(env)
-      force(.args)
-      .work_deps <- rlang::dots_list(..., .named = TRUE)
-      if (length(.work_deps) == 1 && .work_deps[1] == "everything")
-        .work_deps <- rlang::env_get_list(env, ls(env, all.names = TRUE) |> stringr::str_subset(negate = TRUE, pattern = paste0("(?:^",.args,"$)", collapse = "|")))
+
+      .work_deps <- rlang::dots_list(..., .named = TRUE) |>
+        {\(x) {rlang::set_names(x, stringr::str_remove_all(names(x), "\""))}}()
+      if (length(.work_deps) == 1 && .work_deps[1] == "everything") {
+        .all_objs <- ls(env, all.names = TRUE)
+        .args <- try(force(.args), silent = TRUE)
+        if (UU::is_legit(.args))
+          .all_objs<- stringr::str_subset(.all_objs,
+            negate = TRUE,
+            pattern = paste0("(?:^", .args, "$)", collapse = "|")
+          )
+
+        .work_deps <- rlang::env_get_list(env, .all_objs)
+      }
+
       .new_wdeps <- names(.work_deps)
       private$work_deps <-
-        append(private$work_deps, .new_wdeps) %>%
+        append(private$work_deps, .new_wdeps)  |>
         {
-          .[!duplicated(.)]
-        }
+          \(x) {
+            x[!duplicated(x)]
+          }
+        }()
+
       cli::cli({
         cli::cli_h2("Global")
         cli::cli_alert_success(paste0("dependencies saved: ", paste0(.new_wdeps, collapse = ", ")))
       })
-      rlang::env_bind(self$.__enclos_env__,!!!.work_deps)
+      #TODO need handling for unnamed
+      rlang::env_bind(self$.__enclos_env__, !!!.work_deps)
       self$app_objs <- purrr::imap(app_deps, ~ {
         .deps <-
           purrr::compact(rlang::env_get_list(env, .x, default = NULL))
         if (UU::is_legit(.deps)) {
-          app_objs <- purrr::list_modify(self$app_objs, !!!.deps)
+          app_objs <- purrr::list_modify(self$app_objs,!!!.deps)
           cli::cli({
             cli::col_blue(cli::cli_h2(.y))
             cli::cli_alert_success(paste0(" dependencies saved: ", paste0(names(.deps), collapse = ", ")))
@@ -252,35 +270,100 @@ app_env <- R6::R6Class(
           app_objs
         }
       })
+      invisible(self)
     },
     #' @description Pass all dependencies saved from previous functions to an environment for use
     #' @param nms \code{(character)} of the names of the dependencies to load into the `env`. **Default** load all previously stored objects.
     #' @param env \code{(environment)} to pass dependencies to. **Default** the calling environment
-    merge_deps_to_env = function(nms, env = rlang::caller_env()) {
-      if (missing(nms))
+    merge_deps_to_env = function(..., env = rlang::caller_env()) {
+      nms <- purrr::flatten_chr(rlang::dots_list(...))
+      if (!UU::is_legit(nms))
         nms <- private$work_deps
-      rlang::env_bind(env,!!!rlang::env_get_list(self$.__enclos_env__, nms))
+      .missing_nms <- !nms %in% ls(self$.__enclos_env__)
+      if (any(.missing_nms))
+        rlang::abort(paste0(paste0(nms[.missing_nms], collapse = ", "), " not found in working environment. Has it been saved?"))
+      rlang::env_bind(env, !!!rlang::env_get_list(self$.__enclos_env__, nms))
     },
     #' @description Write app dependencies to disk
-    #' @param app_deps \code{(named list)} with each name corresponding to an app with each item containing a character vector of the app dependencies. **Default** the `app_deps` stored in the public field \code{app_env$app_deps}.
+    #' @param app_deps \code{(named list)} with each name corresponding to an app with each item containing a character vector of the app dependencies. **Default** the `app_deps` stored in the public field \code{app_env\$app_deps}.
     #' @param paths \code{(named list)} Paths to write app dependencies to, one path for each app in `app_deps` (in the same order).
     #' @param accessor \code{(function)} An accessor function that will be used to read the files from disk in the live app.
-    write_app_deps = write_deps_to_disk,
+    write_app_deps = function (app_deps = self$app_deps,
+                               paths = purrr::imap_chr(self$app_deps,
+                                                       ~
+                                                         file.path("data", "db", .y)),
+                               accessor = function (x = as.character(match.call()[[1]]),
+                                                    path = "data/db",
+                                                    ...)
+                               {
+                                 .file <- list.files(path,
+                                                     pattern = paste0("^", x,
+                                                                      "\\."),
+                                                     full.names = TRUE)
+                                 ext <-
+                                   stringr::str_extract(basename(.file), "(?<=\\.)\\w+$")
+                                 load_fun <-
+                                   file_io_fn(ext = ext)
+                                 load_fun(file)
+                               })
+    {
+      .missing <-
+        purrr::map_depth(app_deps, 2, ~ is.null(self$app_objs[[.x]]))
+      if (any(purrr::flatten_lgl(.missing)))
+        stop(paste0(purrr::imap_chr(.missing, ~ {
+          paste0("The following objects are missing from ",
+                 .y,
+                 ": ",
+                 paste0(app_deps[.x], collapse = ", "))
+        }), collapse = "\n"))
+      purrr::walk(paths, ~ {
+        if (!dir.exists(.x))
+          stop("`path` directory does not exist")
+      })
+      purrr::walk2(self$app_objs, paths, ~ purrr::iwalk(.x, path = .y,
+                                                        ~ {
+                                                          .fp <- file.path(path, paste0(.y, clarity.looker::file_io_ext(.x)))
+                                                          rlang::exec(clarity.looker::file_io_fn(.x), .x, .fp)
+                                                          cli::cli_alert_success(.y, " saved to ", .fp)
+                                                        }))
+      rlang::fn_env(accessor) <- rlang::env(baseenv())
+      accessors <-
+        purrr::map2(self$app_objs, paths, ~ purrr::imap(.x,
+                                                        path = .y, ~
+                                                          {
+                                                            .fmls <- rlang::fn_fmls(accessor)
+                                                            .fmls$path = path
+                                                            rlang::fn_fmls(accessor) <-
+                                                              .fmls
+                                                            accessor
+                                                          }))
+      accessors <-
+        purrr::map2(self$app_objs, paths, ~ purrr::imap(.x,
+                                                        path = .y, ~
+                                                          {
+                                                            .fmls <- rlang::fn_fmls(accessor)
+                                                            .fmls$path = path
+                                                            rlang::fn_fmls(accessor) <-
+                                                              .fmls
+                                                            accessor
+                                                          }))
+      purrr::pwalk(list(accessors, paths, names(accessors)), ~ saveRDS(.x,
+                                                                       file.path(.y, paste0(..3, ".rds"))))
+    },
     #' @field \code{(list)} with all app dependencies as objects
     app_objs = list(),
     #' @field \code{(list)} with all app dependencies as character vectors
     app_deps = c(),
-    #' @description Instantiate with default app dependencies to be collected (if they exist) each time \code{$gather_deps} is called
-    initialize = rlang::new_function(list(app_deps = rlang::expr(!!app_deps)), body = base::quote({
+    #' @description Instantiate with default app dependencies to be collected (if they exist) each time \code{\$gather_deps} is called
+    initialize = function(app_deps) {
+      if (missing(app_deps))
+        app_deps <- Rm_data:::app_deps
       self$app_deps <- app_deps
-    }))
+    }
   ),
-  private = list(
-    #' @field Save a vector of the names of working dependencies that have been saved for future reference when \code{$merge_deps_to_env} is called.
-    work_deps = c()
-  ),
+  private = list(#' @field Save a vector of the names of working dependencies that have been saved for future reference when \code{\$merge_deps_to_env} is called.
+    work_deps = c()),
   lock_objects = FALSE
 )
 
 dependencies <- list()
-
