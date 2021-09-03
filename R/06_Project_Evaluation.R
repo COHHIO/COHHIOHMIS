@@ -20,9 +20,9 @@ Project_Evaluation <- function(
              e = rlang::caller_env()
             ) {
 if (missing(clarity_api))
-  clarity_api <- UU::find_by_class("clarity_api", e)
+  clarity_api <- get_clarity_api(e = e)
 if (missing(app_env))
-  app_env <- UU::find_by_class("app_env", e)
+  app_env <- get_app_env(e = e)
 
   # TODO update file names when PE Freeze happens
   load("pe_dataset_final/images/COHHIOHMIS.RData")
@@ -566,6 +566,8 @@ data_quality_flags_detail[is.na(data_quality_flags_detail)] <- 0
 
 # writing out a file to help notify flagged projects toward end of process
 
+# TODO Automation email drafts to the right set of users (need to filter COHHIO_admin_user_ids)
+# Retrieve AgencyID, get all attached UserIDs, Send email to those Users.
 users_eda_groups <- readxl::read_xlsx("data/RMisc2.xlsx",
                              sheet = 15) %>%
   dplyr::select(UserID, UserEmail, EDAGroupName)
@@ -576,8 +578,7 @@ eda_groups_providers <- readxl::read_xlsx("data/RMisc2.xlsx",
 
 providers_users <- users_eda_groups %>%
   dplyr::left_join(eda_groups_providers, by = c("EDAGroupName" = "EDAGroup")) %>%
-  dplyr::filter(!is.na(ProjectID) &
-           !UserID %in% c(COHHIO_admin_user_ids))
+  dplyr::filter(!is.na(ProjectID))
 
 notify_about_dq <- data_quality_flags_detail %>%
   dplyr::filter(GeneralFlagTotal > 0 |
@@ -588,7 +589,6 @@ notify_about_dq <- data_quality_flags_detail %>%
               dplyr::select(ProjectID, AltProjectID), by = "AltProjectID") %>%
   dplyr::mutate(ProjectID = dplyr::if_else(is.na(ProjectID), AltProjectID, ProjectID)) %>%
   dplyr::left_join(providers_users, by = "ProjectID")
-
 
 readr::write_csv(notify_about_dq, "Reports/notify.csv")
 
