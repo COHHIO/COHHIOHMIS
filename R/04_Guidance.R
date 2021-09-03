@@ -13,7 +13,7 @@
 # <https://www.gnu.org/licenses/>.
 guidance <- function(app_env, e = rlang::caller_env()) {
   if (missing(app_env))
-    app_env <- UU::find_by_class("app_env", e = e)
+    app_env <- get_app_env(e = e)
   guidance = list()
   guidance$conflicting_hi <-
     "If the user answered \"Yes\" to \"Covered by Health Insurance?\", then
@@ -69,8 +69,8 @@ guidance <- function(app_env, e = rlang::caller_env()) {
   can reasonably attempt again to collect this data from the client (like
   if they are still in your project), then please do so. Otherwise, there is
   no action needed."
+
   app_env$gather_deps(guidance)
-  app_env
 }
 
 

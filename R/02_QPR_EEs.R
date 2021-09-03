@@ -20,9 +20,9 @@ QPR_EEs <- function(
              e = rlang::caller_env()
             ) {
 if (missing(clarity_api))
-  clarity_api <- UU::find_by_class("clarity_api", e)
+  clarity_api <- get_clarity_api(e = e)
 if (missing(app_env))
-  app_env <- UU::find_by_class("app_env", e)
+  app_env <- get_app_env(e = e)
 
 # decided to continue to use a separate file for Goals (instead of building it
 # in a tribble) because this way the CoC team can review it more easily.
@@ -235,6 +235,7 @@ rm(smallEnrollment,
    incomeMostRecent,
    incomeAtEntry,
    smallIncomeDiff)
+
 
 
 # COVID-19 plots for Rm ---------------------------------------------------

@@ -5,9 +5,9 @@ dates <- function(clarity_api,
 ) {
 
   if (missing(clarity_api))
-    clarity_api <- UU::find_by_class("clarity_api", e)
+    clarity_api <- get_clarity_api(e = e)
   if (missing(app_env))
-    app_env <- UU::find_by_class("app_env", e)
+    app_env <- get_app_env(e = e)
   hc <- purrr::map(list(
     data_goes_back_to = "01012019",
 
