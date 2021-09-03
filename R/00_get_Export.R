@@ -16,226 +16,6 @@
 # IT REPLACES THE NAMES AND SSNS WITH DATA QUALITY SIGNIFIERS!
 # IT CAN BE RUN ON A CLEAN CLIENT.CSV FILE OR ONE THAT'S BEEN OVERWRITTEN.
 
-#' @title Redact PII from Client HUD Export
-#' @description This redacts all PII (except DOB) from Client HUD Export
-#' @param Client \code{(tibble)} Client HUD Export
-#' @return \code{(tibble)} Redacted Client HUD Export
-#' @export
-
-Client_redact <- function(Client) {
-  Client %>%
-    # our fake Client IDs are 5 and 4216
-    dplyr::filter(!PersonalID %in% c(5, 4216)) %>%
-    dplyr::mutate(
-      FirstName = dplyr::case_when(
-        NameDataQuality %in% c(8, 9) ~ "DKR",
-        NameDataQuality == 2 ~ "Partial",
-        NameDataQuality == 99 |
-          is.na(NameDataQuality) |
-          FirstName == "Anonymous" ~ "Missing",
-        !(
-          NameDataQuality %in% c(2, 8, 9, 99) |
-            is.na(NameDataQuality) |
-            FirstName == "Anonymous"
-        ) ~ "ok"
-      ),
-      LastName = NULL,
-      MiddleName = NULL,
-      NameSuffix = NULL,
-      SSN = dplyr::case_when(
-        (is.na(SSN) & !SSNDataQuality %in% c(8, 9)) |
-          is.na(SSNDataQuality) | SSNDataQuality == 99 ~ "Missing",
-        SSNDataQuality %in% c(8, 9) ~ "DKR",
-        (nchar(SSN) != 9 & SSNDataQuality != 2) |
-          substr(SSN, 1, 3) %in% c("000", "666") |
-          substr(SSN, 1, 1) == 9 |
-          substr(SSN, 4, 5) == "00" |
-          substr(SSN, 6, 9) == "0000" |
-          SSNDataQuality == 2 |
-          SSN %in% c(
-            111111111,
-            222222222,
-            333333333,
-            444444444,
-            555555555,
-            777777777,
-            888888888,
-            123456789
-          ) ~ "Invalid",
-        SSNDataQuality == 2 & nchar(SSN) != 9 ~ "Incomplete"
-      )
-    ) %>%
-    dplyr::mutate(SSN = dplyr::case_when(is.na(SSN) ~ "ok",!is.na(SSN) ~ SSN))
-}
-provider_extras_helpers <- list(
-  add_regions = function(provider_extras, dirs) {
-    # geocodes is created by `hud.extract` using the hud_geocodes.R functions
-    geocodes <- hud_load("geocodes", dirs$public)
-    # This should map a county to every geocode
-    provider_extras <- provider_extras |>
-      dplyr::left_join(geocodes |> dplyr::select(GeographicCode, County), by = c(Geocode = "GeographicCode"))
-
-    # Some geocodes may be legacy and County will be NA - the following looks these geocodes up on the Google Geocode API via `ggmap`
-    fill_geocodes <- provider_extras |>
-      dplyr::filter(is.na(County)) |>
-      dplyr::distinct(Geocode, .keep_all = TRUE)
-    if (nrow(fill_geocodes) > 0) {
-      # This environment variable must be set in the .Renviron file (at the project level preferably). Be sure to add .Renviron to .gitignore/.Rbuildignore if the file resides in the project directory
-      ggmap::register_google(key = Sys.getenv("GGMAP_GOOGLE_API_KEY"))
-      fill_geocodes <- slider::slide_dfr(fill_geocodes, ~{
-        r <- purrr::keep(.x, ~!is.na(.x))
-        .args <- purrr::list_modify(r[names(r) %in% c("Address", "City", "State", "ZIP")], State = "OH")
-        out <- ggmap::geocode(glue::glue_data(.args, "{Address}, {City}, {State}, {ZIP}"), output = "all")
-        .county <- purrr::keep(out$results[[1]]$address_components, ~any(stringr::str_detect(purrr::flatten(.x), "County")))[[1]]$short_name |>
-          stringr::str_remove("\\sCounty")
-        .x$County <- purrr::when(.county,
-                                 UU::is_legit(.) ~ .county,
-                                 ~ NA)
-        .x
-      })
-
-      for (rn in 1:nrow(fill_geocodes)) {
-        row <- fill_geocodes[rn,]
-        geocodes <- geocodes |>
-          tibble::add_row(GeographicCode = row$Geocode, State = "OH", County = row$County)
-      }
-      feather::write_feather(geocodes, hud_filename("geocodes", dirs$public))
-      provider_extras <- provider_extras |>
-        dplyr::left_join(geocodes, by = c(Geocode = "GeographicCode"))
-    }
-
-    Regions <- hud_load("Regions", dirs$public)
-
-    provider_extras <- provider_extras |>
-      dplyr::left_join(Regions |> dplyr::select(- RegionName), by = "County")
-
-    # Missing Regions
-    # missing_region <- provider_extras |>
-    #   dplyr::filter(is.na(Region))
-    # missing_region |>
-    #   dplyr::pull(County) |>
-    #   unique()
-    provider_extras
-  },
-  create_APs = function(provider_extras, dirs) {
-    Regions <- hud_load("Regions", dirs$public)
-    APs <- provider_extras |>
-      dplyr::select( !tidyselect::starts_with("CoCComp") & !Geocode:ZIP) |>
-      dplyr::filter(Type == "Coordinated Entry") |>
-      tidyr::pivot_longer(tidyselect::starts_with("AP"), names_to = "TargetPop", names_pattern = "(?<=^APCounties)(\\w+)", values_to = "CountiesServed") |>
-      dplyr::filter(!is.na(CountiesServed)) |>
-      dplyr::select(!tidyselect::starts_with("AP") & !Type)
-
-    # Programs serve multiple Counties which may fall into multiple regions. This creates a row for each Region served by a Program such that Coordinated Entry Access Points will show all the appropriate programs when filtering by Region.
-    # @Rm
-    APs <- slider::slide_dfr(APs, ~{
-      .counties <- trimws(stringr::str_split(.x$CountiesServed, ",\\s")[[1]])
-
-      .x |>
-        dplyr::select(- Region) |>
-        cbind(Region = unique(Regions$Region[Regions$County %in% .counties]))
-    }) |>
-      dplyr::distinct_all()
-
-    APs
-  }
-)
-
-
-
-Enrollment_helpers <- list(
-  add_Household = function(Enrollment, Project, app_env) {
-    # getting HH information
-    # only doing this for RRH and PSHs since Move In Date doesn't matter for ES, etc.
-    app_env$merge_deps_to_env("hc$psh_started_collecting_move_in_date")
-    small_project <- Project %>%
-      dplyr::select(ProjectID, ProjectType, ProjectName)
-    # TODO Check to see if Enrollment data has the MoveInDate
-    # TODO Does Move-in Date in Clarity auto-populate from previous enrollments?
-    HHMoveIn <- Enrollment %>%
-      dplyr::left_join(
-        # Adding ProjectType to Enrollment too bc we need EntryAdjust & MoveInAdjust
-        small_project,
-        by = "ProjectID") %>%
-      dplyr::filter(ProjectType %in% c(3, 9, 13)) %>%
-      dplyr::mutate(
-        AssumedMoveIn = dplyr::if_else(
-          EntryDate < hc$psh_started_collecting_move_in_date &
-            ProjectType %in% c(3, 9),
-          1,
-          0
-        ),
-        ValidMoveIn = dplyr::case_when(
-          AssumedMoveIn == 1 ~ EntryDate,
-          AssumedMoveIn == 0 &
-            ProjectType %in% c(3, 9) &
-            EntryDate <= MoveInDate &
-            ExitAdjust > MoveInDate ~ MoveInDate,
-          # the Move-In Dates must fall between the Entry and ExitAdjust to be
-          # considered valid and for PSH the hmid cannot = ExitDate
-          MoveInDate <= ExitAdjust &
-            MoveInDate >= EntryDate &
-            ProjectType == 13 ~ MoveInDate
-        )
-      ) %>%
-      dplyr::filter(!is.na(ValidMoveIn)) %>%
-      dplyr::group_by(HouseholdID) %>%
-      dplyr::mutate(HHMoveIn = min(ValidMoveIn)) %>%
-      dplyr::ungroup() %>%
-      dplyr::select(HouseholdID, HHMoveIn) %>%
-      unique()
-
-    HHEntry <- Enrollment %>%
-      dplyr::left_join(small_project, by = "ProjectID") %>%
-      dplyr::group_by(HouseholdID) %>%
-      dplyr::mutate(FirstEntry = min(EntryDate)) %>%
-      dplyr::ungroup() %>%
-      dplyr::select(HouseholdID, "HHEntry" = FirstEntry) %>%
-      unique() %>%
-      dplyr::left_join(HHMoveIn, by = "HouseholdID")
-
-
-    Enrollment <- Enrollment %>%
-      dplyr::left_join(small_project, by = "ProjectID") %>%
-      dplyr::left_join(HHEntry, by = "HouseholdID") %>%
-      dplyr::mutate(
-        # Puts EntryDate as MoveInDate for projects that don't use a MoveInDate
-        MoveInDateAdjust = dplyr::if_else(
-          !is.na(HHMoveIn) & HHMoveIn <= ExitAdjust,
-          dplyr::if_else(EntryDate <= HHMoveIn,
-                         HHMoveIn, EntryDate),
-          NA_real_),
-        EntryAdjust = dplyr::case_when(
-          ProjectType %in% c(1, 2, 4, 8, 12) ~ EntryDate,
-          ProjectType %in% c(3, 9, 13) &
-            !is.na(MoveInDateAdjust) ~ MoveInDateAdjust
-        )
-      )
-    Enrollment
-  },
-  add_VeteranCE = function(Enrollment, VeteranCE, app_env) {
-    app_env$merge_deps_to_env("Exit")
-
-    Enrollment |>
-      # Join Veteran data
-      dplyr::left_join(VeteranCE  |>  dplyr::select(EnrollmentID, PHTrack, ExpectedPHDate), by = "EnrollmentID") |>
-      # Join Exit data (formerly small_exit)
-
-      dplyr::left_join(
-        Exit %>% dplyr::select(EnrollmentID,
-                               ExitDate,
-                               Destination,
-                               OtherDestination) |>
-          dplyr::mutate(EnrollmentID = as.numeric(EnrollmentID))
-        ,
-        by = "EnrollmentID"
-      ) |>
-      dplyr::mutate(ExitAdjust = dplyr::if_else(is.na(ExitDate) |
-                                                  ExitDate > lubridate::today(),
-                                                lubridate::today(), ExitDate))
-  }
-)
-
 load_export <- function(
   clarity_api,
   app_env,
@@ -243,9 +23,9 @@ load_export <- function(
   e = rlang::caller_env()
 ) {
   if (missing(clarity_api))
-    clarity_api <- UU::find_by_class("clarity_api", e)
+    clarity_api <- get_clarity_api(e = e)
   if (missing(app_env))
-    app_env <- UU::find_by_class("app_env", e)
+    app_env <- get_app_env(e = e)
   # Service Areas -----------------------------------------------------------
   ServiceAreas <- clarity.looker::hud_load("ServiceAreas.feather", dirs$public)
 
@@ -261,19 +41,6 @@ load_export <- function(
     Client <- Client_redact(Client)
     clarity.looker::hud_feather(Client, dirs$export)
   }
-
-
-
-
-
-
-
-
-
-
-  # CurrentLivingSituation <-
-  #   read_csv(paste0(directory, "/CurrentLivingSituation.csv"),
-  #             col_types = "nnnTncnnnnncTTcTc") DON'T NEED YET
 
   # Disabilities ------------------------------------------------------------
 
@@ -298,7 +65,8 @@ load_export <- function(
 
 Project <- cl_api$Project() |>
   dplyr::select(-ProjectCommonName) |>
-  dplyr::left_join(provider_extras, by = "ProjectID")
+  {\(x) {dplyr::left_join(x, provider_extras, by = UU::common_names(x, provider_extras))}}()
+
 
   # EnrollmentCoC -----------------------------------------------------------
 
@@ -306,34 +74,26 @@ Project <- cl_api$Project() |>
     cl_api$EnrollmentCoC()
 
 
+  # Veteran Client_extras ----
+  VeteranCE <- cl_api$`HUD Extras`$Client_extras()
 
   # Enrollment --------------------------------------------------------------
 
   # from sheets 1 and 2, getting EE-related data, joining both to En
 
   Enrollment <- cl_api$Enrollment()
-  # Add Enrollment Extras
-  Enrollment <- Enrollment |>
-    dplyr::inner_join(cl_api$`HUD Extras`$Enrollment_extras(), by = "EnrollmentID")
+  Enrollment_extra_Exit_HH_CL_AaE <- dplyr::inner_join(Enrollment, cl_api$`HUD Extras`$Enrollment_extras(), by = UU::common_names(Enrollment, Enrollment_extras)) |>
+    # Add Exit
+    Enrollment_add_Exit(cl_api$Exit()) |>
+    # Add Households
+    Enrollment_add_Household(Project, app_env$.__enclos_env__$hc) |>
+    # Add Veteran Coordinated Entry
+    Enrollment_add_VeteranCE(VeteranCE) |>
+    # Add Client Location from EnrollmentCoC
+    Enrollment_add_ClientLocation(Enrollment_CoC) |>
+    # Add Client AgeAtEntry
+    Enrollment_add_AgeAtEntry(Client)
 
-  Enrollment_helpers$add_Household(Enrollment, Project, app_env)
-
-  # Veteran Client_extras ----
-  VeteranCE <- cl_api$`HUD Extras`$Client_extras() |>
-    dplyr::mutate(
-      DateVeteranIdentified = as.Date(DateVeteranIdentified, origin = "1899-12-30"),
-      ExpectedPHDate = as.Date(ExpectedPHDate, origin = "1899-12-30")
-    )
-
-  Enrollment <- Enrollment_helpers$add_VeteranCE(Enrollment, VeteranCE, app_env)
-
-  # Add Client Location
-  Enrollment <- Enrollment %>%
-    dplyr::left_join(
-      EnrollmentCoC %>%
-        dplyr::filter(DataCollectionStage == 1) %>%
-        dplyr::select(EnrollmentID, "ClientLocation" = CoCCode),
-      by = "EnrollmentID")
 
   # Funder ------------------------------------------------------------------
 
@@ -365,6 +125,7 @@ Project <- cl_api$Project() |>
   ProjectCoC <-
     cl_api$ProjectCoC()
 
+  mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |> dplyr::pull(ProjectID)
 
   # Contacts ----------------------------------------------------------------
   # only pulling in contacts made between an Entry Date and an Exit Date
@@ -377,19 +138,16 @@ Project <- cl_api$Project() |>
 
   # Offers -----------------------------------------------------------------
 
-  Offers <-
-    readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 7) %>%
-    dplyr::mutate(AcceptDeclineDate = lubridate::ymd(as.Date(AcceptDeclineDate, origin = "1899-12-30")),
-                  OfferDate = lubridate::ymd(as.Date(OfferDate, origin = "1899-12-30")))
+  # TODO Used in Veterans Active List
+  # Offers <- cl_api$`HUD Extras`$Client_Offer_extras()
+  # Offers <-
+  #   readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 7) %>%
+  #   dplyr::mutate(AcceptDeclineDate = lubridate::ymd(as.Date(AcceptDeclineDate, origin = "1899-12-30")),
+  #                 OfferDate = lubridate::ymd(as.Date(OfferDate, origin = "1899-12-30")))
 
 
   # COVID-19 ----------------------------------------------------------------
 
-  # TODO Update col name:
-  # https://github.com/COHHIO/COHHIO_HMIS/blob/d7f2249d5a8333ddddb2181c8bf30553aa7e7038/04_DataQuality.R#L339
-  # https://github.com/COHHIO/COHHIO_HMIS/blob/cbb4d0734e4b60f0cca38dc35a0f5a3f07eafe93/09_covid.R#L98
-  # https://github.com/COHHIO/COHHIO_HMIS/blob/cbb4d0734e4b60f0cca38dc35a0f5a3f07eafe93/09_covid.R#L297
-  # https://github.com/COHHIO/COHHIO_HMIS/blob/cbb4d0734e4b60f0cca38dc35a0f5a3f07eafe93/02_QPR_EEs.R#L249
   covid19 <- cl_api$`HUD Extras`$Client_COVID_extras() |>
     dplyr::mutate(dplyr::across(.f = replace_yes_no))
 
@@ -400,70 +158,57 @@ Project <- cl_api$Project() |>
 
   # Services ----------------------------------------------------------------
 
-  raw_services <-
-    readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 8) %>%
-    dplyr::mutate(ServiceStartDate = lubridate::ymd(as.Date(ServiceStartDate,
-                                                            origin = "1899-12-30")),
-                  ServiceEndDate = lubridate::ymd(as.Date(ServiceEndDate,
-                                                          origin = "1899-12-30")),
-                  ServiceProvider = stringr::str_remove(ServiceProvider, "\\(.*\\)"),
-                  ProviderCreating = stringr::str_remove(ProviderCreating, "\\(.*\\)"))
-
-  services_funds <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 9)
-
-  Services <- raw_services %>%
-    dplyr::left_join(Enrollment[c("EnrollmentID",
-                                  "PersonalID",
-                                  "ProjectName",
-                                  "EntryDate",
-                                  "ExitAdjust")],
-                     by = c("PersonalID")) %>%
-    unique() %>%
-    dplyr::left_join(services_funds, by = "ServiceID") %>%
-    dplyr::mutate(
-      ServiceEndAdjust = dplyr::if_else(is.na(ServiceEndDate) | ServiceEndDate > lubridate::today(), lubridate::today(), ServiceEndDate),
-      service_interval = lubridate::interval(start = lubridate::ymd(ServiceStartDate), end = lubridate::ymd(ServiceEndAdjust)),
-      ee_interval = lubridate::interval(start = lubridate::ymd(EntryDate), end = lubridate::ymd(ExitAdjust)),
-      intersect_tf = lubridate::int_overlaps(service_interval, ee_interval),
-      stray_service = is.na(intersect_tf) | intersect_tf == FALSE | ServiceProvider != ProjectName
-    ) %>%
-    dplyr::select(PersonalID, ServiceID, EnrollmentID, ServiceProvider, ServiceHHID,
-                  ServiceStartDate, ServiceEndDate, Code, Description, ProviderCreating,
-                  Fund, Amount, stray_service)
-
-  stray_services <- Services %>%
-    dplyr::filter(stray_service) %>%
-    dplyr::select(-stray_service)
-
-  Services <- Services %>%
-    dplyr::filter(!stray_service) %>%
-    dplyr::select(-stray_service)
-
-  rm(raw_services, services_funds)
+  # services_funds <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 9)
+  # TODO To get the Total RRH (Which should be 75% of all ESG funding spent on Services)
+  # Rme - QPR - RRH Spending
+  # Rm - QPR - RRH vs HP
+  # Services_extras$ServiceAmount[Services_extras$FundName |>
+  #                              stringr::str_detect("RRH") |>
+  #                              which()]
+  # Services <- cl_api$Services()
+  # raw_services <- cl_api$`HUD Extras`$Services_extras() |>
+  #   dplyr::left_join(Enrollment_extra_Exit_HH_CL_AaE[c("EnrollmentID",
+  #                                 "PersonalID",
+  #                                 "ProjectName",
+  #                                 "EntryDate",
+  #                                 "ExitAdjust")],
+  #                    by = c("PersonalID", "EnrollmentID")) %>%
+  #   unique() %>%
+  #   dplyr::left_join(services_funds, by = "ServiceID") %>%
+  #   dplyr::mutate(
+  #     ServiceEndAdjust = dplyr::if_else(is.na(ServiceEndDate) | ServiceEndDate > Sys.Date(), Sys.Date(), ServiceEndDate),
+  #     service_interval = lubridate::interval(start = ServiceStartDate, end = ServiceEndAdjust),
+  #     ee_interval = lubridate::interval(start = EntryDate, end = ExitAdjust),
+  #     intersect_tf = lubridate::int_overlaps(service_interval, ee_interval),
+  #     stray_service = is.na(intersect_tf) | intersect_tf == FALSE | ServiceProvider != ProjectName
+  #   ) %>%
+  #   dplyr::select(PersonalID, ServiceID, EnrollmentID, ServiceProvider, ServiceHHID,
+  #                 ServiceStartDate, ServiceEndDate, Code, Description, ProviderCreating,
+  #                 Fund, Amount, stray_service)
+  #
+  # stray_services <- Services %>%
+  #   dplyr::filter(stray_service) %>%
+  #   dplyr::select(-stray_service)
+  #
+  # Services <- Services %>%
+  #   dplyr::filter(!stray_service) %>%
+  #   dplyr::select(-stray_service)
+  #
+  # rm(raw_services, services_funds)
 
   # Referrals ---------------------------------------------------------------
 
-  Referrals <-
-    readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 10) %>%
-    dplyr::mutate(ReferralDate = lubridate::ymd(as.Date(ReferralDate,
-                                                        origin = "1899-12-30")),
-                  ProviderCreating = stringr::str_remove(ProviderCreating, "\\(.*\\)"),
-                  `Referred-ToProvider` = stringr::str_remove(`Referred-ToProvider`, "\\(.*\\)"))
+
+  Referrals <- cl_api$`HUD Extras`$CE_Referrals_extras()
+  # TODO ReferralOutcome must be replaced by a Clarity element (or derived from multiple) for dq_internal_old_outstanding_referrals
+
 
   # HUD CSV Specs -----------------------------------------------------------
-  #TODO Where does this csv come from
-  HUD_specs <- readr::read_csv("public_data/HUDSpecs.csv",
-                               col_types = "ccnc") %>%
-    as.data.frame()
+  #TODO hud.extract Data element coercion functions
+  HUD_specs <- hud_load("HUD_specs", dirs$public)
 
-  # Adding Age at Entry to Enrollment ---------------------------------------
-  small_client <- Client %>% dplyr::select(PersonalID, DOB)
-  Enrollment <- Enrollment %>%
-    dplyr::left_join(small_client, by = "PersonalID") %>%
-    dplyr::mutate(AgeAtEntry = age_years(DOB, EntryDate)) %>%
-    dplyr::select(-DOB)
 
-  rm(small_client)
+  app_env("everything")
 
 }
 

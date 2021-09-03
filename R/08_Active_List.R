@@ -17,9 +17,9 @@ Active_List <- function(
              e = rlang::caller_env()
             ) {
 if (missing(clarity_api))
-  clarity_api <- UU::find_by_class("clarity_api", e)
+  clarity_api <- get_clarity_api(e = e)
 if (missing(app_env))
-  app_env <- UU::find_by_class("app_env", e)
+  app_env <- get_app_env(e = e)
 
 # clients currently entered into a homeless project in our system
 
@@ -563,7 +563,7 @@ active_list <- active_list %>%
 small_referrals <- Referrals %>%
   dplyr::left_join(Project %>%
               dplyr::select(ProjectName, "ReferToPTC" = ProjectType),
-            by = c("Referred-ToProvider" = "ProjectName"))
+            by = c("ReferredToProjectID" = "ProjectID"))
 
 # isolates hhs with an Accepted Referral into a PSH or RRH project
 who_has_referrals <- active_list %>%
