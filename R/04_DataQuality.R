@@ -37,22 +37,27 @@ dependencies$DataQuality <-
     "Services",
     "Users"
   )
+
+
+
 DataQuality <- function(
     clarity_api,
     app_env,
     e = rlang::caller_env()
   ) {
   if (missing(clarity_api))
-    clarity_api <- UU::find_by_class("clarity_api", e)
+    clarity_api <- get_clarity_api(e = e)
   if (missing(app_env))
-    app_env <- UU::find_by_class("app_env", e)
+    app_env <- get_app_env(e = e)
   app_env$merge_deps_to_env()
 
 
 
-  va_funded <- Funder %>%
-    dplyr::filter(Funder %in% c(27, 30, 33, 37:42, 45)) %>%
-    dplyr::select(ProjectID)
+  va_funded <- Funder |>
+    Funder_VA_ProjectID()
+
+
+
 
   # Providers to Check ------------------------------------------------------
 
@@ -2549,20 +2554,8 @@ DataQuality <- function(
                   Guidance = guidance$service_on_non_hoh) %>%
     dplyr::select(dplyr::all_of(vars_we_want))
 
-  # TODO Deprecate
-  referrals_on_hh_members <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep),
-                  RelationshipToHoH,
-                  EnrollmentID,
-                  GrantType) %>%
-    dplyr::filter(RelationshipToHoH != 1 &
-                    (GrantType != "SSVF"  | is.na(GrantType))) %>%
-    dplyr::semi_join(Referrals,
-                     by = c("PersonalID", "ProjectName" = "ProviderCreating")) %>%
-    dplyr::mutate(Issue = "Referral on a Non Head of Household",
-                  Type = "Warning",
-                  Guidance = guidance$referral_on_non_hoh) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+
+
 
   referrals_on_hh_members_ssvf <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars_prep),
@@ -2581,12 +2574,7 @@ DataQuality <- function(
   # Because a lot of these records are stray Services due to there being no
   # Entry Exit at all, this can't be shown in the same data set as all the other
   # errors. I'm going to have to make this its own thing. :(
-  stray_services_warning <- stray_services %>%
-    dplyr::mutate(Issue = "Service Not Attached to an Entry Exit",
-                  Type = "Warning",
-                  Guidance = "This Service does not fall between any project stay,
-             so it will not show in any reporting.") %>%
-    dplyr::select(PersonalID, ServiceProvider, ServiceStartDate, Issue, Type)
+  # stray_services_warning <- dq_stray_services(stray_services)
 
   # AP No Recent Referrals --------------------------------------------------
   co_APs <- Project %>%
@@ -2602,15 +2590,15 @@ DataQuality <- function(
     )
 
   aps_no_referrals <- Referrals %>%
-    dplyr::right_join(co_APs, by = c("ProviderCreating" = "ProjectName")) %>%
+    dplyr::right_join(co_APs, by = c("ReferringProjectID" = "ProjectID")) %>%
     dplyr::filter(is.na(PersonalID)) %>%
-    dplyr::select(ProviderCreating) %>%
+    dplyr::select(ReferringProjectID) %>%
     unique()
 
   aps_with_referrals <- Referrals %>%
-    dplyr::right_join(co_APs, by = c("ProviderCreating" = "ProjectName")) %>%
+    dplyr::right_join(co_APs, by = c("ReferringProjectID" = "ProjectID")) %>%
     dplyr::filter(!is.na(PersonalID)) %>%
-    dplyr::select(ProviderCreating) %>%
+    dplyr::select(ReferringProjectID) %>%
     unique()
 
   data_APs <- dplyr::data.frame(
@@ -2671,36 +2659,11 @@ DataQuality <- function(
 
 
   # Old Outstanding Referrals -----------------------------------------------
-  # CW says ProviderCreating should work instead of Referred-From Provider
-  # Using ProviderCreating instead. Either way, I feel this should go in the
+  # CW says ReferringProjectID should work instead of Referred-From Provider
+  # Using ReferringProjectID instead. Either way, I feel this should go in the
   # Provider Dashboard, not the Data Quality report.
-
-  internal_old_outstanding_referrals <- served_in_date_range %>%
-    dplyr::semi_join(Referrals,
-                     by = c("PersonalID")) %>%
-    dplyr::left_join(Referrals,
-                     by = c("PersonalID")) %>%
-    dplyr::filter(ProviderCreating == ProjectName &
-                    ProjectID != 1695) %>%
-    dplyr::select(dplyr::all_of(vars_prep),
-                  ProviderCreating,
-                  ReferralDate,
-                  ReferralOutcome,
-                  EnrollmentID) %>%
-    dplyr::filter(is.na(ReferralOutcome) &
-                    ReferralDate < lubridate::today() - lubridate::days(14)) %>%
-    dplyr::mutate(
-      ProjectName = ProviderCreating,
-      Issue = "Old Outstanding Referral",
-      Type = "Warning",
-      Guidance = "Referrals should be closed in about 2 weeks. Please be sure you are
-      following up with any referrals and helping the client to find permanent
-      housing. Once a Referral is made, the receiving agency should be saving
-      the \"Referral Outcome\" once it is known. If you have Referrals that are
-      legitimately still open after 2 weeks because there is a lot of follow
-      up going on, no action is needed since the HMIS data is accurate."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+# TODO Refresh this once ReferralOutcome is figured out in Clarity  2021-09-03
+#internal_old_outstanding_referrals <- dq_internal_old_outstanding_referrals(served_in_date_range, Referrals, vars)
 
   # ^^this is pulling in neither the Unsheltered NOR referrals from APs
 
@@ -2769,39 +2732,6 @@ DataQuality <- function(
                   EntryDateDisplay = format.Date(EntryDate, "%b %Y")) %>%
     dplyr::select(EntryDate, EntryDateDisplay, HouseholdID, County)
 
-  # Missing End Date on Outreach Contact ------------------------------------
-
-  # Unsheltered Missing Outreach Contact Note -------------------------------
-
-  # Unsheltered Missing Outreach Contact Record -----------------------------
-
-  # Unsheltered Outreach Contact Incorrect Start Date -----------------------
-
-  # Unsheltered Currently Unsheltered 30+ Days w No Referral ----------------
-
-  long_unsheltered <- unsheltered_enrollments %>%
-    dplyr::filter(is.na(ExitDate) &
-                    EntryDate < lubridate::today() - lubridate::days(30))
-
-  unsheltered_referred <- Referrals %>%
-    dplyr::filter(ProviderCreating == "Unsheltered Clients - OUTREACH")
-
-  unsheltered_long_not_referred <-
-    dplyr::anti_join(long_unsheltered, unsheltered_referred, by = "PersonalID") %>%
-    dplyr::mutate(
-      Type = "Warning",
-      Issue = "Unsheltered 30+ Days with no Referral",
-      Guidance = "Ideally households are being referred for housing from the
-        Unsheltered provider within a short period of time. These particular
-        households are currently unsheltered and without a referral. If the
-        household has been referred but that has not been captured in HMIS,
-        please enter the referral. To learn more about when to exit a household
-        from the Unsheltered Provider, click
-        <a href=\"https://youtu.be/qdmrqOHXoN0?t=721\" target=\"_blank\">here</a>."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
-
-  rm(long_unsheltered, unsheltered_referred)
 
   # SSVF --------------------------------------------------------------------
 
