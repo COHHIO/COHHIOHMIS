@@ -18,11 +18,10 @@ jobs::jobscript({
 })
 # must load COHHIOHMIS
 devtools::load_all()
-Rm_env <- app_env$new()
-
 
 Rm_env <- dates()
 Rm_env <- guidance()
+Rm_env <- load_export()
 
 
 increment("Importing raw HMIS data\n")
