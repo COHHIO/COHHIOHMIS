@@ -56,84 +56,18 @@ DataQuality <- function(
   va_funded <- Funder |>
     Funder_VA_ProjectID()
 
-
-
-
   # Providers to Check ------------------------------------------------------
-
-  #QUESTION GrantType? Does this need to be retained?
   projects_current_hmis <- projects_current_hmis(Project, Inventory)
+
 
   # Clients to Check --------------------------------------------------------
 
-  served_in_date_range <- Enrollment %>%
-    dplyr::filter(HMIS::served_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End)) %>%
-    dplyr::left_join(Client %>%
-                       dplyr::select(-DateCreated), by = "PersonalID") %>%
-    dplyr::select(
-      PersonalID,
-      FirstName,
-      NameDataQuality,
-      SSN,
-      SSNDataQuality,
-      DOB,
-      DOBDataQuality,
-      AmIndAKNative,
-      Asian,
-      BlackAfAmerican,
-      NativeHIOtherPacific,
-      White,
-      RaceNone,
-      Ethnicity,
-      Gender,
-      VeteranStatus,
-      EnrollmentID,
-      ProjectID,
-      EntryDate,
-      HouseholdID,
-      RelationshipToHoH,
-      LivingSituation,
-      LengthOfStay,
-      LOSUnderThreshold,
-      PreviousStreetESSH,
-      DateToStreetESSH,
-      TimesHomelessPastThreeYears,
-      AgeAtEntry,
-      MonthsHomelessPastThreeYears,
-      DisablingCondition,
-      DateOfEngagement,
-      MoveInDate,
-      MoveInDateAdjust,
-      EEType,
-      CountyServed,
-      CountyPrior,
-      ExitDate,
-      Destination,
-      ExitAdjust,
-      DateCreated,
-      UserCreating,
-      ClientEnrolledInPATH,
-      LengthOfStay,
-      DateOfPATHStatus,
-      ReasonNotEnrolled,
-      ClientLocation,
-      PHTrack,
-      ExpectedPHDate
-    ) %>%
-    dplyr::inner_join(projects_current_hmis, by = "ProjectID")
-
-  DV <- HealthAndDV %>%
-    dplyr::filter(DataCollectionStage == 1) %>%
-    dplyr::select(EnrollmentID, DomesticViolenceVictim, WhenOccurred, CurrentlyFleeing)
-
-  served_in_date_range <- served_in_date_range %>%
-    dplyr::left_join(DV, by = "EnrollmentID")
-
-  rm(DV)
+  served_in_date_range <- served_in_date_range(projects_current_hmis, app_env = Rm_env)
 
   # The Variables That We Want ----------------------------------------------
 
-  vars_prep <- c(
+  vars <- list()
+  vars$prep <- c(
     "HouseholdID",
     "PersonalID",
     "ProjectName",
@@ -145,7 +79,7 @@ DataQuality <- function(
     "ProjectRegion"
   )
 
-  vars_we_want <- c(vars_prep,
+  vars$we_want <- c(vars$prep,
                             "Issue",
                             "Type",
                             "Guidance")
@@ -169,7 +103,7 @@ DataQuality <- function(
                                 guidance$missing_pii)
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # TODO Check to ensure missing DOB are not present in imported.
   dq_dob <- served_in_date_range %>%
@@ -201,7 +135,7 @@ DataQuality <- function(
       )
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   dq_ssn <- served_in_date_range %>%
     dplyr::mutate(
@@ -226,7 +160,7 @@ DataQuality <- function(
       )
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   dq_race <- served_in_date_range %>%
     dplyr::mutate(
@@ -243,7 +177,7 @@ DataQuality <- function(
                                 guidance$missing_at_entry)
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   dq_ethnicity <- served_in_date_range %>%
     dplyr::mutate(
@@ -260,7 +194,7 @@ DataQuality <- function(
                                 guidance$missing_at_entry)
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   #TODO Change for FY 2022
   dq_gender <- served_in_date_range %>%
@@ -278,7 +212,7 @@ DataQuality <- function(
                                 guidance$missing_at_entry)
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   dq_veteran <- served_in_date_range %>%
     dplyr::mutate(
@@ -308,7 +242,7 @@ DataQuality <- function(
       Issue == "Don't Know/Refused Veteran Status" ~ guidance$dkr_data)
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Missing Vaccine data ----------------------------------------------------
   #TODO C19 Column names need to be updated
@@ -348,7 +282,7 @@ DataQuality <- function(
          Please see the guidance
          <a href = \"https://cohhio.org/boscoc/covid19/\" target = \"blank\">
          for more information</a>.") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   missing_vaccine_current <- served_in_date_range %>%
     dplyr::left_join(covid19[c("PersonalID", "C19ConsentToVaccine", "C19VaccineConcerns")],
@@ -382,7 +316,7 @@ DataQuality <- function(
     <a href = \"https://cohhio.org/boscoc/covid19/\" target = \"blank\">
     for more information</a>."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Dose Warnings -----------------------------------------------------------
 
@@ -394,7 +328,7 @@ DataQuality <- function(
     dplyr::mutate(Type = "Error",
                   Issue = "Vaccine Date Incorrect",
                   Guidance = "Vaccination date precedes the vaccine being available in the US.") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # TODO Revise with new dose data coming in from Clarity
   dose_date_warning <- doses %>%
@@ -420,7 +354,7 @@ DataQuality <- function(
          the vaccine manufacturer’s recommended timeline. One of the vaccine
          records' Vaccine Date or the Vaccine Manufacturer may be entered
          incorrectly.") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   differing_manufacturers <- doses %>%
     dplyr::group_by(PersonalID) %>%
@@ -444,7 +378,7 @@ DataQuality <- function(
     dplyr::left_join(served_in_date_range %>%
                        dplyr::filter(HMIS::served_between(., hc$bos_start_vaccine_data, lubridate::today())),
                      by = "PersonalID") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   unknown_manufacturer_error <- doses %>%
     dplyr::filter(stringr::str_starts(C19VaccineManufacturer, "Client doesn't know") &
@@ -457,7 +391,7 @@ DataQuality <- function(
                   Guidance = "If vaccine information was collected via Healthcare Provider
          or Vaccine card, then the vaccine manufacturer should be known and
          updated in HMIS.") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   unknown_manufacturer_warning <- doses %>%
     dplyr::filter(stringr::str_starts(C19VaccineManufacturer, "Client doesn't know") &
@@ -471,7 +405,7 @@ DataQuality <- function(
          please try to find another source for the information. Reporting relies
          heavily on knowing the manufacturer of the vaccine your client received.
          If you absolutely cannot find it, it is ok to leave as is.") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Missing Client Location -------------------------------------------------
 
@@ -482,7 +416,7 @@ DataQuality <- function(
                   Issue = "Missing Client Location",
                   Guidance = "If Client Location is missing, this household will be
          excluded from all HUD reporting.") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Household Issues --------------------------------------------------------
 
@@ -504,7 +438,7 @@ DataQuality <- function(
          exclusively, every household should have at least one adult in it. If
          you are not sure how to correct this, please contact the HMIS team for
          help.") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   hh_no_hoh <- served_in_date_range %>%
     dplyr::group_by(HouseholdID) %>%
@@ -525,7 +459,7 @@ DataQuality <- function(
       Household\" answered and that one of them says Self (head of household).
       Singles are always Self (head of household)."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   hh_too_many_hohs <- served_in_date_range %>%
     dplyr::filter(RelationshipToHoH == 1) %>%
@@ -540,7 +474,7 @@ DataQuality <- function(
                   Guidance = "Check inside the Entry pencil to be sure each household member has
       \"Relationship to Head of Household\" answered and that only one of
       them says \"Self (head of household)\".") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   hh_missing_rel_to_hoh <- served_in_date_range %>%
     dplyr::filter(RelationshipToHoH == 99) %>%
@@ -550,7 +484,7 @@ DataQuality <- function(
                   Guidance = "Check inside the Entry pencil to be sure each household member has
       \"Relationship to Head of Household\" answered and that only one of
       them says \"Self (head of household)\".") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   hh_issues <- rbind(hh_too_many_hohs, hh_no_hoh, hh_children_only, hh_missing_rel_to_hoh)
 
@@ -562,7 +496,7 @@ DataQuality <- function(
 
   missing_approx_date_homeless <- served_in_date_range %>%
     dplyr::select(
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       EnrollmentID,
       ProjectID,
       AgeAtEntry,
@@ -580,11 +514,11 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Missing Approximate Date Homeless",
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   missing_previous_street_ESSH <- served_in_date_range %>%
     dplyr::select(
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       AgeAtEntry,
       RelationshipToHoH,
       DateToStreetESSH,
@@ -599,10 +533,10 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Missing Previously From Street, ES, or SH (Length of Time Homeless questions)",
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   missing_residence_prior <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep),
+    dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
                   RelationshipToHoH,
                   LivingSituation) %>%
@@ -611,10 +545,10 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Missing Residence Prior",
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   dkr_residence_prior <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep),
+    dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
                   RelationshipToHoH,
                   LivingSituation) %>%
@@ -623,10 +557,10 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Don't Know/Refused Residence Prior",
                   Type = "Warning",
                   Guidance = guidance$dkr_data) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   missing_LoS <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep),
+    dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
                   RelationshipToHoH,
                   LengthOfStay) %>%
@@ -638,10 +572,10 @@ DataQuality <- function(
          may simply be missing. If the value selected is \"One week or less (HUD)\",
          you will need to change that value to either \"One night or less (HUD)\"
          or \"Two to six nights (HUD)\".") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   dkr_LoS <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep),
+    dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
                   RelationshipToHoH,
                   LengthOfStay) %>%
@@ -650,11 +584,11 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Don't Know/Refused Residence Prior",
                   Type = "Warning",
                   Guidance = guidance$dkr_data) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   missing_months_times_homeless <- served_in_date_range %>%
     dplyr::select(
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       AgeAtEntry,
       RelationshipToHoH,
       MonthsHomelessPastThreeYears,
@@ -673,11 +607,11 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Missing Months or Times Homeless",
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   dkr_months_times_homeless <- served_in_date_range %>%
     dplyr::select(
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       AgeAtEntry,
       RelationshipToHoH,
       MonthsHomelessPastThreeYears,
@@ -693,11 +627,11 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Don't Know/Refused Months or Times Homeless",
                   Type = "Warning",
                   Guidance = guidance$dkr_data) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   invalid_months_times_homeless <- served_in_date_range %>%
     dplyr::select(
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       AgeAtEntry,
       RelationshipToHoH,
       MonthsHomelessPastThreeYears,
@@ -746,11 +680,11 @@ DataQuality <- function(
         with the given dates. Please double-check this information for
         consistency and accuracy.")) %>%
     dplyr::filter(!is.na(Guidance)) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   missing_living_situation <- served_in_date_range %>%
     dplyr::select(
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       AgeAtEntry,
       RelationshipToHoH,
       LivingSituation,
@@ -788,7 +722,7 @@ DataQuality <- function(
          situation prior to the \"Residence Prior\" that are important to help
          determine that client's Chronicity. Please answer these questions to
          the best of your knowledge.") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   dkr_living_situation <- served_in_date_range %>%
     dplyr::select(
@@ -825,12 +759,12 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Don't Know/Refused Living Situation",
                   Type = "Warning",
                   Guidance = guidance$dkr_data) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # DisablingCondition at Entry
 
   detail_missing_disabilities <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep),
+    dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
                   RelationshipToHoH,
                   DisablingCondition) %>%
@@ -841,7 +775,7 @@ DataQuality <- function(
                   Guidance = guidance$missing_at_entry)
 
   missing_disabilities <- detail_missing_disabilities %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
 
   smallDisabilities <- Disabilities %>%
@@ -868,7 +802,7 @@ DataQuality <- function(
   # Developmental & HIV/AIDS get automatically IndefiniteAndImpairs = 1 per FY2020
 
   conflicting_disabilities <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep),
+    dplyr::select(dplyr::all_of(vars$prep),
                   EnrollmentID,
                   AgeAtEntry,
                   RelationshipToHoH,
@@ -890,7 +824,7 @@ DataQuality <- function(
     client should not have any disability subassessments that indicate that they
     do have a Disabling Condition."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   rm(smallDisabilities)
 
@@ -906,19 +840,19 @@ DataQuality <- function(
       Guidance = "If this household is \"unreachable\" as defined in the Mahoning County
     Coordinated Entry Policies and Procedures, they should be exited."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Extremely Long Stayers --------------------------------------------------
 
   th_stayers_bos <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ProjectID) %>%
     dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate))) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 2 &
                     !ProjectID %in% c(mahoning_projects))
 
   th_stayers_mah <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ProjectID) %>%
     dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate))) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 2 &
@@ -928,14 +862,14 @@ DataQuality <- function(
   Top2_TH_mah <- subset(th_stayers_mah, Days > stats::quantile(Days, prob = 1 - 2 / 100))
 
   rrh_stayers_bos <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ProjectID) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 13 &
                     !ProjectID %in% c(mahoning_projects)) %>%
     dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate)))
 
   rrh_stayers_mah <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ProjectID) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 13 &
                     ProjectID %in% c(mahoning_projects)) %>%
@@ -945,14 +879,14 @@ DataQuality <- function(
   Top2_RRH_mah <- subset(rrh_stayers_mah, Days > stats::quantile(Days, prob = 1 - 2 / 100))
 
   es_stayers_bos <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ProjectID) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 1 &
                     !ProjectID %in% c(mahoning_projects)) %>%
     dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate)))
 
   es_stayers_mah <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ProjectID) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 1 &
                     ProjectID %in% c(mahoning_projects)) %>%
@@ -962,14 +896,14 @@ DataQuality <- function(
   Top2_ES_mah <- subset(es_stayers_mah, Days > stats::quantile(Days, prob = 1 - 2 / 100))
 
   psh_stayers_bos <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ProjectID) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 3 &
                     !ProjectID %in% c(mahoning_projects)) %>%
     dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate)))
 
   psh_stayers_mah <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ProjectID) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 3 &
                     ProjectID %in% c(mahoning_projects)) %>%
@@ -979,14 +913,14 @@ DataQuality <- function(
   Top1_PSH_mah <- subset(psh_stayers_mah, Days > stats::quantile(Days, prob = 1 - 1 / 100))
 
   hp_stayers_bos <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ProjectID) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 12 &
                     !ProjectID %in% c(mahoning_projects)) %>%
     dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate)))
 
   hp_stayers_mah <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep), ProjectID) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ProjectID) %>%
     dplyr::filter(is.na(ExitDate) &
                     ProjectType == 12 &
                     ProjectID %in% c(mahoning_projects)) %>%
@@ -1023,7 +957,7 @@ DataQuality <- function(
          closest estimation of the day they left your project."
       )
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   rm(list = ls(pattern = "Top*"),
      es_stayers_mah,
@@ -1072,7 +1006,7 @@ DataQuality <- function(
   #     Destination should be \"Rental by client, with RRH...\". If you are sure the
   #     current Destination is accurate, then please leave it the way it is."
   #   ) %>%
-  #   select(all_of(vars_we_want))
+  #   select(all_of(vars$we_want))
 
   should_be_rrh_destination <- served_in_date_range %>%
     dplyr::left_join(moved_in_rrh, by = "PersonalID") %>%
@@ -1090,7 +1024,7 @@ DataQuality <- function(
     then there is no change needed. If this is not the case, then the Destination
     should be \"Rental by client, with RRH or equivalent subsidy\"."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # PSH mover inners only
 
@@ -1119,7 +1053,7 @@ DataQuality <- function(
     are sure the current Destination is accurate, then please leave it the way
     it is."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   should_be_psh_destination <- served_in_date_range %>%
     dplyr::left_join(enrolled_in_psh, by = "PersonalID") %>%
@@ -1136,7 +1070,7 @@ DataQuality <- function(
     Destination for households entering PSH from your project is
     \"Permanent housing (other than RRH) for formerly homeless persons\"."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # TH
 
@@ -1160,7 +1094,7 @@ DataQuality <- function(
     your project is \"Transitional housing for homeless persons (including
     homeless youth)\"."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # SH
 
@@ -1183,7 +1117,7 @@ DataQuality <- function(
     correct Destination for households entering SH from your project is
     \"Safe Haven\"."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
 
   # Missing Project Stay or Incorrect Destination ---------------------------
@@ -1206,7 +1140,7 @@ DataQuality <- function(
     their RRH project stay. If they did not actually receive RRH services at all,
     the Destination should be corrected."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # PSH
 
@@ -1226,7 +1160,7 @@ DataQuality <- function(
     is missing their PSH project stay. If they did not actually enter PSH at all,
     the Destination should be corrected."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # TH
 
@@ -1246,7 +1180,7 @@ DataQuality <- function(
     missing their TH project stay. If they did not actually enter Transitional
     Housing at all, the Destination should be corrected."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # SH
 
@@ -1264,7 +1198,7 @@ DataQuality <- function(
     no longer operating as of 1/1/2021. If you meant to indicate that the household
     exited to a Domestic Violence shelter, please select \"Emergency shelter, ...\"."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # CountyServed (BoS ONLY for now)
 
@@ -1278,7 +1212,7 @@ DataQuality <- function(
       areas for various housing solutions. This can be corrected through the
       Entry pencil."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # CountyPrior (BoS ONLY for now)
 
@@ -1289,13 +1223,13 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Missing County of Prior Residence",
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Check Eligibility, Project Type, Residence Prior ------------------------
 
   check_eligibility <- served_in_date_range %>%
     dplyr::select(
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       ProjectID,
       AgeAtEntry,
       RelationshipToHoH,
@@ -1391,7 +1325,7 @@ DataQuality <- function(
         "if you are unsure of eligibility criteria for your project type."
       )
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Rent Payment Made, No Move-In Date
   rent_paid_no_move_in <- served_in_date_range %>%
@@ -1420,7 +1354,7 @@ DataQuality <- function(
     in your program, they need to be exited from their original Entry and
     re-entered in a new one that has no Move-In Date until they are re-housed."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Missing Destination
   missing_destination <- served_in_date_range %>%
@@ -1442,14 +1376,14 @@ DataQuality <- function(
         "to work out a way to improve client engagement."
       )
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   dkr_destination <- served_in_date_range %>%
     dplyr::filter(Destination %in% c(8, 9)) %>%
     dplyr::mutate(Issue = "Don't Know/Refused Destination",
                   Type = "Warning",
                   Guidance = guidance$dkr_data) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Missing PATH Data -------------------------------------------------------
 
@@ -1464,7 +1398,7 @@ DataQuality <- function(
 
   path_missing_los_res_prior <- served_in_date_range %>%
     dplyr::select(
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       ProjectID,
       AgeAtEntry,
       ClientEnrolledInPATH,
@@ -1479,7 +1413,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Missing Residence Prior Length of Stay (PATH)",
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
 
   #* Engagement at Exit
@@ -1487,7 +1421,7 @@ DataQuality <- function(
 
   path_no_status_at_exit <- served_in_date_range %>%
     dplyr::select(
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       AgeAtEntry,
       ClientEnrolledInPATH,
       DateOfPATHStatus,
@@ -1507,13 +1441,13 @@ DataQuality <- function(
     dplyr::mutate(Issue = "PATH Status at Exit Missing or Incomplete",
                   Type = "Error",
                   Guidance = guidance$missing_at_exit) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   #* Status Determination at Exit
   ### adult, PATH-Enrolled is not null
   ### Date of Status Determ is null -> error
   path_status_determination <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep),
+    dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
                   ClientEnrolledInPATH,
                   DateOfPATHStatus,
@@ -1529,7 +1463,7 @@ DataQuality <- function(
                   Type = "Error",
                   Guidance = "Users must indicate the PATH Status Date for any adult
              enrolled in PATH.") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   #* PATH Enrolled at Exit
   ### adult and:
@@ -1552,7 +1486,7 @@ DataQuality <- function(
         Entry or Exit pencil and creating an Interim. In the assessment, enter
         the correct PATH Enrollment Date and Save."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   #* Not Enrolled Reason
   ### adult
@@ -1579,7 +1513,7 @@ DataQuality <- function(
       Guidance = "The user has indicated the household was not enrolled into
         PATH, but no reason was selected."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   #* Connection with SOAR at Exit
   ### adult
@@ -1608,7 +1542,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Missing Connection with SOAR at Exit",
                   Type = "Error",
                   Guidance = guidance$missing_at_exit) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   rm(smallIncomeSOAR)
 
@@ -1647,7 +1581,7 @@ DataQuality <- function(
              Situation contact record. If you see a record there but there is
              no Date of Contact, saving the Date of Contact will correct this
              issue.") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Incorrect PATH Contact Date
   ## client is adult/hoh, has a contact record, and the first record in the EE
@@ -1684,7 +1618,7 @@ DataQuality <- function(
              Date. This would represent the initial contact made with the
              client."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   rm(first_contact, small_contacts)
 
@@ -1702,7 +1636,7 @@ DataQuality <- function(
       belongs to, navigate to the Entry/Exit tab and delete the program stay
       that was accidentally added for each household member."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
 
   # Future Entry Exits ------------------------------------------------------
@@ -1725,7 +1659,7 @@ DataQuality <- function(
         needed, but going forward, please be sure that your data entry workflow
         is correct according to your project type."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   future_exits <- served_in_date_range %>%
     dplyr::filter(ExitDate > lubridate::today()) %>%
@@ -1737,7 +1671,7 @@ DataQuality <- function(
         yet exited, delete the Exit and then enter the Exit Date once the client
         is no longer in your program."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
 
   # Incorrect Entry Exit Type -----------------------------------------------
@@ -1781,7 +1715,7 @@ DataQuality <- function(
              click the Entry pencil and Save & Continue. The Entry Exit Type at
              the top can then be changed. Click \"Update\" to make this change
              take effect.") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
 
   # HoHs Entering PH without SPDATs -----------------------------------------
@@ -1825,7 +1759,7 @@ DataQuality <- function(
         must have a VI-SPDAT score to aid with prioritization into a
         Transitional Housing or Permanent Housing (RRH or PSH) project."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # HoHs in Shelter without a SPDAT -----------------------------------------
 
@@ -1848,7 +1782,7 @@ DataQuality <- function(
         over 8 days should be assessed with the VI-SPDAT so that they can be
         prioritized for Permanent Housing (RRH or PSH)."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   spdat_on_non_hoh <- ees_with_spdats %>%
     dplyr::left_join(
@@ -1873,7 +1807,7 @@ DataQuality <- function(
       stay is missing their score. To correct this, you would need to completely
       re-enter the score on the correct client's record."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   rm(ees_with_spdats)
 
@@ -1898,7 +1832,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Income Missing at Entry",
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   smallIncome <- IncomeBenefits %>%
     dplyr::select(
@@ -1971,7 +1905,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Conflicting Income yes/no at Entry",
                   Type = "Error",
                   Guidance = guidance$conflicting_income) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Not calculating Conflicting Income Amounts bc they're calculating the TMI from the
   # subs instead of using the field itself. Understandable but that means I would
@@ -1998,7 +1932,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Income Missing at Exit",
                   Type = "Error",
                   Guidance = guidance$missing_at_exit) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   conflicting_income_exit <- income_subs %>%
     dplyr::filter(DataCollectionStage == 3 &
@@ -2011,7 +1945,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Conflicting Income yes/no at Exit",
                   Type = "Error",
                   Guidance = guidance$conflicting_income) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   rm(income_subs)
 
@@ -2118,7 +2052,7 @@ DataQuality <- function(
     dplyr::filter(ExitDate > PreviousEntryAdjust &
                     ExitDate < PreviousExitAdjust) %>%
     dplyr::ungroup() %>%
-    dplyr::select(dplyr::all_of(vars_we_want), PreviousProject)
+    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
 
   rrh_overlaps <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars_prep), ExitAdjust) %>%
@@ -2159,7 +2093,7 @@ DataQuality <- function(
       Overlap = lubridate::int_overlaps(InProject, PreviousStay)
     ) %>%
     dplyr::filter(Overlap == TRUE) %>%
-    dplyr::select(dplyr::all_of(vars_we_want), PreviousProject)
+    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
 
   psh_overlaps <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars_prep), ExitAdjust) %>%
@@ -2200,7 +2134,7 @@ DataQuality <- function(
       Overlap = lubridate::int_overlaps(InProject, PreviousStay)
     ) %>%
     dplyr::filter(Overlap == TRUE) %>%
-    dplyr::select(dplyr::all_of(vars_we_want), PreviousProject)
+    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
 
   dq_overlaps <- staging_overlaps %>%
     dplyr::mutate(
@@ -2208,7 +2142,7 @@ DataQuality <- function(
       Overlap = lubridate::int_overlaps(LiterallyInProject, PreviousStay)
     ) %>%
     dplyr::filter(Overlap == TRUE) %>%
-    dplyr::select(dplyr::all_of(vars_we_want), PreviousProject)
+    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
 
   dq_overlaps <-
     rbind(dq_overlaps, rrh_overlaps, psh_overlaps, same_day_overlaps) %>%
@@ -2243,7 +2177,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Health Insurance Missing at Entry",
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   missing_health_insurance_exit <- served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
@@ -2257,7 +2191,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Health Insurance Missing at Exit",
                   Type = "Error",
                   Guidance = guidance$missing_at_exit) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   health_insurance_subs <- served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
@@ -2296,7 +2230,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Conflicting Health Insurance yes/no at Entry",
                   Type = "Error",
                   Guidance = guidance$conflicting_hi) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   conflicting_health_insurance_exit <- health_insurance_subs %>%
     dplyr::filter(DataCollectionStage == 3 &
@@ -2311,7 +2245,7 @@ DataQuality <- function(
       Type = "Error",
       Guidance = guidance$conflicting_hi
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   rm(health_insurance_subs)
 
@@ -2391,7 +2325,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Non-cash Benefits Missing at Entry",
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   conflicting_ncbs_entry <- served_in_date_range %>%
     dplyr::left_join(ncb_subs, by = c("PersonalID", "EnrollmentID")) %>%
@@ -2410,7 +2344,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Conflicting Non-cash Benefits yes/no at Entry",
                   Type = "Error",
                   Guidance = guidance$conflicting_ncbs) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
 
   # Unlikely NCBs -----------------------------------------------------------
@@ -2432,7 +2366,7 @@ DataQuality <- function(
                   Guidance = "This client has every single Non-Cash Benefit,
              according to HMIS, which is highly unlikely. Please correct (unless
              it's actually true).") %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Missing NCBs at Exit ----------------------------------------------------
   missing_ncbs_exit <- served_in_date_range %>%
@@ -2451,7 +2385,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Non-cash Benefits Missing at Exit",
                   Type = "Error",
                   Guidance = guidance$missing_at_exit) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   conflicting_ncbs_exit <- served_in_date_range %>%
     dplyr::left_join(ncb_subs, by = c("PersonalID", "EnrollmentID")) %>%
@@ -2472,7 +2406,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Conflicting Non-cash Benefits yes/no at Exit",
                   Type = "Error",
                   Guidance = guidance$conflicting_ncbs) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   rm(ncb_subs)
 
@@ -2500,12 +2434,12 @@ DataQuality <- function(
         an adult is receiving SSI or SSDI benefits on behalf a minor child,
         then there is no action needed."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   rm(smallIncome)
 
   # Non HoHs w Svcs or Referrals --------------------------------------------
-  # SSVF projects should be showing this as an Error, whereas non-SSVF projects
+  # SSVF projects should be showing this as an Error,7 whereas non-SSVF projects
   # should be showing it as a warning, and only back to Feb of 2019
   services_on_hh_members <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars_prep),
@@ -2521,7 +2455,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Service Transaction on a Non Head of Household",
                   Type = "Warning",
                   Guidance = guidance$service_on_non_hoh) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   services_on_hh_members_ssvf <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars_prep),
@@ -2534,7 +2468,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Service Transaction on a Non Head of Household (SSVF)",
                   Type = "Error",
                   Guidance = guidance$service_on_non_hoh) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
 
 
@@ -2550,7 +2484,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Referral on a Non Head of Household (SSVF)",
                   Type = "Error",
                   Guidance = guidance$referral_on_non_hoh) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Stray Services (fall outside EE) ----------------------------------------
   # Because a lot of these records are stray Services due to there being no
@@ -2633,7 +2567,7 @@ DataQuality <- function(
       <a href=\"http://hmis.cohhio.org/index.php?pg=kb.page&id=151\"
           target=\"_blank\">Coordinated Entry workflow</a>."
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Side Door ---------------------------------------------------------------
   # use Referrals, get logic from ART report- it's pretty lax I think
@@ -2701,7 +2635,7 @@ DataQuality <- function(
           target=\"_blank\">data entry portion of the Unsheltered video training</a>
           for more info.",
     ) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
 
   # Unsheltered New Entries by County by Month ------------------------------
@@ -2777,7 +2711,7 @@ DataQuality <- function(
       Guidance = guidance$missing_at_entry
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   veteran_missing_year_separated <- ssvf_served_in_date_range %>%
     dplyr::filter(VeteranStatus == 1) %>%
@@ -2789,7 +2723,7 @@ DataQuality <- function(
       Guidance = guidance$missing_at_entry
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   veteran_missing_wars <- ssvf_served_in_date_range %>%
     dplyr::filter(
@@ -2810,7 +2744,7 @@ DataQuality <- function(
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
     dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   veteran_missing_branch <- ssvf_served_in_date_range %>%
     dplyr::filter(VeteranStatus == 1 &
@@ -2819,7 +2753,7 @@ DataQuality <- function(
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
     dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   veteran_missing_discharge_status <- ssvf_served_in_date_range %>%
     dplyr::filter(VeteranStatus == 1 & is.na(DischargeStatus)) %>%
@@ -2827,7 +2761,7 @@ DataQuality <- function(
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
     dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   dkr_client_veteran_info <- ssvf_served_in_date_range %>%
     dplyr::filter(VeteranStatus == 1) %>%
@@ -2848,7 +2782,7 @@ DataQuality <- function(
       Guidance = guidance$dkr_data
     ) %>%
     dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   ssvf_missing_percent_ami <- ssvf_served_in_date_range %>%
     dplyr::filter(RelationshipToHoH == 1 &
@@ -2856,7 +2790,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Missing Percent AMI",
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   ssvf_missing_vamc <- ssvf_served_in_date_range %>%
     dplyr::filter(RelationshipToHoH == 1 &
@@ -2864,7 +2798,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Missing VAMC Station Number",
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   ssvf_missing_address <- ssvf_served_in_date_range %>%
     dplyr::filter(RelationshipToHoH == 1 &
@@ -2877,7 +2811,7 @@ DataQuality <- function(
     dplyr::mutate(Issue = "Missing Some or All of Last Permanent Address",
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars_we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 
   # TEMPORARILY NOT REQUIRED FOR COVID-19 REASONS
   # ssvf_hp_screen <- ssvf_served_in_date_range %>%
@@ -2888,7 +2822,7 @@ DataQuality <- function(
   #   mutate(Issue = "Missing HP Screening or Threshold Score",
   #          Type = "Error",
   #          Guidance = guidance$missing_at_entry) %>%
-  #   select(all_of(vars_we_want))
+  #   select(all_of(vars$we_want))
 
 
   # All together now --------------------------------------------------------
@@ -3122,8 +3056,6 @@ DataQuality <- function(
     dplyr::filter(HMIS::served_between(., hc$project_eval_start, hc$project_eval_end)) %>%
     dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
 
-  projects_current_hmis <- projects_current_hmis %>%
-    dplyr::filter(ProjectID != 1695)
 
   dq_providers <- sort(projects_current_hmis$ProjectName)
 
@@ -3463,7 +3395,7 @@ DataQuality <- function(
     unsheltered_long_not_referred,
     va_funded,
     vars_prep,
-    vars_we_want,
+    vars$we_want,
     veteran_missing_year_entered,
     veteran_missing_year_separated,
     veteran_missing_wars,

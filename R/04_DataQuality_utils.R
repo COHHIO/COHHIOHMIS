@@ -7,6 +7,7 @@ is_sp <- function() {
 }
 
 projects_current_hmis <- function (Project, Inventory) {
+
   Project %>%
     dplyr::left_join(Inventory, by = "ProjectID") %>%
     dplyr::filter(HMISParticipatingProject == 1 &
@@ -26,6 +27,90 @@ projects_current_hmis <- function (Project, Inventory) {
       ProjectRegion
     ) %>% unique()
 }
+
+#' Create the data.frame of Clients to Check `served_in_date_range`
+#'
+#' @param projects_current_hmis \code{(data.frame)} of Providers to check. See `projects_current_hmis`
+#' @param Enrollment_extra_Exit_HH_CL_AaE \code{(data.frame)} Enrollment with all additions from `load_export`
+#' @param Client \code{(data.frame)} Client with all additions from `load_export`
+#' @param Project \code{(data.frame)} Project with extras including Regions and GrantType see `Pe_add_regions` & `Pe_add_GrantType`.
+#' @param Inventory \code{(data.frame)} Inventory
+#' @param calc \code{(list)} of dates from `dates`
+#' @param meta_HUDCSV \code{(list)} of dates from `dates`
+#' @param app_env \code{(data.frame)} Instead of providing all `Enrollment`, `Client`, `Project`, `Inventory`, `calc` & `meta_HUDCSV`, `app_env` with all inputs saved internally can be provided.
+#'
+#' @return \code{data.frame}
+#' @export
+
+served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH_CL_AaE, Client, Project, Inventory, calc, meta_HUDCSV, app_env) {
+  if (!missing(app_env))
+    app_env$merge_deps_to_env("Enrollment_extra_Exit_HH_CL_AaE", "Client", "Project", "Inventory", "calc", "meta_HUDCSV")
+  Enrollment_extra_Exit_HH_CL_AaE  |>
+    HMIS::served_between(calc$data_goes_back_to, meta_HUDCSV$Export_End)  |>
+    dplyr::left_join(Client  |>
+                       dplyr::select(-DateCreated), by = "PersonalID") |>
+    dplyr::select(
+      PersonalID,
+      FirstName,
+      NameDataQuality,
+      SSN,
+      SSNDataQuality,
+      DOB,
+      DOBDataQuality,
+      AmIndAKNative,
+      Asian,
+      BlackAfAmerican,
+      NativeHIOtherPacific,
+      White,
+      RaceNone,
+      Ethnicity,
+      Gender,
+      VeteranStatus,
+      EnrollmentID,
+      ProjectID,
+      EntryDate,
+      HouseholdID,
+      RelationshipToHoH,
+      LivingSituation,
+      LengthOfStay,
+      LOSUnderThreshold,
+      PreviousStreetESSH,
+      DateToStreetESSH,
+      TimesHomelessPastThreeYears,
+      AgeAtEntry,
+      MonthsHomelessPastThreeYears,
+      DisablingCondition,
+      DateOfEngagement,
+      MoveInDate,
+      MoveInDateAdjust,
+      EEType,
+      CountyServed,
+      CountyPrior,
+      ExitDate,
+      Destination,
+      ExitAdjust,
+      DateCreated,
+      UserCreating,
+      ClientEnrolledInPATH,
+      LengthOfStay,
+      DateOfPATHStatus,
+      ReasonNotEnrolled,
+      ClientLocation,
+      PHTrack,
+      ExpectedPHDate
+    )  |>
+    dplyr::inner_join(projects_current_hmis, by = "ProjectID")
+
+  DV <- HealthAndDV  |>
+    dplyr::filter(DataCollectionStage == 1)  |>
+    dplyr::select(EnrollmentID, DomesticViolenceVictim, WhenOccurred, CurrentlyFleeing)
+
+  served_in_date_range |>
+    dplyr::left_join(DV, by = "EnrollmentID")
+
+}
+
+
 
 #' @title Funder_VA
 #' @description This filters for VA Funders
