@@ -251,7 +251,6 @@ cohorts <- function(
     dplyr::left_join(provider_services, by = "ProjectID") %>%
     dplyr::select(
       ProjectID,
-      ProjectAKA,
       OrganizationName,
       ProjectName,
       TargetPop,
@@ -266,11 +265,11 @@ cohorts <- function(
       "<a href='",
       ProjectWebsite,
       "' target='_blank'>",
-      ProjectAKA,
+      ProjectName,
       "</a><small> (#",
       ProjectID,
       ")</small>"
-    ), paste0(ProjectAKA,
+    ), paste0(ProjectName,
               "<small> (#",
               ProjectID,
               ")</small>"))) %>%
@@ -279,7 +278,7 @@ cohorts <- function(
       City = paste0(City, ", ", State, " ", ZIP),
       Addresses = dplyr::coalesce(Address1, Address2)
     ) %>%
-    dplyr::select(ProjectID, ProjectAKA, OrganizationName, ProjectName, TargetPop,
+    dplyr::select(ProjectID, OrganizationName, ProjectName, TargetPop,
                   "ProjectCountyServed" = CountiesServed, ProjectAreaServed,
                   ProjectHours, ProjectTelNo, OrgLink, CoCCode, Addresses, City)
 

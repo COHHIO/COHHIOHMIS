@@ -21,7 +21,6 @@ projects_current_hmis <- function (Project, Inventory) {
       ProjectType,
       GrantType,
       ProjectName,
-      ProjectAKA,
       OrganizationName,
       ProjectCounty,
       ProjectRegion

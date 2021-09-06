@@ -42,7 +42,7 @@ VeteranHHs <- Veterans %>%
 # adding in all the provider data
 VeteranHHs <- Project %>%
   dplyr::select(ProjectID, OrganizationName, OperatingStartDate, OperatingEndDate,
-         ProjectType, GrantType, ProjectName, ProjectAKA, ProjectRegion) %>%
+         ProjectType, GrantType, ProjectName, ProjectRegion) %>%
   dplyr::right_join(VeteranHHs, by = "ProjectID")
 
 VeteranHHs <- VeteranHHs %>%

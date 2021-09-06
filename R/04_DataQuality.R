@@ -2566,7 +2566,6 @@ DataQuality <- function(
       OperatingStartDate,
       OperatingEndDate,
       ProjectName,
-      ProjectAKA,
       HMISParticipatingProject,
       ProjectCounty
     )

@@ -42,7 +42,6 @@ smallProject <- Project %>%
          OrganizationName,
          OperatingStartDate,
          OperatingEndDate,
-         ProjectAKA,
          ProjectName,
          ProjectType,
          HMISParticipatingProject,
@@ -54,7 +53,7 @@ smallProject <- Project %>%
            !is.na(ProjectRegion) &
            ProjectType %in% c(1:4, 8:9, 12:14)) %>%
   dplyr::mutate(
-    FriendlyProjectName = dplyr::if_else(is.na(ProjectAKA), ProjectName, ProjectAKA))
+    FriendlyProjectName = ProjectName)
 
 smallEnrollment <- Enrollment %>%
   dplyr::select(
