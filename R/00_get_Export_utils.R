@@ -254,7 +254,9 @@ Pe_add_regions <- function(provider_extras, dirs) {
   Regions <- hud_load("Regions", dirs$public)
 
   provider_extras <- provider_extras |>
-    dplyr::left_join(Regions |> dplyr::select(- RegionName), by = "County")
+    dplyr::left_join(Regions |> dplyr::select(- RegionName), by = "County") |>
+    dplyr::rename(ProjectRegion = "Region",
+                  ProjectCounty = "County")
 
   # Missing Regions
   # missing_region <- provider_extras |>
