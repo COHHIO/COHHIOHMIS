@@ -205,46 +205,17 @@ Enrollment_add_AgeAtEntry <- function(Enrollment, Client) {
     dplyr::select(-DOB)
 }
 
-#' create_APs
-#' @description Create data.frame of Coordinated Entry Access Points with info about the Counties & Populations Served
-#' @param provider_extras
-#' @param dirs
-#'
-#' @return \code{(data.frame)}
-#' @export
 
-create_APs = function(provider_extras, dirs) {
-  Regions <- hud_load("Regions", dirs$public)
-  APs <- provider_extras |>
-    dplyr::select( !tidyselect::starts_with("CoCComp") & !Geocode:ZIP) |>
-    dplyr::filter(ProjectType == "Coordinated Entry") |>
-    tidyr::pivot_longer(tidyselect::starts_with("AP"), names_to = "TargetPop", names_pattern = "(?<=^APCounties)(\\w+)", values_to = "CountiesServed") |>
-    dplyr::filter(!is.na(CountiesServed)) |>
-    dplyr::select(!tidyselect::starts_with("AP") & !ProjectType)
-
-  # Programs serve multiple Counties which may fall into multiple regions. This creates a row for each Region served by a Program such that Coordinated Entry Access Points will show all the appropriate programs when filtering by Region.
-  # @Rm
-  APs <- slider::slide_dfr(APs, ~{
-    .counties <- trimws(stringr::str_split(.x$CountiesServed, ",\\s")[[1]])
-
-    .x |>
-      dplyr::select(- Region) |>
-      cbind(Region = unique(Regions$Region[Regions$County %in% .counties]))
-  }) |>
-    dplyr::distinct_all()
-
-  APs
-}
 
 #' Add the Corresponding Region for each Project by way of Geocode matching
 #'
 #' @param provider_extras
 #' @param dirs
 #'
-#' @return \code{(data.frame)}
+#' @return \code{(data.frame)} provider_extras with Regions column
 #' @export
 
-add_regions <- function(provider_extras, dirs) {
+Pe_add_regions <- function(provider_extras, dirs) {
   # geocodes is created by `hud.extract` using the hud_geocodes.R functions
   geocodes <- hud_load("geocodes", dirs$public)
   # This should map a county to every geocode
@@ -294,7 +265,59 @@ add_regions <- function(provider_extras, dirs) {
   provider_extras
 }
 
+#' Add Access Points to Provider_extras
+#' @description Create data.frame of Coordinated Entry Access Points with info about the Counties & Populations Served
+#' @param provider_extras \code{(data.frame)} provider_extras with Regions, see `Pe_add_regions`
+#' @param dirs
+#'
+#' @return \code{(data.frame)}
+#' @export
+
+Pe_create_APs = function(provider_extras, dirs) {
+  Regions <- hud_load("Regions", dirs$public)
+  APs <- provider_extras |>
+    dplyr::select( !tidyselect::starts_with("CoCComp") & !Geocode:ZIP) |>
+    dplyr::filter(ProjectType == "Coordinated Entry") |>
+    tidyr::pivot_longer(tidyselect::starts_with("AP"), names_to = "TargetPop", names_pattern = "(?<=^APCounties)(\\w+)", values_to = "CountiesServed") |>
+    dplyr::filter(!is.na(CountiesServed)) |>
+    dplyr::select(!tidyselect::starts_with("AP") & !ProjectType)
+
+  # Programs serve multiple Counties which may fall into multiple regions. This creates a row for each Region served by a Program such that Coordinated Entry Access Points will show all the appropriate programs when filtering by Region.
+  # @Rm
+  APs <- slider::slide_dfr(APs, ~{
+    .counties <- trimws(stringr::str_split(.x$CountiesServed, ",\\s")[[1]])
+
+    .x |>
+      dplyr::select(- Region) |>
+      cbind(Region = unique(Regions$Region[Regions$County %in% .counties]))
+  }) |>
+    dplyr::distinct_all()
+
+  APs
+}
+
+#' Add GrantType column to provider_extras
+#' @description GrantType indicates if the program is funded by one of HOPWA, PATH, SSVF, or RHY
+#'
+#' @param provider_extras
+#'
+#' @return
+#' @export
+Pe_add_GrantType = function(provider_extras) {
+  hash <- hud.extract::hud_translations$`2.06.1 FundingSource`(table = TRUE)
+
+  gt <- list(HOPWA = c(13:19), PATH = 21, SSVF = 33, RHY = 22:26)
+  provider_extras |>
+    dplyr::mutate(GrantType = dplyr::case_when(
+      FundingSourceCode %in% gt$HOPWA ~ "HOPWA",
+      FundingSourceCode %in% gt$PATH ~ "PATH",
+      FundingSourceCode %in% gt$SSVF ~ "SSVF",
+      FundingSourceCode %in% gt$RHY ~ "RHY"
+      ))
+}
+
 provider_extras_helpers <- list(
-  add_regions = add_regions,
-  create_APs = create_APs
+  add_regions = Pe_add_regions,
+  create_APs = Pe_create_APs,
+  add_GrantType = Pe_add_GrantType
 )

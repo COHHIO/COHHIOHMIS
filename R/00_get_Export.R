@@ -60,6 +60,8 @@ load_export <- function(
   # Thu Aug 12 14:23:50 2021
   provider_extras <- cl_api$`HUD Extras`$Project_extras()
   provider_extras <- provider_extras_helpers$add_regions(provider_extras, dirs)
+  provider_extras <- provider_extras_helpers$add_GrantType(provider_extras)
+
   # Rminor: Coordinated Entry Access Points [CEAP]
   APs <- provider_extras_helpers$create_APs(provider_extras, dirs)
 

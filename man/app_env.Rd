@@ -65,15 +65,15 @@ Gather the objects passed to \code{app_env}s internal environment to be passed t
 \subsection{Method \code{merge_deps_to_env()}}{
 Pass all dependencies saved from previous functions to an environment for use
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$merge_deps_to_env(nms, env = rlang::caller_env())}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{app_env$merge_deps_to_env(..., env = rlang::caller_env())}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{nms}}{\code{(character)} of the names of the dependencies to load into the \code{env}. \strong{Default} load all previously stored objects.}
-
 \item{\code{env}}{\code{(environment)} to pass dependencies to. \strong{Default} the calling environment}
+
+\item{\code{nms}}{\code{(character)} of the names of the dependencies to load into the \code{env}. \strong{Default} load all previously stored objects.}
 }
 \if{html}{\out{</div>}}
 }

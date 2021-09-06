@@ -4,7 +4,7 @@
 \alias{Enrollment_add_ClientLocation}
 \title{Add Client Location to Enrollment}
 \usage{
-Enrollment_add_ClientLocation(Enrollment, EnrollmentCoc)
+Enrollment_add_ClientLocation(Enrollment, EnrollmentCoC)
 }
 \arguments{
 \item{EnrollmentCoc}{}
