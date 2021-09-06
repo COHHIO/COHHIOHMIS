@@ -61,26 +61,8 @@ DataQuality <- function(
 
   # Providers to Check ------------------------------------------------------
 
-  projects_current_hmis <- Project %>%
-    dplyr::left_join(Inventory, by = "ProjectID") %>%
-    dplyr::filter(ProjectID %in% c(1695, 2372) | (
-      HMISParticipatingProject == 1 &
-        HMIS::operating_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End) &
-        (GrantType != "HOPWA" | is.na(GrantType)))
-    ) %>%
-    dplyr::select(
-      ProjectID,
-      OrganizationID,
-      OperatingStartDate,
-      OperatingEndDate,
-      ProjectType,
-      GrantType,
-      ProjectName,
-      ProjectAKA,
-      OrganizationName,
-      ProjectCounty,
-      ProjectRegion
-    ) %>% unique()
+  #QUESTION GrantType? Does this need to be retained?
+  projects_current_hmis <- projects_current_hmis(Project, Inventory)
 
   # Clients to Check --------------------------------------------------------
 

@@ -6,6 +6,28 @@ is_sp <- function() {
   getOption("HMIS")$ServicePoint
 }
 
+projects_current_hmis <- function (Project, Inventory) {
+  Project %>%
+    dplyr::left_join(Inventory, by = "ProjectID") %>%
+    dplyr::filter(HMISParticipatingProject == 1 &
+        HMIS::operating_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End) &
+        (GrantType != "HOPWA" | is.na(GrantType))
+    ) %>%
+    dplyr::select(
+      ProjectID,
+      OrganizationID,
+      OperatingStartDate,
+      OperatingEndDate,
+      ProjectType,
+      GrantType,
+      ProjectName,
+      ProjectAKA,
+      OrganizationName,
+      ProjectCounty,
+      ProjectRegion
+    ) %>% unique()
+}
+
 #' @title Funder_VA
 #' @description This filters for VA Funders
 #' @param x \code{(data.frame)} Funder Export Object
