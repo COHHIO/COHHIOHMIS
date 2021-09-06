@@ -50,7 +50,7 @@ smallProject <- Project %>%
          ProjectCounty,
          ProjectRegion) %>%
   dplyr::filter(HMISParticipatingProject == 1 &
-           HMIS::operating_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End) &
+           HMIS::operating_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End) &
            !is.na(ProjectRegion) &
            ProjectType %in% c(1:4, 8:9, 12:14)) %>%
   dplyr::mutate(
@@ -108,7 +108,7 @@ smallEnrollment <- smallEnrollment %>%
 qpr_leavers <- smallProject %>%
   dplyr::left_join(smallEnrollment, by = "ProjectID") %>%
   dplyr::filter((!is.na(ExitDate) | ProjectType %in% c(3, 9, 12)) &
-           HMIS::served_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End) &
+           HMIS::served_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End) &
            RelationshipToHoH == 1) %>%
   dplyr::mutate(
     DestinationGroup = dplyr::case_when(
@@ -120,13 +120,13 @@ qpr_leavers <- smallProject %>%
     ),
     DaysinProject = difftime(ExitAdjust, EntryDate, units = "days")
   ) %>%
-  dplyr::filter(HMIS::stayed_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End)) %>%
+  dplyr::filter(HMIS::stayed_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End)) %>%
   dplyr::arrange(ProjectName)
 
 qpr_rrh_enterers <- smallProject %>%
   dplyr::left_join(smallEnrollment, by = "ProjectID") %>%
   dplyr::filter(ProjectType == 13 &
-           HMIS::entered_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End) &
+           HMIS::entered_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End) &
            RelationshipToHoH == 1) %>%
   dplyr::mutate(
     DaysToHouse = difftime(MoveInDateAdjust, EntryDate, units = "days"),
@@ -143,7 +143,7 @@ smallMainstreamBenefits <- IncomeBenefits %>%
 
 qpr_benefits <- smallProject %>%
   dplyr::left_join(smallEnrollment, by = "ProjectID") %>%
-  dplyr::filter(HMIS::exited_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End) &
+  dplyr::filter(HMIS::exited_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End) &
            RelationshipToHoH == 1) %>%
   dplyr::left_join(smallMainstreamBenefits, by = "EnrollmentID") %>%
   dplyr::select(ProjectName, FriendlyProjectName, PersonalID, HouseholdID, EntryDate,
@@ -185,7 +185,7 @@ smallIncomeDiff <-
 
 qpr_income <- smallProject %>%
   dplyr::left_join(smallEnrollment, by = "ProjectID") %>%
-  dplyr::filter(HMIS::served_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End) &
+  dplyr::filter(HMIS::served_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End) &
            RelationshipToHoH == 1) %>%
   dplyr::left_join(smallIncomeDiff, by = "EnrollmentID") %>%
   dplyr::select(ProjectName, FriendlyProjectName, PersonalID, HouseholdID, EntryDate,

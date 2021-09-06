@@ -45,37 +45,38 @@ dates <- function(clarity_api,
 
   Export <- cl_api$Export()
 
-  meta_HUDCSV_Export_Date <- Export[["ExportDate"]][1]
-  meta_HUDCSV_Export_Start <- Export[["ExportStartDate"]][1]
-  meta_HUDCSV_Export_End <- Export[["ExportEndDate"]][1]
+  meta_HUDCSV <- list()
+  meta_HUDCSV$Export_Date <- Export[["ExportDate"]][1]
+  meta_HUDCSV$Export_Start <- Export[["ExportStartDate"]][1]
+  meta_HUDCSV$Export_End <- Export[["ExportEndDate"]][1]
 
 
 
   # Calculated Dates --------------------------------------------------------
-
+calc <- list()
 
   Exit <- cl_api$Exit()
-   calc_data_goes_back_to <-
+   calc$data_goes_back_to <-
     Exit %>%
     dplyr::arrange(ExitDate) %>%
     utils::head(1) %>%
     dplyr::pull(ExitDate)
 
-  calc_full_date_range <- lubridate::interval(meta_HUDCSV_Export_End,
-                                              calc_data_goes_back_to)
+  calc$full_date_range <- lubridate::interval(meta_HUDCSV$Export_End,
+                                              calc$data_goes_back_to)
 
-  calc_2_yrs_prior_end <- lubridate::floor_date(Sys.Date(), "month") - lubridate::days(1)
-  calc_2_yrs_prior_start <-
-    lubridate::floor_date(calc_2_yrs_prior_end, "month") - lubridate::years(2) + lubridate::dmonths(1)
+  calc$two_yrs_prior_end <- lubridate::floor_date(Sys.Date(), "month") - lubridate::days(1)
+  calc$two_yrs_prior_start <-
+    lubridate::floor_date(calc$two_yrs_prior_end, "month") - lubridate::years(2) + lubridate::dmonths(1)
 
-  calc_2_yrs_prior_range <- lubridate::interval(calc_2_yrs_prior_start,
-                                                calc_2_yrs_prior_end)
-
-
+  calc$two_yrs_prior_range <- lubridate::interval(calc$two_yrs_prior_start,
+                                                calc$two_yrs_prior_end)
 
 
-  if(meta_HUDCSV_Export_Start != hc$data_goes_back_to |
-     meta_HUDCSV_Export_End != Sys.Date())
+
+
+  if(meta_HUDCSV$Export_Start != hc$data_goes_back_to |
+     meta_HUDCSV$Export_End != Sys.Date())
     stop_with_instructions("The HUD CSV Export update process errored. Please rerun.\n", error = error)
 
 

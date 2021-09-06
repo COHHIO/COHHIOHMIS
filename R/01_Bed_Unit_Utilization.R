@@ -29,9 +29,9 @@ Bed_Unit_Utilization <- function(
 # despite the fact we're pulling in usually more than 2 years of data, the
 # utilization reporting will only go back 2 years. (decision based on lack of
 # a need to go back further and time to code all that.)
-FileEnd <- format.Date(calc_2_yrs_prior_end, "%m-%d-%Y")
-FileStart <- format.Date(calc_2_yrs_prior_start, "%m-%d-%Y")
-FilePeriod <- calc_2_yrs_prior_range
+FileEnd <- format.Date(calc$two_yrs_prior_end, "%m-%d-%Y")
+FileStart <- format.Date(calc$two_yrs_prior_start, "%m-%d-%Y")
+FilePeriod <- calc$two_yrs_prior_range
 
 # Creating Beds table -----------------------------------------------------
 

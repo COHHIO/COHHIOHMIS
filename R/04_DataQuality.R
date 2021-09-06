@@ -14,7 +14,7 @@
 
 dependencies$DataQuality <-
   c(
-    "calc_data_goes_back_to",
+    "calc$data_goes_back_to",
     "Client",
     "Contacts",
     "covid19",
@@ -30,7 +30,7 @@ dependencies$DataQuality <-
     "Inventory",
     "living_situation",
     "mahoning_projects",
-    "meta_HUDCSV_Export_End",
+    "meta_HUDCSV$Export_End",
     "Project",
     "Referrals",
     "Scores",
@@ -65,7 +65,7 @@ DataQuality <- function(
     dplyr::left_join(Inventory, by = "ProjectID") %>%
     dplyr::filter(ProjectID %in% c(1695, 2372) | (
       HMISParticipatingProject == 1 &
-        HMIS::operating_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End) &
+        HMIS::operating_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End) &
         (GrantType != "HOPWA" | is.na(GrantType)))
     ) %>%
     dplyr::select(
@@ -85,7 +85,7 @@ DataQuality <- function(
   # Clients to Check --------------------------------------------------------
 
   served_in_date_range <- Enrollment %>%
-    dplyr::filter(HMIS::served_between(., calc_data_goes_back_to, meta_HUDCSV_Export_End)) %>%
+    dplyr::filter(HMIS::served_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End)) %>%
     dplyr::left_join(Client %>%
                        dplyr::select(-DateCreated), by = "PersonalID") %>%
     dplyr::select(
@@ -3254,7 +3254,7 @@ DataQuality <- function(
 
   dq_data_unsheltered_high <- dq_unsheltered %>%
     dplyr::filter(Type == "High Priority",
-                  HMIS::served_between(., hc$unsheltered_data_start, meta_HUDCSV_Export_End)) %>%
+                  HMIS::served_between(., hc$unsheltered_data_start, meta_HUDCSV$Export_End)) %>%
     dplyr::select(PersonalID, HouseholdID, DefaultProvider) %>%
     unique() %>%
     dplyr::group_by(DefaultProvider) %>%
