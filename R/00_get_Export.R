@@ -80,9 +80,9 @@ Project <- cl_api$Project() |>
   # Enrollment --------------------------------------------------------------
 
   # from sheets 1 and 2, getting EE-related data, joining both to En
-
+  Enrollment_extras <- cl_api$`HUD Extras`$Enrollment_extras()
   Enrollment <- cl_api$Enrollment()
-  Enrollment_extra_Exit_HH_CL_AaE <- dplyr::inner_join(Enrollment, cl_api$`HUD Extras`$Enrollment_extras(), by = UU::common_names(Enrollment, Enrollment_extras)) |>
+  Enrollment_extra_Exit_HH_CL_AaE <- dplyr::inner_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
     # Add Exit
     Enrollment_add_Exit(cl_api$Exit()) |>
     # Add Households
@@ -90,7 +90,7 @@ Project <- cl_api$Project() |>
     # Add Veteran Coordinated Entry
     Enrollment_add_VeteranCE(VeteranCE) |>
     # Add Client Location from EnrollmentCoC
-    Enrollment_add_ClientLocation(Enrollment_CoC) |>
+    Enrollment_add_ClientLocation(EnrollmentCoC) |>
     # Add Client AgeAtEntry
     Enrollment_add_AgeAtEntry(Client)
 
@@ -208,7 +208,7 @@ Project <- cl_api$Project() |>
   HUD_specs <- hud_load("HUD_specs", dirs$public)
 
 
-  app_env("everything")
+  app_env$gather_deps("everything")
 
 }
 

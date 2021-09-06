@@ -1,7 +1,12 @@
 if (Sys.info()["nodename"] == "DESKTOP-2SK9RKR") {
-  devtools::load_all("../clarity.looker")
-  cl_api <- clarity.looker::clarity_api$new(file.path("inst","auth","Looker.ini"))
-  Rm_env <- app_env$new()
+  if (!exists("cl_api")) {
+
+    devtools::load_all("../clarity.looker")
+    .GlobalEnv$cl_api <- clarity.looker::clarity_api$new(file.path("inst","auth","Looker.ini"))
+  }
+
+  if (!exists("Rm_env"))
+    .GlobalEnv$Rm_env <- app_env$new()
 }
 
 

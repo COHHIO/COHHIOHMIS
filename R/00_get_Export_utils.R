@@ -183,7 +183,7 @@ Enrollment_add_VeteranCE = function(Enrollment, VeteranCE) {
 #' @return \code{(data.frame)} Enrollment with `ClientLocation` column
 #' @export
 
-Enrollment_add_ClientLocation = function(Enrollment, EnrollmentCoc) {
+Enrollment_add_ClientLocation = function(Enrollment, EnrollmentCoC) {
   dplyr::left_join(Enrollment,
       dplyr::filter(EnrollmentCoC, DataCollectionStage == 1) |>
       dplyr::select(EnrollmentID,
