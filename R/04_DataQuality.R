@@ -86,237 +86,35 @@ DataQuality <- function(
 
   # Missing UDEs ------------------------------------------------------------
 
-  dq_name <- served_in_date_range %>%
-    dplyr::mutate(
-      Issue = dplyr::case_when(
-        FirstName == "Missing" ~
-          "Missing Name Data Quality",
-        FirstName %in% c("DKR", "Partial") ~
-          "Incomplete or Don't Know/Refused Name"
-      ),
-      Type = dplyr::case_when(
-        Issue == "Missing Name Data Quality" ~ "Error",
-        Issue == "Incomplete or Don't Know/Refused Name" ~ "Warning"
-      ),
-      Guidance = dplyr::if_else(Type == "Warning",
-                                guidance$dkr_data,
-                                guidance$missing_pii)
-    ) %>%
-    dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+
+  dq_name <- dq_name(served_in_date_range, guidance, vars)
 
   # TODO Check to ensure missing DOB are not present in imported.
-  dq_dob <- served_in_date_range %>%
-    dplyr::mutate(
-      Issue = dplyr::case_when(
-        is.na(DOB) & DOBDataQuality %in% c(1, 2) ~ "Missing DOB",
-        DOBDataQuality == 99 ~ "Missing Date of Birth Data Quality",
-        DOBDataQuality %in% c(2, 8, 9) ~ "Don't Know/Refused or Approx. Date of Birth",
-        AgeAtEntry < 0 |
-          AgeAtEntry > 95 ~ "Incorrect Date of Birth or Entry Date"
-      ),
-      Type = dplyr::case_when(
-        Issue %in% c(
-          "Missing DOB",
-          "Incorrect Date of Birth or Entry Date",
-          "Missing Date of Birth Data Quality"
-        ) ~ "Error",
-        Issue ==  "Don't Know/Refused or Approx. Date of Birth" ~ "Warning"
-      ),
-      Guidance = dplyr::case_when(
-        Issue == "Incorrect Date of Birth or Entry Date" ~
-          "The HMIS data is indicating the client entered the project PRIOR to
-      being born. Correct either the Date of Birth or the Entry Date, whichever
-      is incorrect.",
-      Issue %in% c("Missing DOB", "Missing Date of Birth Data Quality") ~
-        guidance$missing_at_entry,
-      Issue == "Don't Know/Refused or Approx. Date of Birth" ~
-        guidance$dkr_data
-      )
-    ) %>%
-    dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
-  dq_ssn <- served_in_date_range %>%
-    dplyr::mutate(
-      Issue = dplyr::case_when(
-        SSN == "Missing" ~ "Missing SSN",
-        SSN == "Invalid" ~ "Invalid SSN",
-        SSN == "DKR" ~ "Don't Know/Refused SSN",
-        SSN == "Incomplete" ~ "Invalid SSN"
-      ),
-      Type = dplyr::case_when(
-        Issue %in% c("Missing SSN", "Invalid SSN") ~ "Error",
-        Issue == "Don't Know/Refused SSN" ~ "Warning"
-      ),
-      Guidance = dplyr::case_when(
-        Issue == "Don't Know/Refused SSN" ~ guidance$dkr_data,
-        Issue == "Missing SSN" ~ guidance$missing_pii,
-        Issue == "Invalid SSN" ~ "The Social Security Number does not conform with
-      standards set by the Social Security Administration. This includes rules
-      like every SSN is exactly 9 digits and cannot have certain number patterns.
-      Correct by navigating to the client's record, then clicking the Client
-      Profile tab, then click into the Client Record pencil to correct the data."
-      )
-    ) %>%
-    dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  dq_dob <- dq_dob(served_in_date_range, guidance, vars)
 
-  dq_race <- served_in_date_range %>%
-    dplyr::mutate(
-      Issue = dplyr::case_when(
-        RaceNone == 99 ~ "Missing Race",
-        RaceNone %in% c(8, 9) ~ "Don't Know/Refused Race"
-      ),
-      Type = dplyr::case_when(
-        Issue == "Missing Race" ~ "Error",
-        Issue == "Don't Know/Refused Race" ~ "Warning"
-      ),
-      Guidance = dplyr::if_else(Type == "Warning",
-                                guidance$dkr_data,
-                                guidance$missing_at_entry)
-    ) %>%
-    dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  dq_ssn <- dq_ssn(served_in_date_range, guidance, vars)
 
-  dq_ethnicity <- served_in_date_range %>%
-    dplyr::mutate(
-      Issue = dplyr::case_when(
-        Ethnicity == 99 ~ "Missing Ethnicity",
-        Ethnicity %in% c(8, 9) ~ "Don't Know/Refused Ethnicity"
-      ),
-      Type = dplyr::case_when(
-        Issue == "Missing Ethnicity" ~ "Error",
-        Issue == "Don't Know/Refused Ethnicity" ~ "Warning"
-      ),
-      Guidance = dplyr::if_else(Type == "Warning",
-                                guidance$dkr_data,
-                                guidance$missing_at_entry)
-    ) %>%
-    dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  dq_race <- dq_race(served_in_date_range, guidance, vars)
 
-  #TODO Change for FY 2022
-  dq_gender <- served_in_date_range %>%
-    dplyr::mutate(
-      Issue = dplyr::case_when(
-        Gender == 99 ~ "Missing Gender",
-        Gender %in% c(8, 9) ~ "Don't Know/Refused Gender"
-      ),
-      Type = dplyr::case_when(
-        Issue == "Missing Gender" ~ "Error",
-        Issue == "Don't Know/Refused Gender" ~ "Warning"
-      ),
-      Guidance = dplyr::if_else(Type == "Warning",
-                                guidance$dkr_data,
-                                guidance$missing_at_entry)
-    ) %>%
-    dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  dq_ethnicity <- dq_ethnicity(served_in_date_range, guidance, vars)
 
-  dq_veteran <- served_in_date_range %>%
-    dplyr::mutate(
-      Issue = dplyr::case_when(
-        (AgeAtEntry >= 18 | is.na(AgeAtEntry)) &
-          VeteranStatus == 99 ~ "Missing Veteran Status",
-        (AgeAtEntry >= 18 | is.na(AgeAtEntry)) &
-          VeteranStatus %in% c(8, 9) ~ "Don't Know/Refused Veteran Status",
-        (AgeAtEntry >= 18 | is.na(AgeAtEntry)) &
-          RelationshipToHoH == 1 &
-          VeteranStatus == 0 &
-          Destination %in% c(19, 28) ~ "Check Veteran Status for Accuracy"
-      ),
-      Type = dplyr::case_when(
-        Issue == "Missing Veteran Status" ~ "Error",
-        Issue %in% c(
-          "Don't Know/Refused Veteran Status",
-          "Check Veteran Status for Accuracy"
-        ) ~ "Warning"
-      ),
-      Guidance = dplyr::case_when(
-        Issue == "Check Veteran Status for Accuracy" ~ "You have indicated the
-      household exited to a destination that only veterans are eligible for, but
-      the head of household appears to be not a veteran. Either the Veteran
-      Status is incorrect or the Destination is incorrect.",
-      Issue == "Missing Veteran Status" ~ guidance$missing_pii,
-      Issue == "Don't Know/Refused Veteran Status" ~ guidance$dkr_data)
-    ) %>%
-    dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  dq_gender <- dq_gender(served_in_date_range, guidance, vars)
+
+  dq_veteran <- dq_veteran(served_in_date_range, guidance, vars)
+
 
   # Missing Vaccine data ----------------------------------------------------
   #TODO C19 Column names need to be updated
-  dose_counts <- doses %>%
-    dplyr::count(PersonalID) %>%
-    dplyr::select(PersonalID, "Doses" = n)
+  dose_counts <- doses |>
+  dplyr::mutate(Doses = sum(!is.na(C19Dose1Date), !is.na(C19Dose2Date), na.rm = TRUE)) |>
+    dplyr::select(PersonalID, Doses) |>
+    dplyr::distinct(PersonalID, .keep_all = TRUE)
 
-  missing_vaccine_exited <- served_in_date_range %>%
-    dplyr::filter(HMIS::served_between(., hc$bos_start_vaccine_data, lubridate::today())) %>%
-    dplyr::left_join(covid19[c("PersonalID", "C19ConsentToVaccine", "C19VaccineConcerns")],
-                     by = "PersonalID") %>%
-    dplyr::left_join(dose_counts, by = "PersonalID") %>%
-    dplyr::filter(
-      !ProjectID %in% c(mahoning_projects) &
-        !is.na(ExitDate) &
-        ProjectID != 1695 &
-        (
-          is.na(ExitDate) |
-            ExitDate >= hc$bos_start_vaccine_data
-        ) &
-        (
-          C19ConsentToVaccine == "Data not collected (HUD)" |
-            is.na(C19ConsentToVaccine)
-        ) &
-        is.na(Doses) &
-        (ProjectType %in% c(1, 2, 4, 8) |
-           (
-             ProjectType %in% c(3, 9, 13) &
-               is.na(MoveInDateAdjust)
-           ))
-    ) |>
-    dplyr::mutate(Type = "Warning",
-                  Issue = "Vaccine data not collected and client has exited",
-                  Guidance = "Client was literally homeless on Feb 5th, 2021 or later and
-         is missing their vaccine data, and the client has exited the project.
-         If you are unable to follow up with the client, leave the client as is.
-         Please see the guidance
-         <a href = \"https://cohhio.org/boscoc/covid19/\" target = \"blank\">
-         for more information</a>.") %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  missing_vaccine_exited <- dq_missing_vaccine_exited(served_in_date_range = served_in_date_range, dose_counts = dose_counts, vars = vars, app_env = Rm_env)
 
-  missing_vaccine_current <- served_in_date_range %>%
-    dplyr::left_join(covid19[c("PersonalID", "C19ConsentToVaccine", "C19VaccineConcerns")],
-                     by = "PersonalID") %>%
-    dplyr::left_join(dose_counts, by = "PersonalID") %>%
-    dplyr::filter(
-      !ProjectID %in% c(mahoning_projects) &
-        is.na(ExitDate) &
-        ProjectID != 1695 &
-        (
-          is.na(ExitDate) |
-            ExitDate >= hc$bos_start_vaccine_data
-        ) &
-        (
-          C19ConsentToVaccine == "Data not collected (HUD)" |
-            is.na(C19ConsentToVaccine)
-        ) &
-        is.na(Doses) &
-        (ProjectType %in% c(1, 2, 4, 8) |
-           (
-             ProjectType %in% c(3, 9, 13) &
-               is.na(MoveInDateAdjust)
-           ))
-    ) %>%
-    dplyr::mutate(
-      Type = "Error",
-      Issue = "Vaccine data not collected on current client",
-      Guidance = "Client was literally homeless on Feb 5th, 2021 or later and is
-    missing their vaccine data. Because the client has not exited the project,
-    this data can still be collected. Please see
-    <a href = \"https://cohhio.org/boscoc/covid19/\" target = \"blank\">
-    for more information</a>."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+
+  missing_vaccine_current <- dq_missing_vaccine_current(served_in_date_range, dose_counts, app_env = Rm_env)
 
   # Dose Warnings -----------------------------------------------------------
 
