@@ -98,6 +98,7 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH
       ClientLocation,
       PHTrack,
       ExpectedPHDate
+      #, EEType # Deprecated SP logic
     )  |>
     dplyr::inner_join(projects_current_hmis, by = "ProjectID")
 
@@ -126,8 +127,54 @@ Funder_VA_ProjectID <- function(x, ids = c(27, 30, 33, 37:42, 45)) {
     dplyr::select(ProjectID)
 }
 
+dq_incorrect_ee_type <- function(server_in_date_range) {
+  if (!is_sp())
+    rlang::abort(match.call()[[1]], " is a ServicePoint specific data quality check.")
+  served_in_date_range %>%
+    dplyr::filter(
+      (
+        is.na(GrantType) &
+          !grepl("GPD", ProjectName) &
+          !grepl("HCHV", ProjectName) &
+          !grepl("VET", ProjectName) &
+          !grepl("Veterans", ProjectName) &
+          ProjectID != 1695 &
+          EEType != "HUD"
+      ) |
+        ((
+          GrantType == "SSVF" |
+            grepl("GPD", ProjectName) |
+            grepl("HCHV", ProjectName) |
+            grepl("Veterans", ProjectName) |
+            grepl("VET", ProjectName) |
+            grepl("VASH", ProjectName)
+        ) &
+          EEType != "VA"
+        ) |
+        (GrantType == "RHY" &
+           !grepl("YHDP", ProjectName) &
+           !grepl("ODH", ProjectName) &
+           EEType != "RHY") |
+        (GrantType == "RHY" &
+           grepl("YHDP", ProjectName) &
+           grepl("ODH", ProjectName) &
+           EEType != "HUD") |
+        (GrantType == "PATH" & EEType != "PATH") |
+        (ProjectID == 1695 & EEType != "Standard")
+    ) %>%
+    dplyr::mutate(Issue = "Incorrect Entry Exit Type",
+                  Type = "High Priority",
+                  Guidance = "The user selected the wrong Entry Exit Type. To correct,
+             click the Entry pencil and Save & Continue. The Entry Exit Type at
+             the top can then be changed. Click \"Update\" to make this change
+             take effect.") %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+}
+
 dq_stray_services <- function(stray_services) {
-  stray_services %>%
+  if (!is_sp())
+    rlang::abort(match.call()[[1]], " is a ServicePoint specific data quality check.")
+    stray_services %>%
     dplyr::mutate(Issue = "Service Not Attached to an Entry Exit",
                   Type = "Warning",
                   Guidance = "This Service does not fall between any project stay,

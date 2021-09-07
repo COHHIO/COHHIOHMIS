@@ -1402,12 +1402,10 @@ DataQuality <- function(
       ProjectID,
       AgeAtEntry,
       ClientEnrolledInPATH,
-      LengthOfStay,
-      EEType
+      LengthOfStay
     ) %>%
     dplyr::left_join(smallProject, by = c("ProjectID", "ProjectName")) %>%
-    dplyr::filter(EEType == "PATH" &
-                    AgeAtEntry > 17 &
+    dplyr::filter(AgeAtEntry > 17 &
                     ClientEnrolledInPATH == 1 &
                     (is.na(LengthOfStay) | LengthOfStay == 99)) %>%
     dplyr::mutate(Issue = "Missing Residence Prior Length of Stay (PATH)",
@@ -1425,12 +1423,10 @@ DataQuality <- function(
       AgeAtEntry,
       ClientEnrolledInPATH,
       DateOfPATHStatus,
-      ReasonNotEnrolled,
-      EEType
+      ReasonNotEnrolled
     ) %>%
     dplyr::left_join(smallProject, by = "ProjectName") %>%
-    dplyr::filter(EEType == "PATH" &
-                    !is.na(ExitDate) &
+    dplyr::filter(!is.na(ExitDate) &
                     AgeAtEntry > 17 &
                     (
                       is.na(ClientEnrolledInPATH) |
@@ -1450,12 +1446,9 @@ DataQuality <- function(
     dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
                   ClientEnrolledInPATH,
-                  DateOfPATHStatus,
-                  EEType) %>%
+                  DateOfPATHStatus) %>%
     dplyr::left_join(smallProject, by = "ProjectName") %>%
-    dplyr::filter(
-      EEType == "PATH" &
-        AgeAtEntry > 17 &
+    dplyr::filter(AgeAtEntry > 17 &
         !is.na(ClientEnrolledInPATH) &
         is.na(DateOfPATHStatus)
     ) %>%
@@ -1470,11 +1463,9 @@ DataQuality <- function(
   ### PATH Enrolled null or DNC -> error -OR-
 
   path_enrolled_missing <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep), AgeAtEntry, ClientEnrolledInPATH, EEType) %>%
+    dplyr::select(dplyr::all_of(vars$prep), AgeAtEntry, ClientEnrolledInPATH) %>%
     dplyr::left_join(smallProject, by = "ProjectName") %>%
-    dplyr::filter(
-      EEType == "PATH" &
-        !is.na(ExitDate) &
+    dplyr::filter(!is.na(ExitDate) &
         AgeAtEntry > 17 &
         (ClientEnrolledInPATH == 99 |
            is.na(ClientEnrolledInPATH))
@@ -1495,16 +1486,14 @@ DataQuality <- function(
 
   path_reason_missing <- served_in_date_range %>%
     dplyr::select(
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       AgeAtEntry,
       ClientEnrolledInPATH,
-      EEType,
       ReasonNotEnrolled,
       ProjectType
     ) %>%
     dplyr::left_join(smallProject, by = "ProjectName") %>%
-    dplyr::filter(EEType == "PATH" &
-                    AgeAtEntry > 17 &
+    dplyr::filter(AgeAtEntry > 17 &
                     ClientEnrolledInPATH == 0 &
                     is.na(ReasonNotEnrolled)) %>%
     dplyr::mutate(
@@ -1528,15 +1517,13 @@ DataQuality <- function(
     dplyr::filter(DataCollectionStage == 3)
 
   path_SOAR_missing_at_exit <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep),
+    dplyr::select(dplyr::all_of(vars$prep),
                   EnrollmentID,
                   AgeAtEntry,
-                  ClientEnrolledInPATH,
-                  EEType) %>%
+                  ClientEnrolledInPATH) %>%
     dplyr::left_join(smallProject, by = "ProjectName") %>%
     dplyr::left_join(smallIncomeSOAR, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::filter(EEType == "PATH" &
-                    AgeAtEntry > 17 &
+    dplyr::filter(AgeAtEntry > 17 &
                     DataCollectionStage == 3 &
                     is.na(ConnectionWithSOAR)) %>%
     dplyr::mutate(Issue = "Missing Connection with SOAR at Exit",
@@ -1567,7 +1554,7 @@ DataQuality <- function(
     dplyr::filter(GrantType == "PATH" &
                     (AgeAtEntry > 17 |
                        RelationshipToHoH == 1)) %>%
-    dplyr::select(dplyr::all_of(vars_prep)) %>%
+    dplyr::select(dplyr::all_of(vars$prep)) %>%
     dplyr::left_join(small_contacts,
                      by = c("PersonalID",
                                     "ProjectName",
@@ -1604,7 +1591,7 @@ DataQuality <- function(
     dplyr::filter(GrantType == "PATH" &
                     (AgeAtEntry > 17 |
                        RelationshipToHoH == 1)) %>%
-    dplyr::select(dplyr::all_of(vars_prep)) %>%
+    dplyr::select(dplyr::all_of(vars$prep)) %>%
     dplyr::inner_join(first_contact, by = c("PersonalID",
                                                     "ProjectName",
                                                     "EntryDate",
@@ -1674,48 +1661,7 @@ DataQuality <- function(
     dplyr::select(dplyr::all_of(vars$we_want))
 
 
-  # Incorrect Entry Exit Type -----------------------------------------------
-  # check ART report for exact logic.
-  # TODO Remove for Clarity
-  incorrect_ee_type <- served_in_date_range %>%
-    dplyr::filter(
-      (
-        is.na(GrantType) &
-          !grepl("GPD", ProjectName) &
-          !grepl("HCHV", ProjectName) &
-          !grepl("VET", ProjectName) &
-          !grepl("Veterans", ProjectName) &
-          ProjectID != 1695 &
-          EEType != "HUD"
-      ) |
-        ((
-          GrantType == "SSVF" |
-            grepl("GPD", ProjectName) |
-            grepl("HCHV", ProjectName) |
-            grepl("Veterans", ProjectName) |
-            grepl("VET", ProjectName) |
-            grepl("VASH", ProjectName)
-        ) &
-          EEType != "VA"
-        ) |
-        (GrantType == "RHY" &
-           !grepl("YHDP", ProjectName) &
-           !grepl("ODH", ProjectName) &
-           EEType != "RHY") |
-        (GrantType == "RHY" &
-           grepl("YHDP", ProjectName) &
-           grepl("ODH", ProjectName) &
-           EEType != "HUD") |
-        (GrantType == "PATH" & EEType != "PATH") |
-        (ProjectID == 1695 & EEType != "Standard")
-    ) %>%
-    dplyr::mutate(Issue = "Incorrect Entry Exit Type",
-                  Type = "High Priority",
-                  Guidance = "The user selected the wrong Entry Exit Type. To correct,
-             click the Entry pencil and Save & Continue. The Entry Exit Type at
-             the top can then be changed. Click \"Update\" to make this change
-             take effect.") %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+
 
 
   # HoHs Entering PH without SPDATs -----------------------------------------
@@ -1817,7 +1763,7 @@ DataQuality <- function(
   missing_income_entry <- served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::select(
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       AgeAtEntry,
       DataCollectionStage,
       TotalMonthlyIncome,
@@ -1872,7 +1818,7 @@ DataQuality <- function(
 
   income_subs <- served_in_date_range[c("EnrollmentID",
                                                 "AgeAtEntry",
-                                                vars_prep)] %>%
+                                                vars$prep)] %>%
     dplyr::left_join(smallIncome, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::mutate(
       IncomeCount =
@@ -1917,7 +1863,7 @@ DataQuality <- function(
   missing_income_exit <- served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::select(
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       AgeAtEntry,
       DataCollectionStage,
       TotalMonthlyIncome,
@@ -1956,7 +1902,7 @@ DataQuality <- function(
   # but you can't tell whose fault it is from the data so...
 
   staging_overlaps <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep), ExitAdjust) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
     dplyr::mutate(
       EntryAdjust = dplyr::case_when(
         #for PSH and RRH, EntryAdjust = MoveInDate
@@ -2007,7 +1953,7 @@ DataQuality <- function(
   same_day_overlaps <- served_in_date_range %>%
     dplyr::filter((ProjectType == 13 & MoveInDateAdjust == ExitDate) |
                     ProjectType != 13) %>%
-    dplyr::select(dplyr::all_of(vars_prep), ExitAdjust) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
     dplyr::mutate(
       EntryAdjust = dplyr::case_when(
         #for PSH and RRH, EntryAdjust = MoveInDate
@@ -2055,7 +2001,7 @@ DataQuality <- function(
     dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
 
   rrh_overlaps <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep), ExitAdjust) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
     dplyr::mutate(
       ExitAdjust = ExitAdjust - lubridate::days(1),
       # bc a client can exit&enter same day
@@ -2096,7 +2042,7 @@ DataQuality <- function(
     dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
 
   psh_overlaps <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep), ExitAdjust) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
     dplyr::mutate(
       ExitAdjust = ExitAdjust - lubridate::days(1),
       # bc a client can exit&enter same day
@@ -2166,7 +2112,7 @@ DataQuality <- function(
 
   missing_health_insurance_entry <- served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::select(dplyr::all_of(vars_prep),
+    dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
                   DataCollectionStage,
                   InsuranceFromAnySource) %>%
@@ -2181,7 +2127,7 @@ DataQuality <- function(
 
   missing_health_insurance_exit <- served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::select(dplyr::all_of(vars_prep),
+    dplyr::select(dplyr::all_of(vars$prep),
                   DataCollectionStage,
                   InsuranceFromAnySource) %>%
     dplyr::filter(DataCollectionStage == 3 &
@@ -2196,7 +2142,7 @@ DataQuality <- function(
   health_insurance_subs <- served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::select(
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       DataCollectionStage,
       InsuranceFromAnySource,
       Medicaid,
@@ -2312,7 +2258,7 @@ DataQuality <- function(
   missing_ncbs_entry <- served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::select(AgeAtEntry,
-                  dplyr::all_of(vars_prep),
+                  dplyr::all_of(vars$prep),
                   DataCollectionStage,
                   BenefitsFromAnySource) %>%
     dplyr::filter(
@@ -2330,7 +2276,7 @@ DataQuality <- function(
   conflicting_ncbs_entry <- served_in_date_range %>%
     dplyr::left_join(ncb_subs, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::select(AgeAtEntry,
-                  dplyr::all_of(vars_prep),
+                  dplyr::all_of(vars$prep),
                   DataCollectionStage,
                   BenefitsFromAnySource,
                   BenefitCount) %>%
@@ -2353,7 +2299,7 @@ DataQuality <- function(
     dplyr::left_join(ncb_subs, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::select(
       AgeAtEntry,
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       DataCollectionStage,
       BenefitsFromAnySource,
       BenefitCount
@@ -2372,7 +2318,7 @@ DataQuality <- function(
   missing_ncbs_exit <- served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::select(AgeAtEntry,
-                  dplyr::all_of(vars_prep),
+                  dplyr::all_of(vars$prep),
                   DataCollectionStage,
                   BenefitsFromAnySource) %>%
     dplyr::filter(
@@ -2391,7 +2337,7 @@ DataQuality <- function(
     dplyr::left_join(ncb_subs, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::select(
       AgeAtEntry,
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       DataCollectionStage,
       BenefitsFromAnySource,
       BenefitCount
@@ -2415,7 +2361,7 @@ DataQuality <- function(
     dplyr::select(EnrollmentID, PersonalID, SSI, SSDI)
 
   check_disability_ssi <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep),
+    dplyr::select(dplyr::all_of(vars$prep),
                   EnrollmentID,
                   AgeAtEntry,
                   DisablingCondition) %>%
@@ -2442,7 +2388,7 @@ DataQuality <- function(
   # SSVF projects should be showing this as an Error,7 whereas non-SSVF projects
   # should be showing it as a warning, and only back to Feb of 2019
   services_on_hh_members <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep),
+    dplyr::select(dplyr::all_of(vars$prep),
                   EnrollmentID,
                   RelationshipToHoH,
                   GrantType) %>%
@@ -2458,7 +2404,7 @@ DataQuality <- function(
     dplyr::select(dplyr::all_of(vars$we_want))
 
   services_on_hh_members_ssvf <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep),
+    dplyr::select(dplyr::all_of(vars$prep),
                   EnrollmentID,
                   RelationshipToHoH,
                   GrantType) %>%
@@ -2474,7 +2420,7 @@ DataQuality <- function(
 
 
   referrals_on_hh_members_ssvf <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars_prep),
+    dplyr::select(dplyr::all_of(vars$prep),
                   RelationshipToHoH,
                   EnrollmentID,
                   GrantType) %>%
@@ -2612,11 +2558,10 @@ DataQuality <- function(
   unsheltered_enrollments <- served_in_date_range %>%
     dplyr::filter(ProjectID == 1695) %>%
     dplyr::select(
-      dplyr::all_of(vars_prep),
+      dplyr::all_of(vars$prep),
       RelationshipToHoH,
       LivingSituation,
       AgeAtEntry,
-      EEType,
       Destination,
       CountyServed,
       ProjectCounty,
@@ -3394,7 +3339,7 @@ DataQuality <- function(
     unsheltered_not_unsheltered,
     unsheltered_long_not_referred,
     va_funded,
-    vars_prep,
+    vars$prep,
     vars$we_want,
     veteran_missing_year_entered,
     veteran_missing_year_separated,
