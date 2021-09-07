@@ -279,10 +279,10 @@ Pe_create_APs = function(provider_extras, dirs) {
   Regions <- hud_load("Regions", dirs$public)
   APs <- provider_extras |>
     dplyr::select( !tidyselect::starts_with("CoCComp") & !Geocode:ZIP) |>
-    dplyr::filter(ProjectType == "Coordinated Entry") |>
+    dplyr::filter(ProjectTypeCode == "Coordinated Entry") |>
     tidyr::pivot_longer(tidyselect::starts_with("AP"), names_to = "TargetPop", names_pattern = "(?<=^APCounties)(\\w+)", values_to = "CountiesServed") |>
     dplyr::filter(!is.na(CountiesServed)) |>
-    dplyr::select(!tidyselect::starts_with("AP") & !ProjectType)
+    dplyr::select(!tidyselect::starts_with("AP") & !ProjectTypeCode)
 
   # Programs serve multiple Counties which may fall into multiple regions. This creates a row for each Region served by a Program such that Coordinated Entry Access Points will show all the appropriate programs when filtering by Region.
   # @Rm
@@ -296,6 +296,20 @@ Pe_create_APs = function(provider_extras, dirs) {
     dplyr::distinct_all()
 
   APs
+}
+
+#' @title Add ProjectType (dbl) to provider_extras
+#'
+#' @param provider_extras
+#' @return \code{(data.frame)}
+
+Pe_add_ProjectType <- function(provider_extras) {
+  PT <- hud.extract::hud_translations$`2.02.6 ProjectType`(table = TRUE) |>
+    tibble::add_row(Value = 12, Text = "Homeless Prevention")
+  purrr::map_dbl(provider_extras$ProjectTypeCode, ~PT$Value[agrepl(stringr::str_remove(.x, "\\s\\([\\w\\s]+\\)$"), PT$Text)])
+  provider_extras |>
+    dplyr::rowwise() |>
+    dplyr::mutate(ProjectType = PT$Value[agrepl(stringr::str_remove(ProjectTypeCode, "\\s\\([\\w\\s]+\\)$"), PT$Text)], .after = "ProjectTypeCode")
 }
 
 #' Add GrantType column to provider_extras
@@ -320,6 +334,7 @@ Pe_add_GrantType = function(provider_extras) {
 
 provider_extras_helpers <- list(
   add_regions = Pe_add_regions,
+  add_ProjectType = Pe_add_ProjectType,
   create_APs = Pe_create_APs,
   add_GrantType = Pe_add_GrantType
 )
