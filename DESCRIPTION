@@ -25,6 +25,7 @@ Imports:
     fs,
     ggmap,
     glue,
+    hud.extract,
     janitor,
     lookr,
     lubridate,
@@ -45,6 +46,7 @@ RoxygenNote: 7.1.1.9001
 URL: https://github.com/COHHIO/Rm_data
 BugReports: https://github.com/COHHIO/Rm_data/issues
 Remotes:
+    COHHIO/hud.extract,
     COHHIO/clarity.looker,
     yogat3ch/jobs,
     COHHIO/lookr,
