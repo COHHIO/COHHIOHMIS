@@ -10,18 +10,20 @@
 dirs <- clarity.looker::dirs
 RPushbullet::pbSetup(file.path("inst","auth","rpushbullet.json"))
 
+# must load Rm_data
+devtools::load_all()
 jobs::jobscript({
   devtools::load_all("../clarity.looker")
-  # devtools::load_all("../lookr")
-  # cl_api$get_export(.write = TRUE) # only need to run once
+  cl_api$get_export(.write = TRUE) # only need to run once
   cl_api$get_folder_looks(cl_api$folders$`HUD Extras`, .write = TRUE, path = dirs$extras)
-})
-# must load COHHIOHMIS
-devtools::load_all()
+}, exportEnv = FALSE)
 
 Rm_env <- dates()
 Rm_env <- guidance()
 Rm_env <- load_export()
+Rm_env <- data_quality()
+
+
 
 
 increment("Importing raw HMIS data\n")
