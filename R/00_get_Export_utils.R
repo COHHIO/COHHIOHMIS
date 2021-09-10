@@ -290,8 +290,8 @@ Pe_create_APs = function(provider_extras, dirs) {
     .counties <- trimws(stringr::str_split(.x$CountiesServed, ",\\s")[[1]])
 
     .x |>
-      dplyr::select(- Region) |>
-      cbind(Region = unique(Regions$Region[Regions$County %in% .counties]))
+      dplyr::select(- ProjectRegion) |>
+      dplyr::bind_cols(Region = unique(Regions$Region[Regions$County %in% .counties]))
   }) |>
     dplyr::distinct_all()
 
