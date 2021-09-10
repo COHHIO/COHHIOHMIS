@@ -6,13 +6,13 @@
 \usage{
 served_in_date_range(
   projects_current_hmis,
-  Enrollment_extra_Exit_HH_CL_AaE,
-  Client,
-  Project,
-  Inventory,
-  calc,
-  meta_HUDCSV,
-  app_env
+  Enrollment_extra_Exit_HH_CL_AaE = NULL,
+  Client = NULL,
+  Project = NULL,
+  Inventory = NULL,
+  calc = NULL,
+  meta_HUDCSV = NULL,
+  app_env = get_app_env(e = rlang::caller_env())
 )
 }
 \arguments{
@@ -30,7 +30,7 @@ served_in_date_range(
 
 \item{meta_HUDCSV}{\code{(list)} of dates from \code{dates}}
 
-\item{app_env}{\code{(data.frame)} Instead of providing all arguments after the first,\code{app_env} with all arguments saved internally can be provided.}
+\item{app_env}{\code{(data.frame)} Instead of providing all arguments with NULL defaults,\code{app_env} with all arguments saved internally can be provided.}
 }
 \value{
 \code{(data.frame)}

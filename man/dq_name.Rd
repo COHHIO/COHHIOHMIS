@@ -4,7 +4,12 @@
 \alias{dq_name}
 \title{Data Quality report on Missing First Names}
 \usage{
-dq_name(served_in_date_range, guidance, vars)
+dq_name(
+  served_in_date_range,
+  guidance = NULL,
+  vars = NULL,
+  app_env = get_app_env(e = rlang::caller_env())
+)
 }
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
@@ -12,9 +17,11 @@ dq_name(served_in_date_range, guidance, vars)
 \item{guidance}{\code{(list)}}
 
 \item{vars}{\code{(list)}}
+
+\item{app_env}{\code{(app_env)} Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \value{
-\code{(data.frame)} with \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
+\code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
 }
 \description{
 Data Quality report on Missing First Names
