@@ -17,15 +17,13 @@
 # IT CAN BE RUN ON A CLEAN CLIENT.CSV FILE OR ONE THAT'S BEEN OVERWRITTEN.
 
 load_export <- function(
-  clarity_api,
-  app_env,
-  error = FALSE,
-  e = rlang::caller_env()
+  clarity_api = get_clarity_api(e = rlang::caller_env()),
+  app_env = get_app_env(e = rlang::caller_env()),
+  error = FALSE
 ) {
-  if (missing(clarity_api))
-    clarity_api <- get_clarity_api(e = e)
-  if (missing(app_env))
-    app_env <- get_app_env(e = e)
+
+  force(clarity_api)
+  force(app_env)
   # Service Areas -----------------------------------------------------------
   ServiceAreas <- clarity.looker::hud_load("ServiceAreas.feather", dirs$public)
 
@@ -128,7 +126,15 @@ Project <- cl_api$Project() |>
   ProjectCoC <-
     cl_api$ProjectCoC()
 
-  mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |> dplyr::pull(ProjectID)
+  mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
+    dplyr::select(ProjectID) |>
+    {\(x) {
+      dplyr::left_join(x, dplyr::select(Project, ProjectID, ProjectTypeCode, ProjectName), by = "ProjectID") |>
+      dplyr::filter(stringr::str_detect(ProjectName, "^zz", negate = TRUE)) |>
+      dplyr::distinct(ProjectID, .keep_all = TRUE) |>
+        {\(y) {rlang::set_names(y$ProjectID, dplyr::pull(y, ProjectTypeCode))}}()
+      }}()
+
 
   # Contacts ----------------------------------------------------------------
   # only pulling in contacts made between an Entry Date and an Exit Date

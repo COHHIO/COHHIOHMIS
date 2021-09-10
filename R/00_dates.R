@@ -1,13 +1,10 @@
-dates <- function(clarity_api,
-                  app_env,
-                  error = FALSE,
-                  e = rlang::caller_env()
+dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
+                  app_env = get_app_env(e = rlang::caller_env()),
+                  error = FALSE
 ) {
 
-  if (missing(clarity_api))
-    clarity_api <- get_clarity_api(e = e)
-  if (missing(app_env))
-    app_env <- get_app_env(e = e)
+  force(app_env)
+  force(clarity_api)
   hc <- purrr::map(list(
     data_goes_back_to = "01012019",
 

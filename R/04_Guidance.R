@@ -11,9 +11,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
-guidance <- function(app_env, e = rlang::caller_env()) {
-  if (missing(app_env))
-    app_env <- get_app_env(e = e)
+guidance <- function(app_env = get_app_env(e = rlang::caller_env())) {
+  force(app_env)
+
   guidance = list()
   guidance$conflicting_hi <-
     "If the user answered \"Yes\" to \"Covered by Health Insurance?\", then
