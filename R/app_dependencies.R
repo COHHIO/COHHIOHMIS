@@ -125,6 +125,35 @@ app_deps <- list(
     )
   )
 )
+missing_args <- function(calling_function = sys.function(1), include_null = TRUE, exclude_defaults = TRUE)
+{
+  all_args <- formals(calling_function)
+
+  arg_names <- names(all_args)
+  matched_call <- match.call(
+    calling_function,
+    sys.call(1),
+    expand.dots = FALSE
+  )
+
+  passed_args <- names(as.list(matched_call)[-1])
+  out <- setdiff(arg_names, passed_args)
+  if (include_null)
+    out <- c(out, setdiff(names(purrr::keep(all_args, ~is.null(.x))), passed_args))
+  if (exclude_defaults)
+    out <- setdiff(out, names(purrr::keep(all_args, ~!is.null(.x) & !rlang::is_missing(.x))))
+  out
+}
+
+missing_fmls <- function(ma = missing_args()) {
+  ma[!ma %in% c("app_env", "clarity_api")]
+}
+
+fun_insert <- function(f, expr = app_env$merge_deps_to_env(get_fmls(rlang::current_fn())), after = 1) {
+  body(f) <- as.call(append(as.list(body(f)), rlang::enexpr(expr), after = after ))
+  assignInNamespace(rlang::expr_text(rlang::enexpr(f)), f, utils::packageName(rlang::fn_env(f)))
+}
+
 write_deps_to_disk <- rlang::new_function(
   args =
     rlang::pairlist2(
@@ -221,7 +250,7 @@ app_env <- R6::R6Class(
 
       .work_deps <- rlang::dots_list(..., .named = TRUE) |>
         {\(x) {rlang::set_names(x, stringr::str_remove_all(names(x), "\""))}}()
-      if (length(.work_deps) == 1 && .work_deps[1] == "everything") {
+      if (length(.work_deps) == 1 && identical(.work_deps[[1]],"everything")) {
         .all_objs <- ls(env, all.names = TRUE)
         .args <- try(force(.args), silent = TRUE)
         if (UU::is_legit(.args))
@@ -265,14 +294,19 @@ app_env <- R6::R6Class(
     #' @description Pass all dependencies saved from previous functions to an environment for use
     #' @param nms \code{(character)} of the names of the dependencies to load into the `env`. **Default** load all previously stored objects.
     #' @param env \code{(environment)} to pass dependencies to. **Default** the calling environment
-    merge_deps_to_env = function(..., env = rlang::caller_env()) {
+    merge_deps_to_env = function(..., env = rlang::caller_env(), as_list = FALSE) {
       nms <- purrr::flatten_chr(rlang::dots_list(...))
       if (!UU::is_legit(nms))
         nms <- private$work_deps
       .missing_nms <- !nms %in% ls(self$.__enclos_env__)
       if (any(.missing_nms))
         rlang::abort(paste0(paste0(nms[.missing_nms], collapse = ", "), " not found in working environment. Has it been saved?"))
-      rlang::env_bind(env, !!!rlang::env_get_list(self$.__enclos_env__, nms))
+      if (!as_list) {
+        rlang::env_bind(env, !!!rlang::env_get_list(self$.__enclos_env__, nms))
+      } else {
+        return(rlang::env_get_list(self$.__enclos_env__, nms))
+      }
+
     },
     #' @description Write app dependencies to disk
     #' @param app_deps \code{(named list)} with each name corresponding to an app with each item containing a character vector of the app dependencies. **Default** the `app_deps` stored in the public field \code{app_env\$app_deps}.
@@ -355,5 +389,7 @@ app_env <- R6::R6Class(
     work_deps = c()),
   lock_objects = FALSE
 )
+
+is_app_env <- function(x) inherits(x, "app_env")
 
 dependencies <- list()
