@@ -65,7 +65,7 @@ Gather the objects passed to \code{app_env}s internal environment to be passed t
 \subsection{Method \code{merge_deps_to_env()}}{
 Pass all dependencies saved from previous functions to an environment for use
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$merge_deps_to_env(..., env = rlang::caller_env())}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{app_env$merge_deps_to_env(..., env = rlang::caller_env(), as_list = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

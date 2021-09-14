@@ -10,6 +10,7 @@ served_in_date_range(
   Client = NULL,
   Project = NULL,
   Inventory = NULL,
+  HealthAndDV = NULL,
   calc = NULL,
   meta_HUDCSV = NULL,
   app_env = get_app_env(e = rlang::caller_env())

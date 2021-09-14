@@ -96,7 +96,7 @@ data_quality <- function(
 
   dq_name <- dq_name(served_in_date_range, guidance, vars)
 
-  # TODO Check to ensure missing DOB are not present in imported.
+
 
   dq_dob <- dq_dob(served_in_date_range, guidance, vars)
 
@@ -205,65 +205,27 @@ data_quality <- function(
     dplyr::select(dplyr::all_of(vars$we_want))
 
   # Missing Client Location -------------------------------------------------
-  missing_client_location <- missing_client_location(served_in_date_range, vars)
+  missing_client_location <- dq_missing_client_location(served_in_date_range, vars)
 
 
   # Household Issues --------------------------------------------------------
-  hh_children_only <- hh_children_only(served_in_date_range, vars)
+  hh_children_only <- dq_hh_children_only(served_in_date_range, vars)
 
 
 
 
 
-  hh_no_hoh <- served_in_date_range %>%
-    dplyr::group_by(HouseholdID) %>%
-    dplyr::summarise(hasHoH = dplyr::if_else(min(RelationshipToHoH) != 1,
-                                             FALSE,
-                                             TRUE),
-                     PersonalID = min(PersonalID)) %>%
-    dplyr::filter(hasHoH == FALSE) %>%
-    dplyr::ungroup() %>%
-    dplyr::left_join(served_in_date_range, by = c("PersonalID", "HouseholdID")) %>%
-    dplyr::mutate(
-      Issue = "No Head of Household",
-      Type = "High Priority",
-      Guidance = "Please be sure all members of the household are included in the program
-      stay, and that each household member's birthdate is correct. If those
-      things are both true, or the client is a single, check inside the Entry
-      pencil to be sure each household member has \"Relationship to Head of
-      Household\" answered and that one of them says Self (head of household).
-      Singles are always Self (head of household)."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
-  hh_too_many_hohs <- served_in_date_range %>%
-    dplyr::filter(RelationshipToHoH == 1) %>%
-    dplyr::group_by(HouseholdID) %>%
-    dplyr::summarise(HoHsinHousehold = dplyr::n(),
-                     PersonalID = min(PersonalID)) %>%
-    dplyr::filter(HoHsinHousehold > 1) %>%
-    dplyr::ungroup() %>%
-    dplyr::left_join(served_in_date_range, by = c("PersonalID", "HouseholdID")) %>%
-    dplyr::mutate(Issue = "Too Many Heads of Household",
-                  Type = "High Priority",
-                  Guidance = "Check inside the Entry pencil to be sure each household member has
-      \"Relationship to Head of Household\" answered and that only one of
-      them says \"Self (head of household)\".") %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  hh_no_hoh <- dq_hh_no_hoh()
 
-  hh_missing_rel_to_hoh <- served_in_date_range %>%
-    dplyr::filter(RelationshipToHoH == 99) %>%
-    dplyr::anti_join(hh_no_hoh["HouseholdID"], by = "HouseholdID") %>%
-    dplyr::mutate(Issue = "Missing Relationship to Head of Household",
-                  Type = "High Priority",
-                  Guidance = "Check inside the Entry pencil to be sure each household member has
-      \"Relationship to Head of Household\" answered and that only one of
-      them says \"Self (head of household)\".") %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
-  hh_issues <- rbind(hh_too_many_hohs, hh_no_hoh, hh_children_only, hh_missing_rel_to_hoh)
+  hh_too_many_hohs <- dq_hh_too_many_hohs()
 
-  rm(hh_too_many_hohs, hh_no_hoh, hh_children_only, hh_missing_rel_to_hoh)
+
+  hh_missing_rel_to_hoh <- dq_hh_missing_rel_to_hoh()
+
+
+
 
   # Missing Data at Entry ---------------------------------------------------
   # Living Situation,  Length of Stay, LoSUnderThreshold, PreviousStreetESSH,
@@ -571,7 +533,7 @@ data_quality <- function(
   ### Length of Stay is null or DNC -> error -OR-
   ### Length of Stay is DKR -> warning
 
-  smallProject <- Project %>% dplyr::select(ProjectID,
+  project_small <- Project %>% dplyr::select(ProjectID,
                                             ProjectName,
                                             ProjectCounty)
 
@@ -583,7 +545,7 @@ data_quality <- function(
       ClientEnrolledInPATH,
       LengthOfStay
     ) %>%
-    dplyr::left_join(smallProject, by = c("ProjectID", "ProjectName")) %>%
+    dplyr::left_join(project_small, by = c("ProjectID", "ProjectName")) %>%
     dplyr::filter(AgeAtEntry > 17 &
                     ClientEnrolledInPATH == 1 &
                     (is.na(LengthOfStay) | LengthOfStay == 99)) %>%
@@ -604,7 +566,7 @@ data_quality <- function(
       DateOfPATHStatus,
       ReasonNotEnrolled
     ) %>%
-    dplyr::left_join(smallProject, by = "ProjectName") %>%
+    dplyr::left_join(project_small, by = "ProjectName") %>%
     dplyr::filter(!is.na(ExitDate) &
                     AgeAtEntry > 17 &
                     (
@@ -626,7 +588,7 @@ data_quality <- function(
                   AgeAtEntry,
                   ClientEnrolledInPATH,
                   DateOfPATHStatus) %>%
-    dplyr::left_join(smallProject, by = "ProjectName") %>%
+    dplyr::left_join(project_small, by = "ProjectName") %>%
     dplyr::filter(AgeAtEntry > 17 &
         !is.na(ClientEnrolledInPATH) &
         is.na(DateOfPATHStatus)
@@ -643,7 +605,7 @@ data_quality <- function(
 
   path_enrolled_missing <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep), AgeAtEntry, ClientEnrolledInPATH) %>%
-    dplyr::left_join(smallProject, by = "ProjectName") %>%
+    dplyr::left_join(project_small, by = "ProjectName") %>%
     dplyr::filter(!is.na(ExitDate) &
         AgeAtEntry > 17 &
         (ClientEnrolledInPATH == 99 |
@@ -671,7 +633,7 @@ data_quality <- function(
       ReasonNotEnrolled,
       ProjectType
     ) %>%
-    dplyr::left_join(smallProject, by = "ProjectName") %>%
+    dplyr::left_join(project_small, by = "ProjectName") %>%
     dplyr::filter(AgeAtEntry > 17 &
                     ClientEnrolledInPATH == 0 &
                     is.na(ReasonNotEnrolled)) %>%
@@ -700,7 +662,7 @@ data_quality <- function(
                   EnrollmentID,
                   AgeAtEntry,
                   ClientEnrolledInPATH) %>%
-    dplyr::left_join(smallProject, by = "ProjectName") %>%
+    dplyr::left_join(project_small, by = "ProjectName") %>%
     dplyr::left_join(smallIncomeSOAR, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::filter(AgeAtEntry > 17 &
                     DataCollectionStage == 3 &
@@ -2505,7 +2467,7 @@ data_quality <- function(
     served_in_date_range,
     services_on_hh_members,
     services_on_hh_members_ssvf,
-    smallProject,
+    project_small,
     spdat_on_non_hoh,
     ssvf_missing_address,
     ssvf_missing_vamc,

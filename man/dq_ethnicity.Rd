@@ -14,9 +14,13 @@ dq_ethnicity(
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
 
-\item{guidance}{\code{(list)}}
+\item{guidance}{\code{(list)} See \code{guidance}}
 
-\item{vars}{\code{(list)}}
+\item{vars}{\code{(named list)}
+\itemize{
+\item{\code{prep}}{ Column names for Prep}
+\item{\code{we_want}}{ Column names for output}
+}}
 
 \item{app_env}{\code{(app_env)} Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
@@ -26,3 +30,13 @@ dq_ethnicity(
 \description{
 Data quality report on Ethnicity data
 }
+\seealso{
+Other dq_missing_udes: 
+\code{\link{dq_dob}()},
+\code{\link{dq_gender}()},
+\code{\link{dq_name}()},
+\code{\link{dq_race}()},
+\code{\link{dq_ssn}()},
+\code{\link{dq_veteran}()}
+}
+\concept{dq_missing_udes}

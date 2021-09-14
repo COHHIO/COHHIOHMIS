@@ -162,15 +162,11 @@
     "clarity.looker": {
       "Package": "clarity.looker",
       "Version": "0.0.0.9000",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteUsername": "COHHIO",
-      "RemoteRepo": "clarity.looker",
-      "RemoteRef": "main",
-      "RemoteSha": "646c1cf5491aa16024aad3544f0f69cde3b5e8bb",
+      "Source": "Local",
+      "RemoteType": "local",
+      "RemoteUrl": "C:/Users/Administrator/Documents/R/Contributor_Repos/COHHIO/clarity.looker",
       "Remotes": "yogat3ch/UU, COHHIO/lookr",
-      "Hash": "3e33527bdb4ebc7dec62e8bb2629b2eb"
+      "Hash": "aa523daa6f7d15a34c6da89d6af58063"
     },
     "cli": {
       "Package": "cli",
@@ -434,6 +430,14 @@
       "Repository": "CRAN",
       "Hash": "a525aba14184fec243f9eaec62fbed43"
     },
+    "hud.extract": {
+      "Package": "hud.extract",
+      "Version": "0.0.0.9000",
+      "Source": "Local",
+      "RemoteType": "local",
+      "RemoteUrl": "C:/Users/Administrator/Documents/R/Contributor_Repos/COHHIO/hud.extract",
+      "Hash": "4f2fbc2347100d6dba26bf629bca96de"
+    },
     "ini": {
       "Package": "ini",
       "Version": "0.3.1",
@@ -520,8 +524,8 @@
       "RemoteUsername": "COHHIO",
       "RemoteRepo": "lookr",
       "RemoteRef": "master",
-      "RemoteSha": "9b69bbd7006dc2dea5264ddbc31a130206cac2dd",
-      "Hash": "1bfb09ad86c6c72bdb48d00fd0f9614b"
+      "RemoteSha": "502db60e9aa8794d7a0fe726c778c5d4a56f252e",
+      "Hash": "f5acdbf08b7712a74536a107ac61c956"
     },
     "lubridate": {
       "Package": "lubridate",
@@ -585,6 +589,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "f4dbc5a47fd93d3415249884d31d6791"
+    },
+    "pdftools": {
+      "Package": "pdftools",
+      "Version": "3.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "b7a8772f77a852ec8fe678644fd5ba6e"
     },
     "pillar": {
       "Package": "pillar",
@@ -683,6 +694,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "97def703420c8ab10d8f0e6c72101e02"
+    },
+    "qpdf": {
+      "Package": "qpdf",
+      "Version": "1.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "5a2907cd44279b5861ac5f813465b5c9"
     },
     "rappdirs": {
       "Package": "rappdirs",

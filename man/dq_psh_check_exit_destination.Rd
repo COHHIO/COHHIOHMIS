@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_DataQuality_utils.R
 \name{dq_psh_check_exit_destination}
 \alias{dq_psh_check_exit_destination}
-\title{Find Incorrect Exits in PSH}
+\title{Find Possibly Incorrect Exits in PSH}
 \usage{
 dq_psh_check_exit_destination(
   served_in_date_range,
@@ -14,9 +14,13 @@ dq_psh_check_exit_destination(
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
 
-\item{vars}{\code{(list)}}
+\item{vars}{\code{(named list)}
+\itemize{
+\item{\code{prep}}{ Column names for Prep}
+\item{\code{we_want}}{ Column names for output}
+}}
 
-\item{guidance}{\code{(list)}}
+\item{guidance}{\code{(list)} See \code{guidance}}
 
 \item{app_env}{\code{(app_env)} Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
@@ -24,5 +28,5 @@ dq_psh_check_exit_destination(
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
 }
 \description{
-Find Incorrect Exits in PSH
+Find Possibly Incorrect Exits in PSH
 }

@@ -27,7 +27,7 @@ if (missing(app_env))
   app_env <- get_app_env(e = e)
 
 # more paring down, only taking what variables I need from Enrollment
-smallEnrollment <- Enrollment %>%
+enrollment_small <- Enrollment %>%
   dplyr::left_join(Project, by = c("ProjectType", "ProjectID", "ProjectName")) %>%
   dplyr::select(
     EnrollmentID,
@@ -43,7 +43,7 @@ smallEnrollment <- Enrollment %>%
     CountyServed
   )
 # Entries will give us all the times a hh has an Entry into a PH project
-Entries <- smallEnrollment %>%
+Entries <- enrollment_small %>%
   dplyr::filter(ProjectType %in% c(3, 9, 13))
 
 note_qpr_served_county <- "The horizontal lines represent the average scores of Heads
@@ -60,7 +60,7 @@ the same day, but if there are it is counting the highest score."
 # long to run.
 
 qpr_spdats_county <-
-  dplyr::left_join(smallEnrollment, Scores, by = "PersonalID") %>%
+  dplyr::left_join(enrollment_small, Scores, by = "PersonalID") %>%
   dplyr::filter(
     ProjectType %in% c(1, 2, 4, 8) &
       RelationshipToHoH == 1 &
@@ -157,7 +157,7 @@ SPDATsOnNonHoHs <- dplyr::left_join(Entries, Scores, by = "PersonalID") %>%
   dplyr::select(ProjectName, PersonalID, EntryDate, ExitDate, Score) %>%
   dplyr::arrange(ProjectName)
 
-rm(Entries, smallEnrollment, SPDATsOnNonHoHs)
+rm(Entries, enrollment_small, SPDATsOnNonHoHs)
 # WARNING save.image does not save the environment properly, save must be used.
 app_env$gather_deps()
 

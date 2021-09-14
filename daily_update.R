@@ -21,6 +21,7 @@ jobs::jobscript({
 Rm_env <- dates()
 Rm_env <- guidance()
 Rm_env <- load_export()
+Rm_env <- client_counts()
 Rm_env <- data_quality()
 
 

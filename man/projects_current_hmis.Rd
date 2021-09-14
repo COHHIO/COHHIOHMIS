@@ -4,7 +4,13 @@
 \alias{projects_current_hmis}
 \title{Filter for Current HMIS participating projects}
 \usage{
-projects_current_hmis(Project, Inventory)
+projects_current_hmis(
+  Project,
+  Inventory,
+  calc,
+  meta_HUDCSV,
+  app_env = get_app_env(e = rlang::caller_env())
+)
 }
 \arguments{
 \item{Inventory}{}

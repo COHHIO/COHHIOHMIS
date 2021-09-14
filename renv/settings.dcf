@@ -1,4 +1,3 @@
-external.libraries: C:/Program Files/Microsoft/R Open/R-4.0.2/library
 ignored.packages: tidyverse, broom, dbplyr, dtplyr, forcats, gargle, uuid,
     googledrive, ids, googlesheets4, haven, modelr, reprex, selectr, rvest,
     sinew, jobs, timeR, sodium, filelock, keyring, shinyjs

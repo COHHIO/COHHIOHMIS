@@ -18,7 +18,11 @@ dq_missing_vaccine_current(
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)}}
 
-\item{vars}{\code{(list)}}
+\item{vars}{\code{(named list)}
+\itemize{
+\item{\code{prep}}{ Column names for Prep}
+\item{\code{we_want}}{ Column names for output}
+}}
 
 \item{doses}{\code{(data.frame)} See the \verb{[["HUD Extras"]]$Client_Doses_extra} method in the instantiated clarity_api object}
 
@@ -26,7 +30,7 @@ dq_missing_vaccine_current(
 
 \item{hc}{\code{(list)} from \code{dates}}
 
-\item{guidance}{\code{(list)}}
+\item{guidance}{\code{(list)} See \code{guidance}}
 
 \item{app_env}{}
 }

@@ -37,66 +37,9 @@ goals <- goals %>%
 
 # Building qpr_leavers ----------------------------------------------------
 
-smallProject <- Project %>%
-  dplyr::select(ProjectID,
-         OrganizationName,
-         OperatingStartDate,
-         OperatingEndDate,
-         ProjectName,
-         ProjectType,
-         HMISParticipatingProject,
-         GrantType,
-         ProjectCounty,
-         ProjectRegion) %>%
-  dplyr::filter(HMISParticipatingProject == 1 &
-           HMIS::operating_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End) &
-           !is.na(ProjectRegion) &
-           ProjectType %in% c(1:4, 8:9, 12:14)) %>%
-  dplyr::mutate(
-    FriendlyProjectName = ProjectName)
 
-smallEnrollment <- Enrollment %>%
-  dplyr::select(
-    EnrollmentID,
-    PersonalID,
-    HouseholdID,
-    ProjectID,
-    RelationshipToHoH,
-    CountyServed,
-    EntryDate,
-    MoveInDate,
-    ExitDate,
-    EntryAdjust,
-    MoveInDateAdjust,
-    ExitAdjust,
-    LivingSituation,
-    Destination,
-    DateCreated
-  )
 
-validation <- smallProject %>%
-  dplyr::left_join(smallEnrollment, by = "ProjectID") %>%
-  dplyr::select(
-    ProjectID,
-    ProjectName,
-    ProjectType,
-    CountyServed,
-    EnrollmentID,
-    PersonalID,
-    HouseholdID,
-    RelationshipToHoH,
-    EntryDate,
-    EntryAdjust,
-    MoveInDate,
-    MoveInDateAdjust,
-    ExitDate,
-    LivingSituation,
-    Destination,
-    DateCreated
-  ) %>%
-  dplyr::filter(!is.na(EntryDate))
-
-smallEnrollment <- smallEnrollment %>%
+enrollment_small <- enrollment_small %>%
   dplyr::filter(stringr::str_detect(HouseholdID, stringr::fixed("s_")) |
            (stringr::str_detect(HouseholdID, stringr::fixed("h_")) &
               RelationshipToHoH == 1)) #<- only pulls in hohs and singles
@@ -104,8 +47,8 @@ smallEnrollment <- smallEnrollment %>%
 # captures all leavers PLUS stayers in either HP or PSH because we include those
 # stayers in Permanent Destinations. This is used for LoS and Exits to PH.
 
-qpr_leavers <- smallProject %>%
-  dplyr::left_join(smallEnrollment, by = "ProjectID") %>%
+qpr_leavers <- project_small %>%
+  dplyr::left_join(enrollment_small, by = "ProjectID") %>%
   dplyr::filter((!is.na(ExitDate) | ProjectType %in% c(3, 9, 12)) &
            HMIS::served_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End) &
            RelationshipToHoH == 1) %>%
@@ -122,8 +65,8 @@ qpr_leavers <- smallProject %>%
   dplyr::filter(HMIS::stayed_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End)) %>%
   dplyr::arrange(ProjectName)
 
-qpr_rrh_enterers <- smallProject %>%
-  dplyr::left_join(smallEnrollment, by = "ProjectID") %>%
+qpr_rrh_enterers <- project_small %>%
+  dplyr::left_join(enrollment_small, by = "ProjectID") %>%
   dplyr::filter(ProjectType == 13 &
            HMIS::entered_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End) &
            RelationshipToHoH == 1) %>%
@@ -140,8 +83,8 @@ smallMainstreamBenefits <- IncomeBenefits %>%
   dplyr::ungroup()
 
 
-qpr_benefits <- smallProject %>%
-  dplyr::left_join(smallEnrollment, by = "ProjectID") %>%
+qpr_benefits <- project_small %>%
+  dplyr::left_join(enrollment_small, by = "ProjectID") %>%
   dplyr::filter(HMIS::exited_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End) &
            RelationshipToHoH == 1) %>%
   dplyr::left_join(smallMainstreamBenefits, by = "EnrollmentID") %>%
@@ -182,8 +125,8 @@ incomeAtEntry <- IncomeBenefits %>%
 smallIncomeDiff <-
   dplyr::full_join(incomeAtEntry, incomeMostRecent, by = "EnrollmentID")
 
-qpr_income <- smallProject %>%
-  dplyr::left_join(smallEnrollment, by = "ProjectID") %>%
+qpr_income <- project_small %>%
+  dplyr::left_join(enrollment_small, by = "ProjectID") %>%
   dplyr::filter(HMIS::served_between(., calc$data_goes_back_to, meta_HUDCSV$Export_End) &
            RelationshipToHoH == 1) %>%
   dplyr::left_join(smallIncomeDiff, by = "EnrollmentID") %>%
@@ -208,7 +151,7 @@ qpr_income <- smallProject %>%
 qpr_spending <- Services %>%
   dplyr::left_join(Enrollment,
             by = c("EnrollmentID", "PersonalID")) %>%
-  dplyr::left_join(smallProject, by = c("ProjectID", "ProjectType", "ProjectName")) %>%
+  dplyr::left_join(project_small, by = c("ProjectID", "ProjectType", "ProjectName")) %>%
   dplyr::select(
     PersonalID,
     OrganizationName,
@@ -228,8 +171,8 @@ qpr_spending <- Services %>%
            !is.na(Amount)) %>%
   dplyr::select(-RelationshipToHoH)
 
-rm(smallEnrollment,
-   smallProject,
+rm(enrollment_small,
+   project_small,
    smallMainstreamBenefits,
    incomeMostRecent,
    incomeAtEntry,

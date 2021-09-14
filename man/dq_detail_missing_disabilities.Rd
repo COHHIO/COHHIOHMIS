@@ -6,8 +6,8 @@
 \usage{
 dq_detail_missing_disabilities(
   served_in_date_range,
+  Disabilities,
   vars,
-  hc = NULL,
   guidance = NULL,
   app_env = get_app_env(e = rlang::caller_env())
 )
@@ -15,9 +15,13 @@ dq_detail_missing_disabilities(
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
 
-\item{vars}{\code{(list)}}
+\item{vars}{\code{(named list)}
+\itemize{
+\item{\code{prep}}{ Column names for Prep}
+\item{\code{we_want}}{ Column names for output}
+}}
 
-\item{guidance}{\code{(list)}}
+\item{guidance}{\code{(list)} See \code{guidance}}
 
 \item{app_env}{\code{(app_env)} Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }

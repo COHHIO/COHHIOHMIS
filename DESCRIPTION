@@ -61,6 +61,8 @@ Collate:
     '00_get_Export_utils.R'
     '00_get_Export.R'
     '01_Bed_Unit_Utilization.R'
+    '02_QPR_EEs_utils.R'
+    '02_QPR_client_counts.R'
     '02_QPR_EEs.R'
     '02_QPR_SPDATs.R'
     '03_Veterans.R'
