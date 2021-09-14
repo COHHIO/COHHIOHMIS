@@ -24,6 +24,8 @@ dq_missing_vaccine_current(
 \item{\code{we_want}}{ Column names for output}
 }}
 
+\item{dose_counts}{\code{(data.frame)} Count of doses per client}
+
 \item{doses}{\code{(data.frame)} See the \verb{[["HUD Extras"]]$Client_Doses_extra} method in the instantiated clarity_api object}
 
 \item{mahoning_projects}{\code{(numeric)} from \code{load_export}}
@@ -32,7 +34,7 @@ dq_missing_vaccine_current(
 
 \item{guidance}{\code{(list)} See \code{guidance}}
 
-\item{app_env}{}
+\item{app_env}{\code{(app_env)} Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \value{
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
@@ -40,3 +42,9 @@ dq_missing_vaccine_current(
 \description{
 Find Missing vaccine data for enrolled clients
 }
+\seealso{
+Other data_quality_vaccines: 
+\code{\link{dq_dose_date_error}()},
+\code{\link{dq_missing_vaccine_exited}()}
+}
+\concept{data_quality_vaccines}

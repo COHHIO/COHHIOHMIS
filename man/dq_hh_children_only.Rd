@@ -31,3 +31,10 @@ dq_hh_children_only(
 \description{
 Find Households without adults
 }
+\seealso{
+Other data_quality_households: 
+\code{\link{dq_hh_missing_rel_to_hoh}()},
+\code{\link{dq_hh_no_oh}()},
+\code{\link{dq_hh_too_many_hohs}()}
+}
+\concept{data_quality_households}

@@ -526,7 +526,7 @@ dq_missing_vaccine_current <- function(served_in_date_range, vars, dose_counts, 
 #' @param hc
 #' @inherit data_quality_tables params return
 #' @family data_quality_vaccines
-
+#' @export
 dq_dose_date_error <- function(served_in_date_range, vars, doses, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$merge_deps_to_env(missing_fmls())
@@ -542,7 +542,7 @@ dq_dose_date_error <- function(served_in_date_range, vars, doses, guidance = NUL
 
 #' @title Find missing client locations
 #' @inherit data_quality_tables params return
-
+#' @export
 dq_missing_client_location <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$merge_deps_to_env(missing_fmls())
@@ -562,7 +562,7 @@ dq_missing_client_location <- function(served_in_date_range, vars, guidance = NU
 #' @title Find Households without adults
 #' @inherit data_quality_tables params return
 #' @family data_quality_households
-
+#' @export
 dq_hh_children_only <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$merge_deps_to_env(missing_fmls())
@@ -590,7 +590,7 @@ dq_hh_children_only <- function(served_in_date_range, vars, guidance = NULL, hc 
 #' @title Find Households with no Head of Household
 #' @inherit data_quality_tables params return
 #' @family data_quality_households
-
+#' @export
 dq_hh_no_oh <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
@@ -620,7 +620,7 @@ dq_hh_no_oh <- function(served_in_date_range, vars, guidance = NULL, app_env = g
 #' @title Find Households with Too Many Head of Household
 #' @inherit data_quality_tables params return
 #' @family data_quality_households
-
+#' @export
 dq_hh_too_many_hohs <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
@@ -646,7 +646,7 @@ dq_hh_too_many_hohs <- function(served_in_date_range, vars, guidance = NULL, app
 #' @title Find Households with Missing Relationship to Head of Household
 #' @inherit data_quality_tables params return
 #' @family data_quality_households
-
+#' @export
 dq_hh_missing_rel_to_hoh <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
@@ -662,8 +662,11 @@ dq_hh_missing_rel_to_hoh <- function(served_in_date_range, vars, guidance = NULL
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
+
+# Missing Data at Entry ---------------------------------------------------
 #' @title Find Missing Date Homeless
 #' @inherit data_quality_tables params return
+#' @family dq_missing_data_at_entry
 #' @export
 dq_missing_approx_date_homeless <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
@@ -693,6 +696,7 @@ dq_missing_approx_date_homeless <- function(served_in_date_range, vars, guidance
 
 #' @title Find Missing Length of Time Homeless questions for Emergency Shelters and Safe Havens
 #' @inherit data_quality_tables params return
+#' @family dq_missing_data_at_entry
 #' @export
 dq_missing_previous_street_ESSH <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
@@ -719,6 +723,7 @@ dq_missing_previous_street_ESSH <- function(served_in_date_range, vars, guidance
 
 #' @title Find Missing Prior Residence
 #' @inherit data_quality_tables params return
+#' @family dq_missing_data_at_entry
 #' @export
 dq_missing_residence_prior <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
@@ -740,6 +745,7 @@ dq_missing_residence_prior <- function(served_in_date_range, vars, guidance = NU
 
 #' @title Find Don't Know/Refused Prior Residence
 #' @inherit data_quality_tables params return
+#' @family dq_missing_data_at_entry
 #' @export
 dq_dkr_residence_prior <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
@@ -759,6 +765,7 @@ dq_dkr_residence_prior <- function(served_in_date_range, vars, guidance = NULL, 
 
 #' @title Find Missing Length of Stay
 #' @inherit data_quality_tables params return
+#' @family dq_missing_data_at_entry
 #' @export
 dq_missing_LoS <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
@@ -781,6 +788,7 @@ dq_missing_LoS <- function(served_in_date_range, vars, guidance = NULL, hc = NUL
 
 #' @title Find Don't Know/Refused Length of Stay
 #' @inherit data_quality_tables params return
+#' @family dq_missing_data_at_entry
 #' @export
 dq_dkr_LoS <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
@@ -800,6 +808,7 @@ dq_dkr_LoS <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, a
 
 #' @title Find Missing Months or Times Homeless
 #' @inherit data_quality_tables params return
+#' @family dq_missing_data_at_entry
 #' @export
 dq_missing_months_times_homeless <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
 
@@ -832,6 +841,7 @@ dq_missing_months_times_homeless <- function(served_in_date_range, vars, guidanc
 
 #' @title Find Don't Know/Refused Months or Times Homeless
 #' @inherit data_quality_tables params return
+#' @family dq_missing_data_at_entry
 #' @export
 dq_dkr_months_times_homeless <- function(served_in_date_range, vars, hc = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
@@ -860,6 +870,7 @@ dq_dkr_months_times_homeless <- function(served_in_date_range, vars, hc = NULL, 
 
 #' @title Find Invalid Months or Times Homeless Entries
 #' @inherit data_quality_tables params return
+#' @family dq_missing_data_at_entry
 #' @export
 dq_invalid_months_times_homeless <- function(served_in_date_range, vars, hc = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
@@ -921,6 +932,7 @@ dq_invalid_months_times_homeless <- function(served_in_date_range, vars, hc = NU
 
 #' @title Find Missing Living Situation
 #' @inherit data_quality_tables params return
+#' @family dq_missing_data_at_entry
 #' @export
 dq_missing_living_situation <- function(served_in_date_range, vars, hc = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
@@ -972,6 +984,7 @@ dq_missing_living_situation <- function(served_in_date_range, vars, hc = NULL, g
 
 #' @title Find Don't Know/Refused Living Situation
 #' @inherit data_quality_tables params return
+#' @family dq_missing_data_at_entry
 #' @export
 dq_dkr_living_situation <- function(served_in_date_range, vars, hc = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
@@ -1017,6 +1030,7 @@ dq_dkr_living_situation <- function(served_in_date_range, vars, hc = NULL, guida
 
 #' @title Find Missing Disabilities and Conflicting Disability of Long Duration
 #' @inherit data_quality_tables params return
+#' @family dq_missing_data_at_entry
 #' @export
 dq_detail_missing_disabilities <- function(served_in_date_range, Disabilities, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
@@ -1237,6 +1251,7 @@ dq_th_stayers_bos <- function(served_in_date_range, mahoning_projects, vars, gui
 
 #' @title Find Incorrect Exits in RRH
 #' @inherit data_quality_tables params return
+#' @family data_quality_destinations
 #' @export
 dq_rrh_check_exit_destination <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
@@ -1266,6 +1281,7 @@ dq_rrh_check_exit_destination <- function(served_in_date_range, vars, guidance =
 
 #' @title Find Possibly Incorrect Exits in PSH
 #' @inherit data_quality_tables params return
+#' @family data_quality_destinations
 #' @export
 dq_psh_check_exit_destination <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
@@ -1295,6 +1311,7 @@ dq_psh_check_exit_destination <- function(served_in_date_range, vars, guidance =
 
 #' @title Find Incorrect Exits in PSH
 #' @inherit data_quality_tables params return
+#' @family data_quality_destinations
 #' @export
 dq_psh_incorrect_destination <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
@@ -1322,6 +1339,7 @@ dq_psh_incorrect_destination <- function(served_in_date_range, vars, guidance = 
 
 #' @title Find Incorrect Exits in TH
 #' @inherit data_quality_tables params return
+#' @family data_quality_destinations
 #' @export
 
 dq_th_check_exit_destination <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -1349,6 +1367,7 @@ dq_th_check_exit_destination <- function(served_in_date_range, vars, guidance = 
 
 #' @title Find Incorrect Exits in SH
 #' @inherit data_quality_tables params return
+#' @family data_quality_destinations
 #' @export
 
 dq_sh_check_exit_destination <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -1376,6 +1395,7 @@ dq_sh_check_exit_destination <- function(served_in_date_range, vars, guidance = 
 # Missing Project Stay or Incorrect Destination ---------------------------
 #' @title Find Missing Project Stay or Incorrect Destination for RRH
 #' @inherit data_quality_tables params return
+#' @family data_quality_destinations
 #' @export
 
 dq_rrh_missing_project_stay <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -1402,6 +1422,7 @@ dq_rrh_missing_project_stay <- function(served_in_date_range, vars, guidance = N
 
 #' @title Find Missing Project Stay or Incorrect Destination for PSH
 #' @inherit data_quality_tables params return
+#' @family data_quality_destinations
 #' @export
 dq_psh_missing_project_stay <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
@@ -1426,6 +1447,7 @@ dq_psh_missing_project_stay <- function(served_in_date_range, vars, guidance = N
 
 #' @title Find Missing Project Stay or Incorrect Destination for TH
 #' @inherit data_quality_tables params return
+#' @family data_quality_destinations
 #' @export
 
 dq_th_missing_project_stay <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -1451,6 +1473,7 @@ dq_th_missing_project_stay <- function(served_in_date_range, vars, guidance = NU
 
 #' @title Find Missing Project Stay or Incorrect Destination for SH
 #' @inherit data_quality_tables params return
+#' @family data_quality_destinations
 #' @export
 dq_sh_missing_project_stay <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
@@ -1470,6 +1493,50 @@ dq_sh_missing_project_stay <- function(served_in_date_range, vars, guidance = NU
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
+
+#' @title Find Missing County Served
+#' @inherit data_quality_tables params return
+#' @export
+
+dq_missing_county_served <- function(served_in_date_range, mahoning_projects, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
+  served_in_date_range %>%
+    dplyr::filter(is.na(CountyServed) & !ProjectID %in% c(mahoning_projects)) %>%
+    dplyr::mutate(
+      Issue = "Missing County Served",
+      Type = "Error",
+      Guidance = "County Served must be collected at Entry for all clients. County is
+        very important so that the client is prioritized into the correct service
+        areas for various housing solutions. This can be corrected through the
+        Entry pencil."
+    ) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+}
+
+#' @title Find Missing County Prior
+#' @inherit data_quality_tables params return
+#' @export
+
+dq_missing_county_prior <- function(served_in_date_range, mahoning_projects, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
+  served_in_date_range %>%
+    dplyr::filter(is.na(CountyPrior) & !ProjectID %in% c(mahoning_projects) &
+                    (AgeAtEntry > 17 |
+                       is.na(AgeAtEntry))) %>%
+    dplyr::mutate(Issue = "Missing County of Prior Residence",
+                  Type = "Error",
+                  Guidance = guidance$missing_at_entry) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+}
+
+# ServicePoint DQ Checks ----
+# Tue Sep 14 10:14:17 2021
+#' @title Incorrect Entry/Exit Types
+#' @inherit data_quality_tables params return
+#' @family data_quality_servicepoint
+#' @export
 
 dq_sp_incorrect_ee_type <- function(server_in_date_range) {
   if (!is_sp())

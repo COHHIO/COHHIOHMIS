@@ -27,8 +27,14 @@ dq_dose_date_error(
 \item{app_env}{\code{(app_env)} Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \value{
-
+\code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
 }
 \description{
 Find Dose Date Errors
 }
+\seealso{
+Other data_quality_vaccines: 
+\code{\link{dq_missing_vaccine_current}()},
+\code{\link{dq_missing_vaccine_exited}()}
+}
+\concept{data_quality_vaccines}

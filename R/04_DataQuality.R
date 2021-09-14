@@ -91,24 +91,7 @@ data_quality <- function(
 
                   rlang::eval_bare(.call)
                 })
-  # Missing UDEs ------------------------------------------------------------
 
-
-  dq_name <- dq_name(served_in_date_range, guidance, vars)
-
-
-
-  dq_dob <- dq_dob(served_in_date_range, guidance, vars)
-
-  dq_ssn <- dq_ssn(served_in_date_range, guidance, vars)
-
-  dq_race <- dq_race(served_in_date_range, guidance, vars)
-
-  dq_ethnicity <- dq_ethnicity(served_in_date_range, guidance, vars)
-
-  dq_gender <- dq_gender(served_in_date_range, guidance, vars)
-
-  dq_veteran <- dq_veteran(served_in_date_range, guidance, vars)
 
 
   # Missing Vaccine data ----------------------------------------------------
@@ -271,16 +254,16 @@ data_quality <- function(
   # DisablingCondition at Entry ----
   # Thu Sep 09 13:53:45 2021
 
-  detail_missing_disabilities
+
 
   # Mahoning 60 days CE -----------------------------------------------------
 
-  mahoning_ce_60_days
+
 
 
   # Extremely Long Stayers --------------------------------------------------
 
-  th_stayers_bos
+
 
 
 
@@ -288,15 +271,15 @@ data_quality <- function(
   # Incorrect Destination ---------------------------------------------------
 
   # RRH mover inners only
-  enrolled_in(served_in_date_range, type = 13)
+
   # SH
-  enrolled_in(served_in_date_range, type = 8)
+
   # PSH
-  enrolled_in(served_in_date_range, type = c(3,9), TRUE)
+
   # TH
-  enrolled_in(served_in_date_range, type = 2)
+
   # SH
-  enrolled_in(served_in_date_range, type = 8)
+
 
 
 
@@ -308,7 +291,7 @@ data_quality <- function(
 
 
 
-  should_be_th_destination
+
 
 
   # SH
@@ -343,28 +326,14 @@ data_quality <- function(
 
   # CountyServed (BoS ONLY for now)
 
-  missing_county_served <- served_in_date_range %>%
-    dplyr::filter(is.na(CountyServed) & !ProjectID %in% c(mahoning_projects)) %>%
-    dplyr::mutate(
-      Issue = "Missing County Served",
-      Type = "Error",
-      Guidance = "County Served must be collected at Entry for all clients. County is
-      very important so that the client is prioritized into the correct service
-      areas for various housing solutions. This can be corrected through the
-      Entry pencil."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+
+
+
 
   # CountyPrior (BoS ONLY for now)
 
-  missing_county_prior <- served_in_date_range %>%
-    dplyr::filter(is.na(CountyPrior) & !ProjectID %in% c(mahoning_projects) &
-                    (AgeAtEntry > 17 |
-                       is.na(AgeAtEntry))) %>%
-    dplyr::mutate(Issue = "Missing County of Prior Residence",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+
+
 
   # Check Eligibility, Project Type, Residence Prior ------------------------
 

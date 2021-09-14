@@ -30,3 +30,15 @@ dq_rrh_check_exit_destination(
 \description{
 Find Incorrect Exits in RRH
 }
+\seealso{
+Other data_quality_destinations: 
+\code{\link{dq_psh_check_exit_destination}()},
+\code{\link{dq_psh_incorrect_destination}()},
+\code{\link{dq_psh_missing_project_stay}()},
+\code{\link{dq_rrh_missing_project_stay}()},
+\code{\link{dq_sh_check_exit_destination}()},
+\code{\link{dq_sh_missing_project_stay}()},
+\code{\link{dq_th_check_exit_destination}()},
+\code{\link{dq_th_missing_project_stay}()}
+}
+\concept{data_quality_destinations}
