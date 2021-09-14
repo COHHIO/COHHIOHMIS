@@ -22,6 +22,7 @@ Rm_env <- dates()
 Rm_env <- guidance()
 Rm_env <- load_export()
 Rm_env <- client_counts()
+Rm_env$write_app_deps(Rm_env$app_objs$Rme, Rm_env$app_deps$Rme, file.path("data", "db", "Rme"))
 Rm_env <- data_quality()
 
 
