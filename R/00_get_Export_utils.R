@@ -217,7 +217,7 @@ Enrollment_add_AgeAtEntry <- function(Enrollment, Client) {
 
 Pe_add_regions <- function(provider_extras, dirs) {
   # geocodes is created by `hud.extract` using the hud_geocodes.R functions
-  geocodes <- hud_load("geocodes", dirs$public)
+  geocodes <- clarity.looker::hud_load("geocodes", dirs$public)
   # This should map a county to every geocode
   provider_extras <- provider_extras |>
     dplyr::left_join(geocodes |> dplyr::select(GeographicCode, County), by = c(Geocode = "GeographicCode"))
@@ -251,7 +251,7 @@ Pe_add_regions <- function(provider_extras, dirs) {
       dplyr::left_join(geocodes, by = c(Geocode = "GeographicCode"))
   }
 
-  Regions <- hud_load("Regions", dirs$public)
+  Regions <- clarity.looker::hud_load("Regions", dirs$public)
 
   provider_extras <- provider_extras |>
     dplyr::left_join(Regions |> dplyr::select(- RegionName), by = "County") |>
@@ -276,7 +276,7 @@ Pe_add_regions <- function(provider_extras, dirs) {
 #' @export
 
 Pe_create_APs = function(provider_extras, dirs) {
-  Regions <- hud_load("Regions", dirs$public)
+  Regions <- clarity.looker::hud_load("Regions", dirs$public)
   APs <- provider_extras |>
     dplyr::select( !tidyselect::starts_with("CoCComp") & !Geocode:ZIP) |>
     dplyr::filter(ProjectTypeCode == "Coordinated Entry") |>

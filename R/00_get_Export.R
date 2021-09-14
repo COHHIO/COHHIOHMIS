@@ -214,7 +214,7 @@ Project <- cl_api$Project() |>
 
   # HUD CSV Specs -----------------------------------------------------------
   #TODO hud.extract Data element coercion functions
-  HUD_specs <- hud_load("HUD_specs", dirs$public)
+  HUD_specs <- clarity.looker::hud_load("HUD_specs", dirs$public)
 
 
   app_env$gather_deps("everything")
