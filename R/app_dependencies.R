@@ -161,21 +161,7 @@ write_deps_to_disk <- rlang::new_function(
       paths = rlang::expr(purrr::imap_chr(
         self$app_deps, ~
           file.path("data", "db", .y)
-      )),
-      accessor = function(x = as.character(match.call()[[1]]),
-                          path = "data/db",
-                          ...) {
-        .file <-
-          list.files(path,
-                     pattern = paste0("^", x, "\\."),
-                     full.names = TRUE)
-        ext <-
-          stringr::str_extract(basename(.file), "(?<=\\.)\\w+$")
-
-        load_fun <- file_io_fn(ext = ext)
-
-        load_fun(file)
-      }
+      ))
     ),
   body =
     base::quote({
@@ -183,7 +169,7 @@ write_deps_to_disk <- rlang::new_function(
         purrr::map_depth(app_deps, 2, ~ is.null(self$app_objs[[.x]]))
       # Stop if dependencies are missing
       if (any(purrr::flatten_lgl(.missing)))
-        stop(paste0(purrr::imap_chr(.missing, ~ {
+        rlang::warn(paste0(purrr::imap_chr(.missing, ~ {
           paste0("The following objects are missing from ",
                  .y,
                  ": ",
@@ -198,33 +184,13 @@ write_deps_to_disk <- rlang::new_function(
 
       purrr::walk2(self$app_objs, paths, ~ purrr::iwalk(.x, path = .y, ~
                                                           {
-                                                            .fp <- file.path(path, paste0(.y, clarity.looker::file_io_ext(.x)))
-                                                            rlang::exec(clarity.looker::file_io_fn(.x), .x, .fp)
+                                                            .fp <- file.path(path, paste0(.y, UU::object_ext(.x)))
+                                                            rlang::exec(UU::object_fn(.x), .x, .fp)
                                                             cli::cli_alert_success(.y, " saved to ", .fp)
                                                           }))
-      # make the execution environment the baseenv for these functions to avoid inadvertently grabbing variables or functions from the environment inside the app where it will be executed
-      rlang::fn_env(accessor) <- rlang::env(baseenv())
-      # replace the objects with the accessor function
-      accessors <-
-        purrr::map2(self$app_objs, paths, ~ purrr::imap(.x, path = .y, ~ {
-          .fmls <- rlang::fn_fmls(accessor)
-          .fmls$path = path
-          rlang::fn_fmls(accessor) <- .fmls
-          accessor
-        }))
 
-      accessors <-
-        purrr::map2(self$app_objs, paths, ~ purrr::imap(.x, path = .y, ~ {
-          .fmls <- rlang::fn_fmls(accessor)
-          .fmls$path = path
-          rlang::fn_fmls(accessor) <- .fmls
-          accessor
-        }))
 
-      purrr::pwalk(list(accessors, paths, names(accessors)), ~ saveRDS(.x, file.path(.y, paste0(..3, ".rds"))))
-    })
-
-)
+}))
 
 # app_env ----
 # Thu Aug 05 10:07:19 2021
