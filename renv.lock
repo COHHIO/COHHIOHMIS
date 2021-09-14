@@ -3,7 +3,7 @@
     "Version": "4.1.0",
     "Repositories": [
       {
-        "Name": "https://cran.r-project.org",
+        "Name": null,
         "URL": "https://cran.r-project.org"
       }
     ]
@@ -162,11 +162,15 @@
     "clarity.looker": {
       "Package": "clarity.looker",
       "Version": "0.0.0.9000",
-      "Source": "Local",
-      "RemoteType": "local",
-      "RemoteUrl": "C:/Users/Administrator/Documents/R/Contributor_Repos/COHHIO/clarity.looker",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "COHHIO",
+      "RemoteRepo": "clarity.looker",
+      "RemoteRef": "main",
+      "RemoteSha": "3f176b2dfe07421d98b179a0734e0cde3c56f95c",
       "Remotes": "yogat3ch/UU, COHHIO/lookr",
-      "Hash": "aa523daa6f7d15a34c6da89d6af58063"
+      "Hash": "cb7bbcb2533bf8689e1a4ee05fbb36ed"
     },
     "cli": {
       "Package": "cli",
@@ -350,15 +354,10 @@
     },
     "ggmap": {
       "Package": "ggmap",
-      "Version": "3.0.0.903",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "ggmap",
-      "RemoteUsername": "dkahle",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "7d27649ee2f3ea9ba727b1851c3b67c7f2529f2b",
-      "Hash": "2fd9ca5eb00ad909488926184e4619d8"
+      "Version": "3.0.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "d3a9b5042c577ee6d4ec7b18352098ea"
     },
     "ggplot2": {
       "Package": "ggplot2",
@@ -757,6 +756,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "30e5eba91b67f7f4d75d31de14bbfbdc"
+    },
+    "rjson": {
+      "Package": "rjson",
+      "Version": "0.2.20",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "7d597f982ee6263716b6a2f28efd29fa"
     },
     "rlang": {
       "Package": "rlang",
