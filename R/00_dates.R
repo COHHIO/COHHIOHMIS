@@ -5,7 +5,8 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
 
   force(app_env)
   force(clarity_api)
-  hc <- purrr::map(list(
+  rm_dates <- list()
+  rm_dates$hc <- purrr::map(list(
     data_goes_back_to = "01012019",
 
     check_dq_back_to = "10012019", # the default ReportStart for DQ reporting
@@ -42,38 +43,51 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
 
   Export <- cl_api$Export()
 
-  meta_HUDCSV <- list()
-  meta_HUDCSV$Export_Date <- Export[["ExportDate"]][1]
-  meta_HUDCSV$Export_Start <- Export[["ExportStartDate"]][1]
-  meta_HUDCSV$Export_End <- Export[["ExportEndDate"]][1]
+  rm_dates$meta_HUDCSV <- list(
+    Export_Date = Export[["ExportDate"]][1],
+    Export_Start = Export[["ExportStartDate"]][1],
+    Export_End = Export[["ExportEndDate"]][1]
+  )
+
+
+
+
+
+
+
+
+
 
 
 
   # Calculated Dates --------------------------------------------------------
-calc <- list()
-
   Exit <- cl_api$Exit()
-   calc$data_goes_back_to <-
-    Exit %>%
-    dplyr::arrange(ExitDate) %>%
-    utils::head(1) %>%
-    dplyr::pull(ExitDate)
-
-  calc$full_date_range <- lubridate::interval(meta_HUDCSV$Export_End,
-                                              calc$data_goes_back_to)
-
-  calc$two_yrs_prior_end <- lubridate::floor_date(Sys.Date(), "month") - lubridate::days(1)
-  calc$two_yrs_prior_start <-
-    lubridate::floor_date(calc$two_yrs_prior_end, "month") - lubridate::years(2) + lubridate::dmonths(1)
-
-  calc$two_yrs_prior_range <- lubridate::interval(calc$two_yrs_prior_start,
-                                                calc$two_yrs_prior_end)
+  rm_dates$calc <- list(data_goes_back_to =
+                          Exit %>%
+                          dplyr::arrange(ExitDate) %>%
+                          utils::head(1) %>%
+                          dplyr::pull(ExitDate))
 
 
 
 
-  if(meta_HUDCSV$Export_Start != hc$data_goes_back_to |
-     meta_HUDCSV$Export_End != Sys.Date())
+  rm_dates$calc$full_date_range <-
+    lubridate::interval(rm_dates$meta_HUDCSV$Export_End,
+                        rm_dates$calc$data_goes_back_to)
+
+  rm_dates$calc$two_yrs_prior_end <-
+    lubridate::floor_date(Sys.Date(), "month") - lubridate::days(1)
+  rm_dates$calc$two_yrs_prior_start <-
+    lubridate::floor_date(rm_dates$calc$two_yrs_prior_end, "month") - lubridate::years(2) + lubridate::dmonths(1)
+
+  rm_dates$calc$two_yrs_prior_range <- lubridate::interval(rm_dates$calc$two_yrs_prior_start,
+                                                           rm_dates$calc$two_yrs_prior_end)
+
+
+
+
+  if(rm_dates$meta_HUDCSV$Export_Start != rm_dates$hc$data_goes_back_to |
+     rm_dates$meta_HUDCSV$Export_End != Sys.Date())
     stop_with_instructions("The HUD CSV Export update process errored. Please rerun.\n", error = error)
 
 

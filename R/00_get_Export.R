@@ -87,7 +87,7 @@ Project <- cl_api$Project() |>
     # Add Exit
     Enrollment_add_Exit(cl_api$Exit()) |>
     # Add Households
-    Enrollment_add_Household(Project, app_env$.__enclos_env__$hc) |>
+    Enrollment_add_Household(Project, app_env$.__enclos_env__$rm_dates) |>
     # Add Veteran Coordinated Entry
     Enrollment_add_VeteranCE(VeteranCE) |>
     # Add Client Location from EnrollmentCoC

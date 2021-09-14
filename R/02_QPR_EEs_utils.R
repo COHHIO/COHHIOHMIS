@@ -1,4 +1,4 @@
-qpr_project_small <- function(Project, calc, meta_HUDCSV, app_env = get_app_env(e = rlang::caller_env())) {
+qpr_project_small <- function(Project, rm_dates, app_env = get_app_env(e = rlang::caller_env())) {
   Project |>
     dplyr::select(ProjectID,
                   OrganizationName,
@@ -10,7 +10,7 @@ qpr_project_small <- function(Project, calc, meta_HUDCSV, app_env = get_app_env(
                   GrantType,
                   ProjectCounty,
                   ProjectRegion) |>
-    HMIS::operating_between(calc$data_goes_back_to, meta_HUDCSV$Export_End) |>
+    HMIS::operating_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
     dplyr::filter(HMISParticipatingProject == 1 &
                     !is.na(ProjectRegion) &
                     ProjectType %in% c(1:4, 8:9, 12:14)) |>
@@ -18,8 +18,8 @@ qpr_project_small <- function(Project, calc, meta_HUDCSV, app_env = get_app_env(
       FriendlyProjectName = ProjectName)
 }
 
-qpr_enrollment_small <- function(Enrollment, app_env = get_app_env(e = rlang::caller_env())) {
-  Enrollment |>
+qpr_enrollment_small <- function(Enrollment_extra_Exit_HH_CL_AaE, app_env = get_app_env(e = rlang::caller_env())) {
+  Enrollment_extra_Exit_HH_CL_AaE |>
     dplyr::select(
       EnrollmentID,
       PersonalID,

@@ -408,7 +408,7 @@ vaccine_status <- co_clients_served_county_guesses %>%
 
 
 served_since_02052021 <- co_clients_served %>%
-  dplyr::filter(HMIS::served_between(., hc$bos_start_vaccine_data, meta_HUDCSV$Export_End)) %>%
+  dplyr::filter(HMIS::served_between(., rm_dates$hc$bos_start_vaccine_data, rm_dates$meta_HUDCSV$Export_End)) %>%
   dplyr::count(ProjectName) %>%
   dplyr::rename("totalserved" = n)
 

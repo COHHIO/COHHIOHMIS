@@ -7,8 +7,6 @@
 
 Client_redact <- function(Client) {
   Client %>%
-    # our fake Client IDs are 5 and 4216
-    dplyr::filter(!PersonalID %in% c(5, 4216)) %>%
     dplyr::mutate(
       FirstName = dplyr::case_when(
         NameDataQuality %in% c(8, 9) ~ "DKR",
@@ -82,7 +80,7 @@ Enrollment_add_Exit <- function(Enrollment, Exit) {
 #' @return \code{(data.frame)} of Enrollment with Household Columns `MoveInDateAdjust` appended
 #' @export
 
-Enrollment_add_Household = function(Enrollment, Project, hc) {
+Enrollment_add_Household = function(Enrollment, Project, rm_dates) {
   # getting HH information
   # only doing this for RRH and PSHs since Move In Date doesn't matter for ES, etc.
 
@@ -99,7 +97,7 @@ Enrollment_add_Household = function(Enrollment, Project, hc) {
     dplyr::filter(ProjectType %in% c(3, 9, 13)) %>%
     dplyr::mutate(
       AssumedMoveIn = dplyr::if_else(
-        EntryDate < hc$psh_started_collecting_move_in_date &
+        EntryDate < rm_dates$hc$psh_started_collecting_move_in_date &
           ProjectType %in% c(3, 9),
         1,
         0

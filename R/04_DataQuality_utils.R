@@ -42,7 +42,7 @@ projects_current_hmis <- function (Project,
     app_env$merge_deps_to_env(missing_fmls())
   Project %>%
     dplyr::left_join(Inventory, by = "ProjectID") |>
-    HMIS::operating_between(calc$data_goes_back_to, meta_HUDCSV$Export_End) |>
+    HMIS::operating_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
     dplyr::filter(HMISParticipatingProject == 1 &
                     (GrantType != "HOPWA" | is.na(GrantType))) |>
     dplyr::select(
@@ -73,11 +73,11 @@ projects_current_hmis <- function (Project,
 #' @return \code{(data.frame)}
 
 
-served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH_CL_AaE = NULL, Client = NULL, Project = NULL, Inventory = NULL, HealthAndDV = NULL, calc = NULL, meta_HUDCSV = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH_CL_AaE = NULL, Client = NULL, Project = NULL, Inventory = NULL, HealthAndDV = NULL, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$merge_deps_to_env(missing_fmls())
   Enrollment_extra_Exit_HH_CL_AaE  |>
-    HMIS::served_between(calc$data_goes_back_to, meta_HUDCSV$Export_End)  |>
+    HMIS::served_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End)  |>
     dplyr::left_join(Client  |>
                        dplyr::select(-DateCreated), by = "PersonalID") |>
     dplyr::select(
@@ -428,14 +428,14 @@ dq_veteran <- function(served_in_date_range, guidance = NULL, vars = NULL, app_e
 #' @describeIn data_quality_tables
 #' @inheritParams served_in_date_range
 
-dq_missing_vaccine_exited <- function(served_in_date_range, dose_counts, vars, mahoning_projects = NULL, doses = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_missing_vaccine_exited <- function(served_in_date_range, dose_counts, vars, mahoning_projects = NULL, doses = NULL, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$merge_deps_to_env(missing_fmls())
   # TODO Representation of C19ConsentToVaccine is likely different in Clarity. Once this data is populated this will need to be updated.
   if (!missing(app_env))
     app_env$merge_deps_to_env("mahoning_projects", "doses", "hc")
   served_in_date_range |>
-    HMIS::served_between(hc$bos_start_vaccine_data, lubridate::today()) %>%
+    HMIS::served_between(rm_dates$hc$bos_start_vaccine_data, lubridate::today()) %>%
     dplyr::left_join(doses[c("PersonalID", "C19ConsentToVaccine", "C19VaccineConcerns")],
                      by = "PersonalID") %>%
     dplyr::left_join(dose_counts,
@@ -444,7 +444,7 @@ dq_missing_vaccine_exited <- function(served_in_date_range, dose_counts, vars, m
       !ProjectID %in% c(mahoning_projects) &
         !is.na(ExitDate) &
         (is.na(ExitDate) |
-           ExitDate >= hc$bos_start_vaccine_data) &
+           ExitDate >= rm_dates$hc$bos_start_vaccine_data) &
         (
           C19ConsentToVaccine == "Data not collected (HUD)" |
             is.na(C19ConsentToVaccine)
@@ -479,7 +479,7 @@ dq_missing_vaccine_exited <- function(served_in_date_range, dose_counts, vars, m
 #' @family data_quality_vaccines
 #' @export
 #' @inherit data_quality_tables params return
-dq_missing_vaccine_current <- function(served_in_date_range, vars, dose_counts, doses = NULL, mahoning_projects = NULL, hc = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_missing_vaccine_current <- function(served_in_date_range, vars, dose_counts, doses = NULL, mahoning_projects = NULL, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$merge_deps_to_env(missing_fmls())
 
@@ -494,7 +494,7 @@ dq_missing_vaccine_current <- function(served_in_date_range, vars, dose_counts, 
         ProjectID != 1695 &
         (
           is.na(ExitDate) |
-            ExitDate >= hc$bos_start_vaccine_data
+            ExitDate >= rm_dates$hc$bos_start_vaccine_data
         ) &
         (
           C19ConsentToVaccine == "Data not collected (HUD)" |
@@ -527,12 +527,12 @@ dq_missing_vaccine_current <- function(served_in_date_range, vars, dose_counts, 
 #' @inherit data_quality_tables params return
 #' @family data_quality_vaccines
 #' @export
-dq_dose_date_error <- function(served_in_date_range, vars, doses, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_dose_date_error <- function(served_in_date_range, vars, doses, guidance = NULL, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$merge_deps_to_env(missing_fmls())
   doses %>%
-    dplyr::filter(C19DoseDate < hc$first_vaccine_administered_in_us) %>%
-    dplyr::left_join(HMIS::served_between(served_in_date_range, hc$bos_start_vaccine_data, lubridate::today()),
+    dplyr::filter(C19DoseDate < rm_dates$hc$first_vaccine_administered_in_us) %>%
+    dplyr::left_join(HMIS::served_between(served_in_date_range, rm_dates$hc$bos_start_vaccine_data, lubridate::today()),
                      by = "PersonalID") %>%
     dplyr::mutate(Type = "Error",
                   Issue = "Vaccine Date Incorrect",
@@ -543,7 +543,7 @@ dq_dose_date_error <- function(served_in_date_range, vars, doses, guidance = NUL
 #' @title Find missing client locations
 #' @inherit data_quality_tables params return
 #' @export
-dq_missing_client_location <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_missing_client_location <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$merge_deps_to_env(missing_fmls())
 
@@ -563,7 +563,7 @@ dq_missing_client_location <- function(served_in_date_range, vars, guidance = NU
 #' @inherit data_quality_tables params return
 #' @family data_quality_households
 #' @export
-dq_hh_children_only <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_hh_children_only <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$merge_deps_to_env(missing_fmls())
   served_in_date_range %>%
@@ -668,7 +668,7 @@ dq_hh_missing_rel_to_hoh <- function(served_in_date_range, vars, guidance = NULL
 #' @inherit data_quality_tables params return
 #' @family dq_missing_data_at_entry
 #' @export
-dq_missing_approx_date_homeless <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_missing_approx_date_homeless <- function(served_in_date_range, vars, guidance = NULL, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$merge_deps_to_env(missing_fmls())
   missing_approx_date_homeless <- served_in_date_range %>%
@@ -683,7 +683,7 @@ dq_missing_approx_date_homeless <- function(served_in_date_range, vars, guidance
       PreviousStreetESSH
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    EntryDate >= hc$prior_living_situation_required &
+                    EntryDate >= rm_dates$hc$prior_living_situation_required &
                     is.na(DateToStreetESSH) &
                     LOSUnderThreshold == 1 &
                     PreviousStreetESSH == 1
@@ -698,7 +698,7 @@ dq_missing_approx_date_homeless <- function(served_in_date_range, vars, guidance
 #' @inherit data_quality_tables params return
 #' @family dq_missing_data_at_entry
 #' @export
-dq_missing_previous_street_ESSH <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_missing_previous_street_ESSH <- function(served_in_date_range, vars, guidance = NULL, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$merge_deps_to_env(missing_fmls())
   missing_previous_street_ESSH <- served_in_date_range %>%
@@ -711,7 +711,7 @@ dq_missing_previous_street_ESSH <- function(served_in_date_range, vars, guidance
       LOSUnderThreshold
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    EntryDate >= hc$prior_living_situation_required &
+                    EntryDate >= rm_dates$hc$prior_living_situation_required &
                     is.na(PreviousStreetESSH) &
                     LOSUnderThreshold == 1
     ) %>%
@@ -725,7 +725,7 @@ dq_missing_previous_street_ESSH <- function(served_in_date_range, vars, guidance
 #' @inherit data_quality_tables params return
 #' @family dq_missing_data_at_entry
 #' @export
-dq_missing_residence_prior <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_missing_residence_prior <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$merge_deps_to_env(missing_fmls())
   missing_residence_prior <- served_in_date_range %>%
@@ -747,7 +747,7 @@ dq_missing_residence_prior <- function(served_in_date_range, vars, guidance = NU
 #' @inherit data_quality_tables params return
 #' @family dq_missing_data_at_entry
 #' @export
-dq_dkr_residence_prior <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_dkr_residence_prior <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$merge_deps_to_env(missing_fmls())
   dkr_residence_prior <- served_in_date_range %>%
@@ -767,7 +767,7 @@ dq_dkr_residence_prior <- function(served_in_date_range, vars, guidance = NULL, 
 #' @inherit data_quality_tables params return
 #' @family dq_missing_data_at_entry
 #' @export
-dq_missing_LoS <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_missing_LoS <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$merge_deps_to_env(missing_fmls())
   missing_LoS <- served_in_date_range %>%
@@ -790,7 +790,7 @@ dq_missing_LoS <- function(served_in_date_range, vars, guidance = NULL, hc = NUL
 #' @inherit data_quality_tables params return
 #' @family dq_missing_data_at_entry
 #' @export
-dq_dkr_LoS <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_dkr_LoS <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$merge_deps_to_env(missing_fmls())
   served_in_date_range %>%
@@ -810,7 +810,7 @@ dq_dkr_LoS <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, a
 #' @inherit data_quality_tables params return
 #' @family dq_missing_data_at_entry
 #' @export
-dq_missing_months_times_homeless <- function(served_in_date_range, vars, guidance = NULL, hc = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_missing_months_times_homeless <- function(served_in_date_range, vars, guidance = NULL, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
 
   if (is_app_env(app_env))
     app_env$merge_deps_to_env(missing_fmls())
@@ -824,7 +824,7 @@ dq_missing_months_times_homeless <- function(served_in_date_range, vars, guidanc
       TimesHomelessPastThreeYears
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    EntryDate >= hc$prior_living_situation_required &
+                    EntryDate >= rm_dates$hc$prior_living_situation_required &
                     ProjectType %in% c(1, 4, 8) &
                     (
                       is.na(MonthsHomelessPastThreeYears) |
@@ -843,7 +843,7 @@ dq_missing_months_times_homeless <- function(served_in_date_range, vars, guidanc
 #' @inherit data_quality_tables params return
 #' @family dq_missing_data_at_entry
 #' @export
-dq_dkr_months_times_homeless <- function(served_in_date_range, vars, hc = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_dkr_months_times_homeless <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$merge_deps_to_env(missing_fmls())
 
@@ -856,7 +856,7 @@ dq_dkr_months_times_homeless <- function(served_in_date_range, vars, hc = NULL, 
       TimesHomelessPastThreeYears
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    EntryDate >= hc$prior_living_situation_required &
+                    EntryDate >= rm_dates$hc$prior_living_situation_required &
                     (
                       MonthsHomelessPastThreeYears %in% c(8, 9) |
                         TimesHomelessPastThreeYears %in% c(8, 9)
@@ -872,7 +872,7 @@ dq_dkr_months_times_homeless <- function(served_in_date_range, vars, hc = NULL, 
 #' @inherit data_quality_tables params return
 #' @family dq_missing_data_at_entry
 #' @export
-dq_invalid_months_times_homeless <- function(served_in_date_range, vars, hc = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
+dq_invalid_months_times_homeless <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
     app_env$merge_deps_to_env(missing_fmls())
@@ -888,7 +888,7 @@ dq_invalid_months_times_homeless <- function(served_in_date_range, vars, hc = NU
     dplyr::filter(
       ProjectType != 12 &
         (RelationshipToHoH == 1 | AgeAtEntry > 17) &
-        EntryDate >= hc$prior_living_situation_required &
+        EntryDate >= rm_dates$hc$prior_living_situation_required &
         TimesHomelessPastThreeYears == 1 &
         !is.na(DateToStreetESSH)
     ) %>%
@@ -934,7 +934,7 @@ dq_invalid_months_times_homeless <- function(served_in_date_range, vars, hc = NU
 #' @inherit data_quality_tables params return
 #' @family dq_missing_data_at_entry
 #' @export
-dq_missing_living_situation <- function(served_in_date_range, vars, hc = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
+dq_missing_living_situation <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
 		app_env$merge_deps_to_env(missing_fmls())
@@ -952,7 +952,7 @@ dq_missing_living_situation <- function(served_in_date_range, vars, hc = NULL, g
       TimesHomelessPastThreeYears
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    EntryDate >= hc$prior_living_situation_required &
+                    EntryDate >= rm_dates$hc$prior_living_situation_required &
                     # not req'd prior to this
                     ProjectType %in% c(2, 3, 6, 9, 10, 12, 13) &
                     (
@@ -986,7 +986,7 @@ dq_missing_living_situation <- function(served_in_date_range, vars, hc = NULL, g
 #' @inherit data_quality_tables params return
 #' @family dq_missing_data_at_entry
 #' @export
-dq_dkr_living_situation <- function(served_in_date_range, vars, hc = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
+dq_dkr_living_situation <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
 		app_env$merge_deps_to_env(missing_fmls())
@@ -1015,7 +1015,7 @@ dq_dkr_living_situation <- function(served_in_date_range, vars, hc = NULL, guida
       UserCreating
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    EntryDate > hc$prior_living_situation_required &
+                    EntryDate > rm_dates$hc$prior_living_situation_required &
                     (
                       MonthsHomelessPastThreeYears %in% c(8, 9) |
                         TimesHomelessPastThreeYears %in% c(8, 9) |

@@ -4,11 +4,7 @@ app_deps <- list(
     "APs",
     "bos_counties",
     "BoS_PIT",
-    dates = c(
-      "calc",
-      "hc",
-      "meta_HUDCSV"
-    ),
+    "rm_dates",
     "Client",
     "covid19",
     "covid19_priority_plot",
@@ -58,11 +54,7 @@ app_deps <- list(
     "active_list",
     "aps_no_referrals",
     "Beds",
-    dates = c(
-    "calc",
-    "hc",
-    "meta_HUDCSV"
-    ),
+    "rm_dates",
     "Client",
     "dq_main",
     "dq_past_year",

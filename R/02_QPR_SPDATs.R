@@ -153,7 +153,7 @@ qpr_spdats_project <- dplyr::left_join(Entries, Scores, by = "PersonalID") %>%
 SPDATsOnNonHoHs <- dplyr::left_join(Entries, Scores, by = "PersonalID") %>%
   dplyr::filter(RelationshipToHoH != 1 &
            !is.na(Score) &
-           HMIS::served_between(., lubridate::ymd(calc$data_goes_back_to), lubridate::ymd(meta_HUDCSV$Export_End))) %>%
+           HMIS::served_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), lubridate::ymd(rm_dates$meta_HUDCSV$Export_End))) %>%
   dplyr::select(ProjectName, PersonalID, EntryDate, ExitDate, Score) %>%
   dplyr::arrange(ProjectName)
 
