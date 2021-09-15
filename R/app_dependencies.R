@@ -1,6 +1,6 @@
 app_deps <- list(
   ## to Rm:
-  Rm = c(
+  Rminor = c(
     "APs",
     "bos_counties",
     "BoS_PIT",
@@ -50,7 +50,7 @@ app_deps <- list(
 
   # to Rme
 
-  Rme = c(
+  RminorElevated = c(
     "active_list",
     "aps_no_referrals",
     "Beds",
@@ -264,7 +264,7 @@ app_env <- R6::R6Class(
     #' @param overwrite \code{(logical)} Whether to overwrite existing files.
     write_app_deps = function (objs,
                                deps,
-                               path = file.path("data", "db", "Rm"),
+                               path = file.path("data", "db", "RminorElevated"),
                                overwrite = TRUE)
     {
       # Dir check
@@ -297,12 +297,28 @@ app_env <- R6::R6Class(
     app_objs = list(),
     #' @field \code{(list)} with all app dependencies as character vectors
     app_deps = c(),
+    dropbox_upload = function(folder = file.path("data","db","RminorElevated"), db_folder = "RminorElevated") {
+      files <- list.files(folder, full.names = TRUE)
+      purrr::walk(files, ~{
+        message("Uploading ",.x)
+        rdrop2::drop_upload(.x, file.path(db_folder, basename(.x)))
+      })
+    },
     #' @description Instantiate with default app dependencies to be collected (if they exist) each time \code{\$gather_deps} is called
-    initialize = function(app_deps) {
+    initialize = function(app_deps, db_auth_token = "~/R/auth_tokens/db_token.rds") {
       if (missing(app_deps))
         app_deps <- Rm_data:::app_deps
       self$app_deps <- app_deps
       self$app_objs <- purrr::map(app_deps, ~list())
+      # Dropbox Auth
+      if (!file.exists(db_auth_token)) {
+        token <- rdrop2::drop_auth(key = Sys.getenv("db_key"),
+                          secret = Sys.getenv("db_secret"),
+                          cache = FALSE)
+        saveRDS(token, db_auth_token)
+      } else {
+        rdrop2::drop_auth(rdstoken = db_auth_token)
+      }
     }
   ),
   private = list(#' @field Save a vector of the names of working dependencies that have been saved for future reference when \code{\$merge_deps_to_env} is called.
