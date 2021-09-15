@@ -16,6 +16,7 @@ Authors@R:
            role = "con"))
 Description: This provides workflows for munging and porting data dependencies to the open-source Homeless Management Information System (HMIS) custom reporting apps Rminor & Rminor_elevated
 License: AGPL-3
+Depends: R (>= 4.1.0)
 Imports: 
     clarity.looker,
     cli,
@@ -37,8 +38,6 @@ Imports:
     scales,
     slider,
     UU
-Suggests:
-    jobs
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
@@ -48,7 +47,6 @@ BugReports: https://github.com/COHHIO/Rm_data/issues
 Remotes:
     COHHIO/hud.extract,
     COHHIO/clarity.looker,
-    yogat3ch/jobs,
     COHHIO/lookr,
     yogat3ch/UU
 Collate: 
