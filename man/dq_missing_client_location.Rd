@@ -8,7 +8,6 @@ dq_missing_client_location(
   served_in_date_range,
   vars,
   guidance = NULL,
-  hc = NULL,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }

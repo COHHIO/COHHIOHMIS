@@ -11,8 +11,7 @@ served_in_date_range(
   Project = NULL,
   Inventory = NULL,
   HealthAndDV = NULL,
-  calc = NULL,
-  meta_HUDCSV = NULL,
+  rm_dates = NULL,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }
@@ -27,11 +26,11 @@ served_in_date_range(
 
 \item{Inventory}{\code{(data.frame)} Inventory}
 
+\item{app_env}{\code{(data.frame)} Instead of providing all arguments with NULL defaults,\code{app_env} with all arguments saved internally can be provided.}
+
 \item{calc}{\code{(list)} of dates from \code{dates}}
 
 \item{meta_HUDCSV}{\code{(list)} of dates from \code{dates}}
-
-\item{app_env}{\code{(data.frame)} Instead of providing all arguments with NULL defaults,\code{app_env} with all arguments saved internally can be provided.}
 }
 \value{
 \code{(data.frame)}

@@ -31,7 +31,7 @@ dq_dob(
 Data quality report on Missing/Incorrect DOB
 }
 \seealso{
-Other dq_missing_udes: 
+Other DQ: Missing UDEs: 
 \code{\link{dq_ethnicity}()},
 \code{\link{dq_gender}()},
 \code{\link{dq_name}()},
@@ -39,4 +39,4 @@ Other dq_missing_udes:
 \code{\link{dq_ssn}()},
 \code{\link{dq_veteran}()}
 }
-\concept{dq_missing_udes}
+\concept{DQ: Missing UDEs}

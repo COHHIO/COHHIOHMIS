@@ -10,7 +10,7 @@ dq_missing_vaccine_exited(
   vars,
   mahoning_projects = NULL,
   doses = NULL,
-  hc = NULL,
+  rm_dates = NULL,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }
@@ -25,7 +25,11 @@ dq_missing_vaccine_exited(
 \item{\code{we_want}}{ Column names for output}
 }}
 
+\item{mahoning_projects}{\code{(named numeric)} Vector of ProjectIDs associated with projects operating in Mahoning. Created in \code{load_export}.}
+
 \item{doses}{\code{(data.frame)} See the \verb{[["HUD Extras"]]$Client_Doses_extra} method in the instantiated clarity_api object}
+
+\item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
 
 \item{app_env}{\code{(app_env)} Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
@@ -36,8 +40,8 @@ dq_missing_vaccine_exited(
 Data quality report on Race data
 }
 \seealso{
-Other data_quality_vaccines: 
+Other DQ: Vaccines: 
 \code{\link{dq_dose_date_error}()},
 \code{\link{dq_missing_vaccine_current}()}
 }
-\concept{data_quality_vaccines}
+\concept{DQ: Vaccines}

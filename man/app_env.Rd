@@ -27,11 +27,31 @@ Save dependencies for future functions in an environment and put app dependencie
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-gather_deps}{\code{app_env$gather_deps()}}
 \item \href{#method-merge_deps_to_env}{\code{app_env$merge_deps_to_env()}}
+\item \href{#method-gather_deps}{\code{app_env$gather_deps()}}
 \item \href{#method-write_app_deps}{\code{app_env$write_app_deps()}}
+\item \href{#method-dropbox_upload}{\code{app_env$dropbox_upload()}}
 \item \href{#method-new}{\code{app_env$new()}}
 \item \href{#method-clone}{\code{app_env$clone()}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-merge_deps_to_env"></a>}}
+\if{latex}{\out{\hypertarget{method-merge_deps_to_env}{}}}
+\subsection{Method \code{merge_deps_to_env()}}{
+Pass all dependencies saved from previous functions to an environment for use
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{app_env$merge_deps_to_env(..., env = rlang::caller_env(), as_list = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{env}}{\code{(environment)} to pass dependencies to. \strong{Default} the calling environment}
+
+\item{\code{nms}}{\code{(character)} of the names of the dependencies to load into the \code{env}. \strong{Default} load all previously stored objects.}
+}
+\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -60,51 +80,42 @@ Gather the objects passed to \code{app_env}s internal environment to be passed t
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-merge_deps_to_env"></a>}}
-\if{latex}{\out{\hypertarget{method-merge_deps_to_env}{}}}
-\subsection{Method \code{merge_deps_to_env()}}{
-Pass all dependencies saved from previous functions to an environment for use
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$merge_deps_to_env(..., env = rlang::caller_env(), as_list = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{env}}{\code{(environment)} to pass dependencies to. \strong{Default} the calling environment}
-
-\item{\code{nms}}{\code{(character)} of the names of the dependencies to load into the \code{env}. \strong{Default} load all previously stored objects.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-write_app_deps"></a>}}
 \if{latex}{\out{\hypertarget{method-write_app_deps}{}}}
 \subsection{Method \code{write_app_deps()}}{
 Write app dependencies to disk
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{app_env$write_app_deps(
-  app_deps = self$app_deps,
-  paths = purrr::imap_chr(self$app_deps, ~file.path("data", "db", .y)),
-  accessor = function(x = as.character(match.call()[[1]]), path = "data/db", ...) {    
-    .file <- list.files(path, pattern = paste0("^", x, "\\\\."), full.names = TRUE)    
-    ext <- stringr::str_extract(basename(.file), "(?<=\\\\.)\\\\w+$")     load_fun <-
-    file_io_fn(ext = ext)     load_fun(file) }
+  objs,
+  deps,
+  path = file.path("data", "db", "RminorElevated"),
+  overwrite = TRUE
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{app_deps}}{\code{(named list)} with each name corresponding to an app with each item containing a character vector of the app dependencies. \strong{Default} the \code{app_deps} stored in the public field \code{app_env\$app_deps}.}
+\item{\code{deps}}{\code{(character)} with names of app dependencies.}
 
-\item{\code{paths}}{\code{(named list)} Paths to write app dependencies to, one path for each app in \code{app_deps} (in the same order).}
+\item{\code{path}}{\code{(character)} of directory to write app dependencies to}
 
-\item{\code{accessor}}{\code{(function)} An accessor function that will be used to read the files from disk in the live app.}
+\item{\code{overwrite}}{\code{(logical)} Whether to overwrite existing files.}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-dropbox_upload"></a>}}
+\if{latex}{\out{\hypertarget{method-dropbox_upload}{}}}
+\subsection{Method \code{dropbox_upload()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{app_env$dropbox_upload(
+  folder = file.path("data", "db", "RminorElevated"),
+  db_folder = "RminorElevated"
+)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
@@ -112,7 +123,7 @@ Write app dependencies to disk
 \subsection{Method \code{new()}}{
 Instantiate with default app dependencies to be collected (if they exist) each time \code{\$gather_deps} is called
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$new(app_deps)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{app_env$new(app_deps, db_auth_token = "~/R/auth_tokens/db_token.rds")}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

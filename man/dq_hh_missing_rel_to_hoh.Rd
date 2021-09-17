@@ -31,9 +31,9 @@ dq_hh_missing_rel_to_hoh(
 Find Households with Missing Relationship to Head of Household
 }
 \seealso{
-Other data_quality_households: 
+Other DQ: Household Checks: 
 \code{\link{dq_hh_children_only}()},
 \code{\link{dq_hh_no_oh}()},
 \code{\link{dq_hh_too_many_hohs}()}
 }
-\concept{data_quality_households}
+\concept{DQ: Household Checks}

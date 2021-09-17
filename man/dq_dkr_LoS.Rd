@@ -8,7 +8,6 @@ dq_dkr_LoS(
   served_in_date_range,
   vars,
   guidance = NULL,
-  hc = NULL,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }
@@ -32,7 +31,7 @@ dq_dkr_LoS(
 Find Don't Know/Refused Length of Stay
 }
 \seealso{
-Other dq_missing_data_at_entry: 
+Other DQ: Missing Data at Entry: 
 \code{\link{dq_detail_missing_disabilities}()},
 \code{\link{dq_dkr_living_situation}()},
 \code{\link{dq_dkr_months_times_homeless}()},
@@ -45,4 +44,4 @@ Other dq_missing_data_at_entry:
 \code{\link{dq_missing_previous_street_ESSH}()},
 \code{\link{dq_missing_residence_prior}()}
 }
-\concept{dq_missing_data_at_entry}
+\concept{DQ: Missing Data at Entry}

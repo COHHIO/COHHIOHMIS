@@ -32,7 +32,7 @@ dq_detail_missing_disabilities(
 Find Missing Disabilities and Conflicting Disability of Long Duration
 }
 \seealso{
-Other dq_missing_data_at_entry: 
+Other DQ: Missing Data at Entry: 
 \code{\link{dq_dkr_LoS}()},
 \code{\link{dq_dkr_living_situation}()},
 \code{\link{dq_dkr_months_times_homeless}()},
@@ -45,4 +45,4 @@ Other dq_missing_data_at_entry:
 \code{\link{dq_missing_previous_street_ESSH}()},
 \code{\link{dq_missing_residence_prior}()}
 }
-\concept{dq_missing_data_at_entry}
+\concept{DQ: Missing Data at Entry}

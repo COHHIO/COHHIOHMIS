@@ -8,7 +8,6 @@ dq_missing_residence_prior(
   served_in_date_range,
   vars,
   guidance = NULL,
-  hc = NULL,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }
@@ -32,7 +31,7 @@ dq_missing_residence_prior(
 Find Missing Prior Residence
 }
 \seealso{
-Other dq_missing_data_at_entry: 
+Other DQ: Missing Data at Entry: 
 \code{\link{dq_detail_missing_disabilities}()},
 \code{\link{dq_dkr_LoS}()},
 \code{\link{dq_dkr_living_situation}()},
@@ -45,4 +44,4 @@ Other dq_missing_data_at_entry:
 \code{\link{dq_missing_months_times_homeless}()},
 \code{\link{dq_missing_previous_street_ESSH}()}
 }
-\concept{dq_missing_data_at_entry}
+\concept{DQ: Missing Data at Entry}

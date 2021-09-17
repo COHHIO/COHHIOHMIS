@@ -31,7 +31,7 @@ dq_veteran(
 Data quality report on Veteran Status
 }
 \seealso{
-Other dq_missing_udes: 
+Other DQ: Missing UDEs: 
 \code{\link{dq_dob}()},
 \code{\link{dq_ethnicity}()},
 \code{\link{dq_gender}()},
@@ -39,4 +39,4 @@ Other dq_missing_udes:
 \code{\link{dq_race}()},
 \code{\link{dq_ssn}()}
 }
-\concept{dq_missing_udes}
+\concept{DQ: Missing UDEs}

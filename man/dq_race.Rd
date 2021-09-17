@@ -31,7 +31,7 @@ dq_race(
 Data quality report on Race data
 }
 \seealso{
-Other dq_missing_udes: 
+Other DQ: Missing UDEs: 
 \code{\link{dq_dob}()},
 \code{\link{dq_ethnicity}()},
 \code{\link{dq_gender}()},
@@ -39,4 +39,4 @@ Other dq_missing_udes:
 \code{\link{dq_ssn}()},
 \code{\link{dq_veteran}()}
 }
-\concept{dq_missing_udes}
+\concept{DQ: Missing UDEs}

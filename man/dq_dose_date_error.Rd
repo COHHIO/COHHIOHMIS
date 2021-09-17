@@ -9,7 +9,7 @@ dq_dose_date_error(
   vars,
   doses,
   guidance = NULL,
-  hc = NULL,
+  rm_dates = NULL,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }
@@ -24,6 +24,8 @@ dq_dose_date_error(
 
 \item{guidance}{\code{(list)} See \code{guidance}}
 
+\item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
+
 \item{app_env}{\code{(app_env)} Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \value{
@@ -33,8 +35,8 @@ dq_dose_date_error(
 Find Dose Date Errors
 }
 \seealso{
-Other data_quality_vaccines: 
+Other DQ: Vaccines: 
 \code{\link{dq_missing_vaccine_current}()},
 \code{\link{dq_missing_vaccine_exited}()}
 }
-\concept{data_quality_vaccines}
+\concept{DQ: Vaccines}

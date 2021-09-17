@@ -6,6 +6,10 @@
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
 
+\item{IncomeBenefits}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{mahoning_projects}{\code{(named numeric)} Vector of ProjectIDs associated with projects operating in Mahoning. Created in \code{load_export}.}
+
 \item{guidance}{\code{(list)} See \code{guidance}}
 
 \item{vars}{\code{(named list)}
@@ -13,6 +17,8 @@
 \item{\code{prep}}{ Column names for Prep}
 \item{\code{we_want}}{ Column names for output}
 }}
+
+\item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
 
 \item{app_env}{\code{(app_env)} Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }

@@ -8,7 +8,6 @@ dq_hh_children_only(
   served_in_date_range,
   vars,
   guidance = NULL,
-  hc = NULL,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }
@@ -32,9 +31,9 @@ dq_hh_children_only(
 Find Households without adults
 }
 \seealso{
-Other data_quality_households: 
+Other DQ: Household Checks: 
 \code{\link{dq_hh_missing_rel_to_hoh}()},
 \code{\link{dq_hh_no_oh}()},
 \code{\link{dq_hh_too_many_hohs}()}
 }
-\concept{data_quality_households}
+\concept{DQ: Household Checks}

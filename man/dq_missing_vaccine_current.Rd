@@ -10,7 +10,7 @@ dq_missing_vaccine_current(
   dose_counts,
   doses = NULL,
   mahoning_projects = NULL,
-  hc = NULL,
+  rm_dates = NULL,
   guidance = NULL,
   app_env = get_app_env(e = rlang::caller_env())
 )
@@ -28,9 +28,9 @@ dq_missing_vaccine_current(
 
 \item{doses}{\code{(data.frame)} See the \verb{[["HUD Extras"]]$Client_Doses_extra} method in the instantiated clarity_api object}
 
-\item{mahoning_projects}{\code{(numeric)} from \code{load_export}}
+\item{mahoning_projects}{\code{(named numeric)} Vector of ProjectIDs associated with projects operating in Mahoning. Created in \code{load_export}.}
 
-\item{hc}{\code{(list)} from \code{dates}}
+\item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
 
 \item{guidance}{\code{(list)} See \code{guidance}}
 
@@ -43,8 +43,8 @@ dq_missing_vaccine_current(
 Find Missing vaccine data for enrolled clients
 }
 \seealso{
-Other data_quality_vaccines: 
+Other DQ: Vaccines: 
 \code{\link{dq_dose_date_error}()},
 \code{\link{dq_missing_vaccine_exited}()}
 }
-\concept{data_quality_vaccines}
+\concept{DQ: Vaccines}

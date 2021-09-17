@@ -31,9 +31,9 @@ dq_hh_too_many_hohs(
 Find Households with Too Many Head of Household
 }
 \seealso{
-Other data_quality_households: 
+Other DQ: Household Checks: 
 \code{\link{dq_hh_children_only}()},
 \code{\link{dq_hh_missing_rel_to_hoh}()},
 \code{\link{dq_hh_no_oh}()}
 }
-\concept{data_quality_households}
+\concept{DQ: Household Checks}

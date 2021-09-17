@@ -4,7 +4,7 @@
 \alias{Enrollment_add_Household}
 \title{Add Household Information to Enrollment from Project}
 \usage{
-Enrollment_add_Household(Enrollment, Project, hc)
+Enrollment_add_Household(Enrollment, Project, rm_dates)
 }
 \arguments{
 \item{Enrollment}{with Exit data. See \code{Enrollment_add_Exit}}

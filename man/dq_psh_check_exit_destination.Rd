@@ -31,7 +31,7 @@ dq_psh_check_exit_destination(
 Find Possibly Incorrect Exits in PSH
 }
 \seealso{
-Other data_quality_destinations: 
+Other DQ: Incorrect Destinations: 
 \code{\link{dq_psh_incorrect_destination}()},
 \code{\link{dq_psh_missing_project_stay}()},
 \code{\link{dq_rrh_check_exit_destination}()},
@@ -41,4 +41,4 @@ Other data_quality_destinations:
 \code{\link{dq_th_check_exit_destination}()},
 \code{\link{dq_th_missing_project_stay}()}
 }
-\concept{data_quality_destinations}
+\concept{DQ: Incorrect Destinations}

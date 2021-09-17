@@ -8,7 +8,7 @@ dq_missing_months_times_homeless(
   served_in_date_range,
   vars,
   guidance = NULL,
-  hc = NULL,
+  rm_dates = NULL,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }
@@ -23,6 +23,8 @@ dq_missing_months_times_homeless(
 
 \item{guidance}{\code{(list)} See \code{guidance}}
 
+\item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
+
 \item{app_env}{\code{(app_env)} Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \value{
@@ -32,7 +34,7 @@ dq_missing_months_times_homeless(
 Find Missing Months or Times Homeless
 }
 \seealso{
-Other dq_missing_data_at_entry: 
+Other DQ: Missing Data at Entry: 
 \code{\link{dq_detail_missing_disabilities}()},
 \code{\link{dq_dkr_LoS}()},
 \code{\link{dq_dkr_living_situation}()},
@@ -45,4 +47,4 @@ Other dq_missing_data_at_entry:
 \code{\link{dq_missing_previous_street_ESSH}()},
 \code{\link{dq_missing_residence_prior}()}
 }
-\concept{dq_missing_data_at_entry}
+\concept{DQ: Missing Data at Entry}
