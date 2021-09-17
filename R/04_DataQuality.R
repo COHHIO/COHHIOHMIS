@@ -11,7 +11,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
-
+#' @include app_dependencies.R
 dependencies$DataQuality <-
   c(
     "Client",
@@ -48,8 +48,6 @@ data_quality <- function(
 
 
 
-  va_funded <- Funder |>
-    Funder_VA_ProjectID()
 
   # Providers to Check ------------------------------------------------------
   projects_current_hmis <- projects_current_hmis()
@@ -65,6 +63,7 @@ data_quality <- function(
   vars$prep <- c(
     "HouseholdID",
     "PersonalID",
+    "UniqueID",
     "ProjectName",
     "ProjectType",
     "EntryDate",
@@ -90,100 +89,10 @@ data_quality <- function(
                   rlang::eval_bare(.call)
                 })
 
+dqs <- dqs |>
+  dq_make_profile_link()
 
 
-  # Missing Vaccine data ----------------------------------------------------
-  #TODO C19 Column names need to be updated
-  dose_counts <- doses |>
-  dplyr::mutate(Doses = sum(!is.na(C19Dose1Date), !is.na(C19Dose2Date), na.rm = TRUE)) |>
-    dplyr::select(PersonalID, Doses) |>
-    dplyr::distinct(PersonalID, .keep_all = TRUE)
-
-  missing_vaccine_exited <- dq_missing_vaccine_exited(served_in_date_range = served_in_date_range, dose_counts = dose_counts, vars = vars, app_env = Rm_env)
-
-
-  missing_vaccine_current <- dq_missing_vaccine_current(served_in_date_range, dose_counts, app_env = Rm_env)
-
-  # Dose Warnings -----------------------------------------------------------
-  dose_date_error <- dose_date_error(doses, served_in_date_range, hc)
-
-
-  # TODO Revise with new dose data coming in from Clarity
-  dose_date_warning <- doses %>%
-    dplyr::group_by(PersonalID) %>%
-    dplyr::summarise(Doses = dplyr::n()) %>%
-    dplyr::ungroup() %>%
-    dplyr::filter(Doses > 1) %>%
-    dplyr::left_join(doses, by = "PersonalID") %>%
-    dplyr::group_by(PersonalID) %>%
-    # TODO LastDose should be taken care of by C19DoseDate on the Looker end
-    dplyr::mutate(LastDose = dplyr::lag(C19DoseDate, order_by = C19DoseDate)) %>%
-    dplyr::filter(!is.na(LastDose)) %>%
-    dplyr::mutate(DaysBetweenDoses = difftime(C19Dose1Date, C19Dose2Date, units = "days")) %>%
-    dplyr::filter(C19DoseDate < rm_dates$hc$first_vaccine_administered_in_us |
-                    DaysBetweenDoses < 20 |
-                    (C19VaccineManufacturer == "Moderna") &
-                    DaysBetweenDoses < 27) %>%
-    dplyr::left_join(HMIS::served_between(served_in_date_range, rm_dates$hc$bos_start_vaccine_data, lubridate::today()),
-                     by = "PersonalID") %>%
-    dplyr::mutate(Type = "Warning",
-                  Issue = "Vaccine Dates or Vaccine Manufacturer Questionable",
-                  Guidance = "The number of days between vaccines doses does not match
-         the vaccine manufacturer’s recommended timeline. One of the vaccine
-         records' Vaccine Date or the Vaccine Manufacturer may be entered
-         incorrectly.") %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  differing_manufacturers <- doses %>%
-    dplyr::group_by(PersonalID) %>%
-    dplyr::summarise(Doses = dplyr::n()) %>%
-    dplyr::ungroup() %>%
-    dplyr::filter(Doses > 1) %>%
-    dplyr::left_join(doses, by = "PersonalID") %>%
-    dplyr::group_by(PersonalID) %>%
-    dplyr::mutate(
-      minManufacturer = min(C19VaccineManufacturer),
-      maxManufacturer = max(C19VaccineManufacturer),
-      differs = minManufacturer != maxManufacturer,
-      Type = "Error",
-      Issue = "Client received different vaccines",
-      Guidance = "The data shows that the client received vaccines from
-    different manufacturers, but this is highly unlikely. Please correct the
-    data in HMIS or let us know if the client actually received vaccines from
-    different manufacturers."
-    ) %>%
-    dplyr::filter(differs == TRUE) %>%
-    dplyr::left_join(served_in_date_range %>%
-                       dplyr::filter(HMIS::served_between(., rm_dates$hc$bos_start_vaccine_data, lubridate::today())),
-                     by = "PersonalID") %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  unknown_manufacturer_error <- doses %>%
-    dplyr::filter(stringr::str_starts(C19VaccineManufacturer, "Client doesn't know") &
-                    C19VaccineDocumentation != "Self-report") %>%
-    dplyr::left_join(served_in_date_range %>%
-                       dplyr::filter(HMIS::served_between(., rm_dates$hc$bos_start_vaccine_data, lubridate::today())),
-                     by = "PersonalID") %>%
-    dplyr::mutate(Type = "Error",
-                  Issue = "Incorrect Vaccine Manufacturer or Incorrect Documentation Type",
-                  Guidance = "If vaccine information was collected via Healthcare Provider
-         or Vaccine card, then the vaccine manufacturer should be known and
-         updated in HMIS.") %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  unknown_manufacturer_warning <- doses %>%
-    dplyr::filter(stringr::str_starts(C19VaccineManufacturer, "Client doesn't know") &
-                    C19VaccineDocumentation == "Self-report") %>%
-    dplyr::left_join(served_in_date_range %>%
-                       dplyr::filter(HMIS::served_between(., rm_dates$hc$bos_start_vaccine_data, lubridate::today())),
-                     by = "PersonalID") %>%
-    dplyr::mutate(Type = "Warning",
-                  Issue = "Unknown Vaccine Manufacturer",
-                  Guidance = "If the client does not know the manufacturer of the vaccine,
-         please try to find another source for the information. Reporting relies
-         heavily on knowing the manufacturer of the vaccine your client received.
-         If you absolutely cannot find it, it is ok to leave as is.") %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Missing Client Location -------------------------------------------------
   missing_client_location <- dq_missing_client_location(served_in_date_range, vars)
@@ -335,163 +244,18 @@ data_quality <- function(
 
   # Check Eligibility, Project Type, Residence Prior ------------------------
 
-  check_eligibility <- served_in_date_range %>%
-    dplyr::select(
-      dplyr::all_of(vars$prep),
-      ProjectID,
-      AgeAtEntry,
-      RelationshipToHoH,
-      LivingSituation,
-      LengthOfStay,
-      LOSUnderThreshold,
-      PreviousStreetESSH,
-      GrantType
-    ) %>%
-    dplyr::filter(
-      RelationshipToHoH == 1 &
-        AgeAtEntry > 17 &
-        EntryDate > rm_dates$hc$check_eligibility_back_to &
-        (ProjectType %in% c(3, 4, 8, 9, 10, 12, 13) |
-           (ProjectType == 2 & (is.na(GrantType) | GrantType != "RHY"))) &
-        (
-          (ProjectType %in% c(2, 3, 9, 10, 13) &
-             # PTCs that require LH status
-             (
-               is.na(LivingSituation) |
-                 (
-                   LivingSituation %in% c(4:7, 15, 25:27, 29) & # institution
-                     (
-                       !LengthOfStay %in% c(2, 3, 10, 11) | # <90 days
-                         is.na(LengthOfStay) |
-                         PreviousStreetESSH == 0 | # LH prior
-                         is.na(PreviousStreetESSH)
-                     )
-                 ) |
-                 (
-                   LivingSituation %in% c(3, 10, 11, 14, 19:23, 28, 31, 35, 36) &
-                     # not homeless
-                     (
-                       !LengthOfStay %in% c(10, 11) |  # <1 week
-                         is.na(LengthOfStay) |
-                         PreviousStreetESSH == 0 | # LH prior
-                         is.na(PreviousStreetESSH)
-                     )
-                 )
-             )) |
-            (
-              ProjectType == 12 &
-                (!LivingSituation %in% c(3, 10, 11, 14, 19:23, 28, 31, 35, 36) |
-                   PreviousStreetESSH != 0 )
-            ) |
-            (ProjectType %in% c(8, 4) & # Safe Haven and Outreach
-               LivingSituation != 16) # unsheltered only
-        )
-    )
 
-  detail_eligibility <- check_eligibility %>%
-    dplyr::select(
-      PersonalID,
-      ProjectName,
-      ProjectType,
-      LivingSituation,
-      EntryDate,
-      ExitDate,
-      LengthOfStay,
-      LOSUnderThreshold,
-      PreviousStreetESSH
-    ) %>%
-    dplyr::mutate(
-      ResidencePrior =
-        living_situation(LivingSituation),
-      LengthOfStay = dplyr::case_when(
-        LengthOfStay == 2 ~ "One week or more but less than one month",
-        LengthOfStay == 3 ~ "One month or more but less than 90 days",
-        LengthOfStay == 4 ~ "90 days or more but less than one year",
-        LengthOfStay == 5 ~ "One year or longer",
-        LengthOfStay == 8 ~ "Client doesn't know",
-        LengthOfStay == 9 ~ "Client refused",
-        LengthOfStay == 10 ~ "One night or less",
-        LengthOfStay == 11 ~ "Two to six nights",
-        LengthOfStay == 99 ~ "Data not collected"
-      )
-    )
-
-  check_eligibility <- check_eligibility %>%
-    dplyr::mutate(
-      Issue = "Check Eligibility",
-      Type = "Warning",
-      Guidance = paste(
-        "Your Residence Prior data suggests that this project is either
-        serving ineligible households, the household was entered into the wrong
-        project, or the Residence Prior data at Entry is incorrect. Please check
-        the terms of your grant or speak with",
-        dplyr::if_else(
-          ProjectID %in% c(mahoning_projects),
-          "the Mahoning County CoC Coordinator",
-          "the CoC team at COHHIO"
-        ),
-        "if you are unsure of eligibility criteria for your project type."
-      )
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+# dq_check_eligibility
 
   # Rent Payment Made, No Move-In Date
-  rent_paid_no_move_in <- served_in_date_range %>%
-    dplyr::filter(is.na(MoveInDateAdjust) &
-                    RelationshipToHoH == 1 &
-                    ProjectType %in% c(3, 9, 13)) %>%
-    dplyr::inner_join(Services %>%
-                        dplyr::filter(
-                          Description %in% c(
-                            "Rent Payment Assistance",
-                            "Utility Deposit Assistance",
-                            "Rental Deposit Assistance"
-                          )
-                        ) %>%
-                        dplyr::select(-PersonalID),
-                      by = "EnrollmentID") %>%
-    dplyr::mutate(
-      Issue = "Rent Payment Made, No Move-In Date",
-      Type = "Error",
-      Guidance =
-        "This client does not have a valid Move-In Date, but there is at
-    least one rent/deposit payment Service Transaction recorded for this program.
-    Until a Move-In Date is entered, this client will continue to be counted as
-    literally homeless while in your program. Move-in dates must be on or after
-    the Entry Date. If a client is housed then returns to homelessness while
-    in your program, they need to be exited from their original Entry and
-    re-entered in a new one that has no Move-In Date until they are re-housed."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  #dq_rent_paid_no_move_in
+
 
   # Missing Destination
-  missing_destination <- served_in_date_range %>%
-    dplyr::filter(!is.na(ExitDate) &
-                    (is.na(Destination) | Destination %in% c(99, 30))) %>%
-    dplyr::mutate(
-      Issue = "Missing Destination",
-      Type = "Warning",
-      Guidance = paste(
-        "It is widely understood that not every client will
-             complete an exit interview, especially for high-volume emergency
-             shelters. A few warnings for Missing Destination is no cause for
-             concern, but if there is a large number, please contact",
-        dplyr::if_else(
-          ProjectID %in% c(mahoning_projects),
-          "the Mahoning County CoC Coordinator",
-          "the Balance of State CoC team at COHHIO"
-        ),
-        "to work out a way to improve client engagement."
-      )
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  #dq_missing_destination
 
-  dkr_destination <- served_in_date_range %>%
-    dplyr::filter(Destination %in% c(8, 9)) %>%
-    dplyr::mutate(Issue = "Don't Know/Refused Destination",
-                  Type = "Warning",
-                  Guidance = guidance$dkr_data) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+
+  # dq_dkr_destination
 
   # Missing PATH Data -------------------------------------------------------
 
@@ -500,146 +264,38 @@ data_quality <- function(
   ### Length of Stay is null or DNC -> error -OR-
   ### Length of Stay is DKR -> warning
 
-  project_small <- Project %>% dplyr::select(ProjectID,
-                                            ProjectName,
-                                            ProjectCounty)
-
-  path_missing_los_res_prior <- served_in_date_range %>%
-    dplyr::select(
-      dplyr::all_of(vars$prep),
-      ProjectID,
-      AgeAtEntry,
-      ClientEnrolledInPATH,
-      LengthOfStay
-    ) %>%
-    dplyr::left_join(project_small, by = c("ProjectID", "ProjectName")) %>%
-    dplyr::filter(AgeAtEntry > 17 &
-                    ClientEnrolledInPATH == 1 &
-                    (is.na(LengthOfStay) | LengthOfStay == 99)) %>%
-    dplyr::mutate(Issue = "Missing Residence Prior Length of Stay (PATH)",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
+  #dq_path_missing_los_res_prior
 
   #* Engagement at Exit
   ### adult, PATH-enrolled, Date of Engagement is null -> error
 
-  path_no_status_at_exit <- served_in_date_range %>%
-    dplyr::select(
-      dplyr::all_of(vars$prep),
-      AgeAtEntry,
-      ClientEnrolledInPATH,
-      DateOfPATHStatus,
-      ReasonNotEnrolled
-    ) %>%
-    dplyr::left_join(project_small, by = "ProjectName") %>%
-    dplyr::filter(!is.na(ExitDate) &
-                    AgeAtEntry > 17 &
-                    (
-                      is.na(ClientEnrolledInPATH) |
-                        is.na(DateOfPATHStatus) |
-                        (ClientEnrolledInPATH == 0 &
-                           is.na(ReasonNotEnrolled))
-                    )) %>%
-    dplyr::mutate(Issue = "PATH Status at Exit Missing or Incomplete",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_exit) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  #dq_path_no_status_at_exit
 
   #* Status Determination at Exit
   ### adult, PATH-Enrolled is not null
   ### Date of Status Determ is null -> error
-  path_status_determination <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep),
-                  AgeAtEntry,
-                  ClientEnrolledInPATH,
-                  DateOfPATHStatus) %>%
-    dplyr::left_join(project_small, by = "ProjectName") %>%
-    dplyr::filter(AgeAtEntry > 17 &
-        !is.na(ClientEnrolledInPATH) &
-        is.na(DateOfPATHStatus)
-    ) %>%
-    dplyr::mutate(Issue = "Missing Date of PATH Status",
-                  Type = "Error",
-                  Guidance = "Users must indicate the PATH Status Date for any adult
-             enrolled in PATH.") %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+
+  # dq_path_status_determination
 
   #* PATH Enrolled at Exit
   ### adult and:
   ### PATH Enrolled null or DNC -> error -OR-
 
-  path_enrolled_missing <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep), AgeAtEntry, ClientEnrolledInPATH) %>%
-    dplyr::left_join(project_small, by = "ProjectName") %>%
-    dplyr::filter(!is.na(ExitDate) &
-        AgeAtEntry > 17 &
-        (ClientEnrolledInPATH == 99 |
-           is.na(ClientEnrolledInPATH))
-    ) %>%
-    dplyr::mutate(
-      Issue = "Missing PATH Enrollment at Exit",
-      Type = "Error",
-      Guidance = "Please enter the data for this item by clicking into the
-        Entry or Exit pencil and creating an Interim. In the assessment, enter
-        the correct PATH Enrollment Date and Save."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  #dq_path_enrolled_missing
 
   #* Not Enrolled Reason
   ### adult
   ### PATH Enrolled = No
   ### Reason is null -> error
 
-  path_reason_missing <- served_in_date_range %>%
-    dplyr::select(
-      dplyr::all_of(vars$prep),
-      AgeAtEntry,
-      ClientEnrolledInPATH,
-      ReasonNotEnrolled,
-      ProjectType
-    ) %>%
-    dplyr::left_join(project_small, by = "ProjectName") %>%
-    dplyr::filter(AgeAtEntry > 17 &
-                    ClientEnrolledInPATH == 0 &
-                    is.na(ReasonNotEnrolled)) %>%
-    dplyr::mutate(
-      Issue = "Missing Reason Not PATH Enrolled",
-      Type = "Error",
-      Guidance = "The user has indicated the household was not enrolled into
-        PATH, but no reason was selected."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  #dq_path_reason_missing
 
   #* Connection with SOAR at Exit
   ### adult
   ### Connection w/ SOAR is null or DNC -> error -OR-
   ### Connection w/ SOAR DKR -> warning
 
-  smallIncomeSOAR <- IncomeBenefits %>%
-    dplyr::select(PersonalID,
-                  EnrollmentID,
-                  ConnectionWithSOAR,
-                  DataCollectionStage) %>%
-    dplyr::filter(DataCollectionStage == 3)
-
-  path_SOAR_missing_at_exit <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep),
-                  EnrollmentID,
-                  AgeAtEntry,
-                  ClientEnrolledInPATH) %>%
-    dplyr::left_join(project_small, by = "ProjectName") %>%
-    dplyr::left_join(smallIncomeSOAR, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::filter(AgeAtEntry > 17 &
-                    DataCollectionStage == 3 &
-                    is.na(ConnectionWithSOAR)) %>%
-    dplyr::mutate(Issue = "Missing Connection with SOAR at Exit",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_exit) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  rm(smallIncomeSOAR)
+  # dq_path_SOAR_missing_at_exit
 
   # Missing PATH Contacts
   ## client is adult/hoh and has no contact record in the EE -> error
@@ -647,36 +303,7 @@ data_quality <- function(
   ## if the contact was an "Outreach" record after 10/1/2019, it is being
   ## filtered out because they should be using CLS subs past that date.
 
-  small_contacts <- Contacts %>%
-    dplyr::left_join(served_in_date_range, by = "PersonalID") %>%
-    dplyr::filter(
-      ContactDate >= EntryDate &
-      ContactDate <= ExitAdjust &
-      ContactDate < rm_dates$hc$outreach_to_cls
-    ) %>%
-    dplyr::group_by(PersonalID, ProjectName, EntryDate, ExitDate) %>%
-    dplyr::summarise(ContactCount = dplyr::n()) %>%
-    dplyr::ungroup()
-
-  missing_path_contact <- served_in_date_range %>%
-    dplyr::filter(GrantType == "PATH" &
-                    (AgeAtEntry > 17 |
-                       RelationshipToHoH == 1)) %>%
-    dplyr::select(dplyr::all_of(vars$prep)) %>%
-    dplyr::left_join(small_contacts,
-                     by = c("PersonalID",
-                                    "ProjectName",
-                                    "EntryDate",
-                                    "ExitDate")) %>%
-    dplyr::mutate_at(dplyr::vars(ContactCount), ~replace(., is.na(.), 0)) %>%
-    dplyr::filter(ContactCount == 0) %>%
-    dplyr::mutate(Issue = "Missing PATH Contact",
-                  Type = "High Priority",
-                  Guidance = "Every adult or Head of Household must have a Living
-             Situation contact record. If you see a record there but there is
-             no Date of Contact, saving the Date of Contact will correct this
-             issue.") %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  # dq_missing_path_contact
 
   # Incorrect PATH Contact Date
   ## client is adult/hoh, has a contact record, and the first record in the EE
@@ -684,54 +311,14 @@ data_quality <- function(
   ## if the contact was an "Outreach" record after 10/1/2019, it is being
   ## filtered out because they should be using CLS subs past that date.
 
-  first_contact <- Contacts %>%
-    dplyr::filter(ContactDate < rm_dates$hc$outreach_to_cls) %>%
-    dplyr::left_join(served_in_date_range, by = "PersonalID") %>%
-    dplyr::select(PersonalID, EntryDate, ExitAdjust, ExitDate, ContactDate, ProjectName,
-                  EntryDate, ExitAdjust) %>%
-    dplyr::filter(ContactDate >= EntryDate &
-                    ContactDate <= ExitAdjust) %>%
-    dplyr::group_by(PersonalID, ProjectName, EntryDate, ExitDate) %>%
-    dplyr::arrange(ContactDate) %>%
-    dplyr::slice(1L)
-
-  incorrect_path_contact_date <- served_in_date_range %>%
-    dplyr::filter(GrantType == "PATH" &
-                    (AgeAtEntry > 17 |
-                       RelationshipToHoH == 1)) %>%
-    dplyr::select(dplyr::all_of(vars$prep)) %>%
-    dplyr::inner_join(first_contact, by = c("PersonalID",
-                                                    "ProjectName",
-                                                    "EntryDate",
-                                                    "ExitDate")) %>%
-    dplyr::filter(ContactDate != EntryDate) %>%
-    dplyr::mutate(
-      Issue = "No PATH Contact Entered at Entry",
-      Type = "Error",
-      Guidance = "Every adult or head of household should have a Living
-             Situation contact record where the Contact Date matches the Entry
-             Date. This would represent the initial contact made with the
-             client."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  rm(first_contact, small_contacts)
+  #dq_incorrect_path_contact_date
 
   # Duplicate EEs -----------------------------------------------------------
   # this could be more nuanced but it's ok to leave it since we are also
   # looking at overlaps
-  duplicate_ees <-
-    janitor::get_dupes(served_in_date_range, PersonalID, ProjectID, EntryDate) %>%
-    dplyr::mutate(
-      Issue = "Duplicate Entry Exits",
-      Type = "High Priority",
-      Guidance = "Users sometimes create this error when they forget to click
-        into a program stay by using the Entry pencil, and instead they click
-        \"Add Entry/Exit\" each time. To correct, EDA to the project the Entry/Exit
-      belongs to, navigate to the Entry/Exit tab and delete the program stay
-      that was accidentally added for each household member."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+
+  #duplicate_ees <- dq_duplicate_ees()
+
 
 
   # Future Entry Exits ------------------------------------------------------
@@ -739,34 +326,8 @@ data_quality <- function(
   # their clients prior to their Entry Date since back then the Entry Date was the
   # day they moved in. So they're excused from this prior to Move In Date's existence.
 
-  future_ees <- served_in_date_range %>%
-    dplyr::filter(EntryDate > lubridate::ymd_hms(DateCreated) &
-                    (ProjectType %in% c(1, 2, 4, 8, 13) |
-                       (
-                         ProjectType %in% c(3, 9) &
-                           EntryDate >= rm_dates$hc$psh_started_collecting_move_in_date
-                       )))  %>%
-    dplyr::mutate(
-      Issue = "Future Entry Date",
-      Type = "Warning",
-      Guidance = "Users should not be entering a client into a project on a
-        date in the future. If the Entry Date is correct, there is no action
-        needed, but going forward, please be sure that your data entry workflow
-        is correct according to your project type."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  future_exits <- served_in_date_range %>%
-    dplyr::filter(ExitDate > lubridate::today()) %>%
-    dplyr::mutate(
-      Issue = "Future Exit Date",
-      Type = "Error",
-      Guidance = "This client's Exit Date is a date in the future. Please
-        enter the exact date the client left your program. If this client has not
-        yet exited, delete the Exit and then enter the Exit Date once the client
-        is no longer in your program."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  #future_ees <- dq_future_ees()
+  #future_exits <- dq_future_exits()
 
 
 
@@ -774,192 +335,14 @@ data_quality <- function(
 
   # HoHs Entering PH without SPDATs -----------------------------------------
 
-  ees_with_spdats <- served_in_date_range %>%
-    dplyr::anti_join(va_funded, by = "ProjectID") %>%
-    dplyr::left_join(Scores, by = "PersonalID") %>%
-    dplyr::ungroup() %>%
-    dplyr::select(PersonalID,
-                  EnrollmentID,
-                  RelationshipToHoH,
-                  EntryDate,
-                  ExitAdjust,
-                  ScoreDate,
-                  Score) %>%
-    dplyr::filter(ScoreDate + lubridate::days(365) > EntryDate &
-                    # score is < 1 yr old
-                    ScoreDate < ExitAdjust) %>%  # score is prior to Exit
-    dplyr::group_by(EnrollmentID) %>%
-    dplyr::slice_max(ScoreDate) %>%
-    dplyr::slice_max(Score) %>%
-    dplyr::distinct() %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(ScoreAdjusted = dplyr::if_else(is.na(Score), 0, Score))
+  #ph_without_spdats <- dq_ph_without_spdates()
 
-  entered_ph_without_spdat <-
-    dplyr::anti_join(served_in_date_range, ees_with_spdats, by = "EnrollmentID") %>%
-    dplyr::filter(
-      ProjectType %in% c(2, 3, 9, 13) &
-        EntryDate > rm_dates$hc$began_requiring_spdats &
-        # only looking at 1/1/2019 forward
-        RelationshipToHoH == 1 &
-        (CurrentlyFleeing != 1 |
-           is.na(CurrentlyFleeing) |
-           !WhenOccurred %in% c(1:3))
-    ) %>%
-    dplyr::mutate(
-      Issue = "Non-DV HoHs Entering PH or TH without SPDAT",
-      Type = "Warning",
-      Guidance = "Every household (besides those fleeing domestic violence)
-        must have a VI-SPDAT score to aid with prioritization into a
-        Transitional Housing or Permanent Housing (RRH or PSH) project."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
-  # HoHs in Shelter without a SPDAT -----------------------------------------
-
-  lh_without_spdat <- served_in_date_range %>%
-    dplyr::filter(is.na(PHTrack) | PHTrack != "Self Resolve" |
-                    ExpectedPHDate < lubridate::today()) %>%
-    dplyr::anti_join(ees_with_spdats, by = "EnrollmentID") %>%
-    dplyr::filter(
-      ProjectType %in% c(1, 4, 8) &
-        VeteranStatus != 1 &
-        RelationshipToHoH == 1 &
-        EntryDate < lubridate::today() - lubridate::days(8) &
-        is.na(ExitDate) &
-        EntryDate > rm_dates$hc$began_requiring_spdats
-    ) %>%
-    dplyr::mutate(
-      Issue = "HoHs in shelter for 8+ days without SPDAT",
-      Type = "Warning",
-      Guidance = "Any household who has been in shelter or a Safe Haven for
-        over 8 days should be assessed with the VI-SPDAT so that they can be
-        prioritized for Permanent Housing (RRH or PSH)."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  spdat_on_non_hoh <- ees_with_spdats %>%
-    dplyr::left_join(
-      served_in_date_range,
-      by = c(
-        "PersonalID",
-        "EnrollmentID",
-        "RelationshipToHoH",
-        "EntryDate",
-        "ExitAdjust"
-      )
-    ) %>%
-    dplyr::filter(RelationshipToHoH != 1) %>%
-    dplyr::mutate(
-      Issue = "SPDAT Created on a Non-Head-of-Household",
-      Type = "Warning",
-      Guidance = "It is very important to be sure that the VI-SPDAT score goes on the
-        Head of Household of a given program stay because otherwise that score
-      may not pull into any reporting. It is possible a Non Head of Household
-      was a Head of Household in a past program stay, and in that situation,
-      this should not be corrected unless the Head of Household of your program
-      stay is missing their score. To correct this, you would need to completely
-      re-enter the score on the correct client's record."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  rm(ees_with_spdats)
 
   # Missing Income at Entry -------------------------------------------------
   # IncomeBenefits <- IncomeBenefits %>% select(-DateCreated)
 
-  missing_income_entry <- served_in_date_range %>%
-    dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::select(
-      dplyr::all_of(vars$prep),
-      AgeAtEntry,
-      DataCollectionStage,
-      TotalMonthlyIncome,
-      IncomeFromAnySource
-    ) %>%
-    dplyr::filter(DataCollectionStage == 1 &
-                    ProjectName != "Unsheltered Clients - OUTREACH" &
-                    (AgeAtEntry > 17 |
-                       is.na(AgeAtEntry)) &
-                    (IncomeFromAnySource == 99 |
-                       is.na(IncomeFromAnySource))) %>%
-    dplyr::mutate(Issue = "Income Missing at Entry",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
-  smallIncome <- IncomeBenefits %>%
-    dplyr::select(
-      PersonalID,
-      EnrollmentID,
-      Earned,
-      Unemployment,
-      SSI,
-      SSDI,
-      VADisabilityService,
-      VADisabilityNonService,
-      PrivateDisability,
-      WorkersComp,
-      TANF,
-      GA,
-      SocSecRetirement,
-      Pension,
-      ChildSupport,
-      Alimony,
-      OtherIncomeSource,
-      DataCollectionStage
-    )
-
-  smallIncome[is.na(smallIncome)] <- 0
-
-  smallIncome <-
-    smallIncome %>% dplyr::full_join(IncomeBenefits[c(
-      "PersonalID",
-      "EnrollmentID",
-      "DataCollectionStage",
-      "TotalMonthlyIncome",
-      "IncomeFromAnySource"
-    )],
-    by = c("PersonalID",
-                   "EnrollmentID",
-                   "DataCollectionStage"))
-
-  income_subs <- served_in_date_range[c("EnrollmentID",
-                                                "AgeAtEntry",
-                                                vars$prep)] %>%
-    dplyr::left_join(smallIncome, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::mutate(
-      IncomeCount =
-        Earned +
-        Unemployment +
-        SSI +
-        SSDI +
-        VADisabilityService +
-        VADisabilityNonService +
-        PrivateDisability +
-        WorkersComp +
-        TANF +
-        GA +
-        SocSecRetirement +
-        Pension +
-        ChildSupport +
-        Alimony +
-        OtherIncomeSource
-    )
-
-
-  conflicting_income_entry <- income_subs %>%
-    dplyr::filter(DataCollectionStage == 1 &
-                    (AgeAtEntry > 17 | is.na(AgeAtEntry)) &
-                    ((IncomeFromAnySource == 1 &
-                        IncomeCount == 0) |
-                       (IncomeFromAnySource == 0 &
-                          IncomeCount > 0)
-                    )) %>%
-    dplyr::mutate(Issue = "Conflicting Income yes/no at Entry",
-                  Type = "Error",
-                  Guidance = guidance$conflicting_income) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Not calculating Conflicting Income Amounts bc they're calculating the TMI from the
   # subs instead of using the field itself. Understandable but that means I would
@@ -968,40 +351,10 @@ data_quality <- function(
 
   # Missing Income at Exit --------------------------------------------------
 
-  missing_income_exit <- served_in_date_range %>%
-    dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::select(
-      dplyr::all_of(vars$prep),
-      AgeAtEntry,
-      DataCollectionStage,
-      TotalMonthlyIncome,
-      IncomeFromAnySource,
-      UserCreating
-    ) %>%
-    dplyr::filter(DataCollectionStage == 3 &
-                    (AgeAtEntry > 17 |
-                       is.na(AgeAtEntry)) &
-                    (IncomeFromAnySource == 99 |
-                       is.na(IncomeFromAnySource))) %>%
-    dplyr::mutate(Issue = "Income Missing at Exit",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_exit) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  #missing_income <- dq_missing_income()
+  #conflicting_income <- dq_conflicting_income()
 
-  conflicting_income_exit <- income_subs %>%
-    dplyr::filter(DataCollectionStage == 3 &
-                    (AgeAtEntry > 17 | is.na(AgeAtEntry)) &
-                    ((IncomeFromAnySource == 1 &
-                        IncomeCount == 0) |
-                       (IncomeFromAnySource == 0 &
-                          IncomeCount > 0)
-                    )) %>%
-    dplyr::mutate(Issue = "Conflicting Income yes/no at Exit",
-                  Type = "Error",
-                  Guidance = guidance$conflicting_income) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
-  rm(income_subs)
 
   # Overlapping Enrollment/Move In Dates ------------------------------------
 
@@ -1009,460 +362,48 @@ data_quality <- function(
   # some users won't like being flagged for it if it's someone else's fault
   # but you can't tell whose fault it is from the data so...
 
-  staging_overlaps <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
-    dplyr::mutate(
-      EntryAdjust = dplyr::case_when(
-        #for PSH and RRH, EntryAdjust = MoveInDate
-        ProjectType %in% c(1, 2, 8, 12) |
-          ProjectName == "Unsheltered Clients - OUTREACH" ~ EntryDate,
-        ProjectType %in% c(3, 9, 13) &
-          !is.na(MoveInDateAdjust) ~ MoveInDateAdjust,
-        ProjectType %in% c(3, 9, 13) &
-          is.na(MoveInDateAdjust) ~ EntryDate
-      ),
-      ExitAdjust = ExitAdjust - lubridate::days(1),
-      # bc a client can exit&enter same day
-      LiterallyInProject = dplyr::if_else(
-        ProjectType %in% c(3, 9, 13),
-        lubridate::interval(MoveInDateAdjust, ExitAdjust),
-        lubridate::interval(EntryAdjust, ExitAdjust)
-      ),
-      Issue = "Overlapping Project Stays",
-      Type = "High Priority",
-      Guidance = "A client cannot reside in an ES, TH, or Safe Haven at the
-        same time. Nor can they have a Move-In Date into a PSH or RRH project
-        while they are still in an ES, TH, or Safe Haven. Further, they cannot
-        be in any two RRH's or any two PSH's simultaneously, housed or not.
-        Please look the client(s) up in HMIS and determine which project stay's
-        Entry/Move-In/or Exit Date is incorrect. PLEASE NOTE: It may be the
-        \"Previous Provider's\" mistake, but if you are seeing clients here, it
-        means your project stay was entered last.
-        If the overlap is not your project's mistake, please work with the
-        project that has the incorrect Entry/Move-In/or Exit Date to get this
-        corrected or send an email to hmis@cohhio.org if you cannot get it
-        resolved. These clients will NOT show on their Data Quality app.
-        If YOUR dates are definitely correct, it is fine to continue with other
-        data corrections as needed."
-    ) %>%
-    dplyr::filter(!is.na(LiterallyInProject) &
-                    lubridate::int_length(LiterallyInProject) > 0) %>%
-    janitor::get_dupes(., PersonalID) %>%
-    dplyr::group_by(PersonalID) %>%
-    dplyr::arrange(PersonalID, EntryAdjust) %>%
-    dplyr::mutate(
-      PreviousEntryAdjust = dplyr::lag(EntryAdjust),
-      PreviousExitAdjust = dplyr::lag(ExitAdjust),
-      PreviousProject = dplyr::lag(ProjectName)
-    ) %>%
-    dplyr::filter(!is.na(PreviousEntryAdjust)) %>%
-    dplyr::ungroup()
+  #staging_overlaps <- dq_staging_overlaps()
+  #same_day_overlaps <- dq_overlaps()
+  # rrh_overlaps <- dq_overlaps_rrh()
+  # psh_overlaps <- dq_overlaps_psh()
 
-  same_day_overlaps <- served_in_date_range %>%
-    dplyr::filter((ProjectType == 13 & MoveInDateAdjust == ExitDate) |
-                    ProjectType != 13) %>%
-    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
-    dplyr::mutate(
-      EntryAdjust = dplyr::case_when(
-        #for PSH and RRH, EntryAdjust = MoveInDate
-        ProjectType %in% c(1, 2, 8, 12) |
-          ProjectName == "Unsheltered Clients - OUTREACH" ~ EntryDate,
-        ProjectType %in% c(3, 9, 13) &
-          !is.na(MoveInDateAdjust) ~ MoveInDateAdjust,
-        ProjectType %in% c(3, 9, 13) &
-          is.na(MoveInDateAdjust) ~ EntryDate
-      ),
-      LiterallyInProject = dplyr::case_when(
-        ProjectType %in% c(3, 9) ~ lubridate::interval(MoveInDateAdjust, ExitAdjust),
-        ProjectType %in% c(1, 2, 4, 8, 12) ~ lubridate::interval(EntryAdjust, ExitAdjust)
-      ),
-      Issue = "Overlapping Project Stays",
-      Type = "High Priority",
-      Guidance = "A client cannot reside in an ES, TH, or Safe Haven at the
-        same time. Nor can they have a Move-In Date into a PSH or RRH project
-        while they are still in an ES, TH, or Safe Haven. Further, they cannot
-        be in any two RRH's or any two PSH's simultaneously, housed or not.
-        Please look the client(s) up in HMIS and determine which project stay's
-        Entry/Move-In/or Exit Date is incorrect. PLEASE NOTE: It may be the
-        \"Previous Provider's\" mistake, but if you are seeing clients here, it
-        means your project stay was entered last.
-        If the overlap is not your project's mistake, please work with the
-        project that has the incorrect Entry/Move-In/or Exit Date to get this
-        corrected or send an email to hmis@cohhio.org if you cannot get it
-        resolved. These clients will NOT show on their Data Quality app.
-        If YOUR dates are definitely correct, it is fine to continue with other
-        data corrections as needed."
-    ) %>%
-    dplyr::filter((!is.na(LiterallyInProject) & ProjectType != 13) |
-                    ProjectType == 13) %>%
-    janitor::get_dupes(., PersonalID) %>%
-    dplyr::group_by(PersonalID) %>%
-    dplyr::arrange(PersonalID, EntryAdjust) %>%
-    dplyr::mutate(
-      PreviousEntryAdjust = dplyr::lag(EntryAdjust),
-      PreviousExitAdjust = dplyr::lag(ExitAdjust),
-      PreviousProject = dplyr::lag(ProjectName)
-    ) %>%
-    dplyr::filter(ExitDate > PreviousEntryAdjust &
-                    ExitDate < PreviousExitAdjust) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
 
-  rrh_overlaps <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
-    dplyr::mutate(
-      ExitAdjust = ExitAdjust - lubridate::days(1),
-      # bc a client can exit&enter same day
-      InProject = lubridate::interval(EntryDate, ExitAdjust),
-      Issue = "Overlapping Project Stays",
-      Type = "High Priority",
-      Guidance = "A client cannot reside in an ES, TH, or Safe Haven at the
-        same time. Nor can they have a Move-In Date into a PSH or RRH project
-        while they are still in an ES, TH, or Safe Haven. Further, they cannot
-        be in any two RRH's or any two PSH's simultaneously, housed or not.
-        Please look the client(s) up in HMIS and determine which project stay's
-        Entry/Move-In/or Exit Date is incorrect. PLEASE NOTE: It may be the
-        \"Previous Provider's\" mistake, but if you are seeing clients here, it
-        means your project stay was entered last.
-        If the overlap is not your project's mistake, please work with the
-        project that has the incorrect Entry/Move-In/or Exit Date to get this
-        corrected or send an email to hmis@cohhio.org if you cannot get it
-        resolved. These clients will NOT show on their Data Quality app.
-        If YOUR dates are definitely correct, it is fine to continue with other
-        data corrections as needed."
-    ) %>%
-    dplyr::filter(ProjectType == 13) %>%
-    janitor::get_dupes(., PersonalID) %>%
-    dplyr::group_by(PersonalID) %>%
-    dplyr::arrange(PersonalID, EntryDate) %>%
-    dplyr::mutate(
-      PreviousEntry = dplyr::lag(EntryDate),
-      PreviousExit = dplyr::lag(ExitAdjust),
-      PreviousProject = dplyr::lag(ProjectName)
-    ) %>%
-    dplyr::filter(!is.na(PreviousEntry)) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(
-      PreviousStay = lubridate::interval(PreviousEntry, PreviousExit),
-      Overlap = lubridate::int_overlaps(InProject, PreviousStay)
-    ) %>%
-    dplyr::filter(Overlap == TRUE) %>%
-    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
 
-  psh_overlaps <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
-    dplyr::mutate(
-      ExitAdjust = ExitAdjust - lubridate::days(1),
-      # bc a client can exit&enter same day
-      InProject = lubridate::interval(EntryDate, ExitAdjust),
-      Issue = "Overlapping Project Stays",
-      Type = "High Priority",
-      Guidance = "A client cannot reside in an ES, TH, or Safe Haven at the
-        same time. Nor can they have a Move-In Date into a PSH or RRH project
-        while they are still in an ES, TH, or Safe Haven. Further, they cannot
-        be in any two RRH's or any two PSH's simultaneously, housed or not.
-        Please look the client(s) up in HMIS and determine which project stay's
-        Entry/Move-In/or Exit Date is incorrect. PLEASE NOTE: It may be the
-        \"Previous Provider's\" mistake, but if you are seeing clients here, it
-        means your project stay was entered last.
-        If the overlap is not your project's mistake, please work with the
-        project that has the incorrect Entry/Move-In/or Exit Date to get this
-        corrected or send an email to hmis@cohhio.org if you cannot get it
-        resolved. These clients will NOT show on their Data Quality app.
-        If YOUR dates are definitely correct, it is fine to continue with other
-        data corrections as needed."
-    ) %>%
-    dplyr::filter(ProjectType == 3) %>%
-    janitor::get_dupes(., PersonalID) %>%
-    dplyr::group_by(PersonalID) %>%
-    dplyr::arrange(PersonalID, EntryDate) %>%
-    dplyr::mutate(
-      PreviousEntry = dplyr::lag(EntryDate),
-      PreviousExit = dplyr::lag(ExitAdjust),
-      PreviousProject = dplyr::lag(ProjectName)
-    ) %>%
-    dplyr::filter(!is.na(PreviousEntry)) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(
-      PreviousStay = lubridate::interval(PreviousEntry, PreviousExit),
-      Overlap = lubridate::int_overlaps(InProject, PreviousStay)
-    ) %>%
-    dplyr::filter(Overlap == TRUE) %>%
-    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
 
-  dq_overlaps <- staging_overlaps %>%
-    dplyr::mutate(
-      PreviousStay = lubridate::interval(PreviousEntryAdjust, PreviousExitAdjust),
-      Overlap = lubridate::int_overlaps(LiterallyInProject, PreviousStay)
-    ) %>%
-    dplyr::filter(Overlap == TRUE) %>%
-    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
-
-  dq_overlaps <-
-    rbind(dq_overlaps, rrh_overlaps, psh_overlaps, same_day_overlaps) %>%
-    unique()
-
-  rm(staging_overlaps,
-     same_day_overlaps,
-     rrh_overlaps,
-     psh_overlaps)
-
-  unsh_overlaps <- dq_overlaps %>%
-    dplyr::filter(ProjectName == "Unsheltered Clients - OUTREACH") %>%
-    dplyr::left_join(Users, by = "UserCreating") %>%
-    dplyr::select(PersonalID,
-                  DefaultProvider,
-                  EntryDate,
-                  ExitDate,
-                  PreviousProject)
+# TODO SP: Add to SP Checks
+  # unsh_overlaps <- dq_overlaps %>%
+  #   dplyr::filter(ProjectName == "Unsheltered Clients - OUTREACH") %>%
+  #   dplyr::left_join(Users, by = "UserCreating") %>%
+  #   dplyr::select(PersonalID,
+  #                 DefaultProvider,
+  #                 EntryDate,
+  #                 ExitDate,
+  #                 PreviousProject)
 
   # Missing Health Ins ------------------------------------------------------
 
-  missing_health_insurance_entry <- served_in_date_range %>%
-    dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::select(dplyr::all_of(vars$prep),
-                  AgeAtEntry,
-                  DataCollectionStage,
-                  InsuranceFromAnySource) %>%
-    dplyr::filter(DataCollectionStage == 1 &
-                    ProjectName != "Unsheltered Clients - OUTREACH" &
-                    (InsuranceFromAnySource == 99 |
-                       is.na(InsuranceFromAnySource))) %>%
-    dplyr::mutate(Issue = "Health Insurance Missing at Entry",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  #missing_health_insurance_entry <- dq_missing_hi_entry()
+  #missing_health_insurance_exit <- dq_missing_hi_exit()
+  #conflicting_health_insurance <- dq_conflicting_hi_ee()
 
-  missing_health_insurance_exit <- served_in_date_range %>%
-    dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::select(dplyr::all_of(vars$prep),
-                  DataCollectionStage,
-                  InsuranceFromAnySource) %>%
-    dplyr::filter(DataCollectionStage == 3 &
-                    ProjectName != "Unsheltered Clients - OUTREACH" &
-                    (InsuranceFromAnySource == 99 |
-                       is.na(InsuranceFromAnySource))) %>%
-    dplyr::mutate(Issue = "Health Insurance Missing at Exit",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_exit) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
-  health_insurance_subs <- served_in_date_range %>%
-    dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::select(
-      dplyr::all_of(vars$prep),
-      DataCollectionStage,
-      InsuranceFromAnySource,
-      Medicaid,
-      Medicare,
-      SCHIP,
-      VAMedicalServices,
-      EmployerProvided,
-      COBRA,
-      PrivatePay,
-      StateHealthIns,
-      IndianHealthServices,
-      OtherInsurance,
-      HIVAIDSAssistance,
-      ADAP,
-      UserCreating
-    ) %>%
-    dplyr::mutate(
-      SourceCount = Medicaid + SCHIP + VAMedicalServices + EmployerProvided +
-        COBRA + PrivatePay + StateHealthIns + IndianHealthServices +
-        OtherInsurance + Medicare
-    )
+  # Missing, Unlikely, or Conflicting NCBs ---------------------------------------------------
 
-  conflicting_health_insurance_entry <- health_insurance_subs %>%
-    dplyr::filter(DataCollectionStage == 1 &
-                    ProjectName != "Unsheltered Clients - OUTREACH" &
-                    ((InsuranceFromAnySource == 1 &
-                        SourceCount == 0) |
-                       (InsuranceFromAnySource == 0 &
-                          SourceCount > 0)
-                    )) %>%
-    dplyr::mutate(Issue = "Conflicting Health Insurance yes/no at Entry",
-                  Type = "Error",
-                  Guidance = guidance$conflicting_hi) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
-  conflicting_health_insurance_exit <- health_insurance_subs %>%
-    dplyr::filter(DataCollectionStage == 3 &
-                    ProjectName != "Unsheltered Clients - OUTREACH" &
-                    ((InsuranceFromAnySource == 1 &
-                        SourceCount == 0) |
-                       (InsuranceFromAnySource == 0 &
-                          SourceCount > 0)
-                    )) %>%
-    dplyr::mutate(
-      Issue = "Conflicting Health Insurance yes/no at Exit",
-      Type = "Error",
-      Guidance = guidance$conflicting_hi
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
-  rm(health_insurance_subs)
 
-  # Missing NCBs at Entry ---------------------------------------------------
 
-  ncb_subs <- IncomeBenefits %>%
-    dplyr::select(
-      PersonalID,
-      EnrollmentID,
-      DataCollectionStage,
-      SNAP,
-      WIC,
-      TANFChildCare,
-      TANFTransportation,
-      OtherTANF,
-      OtherBenefitsSource
-    )
-
-  ncb_subs[is.na(ncb_subs)] <- 0
-
-  ncb_subs <- ncb_subs %>%
-    dplyr::full_join(IncomeBenefits[c("PersonalID",
-                                              "EnrollmentID",
-                                              "DataCollectionStage",
-                                              "BenefitsFromAnySource")],
-                     by = c("PersonalID",
-                                    "EnrollmentID",
-                                    "DataCollectionStage"))
-
-  ncb_subs <- served_in_date_range %>%
-    dplyr::filter(ProjectName != "Unsheltered Clients - OUTREACH") %>%
-    dplyr::left_join(ncb_subs, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::select(
-      PersonalID,
-      EnrollmentID,
-      HouseholdID,
-      AgeAtEntry,
-      ProjectName,
-      EntryDate,
-      MoveInDateAdjust,
-      ExitDate,
-      ProjectType,
-      DataCollectionStage,
-      BenefitsFromAnySource,
-      SNAP,
-      WIC,
-      TANFChildCare,
-      TANFTransportation,
-      OtherTANF,
-      OtherBenefitsSource,
-      UserCreating
-    ) %>%
-    dplyr::mutate(
-      BenefitCount = SNAP + WIC + TANFChildCare + TANFTransportation +
-        OtherTANF + OtherBenefitsSource
-    ) %>%
-    dplyr::select(PersonalID,
-                  EnrollmentID,
-                  DataCollectionStage,
-                  BenefitsFromAnySource,
-                  BenefitCount) %>%
-    unique()
-
-  missing_ncbs_entry <- served_in_date_range %>%
-    dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::select(AgeAtEntry,
-                  dplyr::all_of(vars$prep),
-                  DataCollectionStage,
-                  BenefitsFromAnySource) %>%
-    dplyr::filter(
-      DataCollectionStage == 1 &
-        (AgeAtEntry > 17 |
-           is.na(AgeAtEntry)) &
-        (BenefitsFromAnySource == 99 |
-           is.na(BenefitsFromAnySource))
-    ) %>%
-    dplyr::mutate(Issue = "Non-cash Benefits Missing at Entry",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  conflicting_ncbs_entry <- served_in_date_range %>%
-    dplyr::left_join(ncb_subs, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::select(AgeAtEntry,
-                  dplyr::all_of(vars$prep),
-                  DataCollectionStage,
-                  BenefitsFromAnySource,
-                  BenefitCount) %>%
-    dplyr::filter(DataCollectionStage == 1 &
-                    (AgeAtEntry > 17 | is.na(AgeAtEntry)) &
-                    ((BenefitsFromAnySource == 1 &
-                        BenefitCount == 0) |
-                       (BenefitsFromAnySource == 0 &
-                          BenefitCount > 0)
-                    )) %>%
-    dplyr::mutate(Issue = "Conflicting Non-cash Benefits yes/no at Entry",
-                  Type = "Error",
-                  Guidance = guidance$conflicting_ncbs) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
 
   # Unlikely NCBs -----------------------------------------------------------
 
-  unlikely_ncbs_entry <- served_in_date_range %>%
-    dplyr::left_join(ncb_subs, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::select(
-      AgeAtEntry,
-      dplyr::all_of(vars$prep),
-      DataCollectionStage,
-      BenefitsFromAnySource,
-      BenefitCount
-    ) %>%
-    dplyr::filter(DataCollectionStage == 1 &
-                    (AgeAtEntry > 17 | is.na(AgeAtEntry)) &
-                    (BenefitCount == 6)) %>%
-    dplyr::mutate(Issue = "Client has ALL SIX Non-cash Benefits at Entry",
-                  Type = "Warning",
-                  Guidance = "This client has every single Non-Cash Benefit,
-             according to HMIS, which is highly unlikely. Please correct (unless
-             it's actually true).") %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+
 
   # Missing NCBs at Exit ----------------------------------------------------
-  missing_ncbs_exit <- served_in_date_range %>%
-    dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::select(AgeAtEntry,
-                  dplyr::all_of(vars$prep),
-                  DataCollectionStage,
-                  BenefitsFromAnySource) %>%
-    dplyr::filter(
-      DataCollectionStage == 3 &
-        (AgeAtEntry > 17 |
-           is.na(AgeAtEntry)) &
-        (BenefitsFromAnySource == 99 |
-           is.na(BenefitsFromAnySource))
-    ) %>%
-    dplyr::mutate(Issue = "Non-cash Benefits Missing at Exit",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_exit) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
-  conflicting_ncbs_exit <- served_in_date_range %>%
-    dplyr::left_join(ncb_subs, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::select(
-      AgeAtEntry,
-      dplyr::all_of(vars$prep),
-      DataCollectionStage,
-      BenefitsFromAnySource,
-      BenefitCount
-    ) %>%
-    dplyr::filter(DataCollectionStage == 3 &
-                    (AgeAtEntry > 17 | is.na(AgeAtEntry)) &
-                    ((BenefitsFromAnySource == 1 &
-                        BenefitCount == 0) |
-                       (BenefitsFromAnySource == 0 &
-                          BenefitCount > 0)
-                    )) %>%
-    dplyr::mutate(Issue = "Conflicting Non-cash Benefits yes/no at Exit",
-                  Type = "Error",
-                  Guidance = guidance$conflicting_ncbs) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  # dq_conflicting_unlikely_ncbs
+  # dq_missing_ncbs
 
-  rm(ncb_subs)
 
   # SSI/SSDI but no Disability (Q) ------------------------------------------
   smallIncome <- IncomeBenefits %>%
@@ -1548,7 +489,7 @@ data_quality <- function(
 
   # AP No Recent Referrals --------------------------------------------------
   co_APs <- Project %>%
-    dplyr::filter(ProjectType == 14 & ProjectID != 2372) %>% # not incl Mah CE
+    dplyr::filter(ProjectType == 14) %>% # not incl Mah CE
     dplyr::select(
       ProjectID,
       OperatingStartDate,
@@ -1645,21 +586,7 @@ data_quality <- function(
     dplyr::arrange(dplyr::desc(Open_Referrals)) %>%
     dplyr::mutate(Project = paste0(ProjectName, ":", ProjectID))
 
-  dq_plot_outstanding_referrals <-
-    ggplot2::ggplot(
-      head(staging_outstanding_referrals, 20L),
-      ggplot2::aes(
-        x = stats::reorder(Project, Open_Referrals),
-        y = Open_Referrals,
-        fill = Open_Referrals
-      )
-    ) +
-    ggplot2::geom_col(show.legend = FALSE) +
-    ggplot2::coord_flip() +
-    ggplot2::labs(x = "",
-                  y = "Referrals") +
-    ggplot2::scale_fill_viridis_c(direction = -1) +
-    ggplot2::theme_minimal(base_size = 18)
+
 
 
   # Unsheltered Incorrect Residence Prior -----------------------------------
@@ -1676,7 +603,7 @@ data_quality <- function(
       LivingSituation
     )
 
-  # TODO Remove for Clarity users
+  # TODO SP: Add to SP Checks
   unsheltered_not_unsheltered <- unsheltered_enrollments %>%
     dplyr::filter(LivingSituation != 16) %>%
     dplyr::mutate(
@@ -1692,7 +619,7 @@ data_quality <- function(
 
 
   # Unsheltered New Entries by County by Month ------------------------------
-
+  # TODO SP: Add to SP Checks
   unsheltered_by_month <- unsheltered_enrollments %>%
     dplyr::left_join(Users, by = "UserCreating") %>%
     dplyr::mutate(ExitAdjust = dplyr::if_else(is.na(ExitDate), lubridate::today(), ExitDate),
@@ -1985,8 +912,8 @@ data_quality <- function(
   dq_main <- dq_main %>%
     unique()   %>%
     dplyr::mutate(Type = factor(Type, levels = c("High Priority",
-                                                         "Error",
-                                                         "Warning")))
+                                                 "Error",
+                                                 "Warning")))
 
   # filtering out AP errors that are irrlevant to APs
 
@@ -2099,269 +1026,19 @@ data_quality <- function(
   # for CoC-wide DQ tab
 
   dq_past_year <- dq_main %>%
-    dplyr::filter(HMIS::served_between(., rm_dates$hc$check_dq_back_to,
-                                       lubridate::today())) %>%
+    HMIS::served_between(rm_dates$hc$check_dq_back_to,
+                         lubridate::today()) |>
     dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
 
   # for project evaluation reporting
 
-  dq_for_pe <- dq_main %>%
-    dplyr::filter(HMIS::served_between(., rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end)) %>%
+  dq_for_pe <- dq_main  |>
+    HMIS::served_between(rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end)
     dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
 
 
   dq_providers <- sort(projects_current_hmis$ProjectName)
 
-  # Plots -------------------------------------------------------------------
-
-  dq_data_errors_plot <- dq_past_year %>%
-    dplyr::filter(
-      Type %in% c("Error", "High Priority") &
-        !Issue %in% c(
-          "No Head of Household",
-          "Missing Relationship to Head of Household",
-          "Too Many Heads of Household",
-          "Children Only Household"
-        )
-    ) %>%
-    dplyr::select(PersonalID, ProjectID, ProjectName) %>%
-    unique() %>%
-    dplyr::group_by(ProjectName, ProjectID) %>%
-    dplyr::summarise(clientsWithErrors = dplyr::n()) %>%
-    dplyr::ungroup() %>%
-    dplyr::arrange(dplyr::desc(clientsWithErrors))
-
-  dq_data_errors_plot$hover <-
-    with(dq_data_errors_plot,
-         paste0(ProjectName, ":", ProjectID))
-
-  dq_plot_projects_errors <-
-    ggplot2::ggplot(
-      head(dq_data_errors_plot, 20L),
-      ggplot2::aes(
-        x = stats::reorder(hover, clientsWithErrors),
-        y = clientsWithErrors,
-        fill = clientsWithErrors
-      )
-    ) +
-    ggplot2::geom_col(show.legend = FALSE) +
-    ggplot2::coord_flip() +
-    ggplot2::labs(x = "",
-                  y = "Clients") +
-    ggplot2::scale_fill_viridis_c(direction = -1) +
-    ggplot2::theme_minimal(base_size = 18)
-
-  dq_data_warnings_plot <- dq_past_year %>%
-    dplyr::filter(Type == "Warning") %>%
-    dplyr::group_by(ProjectName, ProjectID) %>%
-    dplyr::summarise(Warnings = dplyr::n()) %>%
-    dplyr::ungroup() %>%
-    dplyr::arrange(dplyr::desc(Warnings))
-
-  dq_data_warnings_plot$hover <-
-    with(dq_data_warnings_plot,
-         paste0(ProjectName, ":", ProjectID))
-
-  dq_plot_projects_warnings <-
-    ggplot2::ggplot(head(dq_data_warnings_plot, 20L),
-                    ggplot2::aes(
-                      x = stats::reorder(hover, Warnings),
-                      y = Warnings,
-                      fill = Warnings
-                    )) +
-    ggplot2::geom_col(show.legend = FALSE) +
-    ggplot2::coord_flip() +
-    ggplot2::labs(x = "",
-                  y = "Clients") +
-    ggplot2::scale_fill_viridis_c(direction = -1) +
-    ggplot2::theme_minimal(base_size = 18)
-
-  dq_data_error_types <- dq_past_year %>%
-    dplyr::filter(Type %in% c("Error", "High Priority")) %>%
-    dplyr::group_by(Issue) %>%
-    dplyr::summarise(Errors = dplyr::n()) %>%
-    dplyr::ungroup() %>%
-    dplyr::arrange(dplyr::desc(Errors))
-
-  dq_plot_errors <-
-    ggplot2::ggplot(head(dq_data_error_types, 10L),
-                    ggplot2::aes(
-                      x = stats::reorder(Issue, Errors),
-                      y = Errors,
-                      fill = Errors
-                    )) +
-    ggplot2::geom_col(show.legend = FALSE) +
-    ggplot2::coord_flip() +
-    ggplot2::labs(x = "",
-                  y = "Clients") +
-    ggplot2::scale_fill_viridis_c(direction = -1) +
-    ggplot2::theme_minimal(base_size = 18)
-
-  dq_data_warning_types <- dq_past_year %>%
-    dplyr::filter(Type == "Warning") %>%
-    dplyr::group_by(Issue) %>%
-    dplyr::summarise(Warnings = dplyr::n()) %>%
-    dplyr::ungroup() %>%
-    dplyr::arrange(dplyr::desc(Warnings))
-
-  dq_plot_warnings <-
-    ggplot2::ggplot(head(dq_data_warning_types, 10L),
-                    ggplot2::aes(
-                      x = stats::reorder(Issue, Warnings),
-                      y = Warnings,
-                      fill = Warnings
-                    )) +
-    ggplot2::geom_col(show.legend = FALSE) +
-    ggplot2::coord_flip() +
-    ggplot2::labs(x = "",
-                  y = "Clients") +
-    ggplot2::scale_fill_viridis_c(direction = -1) +
-    ggplot2::theme_minimal(base_size = 18)
-
-  dq_data_unsheltered_high <- dq_unsheltered %>%
-    dplyr::filter(Type == "High Priority",
-                  HMIS::served_between(., rm_dates$hc$unsheltered_data_start, rm_dates$meta_HUDCSV$Export_End)) %>%
-    dplyr::select(PersonalID, HouseholdID, DefaultProvider) %>%
-    unique() %>%
-    dplyr::group_by(DefaultProvider) %>%
-    dplyr::summarise(clientsWithErrors = dplyr::n()) %>%
-    dplyr::ungroup() %>%
-    dplyr::arrange(dplyr::desc(clientsWithErrors))
-
-  dq_plot_unsheltered_high <-
-    ggplot2::ggplot(
-      head(dq_data_unsheltered_high, 20L),
-      ggplot2::aes(
-        x = stats::reorder(DefaultProvider, clientsWithErrors),
-        y = clientsWithErrors,
-        fill = clientsWithErrors
-      )
-    ) +
-    ggplot2::geom_col(show.legend = FALSE) +
-    ggplot2::coord_flip() +
-    ggplot2::labs(x = "",
-                  y = "Clients") +
-    ggplot2::scale_fill_viridis_c(direction = -1) +
-    ggplot2::theme_minimal(base_size = 18)
-
-  dq_data_hh_issues_plot <- dq_past_year %>%
-    dplyr::filter(
-      Type %in% c("Error", "High Priority") &
-        Issue %in% c(
-          "Missing Relationship to Head of Household",
-          "No Head of Household",
-          "Too Many Heads of Household",
-          "Children Only Household"
-        )
-    ) %>%
-    dplyr::select(PersonalID, ProjectID, ProjectName) %>%
-    unique() %>%
-    dplyr::group_by(ProjectName, ProjectID) %>%
-    dplyr::summarise(Households = dplyr::n()) %>%
-    dplyr::ungroup() %>%
-    dplyr::arrange(dplyr::desc(Households))
-
-  dq_data_hh_issues_plot$hover <-
-    with(dq_data_hh_issues_plot,
-         paste0(ProjectName, ":", ProjectID))
-
-  dq_plot_hh_errors <-
-    ggplot2::ggplot(head(dq_data_hh_issues_plot, 20L),
-                    ggplot2::aes(
-                      x = stats::reorder(hover, Households),
-                      y = Households,
-                      fill = Households
-                    )) +
-    ggplot2::geom_col(show.legend = FALSE) +
-    ggplot2::coord_flip() +
-    ggplot2::labs(x = "") +
-    ggplot2::scale_fill_viridis_c(direction = -1) +
-    ggplot2::theme_minimal(base_size = 18)
-
-  dq_data_outstanding_referrals_plot <- dq_past_year %>%
-    dplyr::filter(Issue == "Old Outstanding Referral") %>%
-    dplyr::select(PersonalID, ProjectID, ProjectName) %>%
-    unique() %>%
-    dplyr::group_by(ProjectName, ProjectID) %>%
-    dplyr::summarise(Households = dplyr::n()) %>%
-    dplyr::ungroup() %>%
-    dplyr::arrange(dplyr::desc(Households)) %>%
-    dplyr::mutate(hover = paste(ProjectName, ":", ProjectID))
-
-  dq_plot_projects_outstanding_referrals <-
-    ggplot2::ggplot(
-      head(dq_data_outstanding_referrals_plot, 20L),
-      ggplot2::aes(
-        x = stats::reorder(hover, Households),
-        y = Households,
-        fill = Households
-      )
-    ) +
-    ggplot2::geom_col(show.legend = FALSE) +
-    ggplot2::coord_flip() +
-    ggplot2::labs(x = "") +
-    ggplot2::scale_fill_viridis_c(direction = -1) +
-    ggplot2::theme_minimal(base_size = 18)
-
-  dq_data_eligibility_plot <- dq_past_year %>%
-    dplyr::filter(Type == "Warning" &
-                    Issue %in% c("Check Eligibility")) %>%
-    dplyr::select(PersonalID, ProjectID, ProjectName) %>%
-    unique() %>%
-    dplyr::group_by(ProjectName, ProjectID) %>%
-    dplyr::summarise(Households = dplyr::n()) %>%
-    dplyr::ungroup() %>%
-    dplyr::arrange(dplyr::desc(Households))
-
-  dq_data_eligibility_plot$hover <-
-    with(dq_data_eligibility_plot,
-         paste0(ProjectName, ":", ProjectID))
-
-  dq_plot_eligibility <-
-    ggplot2::ggplot(
-      head(dq_data_eligibility_plot, 20L),
-      ggplot2::aes(
-        x = stats::reorder(hover, Households),
-        y = Households,
-        fill = Households
-      )
-    ) +
-    ggplot2::geom_col(show.legend = FALSE) +
-    ggplot2::coord_flip() +
-    ggplot2::labs(x = "") +
-    ggplot2::scale_fill_viridis_c(direction = -1) +
-    ggplot2::theme_minimal(base_size = 18)
-
-  dq_data_without_spdat_plot <- dq_past_year %>%
-    dplyr::filter(
-      Type == "Warning" &
-        Issue %in% c(
-          "Non-DV HoHs Entering PH or TH without SPDAT",
-          "HoHs in shelter for 8+ days without SPDAT"
-        )
-    ) %>%
-    dplyr::select(PersonalID, ProjectID, ProjectName) %>%
-    unique() %>%
-    dplyr::group_by(ProjectName, ProjectID) %>%
-    dplyr::summarise(Households = dplyr::n()) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(ProjectDisplay = paste0(ProjectName, ":", ProjectID)) %>%
-    dplyr::arrange(dplyr::desc(Households))
-
-  dq_plot_hh_no_spdat <-
-    ggplot2::ggplot(
-      head(dq_data_without_spdat_plot, 20L),
-      ggplot2::aes(
-        x = stats::reorder(ProjectDisplay, Households),
-        y = Households,
-        fill = Households
-      )
-    ) +
-    ggplot2::geom_col(show.legend = FALSE) +
-    ggplot2::coord_flip() +
-    ggplot2::labs(x = "") +
-    ggplot2::scale_fill_viridis_c(direction = -1) +
-    ggplot2::theme_minimal(base_size = 18)
 
   # Clean up the house ------------------------------------------------------
 
