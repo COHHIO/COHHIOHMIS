@@ -16,59 +16,35 @@ guidance <- function(app_env = get_app_env(e = rlang::caller_env())) {
 
   guidance = list()
   guidance$conflicting_hi <-
-    "If the user answered \"Yes\" to \"Covered by Health Insurance?\", then
-  there should be a Health Insurance subassessment where it indicates which
-  type of health insurance the client is receiving. Similarly if the user
-  answered \"No\", there should not be any Health Insurance records that say
-  the client is receiving that type of Health Insurance."
+    "If the user answered 'Yes' to 'Covered by Health Insurance?', then there should be a Health Insurance subassessment where it indicates which type of health insurance the client is receiving. Similarly if the user answered 'No', there should not be any Health Insurance records that say the client is receiving that type of Health Insurance."
 
   guidance$conflicting_income <-
-    "If the user answered \"Yes\" to \"Income from any source\", then
-  there should be an income subassessment where it indicates which
-  type of income the client is receiving. Similarly if the user answered
-  \"No\", there should not be any income records that say the client is
-  receiving that type of income."
+    "If the user answered 'Yes' to 'Income from any source', then there should be an income subassessment where it indicates which type of income the client is receiving. Similarly if the user answered 'No', there should not be any income records that say the client is receiving that type of income."
 
   guidance$conflicting_ncbs <-
-    "If the user answered \"Yes\" to \"Non-cash benefits from any source\",
-  then there should be a Non-cash benefits subassessment where it indicates
-  which type of income the client is receiving. Similarly if the user answered
-  \"No\", then there should not be any non-cash records that say the client is
-  receiving that type of benefit"
+    "If the user answered 'Yes' to 'Non-cash benefits from any source', then there should be a Non-cash benefits subassessment where it indicates which type of income the client is receiving. Similarly if the user answered 'No', then there should not be any non-cash records that say the client is receiving that type of benefit"
+
+  guidance$unlikely_ncbs <- "This client has every single Non-Cash Benefit, according to HMIS, which is highly unlikely. Please correct (unless it's actually true)."
 
   guidance$missing_at_exit <-
-    "Please enter the data for this item by clicking into the Exit pencil on the
-  given Client ID on the appropriate program stay."
+    "Please enter the data for this item by clicking into the Exit pencil on the given Client ID on the appropriate program stay."
 
   guidance$missing_at_entry <-
-    "This data element is required to be collected at project Entry. Please
-  click into the client's Entry pencil to save this data to HMIS."
+    "This data element is required to be collected at project Entry. Please click into the client's Entry pencil to save this data to HMIS."
 
   guidance$missing_pii <-
-    "Please correct by navigating to the client's record, then clicking the
-  Client Profile tab, then click into the Client Record pencil to save the
-  missing data."
+    "Please correct by navigating to the client's record, then clicking the Client Profile tab, then click into the Client Record pencil to save the missing data."
 
   guidance$referral_on_non_hoh <-
-    "Users should not checkbox all the household members when creating a
-  Referral. Only the Head of Household needs the Referral. It is recommended
-  that users delete any referrals on Non Heads of Household related to this
-  project stay so that the receiving agency does not have to deal with them
-  and they stop showing in reporting."
+    "Users should not checkbox all the household members when creating a Referral. Only the Head of Household needs the Referral. It is recommended that users delete any referrals on Non Heads of Household related to this project stay so that the receiving agency does not have to deal with them and they stop showing in reporting."
 
   guidance$service_on_non_hoh <-
-    "Users should not checkbox all the household members when creating a
-  Service Transaction. Only the Head of Household needs a Service
-  Transaction. Delete any extraneous Service Transactions related to this
-  project stay."
+    "Users should not checkbox all the household members when creating a Service Transaction. Only the Head of Household needs a Service Transaction. Delete any extraneous Service Transactions related to this project stay."
 
   guidance$dkr_data <-
-    "It is widely understood that not every client will be able to or consent
-  to answer every question in every assessment. If you do have any of this
-  data, but it is just not entered into HMIS yet, please enter it. If you
-  can reasonably attempt again to collect this data from the client (like
-  if they are still in your project), then please do so. Otherwise, there is
-  no action needed."
+    "It is widely understood that not every client will be able to or consent to answer every question in every assessment. If you do have any of this data, but it is just not entered into HMIS yet, please enter it. If you can reasonably attempt again to collect this data from the client (like if they are still in your project), then please do so. Otherwise, there is no action needed."
+
+  guidance$project_stays <- "A client cannot reside in an ES, TH, or Safe Haven at the same time. Nor can they have a Move-In Date into a PSH or RRH project while they are still in an ES, TH, or Safe Haven. Further, they cannot be in any two RRH's or any two PSH's simultaneously, housed or not. Please look the client(s) up in HMIS and determine which project stay's Entry/Move-In/or Exit Date is incorrect. PLEASE NOTE: It may be the 'Previous Provider's' mistake, but if you are seeing clients here, it means your project stay was entered last. If the overlap is not your project's mistake, please work with the project that has the incorrect Entry/Move-In/or Exit Date to get this corrected or send an email to hmis@cohhio.org if you cannot get it resolved. These clients will NOT show on their Data Quality app. If YOUR dates are definitely correct, it is fine to continue with other data corrections as needed."
 
   app_env$gather_deps(guidance)
 }
