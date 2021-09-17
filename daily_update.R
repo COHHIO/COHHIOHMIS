@@ -12,11 +12,7 @@ RPushbullet::pbSetup(file.path("inst","auth","rpushbullet.json"))
 
 # must load Rm_data
 devtools::load_all()
-jobs::jobscript({
-  devtools::load_all("../clarity.looker")
-  cl_api$get_export(.write = TRUE) # only need to run once
-  cl_api$get_folder_looks(cl_api$folders$`HUD Extras`, .write = TRUE, path = dirs$extras)
-}, exportEnv = "")
+rstudioapi::jobRunScript(file.path("inst","src","update_data.R"), importEnv = TRUE)
 
 Rm_env <- dates()
 Rm_env <- load_export()
