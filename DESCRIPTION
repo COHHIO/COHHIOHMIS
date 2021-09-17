@@ -29,8 +29,8 @@ BugReports: https://github.com/COHHIO/Rm_data/issues
 Remotes: COHHIO/hud.extract, COHHIO/clarity.looker,
        COHHIO/lookr, COHHIO/HMIS, yogat3ch/UU
 Collate: 
-    'init_R6.R'
     'app_dependencies.R'
+    'init_R6.R'
     '00_cohorts.R'
     '00_dates.R'
     '00_functions.R'
@@ -45,8 +45,8 @@ Collate:
     '04_DataQuality.R'
     '04_DataQuality_doses.R'
     '04_DataQuality_plots.R'
-    '04_DataQuality_utils.R'
     '04_Guidance.R'
+    '04_DataQuality_utils.R'
     '05_Veterans_Active_List.R'
     '06_Project_Evaluation.R'
     '07_SPMs.R'

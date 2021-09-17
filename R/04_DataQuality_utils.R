@@ -1,3 +1,4 @@
+#' @include 04_Guidance.R
 is_clarity <- function() {
   getOption("HMIS")$Clarity
 }

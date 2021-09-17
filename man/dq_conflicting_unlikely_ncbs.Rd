@@ -33,7 +33,7 @@ dq_conflicting_unlikely_ncbs(
 \description{
 \itemize{
 \item{Conflicting NCBs}{  If the user answered 'Yes' to 'Non-cash benefits from any source', then there should be a Non-cash benefits subassessment where it indicates which type of income the client is receiving. Similarly if the user answered 'No', then there should not be any non-cash records that say the client is receiving that type of benefit}
-\item{Unlikley NCBs}{ This client has every single Non-Cash Benefit, according to HMIS, which is highly unlikely. Please correct (unless it's actually true).}
+\item{Unlikeley NCBs}{ This client has every single Non-Cash Benefit, according to HMIS, which is highly unlikely. Please correct (unless it's actually true).}
 }
 }
 \seealso{
@@ -41,6 +41,8 @@ Other DQ: Non-Cash Benefit Checks:
 \code{\link{dq_missing_ncbs}()}
 
 Other Clarity Checks: 
+\code{\link{dq_aps_with_ees}()},
+\code{\link{dq_check_disability_ssi}()},
 \code{\link{dq_check_eligibility}()},
 \code{\link{dq_conflicting_hi_ee}()},
 \code{\link{dq_conflicting_income}()},
@@ -96,9 +98,12 @@ Other Clarity Checks:
 \code{\link{dq_psh_incorrect_destination}()},
 \code{\link{dq_psh_missing_project_stay}()},
 \code{\link{dq_race}()},
+\code{\link{dq_referrals_on_hh_members_ssvf}()},
 \code{\link{dq_rent_paid_no_move_in}()},
 \code{\link{dq_rrh_check_exit_destination}()},
 \code{\link{dq_rrh_missing_project_stay}()},
+\code{\link{dq_services_on_hh_members_ssvf}()},
+\code{\link{dq_services_on_non_hoh}()},
 \code{\link{dq_sh_check_exit_destination}()},
 \code{\link{dq_sh_missing_project_stay}()},
 \code{\link{dq_ssn}()},

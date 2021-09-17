@@ -19,7 +19,6 @@ jobs::jobscript({
 }, exportEnv = "")
 
 Rm_env <- dates()
-Rm_env <- guidance()
 Rm_env <- load_export()
 Rm_env <- client_counts()
 Rm_env$write_app_deps(Rm_env$app_objs$RminorElevated, Rm_env$app_deps$RminorElevated, file.path("data", "db", "RminorElevated"))

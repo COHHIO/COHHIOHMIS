@@ -11,8 +11,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
-guidance <- function(app_env = get_app_env(e = rlang::caller_env())) {
-  force(app_env)
+
 
   guidance = list()
   guidance$conflicting_hi <-
@@ -76,7 +75,5 @@ guidance <- function(app_env = get_app_env(e = rlang::caller_env())) {
   guidance$stray_service <- "This Service does not fall between any project stay, so it will not show in any reporting."
   guidance$check_disability_ssi <- "If a client is receiving SSI or SSDI for THEIR OWN disability, that disability should be indicated in the Disabilities data elements. If an adult is receiving SSI or SSDI benefits on behalf a minor child, then there is no action needed."
 
-  app_env$gather_deps(guidance)
-}
 
 

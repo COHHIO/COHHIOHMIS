@@ -32,6 +32,8 @@ Find Households with Missing Relationship to Head of Household
 }
 \seealso{
 Other Clarity Checks: 
+\code{\link{dq_aps_with_ees}()},
+\code{\link{dq_check_disability_ssi}()},
 \code{\link{dq_check_eligibility}()},
 \code{\link{dq_conflicting_hi_ee}()},
 \code{\link{dq_conflicting_income}()},
@@ -87,9 +89,12 @@ Other Clarity Checks:
 \code{\link{dq_psh_incorrect_destination}()},
 \code{\link{dq_psh_missing_project_stay}()},
 \code{\link{dq_race}()},
+\code{\link{dq_referrals_on_hh_members_ssvf}()},
 \code{\link{dq_rent_paid_no_move_in}()},
 \code{\link{dq_rrh_check_exit_destination}()},
 \code{\link{dq_rrh_missing_project_stay}()},
+\code{\link{dq_services_on_hh_members_ssvf}()},
+\code{\link{dq_services_on_non_hoh}()},
 \code{\link{dq_sh_check_exit_destination}()},
 \code{\link{dq_sh_missing_project_stay}()},
 \code{\link{dq_ssn}()},
@@ -101,7 +106,10 @@ Other Clarity Checks:
 Other DQ: Household Checks: 
 \code{\link{dq_hh_children_only}()},
 \code{\link{dq_hh_no_oh}()},
-\code{\link{dq_hh_too_many_hohs}()}
+\code{\link{dq_hh_too_many_hohs}()},
+\code{\link{dq_referrals_on_hh_members_ssvf}()},
+\code{\link{dq_services_on_hh_members_ssvf}()},
+\code{\link{dq_services_on_non_hoh}()}
 }
 \concept{Clarity Checks}
 \concept{DQ: Household Checks}
