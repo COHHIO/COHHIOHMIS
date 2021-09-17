@@ -203,6 +203,7 @@ enrolled_in <-
 # Missing UDEs ------------------------------------------------------------
 
 #' @title Data Quality report on Missing First Names
+#' @family Clarity Checks
 #' @family DQ: Missing UDEs
 #' @describeIn data_quality_tables
 #' @inherit data_quality_tables params return
@@ -231,6 +232,7 @@ dq_name <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env 
 }
 
 #' @title Data quality report on Missing/Incorrect DOB
+#' @family Clarity Checks
 #' @family DQ: Missing UDEs
 #' @describeIn data_quality_tables
 #' @inherit data_quality_tables params return
@@ -272,6 +274,7 @@ dq_dob <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env =
 }
 
 #' @title Data quality report on SSN Validity
+#' @family Clarity Checks
 #' @family DQ: Missing UDEs
 #' @describeIn data_quality_tables
 #' @inherit data_quality_tables params return
@@ -307,6 +310,7 @@ dq_ssn <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env =
 }
 
 #' @title Data quality report on Race data
+#' @family Clarity Checks
 #' @family DQ: Missing UDEs
 #' @describeIn data_quality_tables
 #' @inherit data_quality_tables params return
@@ -333,6 +337,7 @@ dq_race <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env 
 }
 
 #' @title Data quality report on Ethnicity data
+#' @family Clarity Checks
 #' @family DQ: Missing UDEs
 #' @describeIn data_quality_tables
 #' @inherit data_quality_tables params return
@@ -359,6 +364,7 @@ dq_ethnicity <- function(served_in_date_range, guidance = NULL, vars = NULL, app
 }
 
 #' @title Data quality report on Gender Data
+#' @family Clarity Checks
 #' @family DQ: Missing UDEs
 #' @describeIn data_quality_tables
 #' @inherit data_quality_tables params return
@@ -385,6 +391,7 @@ dq_gender <- function(served_in_date_range, guidance = NULL, vars = NULL, app_en
 }
 
 #' @title Data quality report on Veteran Status
+#' @family Clarity Checks
 #' @family DQ: Missing UDEs
 #' @describeIn data_quality_tables
 #' @inherit data_quality_tables params return
@@ -426,6 +433,7 @@ dq_veteran <- function(served_in_date_range, guidance = NULL, vars = NULL, app_e
 # Missing Vaccine data ----------------------------------------------------
 #' @title Data quality report on Race data
 #' @param doses \code{(data.frame)} See the `[["HUD Extras"]]$Client_Doses_extra` method in the instantiated clarity_api object
+#' @family Clarity Checks
 #' @family DQ: Vaccines
 #' @param dose_counts \code{(data.frame)} Count of doses per client
 #' @inherit data_quality_tables params return
@@ -476,8 +484,7 @@ dq_missing_vaccine_exited <- function(served_in_date_range, dose_counts, vars, m
 #' Find Missing vaccine data for enrolled clients
 #'
 #' @inheritParams dq_missing_vaccine_exited
-#' @param served_in_date_range \code{(data.frame)}
-#' @param app_env
+#' @family Clarity Checks
 #' @family DQ: Vaccines
 #' @export
 #' @inherit data_quality_tables params return
@@ -525,7 +532,7 @@ dq_missing_vaccine_current <- function(served_in_date_range, vars, dose_counts, 
 #'
 #' @param doses
 #' @param served_in_date_range
-#' @param hc
+#' @family Clarity Checks
 #' @inherit data_quality_tables params return
 #' @family DQ: Vaccines
 #' @export
@@ -543,6 +550,7 @@ dq_dose_date_error <- function(served_in_date_range, vars, doses, guidance = NUL
 }
 
 #' @title Find missing client locations
+#' @family Clarity Checks
 #' @inherit data_quality_tables params return
 #' @export
 dq_missing_client_location <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
@@ -563,6 +571,7 @@ dq_missing_client_location <- function(served_in_date_range, vars, guidance = NU
 # Household Issues --------------------------------------------------------
 #' @title Find Households without adults
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Household Checks
 #' @export
 dq_hh_children_only <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
@@ -591,6 +600,7 @@ dq_hh_children_only <- function(served_in_date_range, vars, guidance = NULL, app
 
 #' @title Find Households with no Head of Household
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Household Checks
 #' @export
 dq_hh_no_oh <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -621,6 +631,7 @@ dq_hh_no_oh <- function(served_in_date_range, vars, guidance = NULL, app_env = g
 
 #' @title Find Households with Too Many Head of Household
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Household Checks
 #' @export
 dq_hh_too_many_hohs <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -647,6 +658,7 @@ dq_hh_too_many_hohs <- function(served_in_date_range, vars, guidance = NULL, app
 
 #' @title Find Households with Missing Relationship to Head of Household
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Household Checks
 #' @export
 dq_hh_missing_rel_to_hoh <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -668,6 +680,7 @@ dq_hh_missing_rel_to_hoh <- function(served_in_date_range, vars, guidance = NULL
 # Missing Data at Entry ---------------------------------------------------
 #' @title Find Missing Date Homeless
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
 #' @export
 dq_missing_approx_date_homeless <- function(served_in_date_range, vars, guidance = NULL, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
@@ -698,6 +711,7 @@ dq_missing_approx_date_homeless <- function(served_in_date_range, vars, guidance
 
 #' @title Find Missing Length of Time Homeless questions for Emergency Shelters and Safe Havens
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
 #' @export
 dq_missing_previous_street_ESSH <- function(served_in_date_range, vars, guidance = NULL, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
@@ -725,6 +739,7 @@ dq_missing_previous_street_ESSH <- function(served_in_date_range, vars, guidance
 
 #' @title Find Missing Prior Residence
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
 #' @export
 dq_missing_residence_prior <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
@@ -747,6 +762,7 @@ dq_missing_residence_prior <- function(served_in_date_range, vars, guidance = NU
 
 #' @title Find Don't Know/Refused Prior Residence
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
 #' @export
 dq_dkr_residence_prior <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
@@ -767,6 +783,7 @@ dq_dkr_residence_prior <- function(served_in_date_range, vars, guidance = NULL, 
 
 #' @title Find Missing Length of Stay
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
 #' @export
 dq_missing_LoS <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
@@ -790,6 +807,7 @@ dq_missing_LoS <- function(served_in_date_range, vars, guidance = NULL, app_env 
 
 #' @title Find Don't Know/Refused Length of Stay
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
 #' @export
 dq_dkr_LoS <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
@@ -843,6 +861,7 @@ dq_missing_months_times_homeless <- function(served_in_date_range, vars, guidanc
 
 #' @title Find Don't Know/Refused Months or Times Homeless
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
 #' @export
 dq_dkr_months_times_homeless <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
@@ -872,6 +891,7 @@ dq_dkr_months_times_homeless <- function(served_in_date_range, vars, rm_dates = 
 
 #' @title Find Invalid Months or Times Homeless Entries
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
 #' @export
 dq_invalid_months_times_homeless <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -934,6 +954,7 @@ dq_invalid_months_times_homeless <- function(served_in_date_range, vars, rm_date
 
 #' @title Find Missing Living Situation
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
 #' @export
 dq_missing_living_situation <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -975,17 +996,15 @@ dq_missing_living_situation <- function(served_in_date_range, vars, rm_dates = N
     ) %>%
     dplyr::mutate(Issue = "Incomplete Living Situation Data",
                   Type = "Error",
-                  Guidance = "When responding to the Living Situation questions in your
-           Entry Assessment, users must answer questions about some clients'
-           situation prior to the \"Residence Prior\" that are important to help
-           determine that client's Chronicity. Please answer these questions to
-           the best of your knowledge.") %>%
+                  Guidance = "When responding to the Living Situation questions in your Entry Assessment, users must answer questions about some clients' situation prior to the 'Residence Prior' that are important to help determine that client's Chronicity. Please answer these questions to the best of your knowledge."
+                  ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 
 #' @title Find Don't Know/Refused Living Situation
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
 #' @export
 dq_dkr_living_situation <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -1031,6 +1050,7 @@ dq_dkr_living_situation <- function(served_in_date_range, vars, rm_dates = NULL,
 }
 
 #' @title Find Missing Disabilities and Conflicting Disability of Long Duration
+#' @family Clarity Checks
 #' @inherit data_quality_tables params return
 #' @family DQ: Missing Data at Entry
 #' @export
@@ -1094,17 +1114,13 @@ if (is_app_env(app_env))
     dplyr::mutate(
       Issue = "Conflicting Disability of Long Duration yes/no",
       Type = "Error",
-      Guidance = "If the user answered \"Yes\" to the \"Does the client have a
-      disabling condition?\", then there should be a disability subassessment that
-      indicates the disability determination is Yes *and* the \"If yes,... long
-      duration\" question is Yes. Similarly if the user answered \"No\", the
-      client should not have any disability subassessments that indicate that they
-      do have a Disabling Condition."
+      Guidance = "If the user answered 'Yes' to the 'Does the client have a disabling condition?', then there should be a disability subassessment that indicates the disability determination is Yes *and* the 'If yes,... long duration' question is Yes. Similarly if the user answered 'No', the client should not have any disability subassessments that indicate that they do have a Disabling Condition."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Find Clients in Mahoning with 60 Days elapsed in Coordinated Entry
+#' @family Clarity Checks
 #' @inherit data_quality_tables params return
 #' @export
 
@@ -1120,13 +1136,13 @@ dq_mahoning_ce_60_days <- function(served_in_date_range, mahoning_projects, vars
     dplyr::mutate(
       Issue = "60 Days in Mahoning Coordinated Entry",
       Type = "Warning",
-      Guidance = "If this household is \"unreachable\" as defined in the Mahoning County
-      Coordinated Entry Policies and Procedures, they should be exited."
+      Guidance = "If this household is 'unreachable' as defined in the Mahoning County Coordinated Entry Policies and Procedures, they should be exited."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Find Clients with Extremely Long Stays
+#' @family Clarity Checks
 #' @inherit data_quality_tables params return
 #' @export
 dq_th_stayers_bos <- function(served_in_date_range, mahoning_projects, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -1231,20 +1247,7 @@ dq_th_stayers_bos <- function(served_in_date_range, mahoning_projects, vars, gui
     dplyr::mutate(
       Issue = "Extremely Long Stayer",
       Type = "Warning",
-      Guidance = paste(
-        "This client is showing as an outlier for Length of Stay for this project
-        type in the",
-        dplyr::if_else(
-          ProjectID %in% c(mahoning_projects),
-          "Mahoning County",
-          "Balance of State"
-        ),
-        "CoC. Please verify that
-           this client is still in your project. If they are, be sure there are no
-           alternative permanent housing solutions for this client. If the client
-           is no longer in your project, please enter their Exit Date as the
-           closest estimation of the day they left your project."
-      )
+      Guidance =  "This client is showing as an outlier for Length of Stay for this project type in your CoC. Please verify that this client is still in your project. If they are, be sure there are no alternative permanent housing solutions for this client. If the client is no longer in your project, please enter their Exit Date as the closest estimation of the day they left your project."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
@@ -1253,6 +1256,7 @@ dq_th_stayers_bos <- function(served_in_date_range, mahoning_projects, vars, gui
 
 #' @title Find Incorrect Exits in RRH
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Incorrect Destinations
 #' @export
 dq_rrh_check_exit_destination <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -1268,21 +1272,16 @@ dq_rrh_check_exit_destination <- function(served_in_date_range, vars, guidance =
                     ExitDate == MoveInDateAdjust_rrh &
                     Destination != 31) %>%
     dplyr::mutate(
-      Issue = "Maybe Incorrect Exit Destination (did you mean \"Rental by client, with RRH...\"?)",
+      Issue = "Maybe Incorrect Exit Destination (did you mean 'Rental by client, with RRH...'?)",
       Type = "Warning",
-      Guidance = "This household has a Move-In Date into an RRH project that
-      matches their Exit from your project, but the Exit Destination from your
-      project does not indicate that the household exited to Rapid Rehousing. If
-      the household exited to a Destination that was not \"Rental by client\", but
-      it is a permanent destination attained through a Rapid Rehousing project,
-      then there is no change needed. If this is not the case, then the Destination
-      should be \"Rental by client, with RRH or equivalent subsidy\"."
+      Guidance = "This household has a Move-In Date into an RRH project that matches their Exit from your project, but the Exit Destination from your project does not indicate that the household exited to Rapid Rehousing. If the household exited to a Destination that was not 'Rental by client', but it is a permanent destination attained through a Rapid Rehousing project, then there is no change needed. If this is not the case, then the Destination should be 'Rental by client, with RRH or equivalent subsidy'."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Find Possibly Incorrect Exits in PSH
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Incorrect Destinations
 #' @export
 dq_psh_check_exit_destination <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -1300,19 +1299,14 @@ dq_psh_check_exit_destination <- function(served_in_date_range, vars, guidance =
       Issue = "Check Exit Destination (may be \"Permanent housing (other
       than RRH)...\")",
       Type = "Warning",
-      Guidance = "This household appears to have an Entry into a PSH project that
-      overlaps their Exit from your project. Typically this means the client moved
-      into a Permanent Supportive Housing unit after their stay with you. If that
-      is true, the Destination should be
-      \"Permanent housing (other than RRH) for formerly homeless persons\". If you
-      are sure the current Destination is accurate, then please leave it the way
-      it is."
+      Guidance = "This household appears to have an Entry into a PSH project that overlaps their Exit from your project. Typically this means the client moved into a Permanent Supportive Housing unit after their stay with you. If that is true, the Destination should be 'Permanent housing (other than RRH) for formerly homeless persons'. If you are sure the current Destination is accurate, then please leave it the way it is."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Find Incorrect Exits in PSH
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Incorrect Destinations
 #' @export
 dq_psh_incorrect_destination <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -1330,17 +1324,14 @@ dq_psh_incorrect_destination <- function(served_in_date_range, vars, guidance = 
       Issue = "Incorrect Exit Destination (should be \"Permanent housing (other
     than RRH)...\")",
     Type = "Error",
-    Guidance = "This household appears to have a Move-In Date into a PSH project
-    that matches their Exit from your project, but the Exit Destination from your
-    project does not indicate that the household exited to PSH. The correct
-    Destination for households entering PSH from your project is
-    \"Permanent housing (other than RRH) for formerly homeless persons\"."
+    Guidance = "This household appears to have a Move-In Date into a PSH project that matches their Exit from your project, but the Exit Destination from your project does not indicate that the household exited to PSH. The correct Destination for households entering PSH from your project is 'Permanent housing (other than RRH) for formerly homeless persons'."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Find Incorrect Exits in TH
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Incorrect Destinations
 #' @export
 
@@ -1357,18 +1348,14 @@ dq_th_check_exit_destination <- function(served_in_date_range, vars, guidance = 
     dplyr::mutate(
       Issue = "Incorrect Exit Destination (should be \"Transitional housing...\")",
       Type = "Error",
-      Guidance = "This household appears to have an Entry into a Transitional
-      Housing project that overlaps their Exit from your project, but the Exit
-      Destination from your project does not indicate that the household exited to
-      Transitional Housing. The correct Destination for households entering TH from
-      your project is \"Transitional housing for homeless persons (including
-      homeless youth)\"."
+      Guidance = "This household appears to have an Entry into a Transitional Housing project that overlaps their Exit from your project, but the Exit Destination from your project does not indicate that the household exited to Transitional Housing. The correct Destination for households entering TH from your project is 'Transitional housing for homeless persons (including homeless youth)."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Find Incorrect Exits in SH
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Incorrect Destinations
 #' @export
 
@@ -1385,11 +1372,7 @@ dq_sh_check_exit_destination <- function(served_in_date_range, vars, guidance = 
     dplyr::mutate(
       Issue = "Incorrect Exit Destination (should be \"Safe Haven\")",
       Type = "Error",
-      Guidance = "This household appears to have an Entry into a Safe Haven that
-      overlaps their Exit from your project, but the Exit Destination from your
-      project does not indicate that the household exited to a Safe Haven. The
-      correct Destination for households entering SH from your project is
-      \"Safe Haven\"."
+      Guidance = "This household appears to have an Entry into a Safe Haven that overlaps their Exit from your project, but the Exit Destination from your project does not indicate that the household exited to a Safe Haven. The correct Destination for households entering SH from your project is 'Safe Haven'."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
@@ -1397,6 +1380,7 @@ dq_sh_check_exit_destination <- function(served_in_date_range, vars, guidance = 
 # Missing Project Stay or Incorrect Destination ---------------------------
 #' @title Find Missing Project Stay or Incorrect Destination for RRH
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Incorrect Destinations
 #' @export
 
@@ -1411,19 +1395,14 @@ dq_rrh_missing_project_stay <- function(served_in_date_range, vars, guidance = N
     dplyr::mutate(
       Issue = "Missing RRH Project Stay or Incorrect Destination",
       Type = "Warning",
-      Guidance = "The Exit Destination for this household indicates that they exited
-      to Rapid Rehousing, but there is no RRH project stay on the client. If the
-      RRH project the household exited to is outside of the Balance of State or
-      Mahoning County CoCs, then no correction is necessary. If they received RRH services
-      in the Balance of State CoC or Mahoning County CoC, then this household is missing
-      their RRH project stay. If they did not actually receive RRH services at all,
-      the Destination should be corrected."
+      Guidance = "The Exit Destination for this household indicates that they exited to Rapid Rehousing, but there is no RRH project stay on the client. If the RRH project the household exited to is outside of the Balance of State or Mahoning County CoCs, then no correction is necessary. If they received RRH services in the Balance of State CoC or Mahoning County CoC, then this household is missing their RRH project stay. If they did not actually receive RRH services at all, the Destination should be corrected."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Find Missing Project Stay or Incorrect Destination for PSH
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Incorrect Destinations
 #' @export
 dq_psh_missing_project_stay <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -1436,19 +1415,14 @@ dq_psh_missing_project_stay <- function(served_in_date_range, vars, guidance = N
     dplyr::mutate(
       Issue = "Missing PSH Project Stay or Incorrect Destination",
       Type = "Warning",
-      Guidance = "The Exit Destination for this household indicates that they exited
-      to Permanent Supportive Housing, but there is no PSH project stay on the
-      client. If the PSH project the household exited to is outside of the Balance
-      of State CoC or Mahoning County CoC, then no correction is necessary. If they
-      entered PSH in the Balance of State CoC or Mahoning County CoC, then this household
-      is missing their PSH project stay. If they did not actually enter PSH at all,
-      the Destination should be corrected."
+      Guidance = "The Exit Destination for this household indicates that they exited to Permanent Supportive Housing, but there is no PSH project stay on the client. If the PSH project the household exited to is outside of the Balance of State CoC or Mahoning County CoC, then no correction is necessary. If they entered PSH in the Balance of State CoC or Mahoning County CoC, then this household is missing their PSH project stay. If they did not actually enter PSH at all, the Destination should be corrected."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Find Missing Project Stay or Incorrect Destination for TH
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Incorrect Destinations
 #' @export
 
@@ -1462,19 +1436,14 @@ dq_th_missing_project_stay <- function(served_in_date_range, vars, guidance = NU
     dplyr::mutate(
       Issue = "Missing TH Project Stay or Incorrect Destination",
       Type = "Warning",
-      Guidance = "The Exit Destination for this household indicates that they exited
-      to Transitional Housing, but there is no TH project stay on the client. If the
-      TH project that the household exited to is outside of the Balance of State
-      CoC or Mahoning County CoC, then no correction is necessary. If they went into a TH
-      project in the Balance of State CoC or Mahoning County CoC, then this household is
-      missing their TH project stay. If they did not actually enter Transitional
-      Housing at all, the Destination should be corrected."
+      Guidance = "The Exit Destination for this household indicates that they exited to Transitional Housing, but there is no TH project stay on the client. If the TH project that the household exited to is outside of the Balance of State CoC or Mahoning County CoC, then no correction is necessary. If they went into a TH project in the Balance of State CoC or Mahoning County CoC, then this household is missing their TH project stay. If they did not actually enter Transitional Housing at all, the Destination should be corrected."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Find Missing Project Stay or Incorrect Destination for SH
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Incorrect Destinations
 #' @export
 dq_sh_missing_project_stay <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
@@ -1487,16 +1456,13 @@ dq_sh_missing_project_stay <- function(served_in_date_range, vars, guidance = NU
     dplyr::mutate(
       Issue = "Missing Safe Haven Project Stay or Incorrect Destination",
       Type = "Warning",
-      Guidance = "The Exit Destination for this household indicates that they exited
-      to a Safe Haven, but there is no Entry in HMIS into a Safe Haven. Keep in
-      mind that there is only one Safe Haven in the Balance of State and they are
-      no longer operating as of 1/1/2021. If you meant to indicate that the household
-      exited to a Domestic Violence shelter, please select \"Emergency shelter, ...\"."
+      Guidance = "The Exit Destination for this household indicates that they exited to a Safe Haven, but there is no Entry in HMIS into a Safe Haven. Keep in mind that there is only one Safe Haven in the Balance of State and they are no longer operating as of 1/1/2021. If you meant to indicate that the household exited to a Domestic Violence shelter, please select 'Emergency shelter'."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Find Missing County Served
+#' @family Clarity Checks
 #' @inherit data_quality_tables params return
 #' @export
 
@@ -1508,15 +1474,13 @@ dq_missing_county_served <- function(served_in_date_range, mahoning_projects, va
     dplyr::mutate(
       Issue = "Missing County Served",
       Type = "Error",
-      Guidance = "County Served must be collected at Entry for all clients. County is
-        very important so that the client is prioritized into the correct service
-        areas for various housing solutions. This can be corrected through the
-        Entry pencil."
+      Guidance = "County Served must be collected at Entry for all clients. County is very important so that the client is prioritized into the correct service areas for various housing solutions. This can be corrected through the Entry pencil."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Find Missing County Prior
+#' @family Clarity Checks
 #' @inherit data_quality_tables params return
 #' @export
 
@@ -1536,6 +1500,7 @@ dq_missing_county_prior <- function(served_in_date_range, mahoning_projects, var
 # Check Eligibility, Project Type, Residence Prior ------------------------
 #' @title Check Eligibility
 #' @description The Residence Prior may suggest that the project is serving ineligible households, the household was entered into the wrong project, or the Residence Prior at Entry is incorrect.
+#' @family Clarity Checks
 #' @family DQ: Check Eligibility
 #' @inherit data_quality_tables params return
 #' @param detail \code{(logical)} Whether to return eligibility detail
@@ -1630,18 +1595,7 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
       dplyr::mutate(
         Issue = "Check Eligibility",
         Type = "Warning",
-        Guidance = paste(
-          "Your Residence Prior data suggests that this project is either
-          serving ineligible households, the household was entered into the wrong
-          project, or the Residence Prior data at Entry is incorrect. Please check
-          the terms of your grant or speak with",
-          dplyr::if_else(
-            ProjectID %in% c(mahoning_projects),
-            "the Mahoning County CoC Coordinator",
-            "the CoC team at COHHIO"
-          ),
-          "if you are unsure of eligibility criteria for your project type."
-        )
+        Guidance = "Your Residence Prior data suggests that this project is either serving ineligible households, the household was entered into the wrong project, or the Residence Prior data at Entry is incorrect. Please check the terms of your grant or speak with your CoC Team Coordinator if you are unsure of eligibility criteria for your project type."
       ) %>%
       dplyr::select(dplyr::all_of(vars$we_want))
   }
@@ -1651,6 +1605,7 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
 #' @title Rent Payment Made, No Move-In Date
 #' @description This client does not have a valid Move-In Date, but there is at least one rent/deposit payment Service Transaction recorded for this program.  Until a Move-In Date is entered, this client will continue to be counted as literally homeless while in your program. Move-in dates must be on or after the Entry Date. If a client is housed then returns to homelessness while in your program, they need to be exited from their original Entry and re-entered in a new one that has no Move-In Date until they are re-housed.
 #' @inherit data_quality_tables params return
+#' @family Clarity Checks
 #' @family DQ: Check Eligibility
 #' @export
 dq_rent_paid_no_move_in <- function(served_in_date_range, vars, app_env = get_app_env(e = rlang::caller_env())) {
@@ -1673,20 +1628,14 @@ dq_rent_paid_no_move_in <- function(served_in_date_range, vars, app_env = get_ap
     dplyr::mutate(
       Issue = "Rent Payment Made, No Move-In Date",
       Type = "Error",
-      Guidance =
-        "This client does not have a valid Move-In Date, but there is at
-      least one rent/deposit payment Service Transaction recorded for this program.
-      Until a Move-In Date is entered, this client will continue to be counted as
-      literally homeless while in your program. Move-in dates must be on or after
-      the Entry Date. If a client is housed then returns to homelessness while
-      in your program, they need to be exited from their original Entry and
-      re-entered in a new one that has no Move-In Date until they are re-housed."
+      Guidance = "This client does not have a valid Move-In Date, but there is at least one rent/deposit payment Service Transaction recorded for this program. Until a Move-In Date is entered, this client will continue to be counted as literally homeless while in your program. Move-in dates must be on or after the Entry Date. If a client is housed then returns to homelessness while in your program, they need to be exited from their original Entry and re-entered in a new one that has no Move-In Date until they are re-housed."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Missing Destination
 #' @description It is widely understood that not every client will complete an exit interview, especially for high-volume emergency shelters. A few warnings for Missing Destination is no cause for concern, but if there is a large number this will surface these errors.
+#' @family Clarity Checks
 #' @family DQ: Check Eligibility
 #' @inherit data_quality_tables params return
 #' @export
@@ -1700,23 +1649,13 @@ dq_missing_destination <- function(served_in_date_range,  mahoning_projects, var
     dplyr::mutate(
       Issue = "Missing Destination",
       Type = "Warning",
-      Guidance = paste(
-        "It is widely understood that not every client will
-               complete an exit interview, especially for high-volume emergency
-               shelters. A few warnings for Missing Destination is no cause for
-               concern, but if there is a large number, please contact",
-        dplyr::if_else(
-          ProjectID %in% c(mahoning_projects),
-          "the Mahoning County CoC Coordinator",
-          "the Balance of State CoC team at COHHIO"
-        ),
-        "to work out a way to improve client engagement."
-      )
+      Guidance = "It is widely understood that not every client will complete an exit interview, especially for high-volume emergency shelters. A few warnings for Missing Destination is no cause for concern, but if there is a large number, please contact your CoC Team Coordinator"
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Don't Know Refused Destination
+#' @family Clarity Checks
 #' @family DQ: Check Eligibility
 #' @inherit data_quality_tables params return
 #' @export
@@ -1738,6 +1677,7 @@ dq_dkr_destination <- function(served_in_date_range,
 
 #' @title Return a subset of Project data
 #' @param Project \code{(data.frame)} of Project with additional features added in `load_export`
+#' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @return \code{(data.frame)} with ProjectID, ProjectName, ProjectCounty
 
@@ -1778,6 +1718,7 @@ dq_path_missing_los_res_prior <- function(served_in_date_range, Project, vars, g
 
 #' @title PATH: Status at Exit Missing or Incomplete
 #' @details Engagement at Exit & adult, PATH-enrolled, Date of Engagement is null -> error
+#' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @inherit data_quality_tables params return
 #' @inheritParams dq_project_small
@@ -1813,6 +1754,7 @@ dq_path_no_status_at_exit <- function(served_in_date_range, vars, Project, guida
 #' @title PATH: Missing Date of PATH Status
 #' @description Users must indicate the PATH Status Date for any adult enrolled in PATH.
 #' @family DQ: Path Checks
+#' @family Clarity Checks
 #' @inherit data_quality_tables params return
 #' @inheritParams dq_project_small
 #' @details Status Determination at Exit &adult, PATH-Enrolled is not null & Date of Status is null -> error
@@ -1833,8 +1775,7 @@ dq_path_status_determination <- function(served_in_date_range, Project, vars, ap
     ) %>%
     dplyr::mutate(Issue = "Missing Date of PATH Status",
                   Type = "Error",
-                  Guidance = "Users must indicate the PATH Status Date for any adult
-               enrolled in PATH.") %>%
+                  Guidance = "Users must indicate the PATH Status Date for any adult enrolled in PATH.") %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
@@ -1842,6 +1783,7 @@ dq_path_status_determination <- function(served_in_date_range, Project, vars, ap
 
 #' @title PATH: Missing PATH Enrollment at Exit
 #' @description Users must indicate the PATH Enrollment Date at Entry, Exit when creating an Interim
+#' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @inherit data_quality_tables params return
 #' @inheritParams dq_project_small
@@ -1861,9 +1803,7 @@ dq_path_enrolled_missing <- function(served_in_date_range, Project, vars, app_en
     dplyr::mutate(
       Issue = "Missing PATH Enrollment at Exit",
       Type = "Error",
-      Guidance = "Please enter the data for this item by clicking into the
-          Entry or Exit pencil and creating an Interim. In the assessment, enter
-          the correct PATH Enrollment Date and Save."
+      Guidance = guidance$path_enrolled_missing
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
@@ -1872,6 +1812,7 @@ dq_path_enrolled_missing <- function(served_in_date_range, Project, vars, app_en
 
 #' @title PATH: Missing Reason Not PATH Enrolled
 #' @description The user has indicated the household was not enrolled into PATH, but no reason was selected.
+#' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @inherit data_quality_tables params return
 #' @inheritParams dq_project_small
@@ -1896,8 +1837,7 @@ dq_path_reason_missing <- function(served_in_date_range, Project, vars, app_env 
     dplyr::mutate(
       Issue = "Missing Reason Not PATH Enrolled",
       Type = "Error",
-      Guidance = "The user has indicated the household was not enrolled into
-          PATH, but no reason was selected."
+      Guidance = guidance$path_reason_missing
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
@@ -1905,6 +1845,7 @@ dq_path_reason_missing <- function(served_in_date_range, Project, vars, app_env 
 
 
 #' @title PATH: Missing Connection with SOAR at Exit
+#' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @inherit data_quality_tables params return
 #' @inheritParams dq_project_small
@@ -1939,6 +1880,7 @@ dq_path_SOAR_missing_at_exit <- function(served_in_date_range, Project, IncomeBe
 
 
 #' @title PATH: Missing PATH Contact
+#' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @description  Every adult or Head of Household must have a Living Situation contact record. If you see a record there but there is no Date of Contact, saving the Date of Contact will correct this issue. This is a high priority DQ issue.
 #' @inherit data_quality_tables params return
@@ -1978,12 +1920,13 @@ dq_missing_path_contact <- function(served_in_date_range, Contacts, rm_dates, va
     dplyr::mutate(
       Issue = "Missing PATH Contact",
       Type = "High Priority",
-      Guidance = "Every adult or Head of Household must have a Living Situation contact record. If you see a record there but there is no Date of Contact, saving the Date of Contact will correct this issue."
+      Guidance = guidance$missing_path_contact
     )  |>
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title PATH: Incorrect PATH Contact Date
+#' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @description Every adult or head of household should have a Living Situation contact record where the Contact Date matches the Entry Date. This would represent the initial contact made with the client.
 #' @inherit data_quality_tables params return
@@ -2020,7 +1963,7 @@ dq_incorrect_path_contact_date <- function(served_in_date_range, Contacts, rm_da
     dplyr::mutate(
       Issue = "No PATH Contact Entered at Entry",
       Type = "Error",
-      Guidance = "Every adult or head of household should have a Living Situation contact record where the Contact Date matches the Entry Date. This would represent the initial contact made with the client."
+      Guidance = guidance$incorrect_path_contact_date
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 
@@ -2029,6 +1972,7 @@ dq_incorrect_path_contact_date <- function(served_in_date_range, Contacts, rm_da
 # Entry Exits ------------------------------------------------------
 
 #' @title Find Duplicate EEs
+#' @family Clarity Checks
 #' @family DQ: EE Checks
 #' @description Users sometimes create this error when they forget to click into a program stay by using the Entry pencil, and instead they click \"Add Entry/Exit\" each time. To correct, EDA to the project the Entry/Exit belongs to, navigate to the Entry/Exit tab and delete the program stay that was accidentally added for each household member.
 #' @inherit data_quality_tables params return
@@ -2040,12 +1984,13 @@ dq_duplicate_ees <- function(served_in_date_range, vars, app_env = get_app_env(e
     dplyr::mutate(
       Issue = "Duplicate Entry Exits",
       Type = "High Priority",
-      Guidance = "Users sometimes create this error when they forget to click into a program stay by using the Entry pencil, and instead they click \"Add Entry/Exit\" each time. To correct, EDA to the project the Entry/Exit belongs to, navigate to the Entry/Exit tab and delete the program stay that was accidentally added for each household member."
+      Guidance = guidance$duplicate_ees
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Find Future EEs
+#' @family Clarity Checks
 #' @family DQ: EE Checks
 #' @description Users should not be entering a client into a project on a date in the future. If the Entry Date is correct, there is no action needed, but going forward, please be sure that your data entry workflow is correct according to your project type.
 #' @inherit data_quality_tables params return
@@ -2065,7 +2010,7 @@ dq_future_ees <- function(served_in_date_range, rm_dates, vars, app_env = get_ap
     dplyr::mutate(
       Issue = "Future Entry Date",
       Type = "Warning",
-      Guidance = "Users should not be entering a client into a project on a date in the future. If the Entry Date is correct, there is no action needed, but going forward, please be sure that your data entry workflow is correct according to your project type."
+      Guidance = guidance$future_ees
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 
@@ -2073,6 +2018,7 @@ dq_future_ees <- function(served_in_date_range, rm_dates, vars, app_env = get_ap
 }
 
 #' @title Find Future Exits
+#' @family Clarity Checks
 #' @family DQ: EE Checks
 #' @description This client's Exit Date is a date in the future. Please enter the exact date the client left your program. If this client has not yet exited, delete the Exit and then enter the Exit Date once the client is no longer in your program.
 #' @inherit data_quality_tables params return
@@ -2085,7 +2031,7 @@ dq_future_exits <- function(served_in_date_range, vars, app_env = get_app_env(e 
   dplyr::mutate(
     Issue = "Future Exit Date",
     Type = "Error",
-    Guidance = "This client's Exit Date is a date in the future. Please enter the exact date the client left your program. If this client has not yet exited, delete the Exit and then enter the Exit Date once the client is no longer in your program."
+    Guidance = guidance$future_exits
   ) %>%
   dplyr::select(dplyr::all_of(vars$we_want))
 }
@@ -2093,6 +2039,7 @@ dq_future_exits <- function(served_in_date_range, vars, app_env = get_app_env(e 
 # HoHs Entering PH without SPDATs -----------------------------------------
 
 #' @title Find Non-DV HoHs Entering PH or TH without SPDAT, HoHs in shelter for 8+ days without SPDAT, and SPDAT Created on a Non-HoH
+#' @family Clarity Checks
 #' @family DQ: SPDAT Checks
 #' @description This checks for three warning types:
 #' \itemize{
@@ -2146,7 +2093,7 @@ dq_ph_without_spdats <- function(served_in_date_range, Funder, rm_dates, vars, a
     dplyr::mutate(
       Issue = "Non-DV HoHs Entering PH or TH without SPDAT",
       Type = "Warning",
-      Guidance = "Every household (besides those fleeing domestic violence) must have a VI-SPDAT score to aid with prioritization into a Transitional Housing or Permanent Housing (RRH or PSH) project."
+      Guidance = guidance$ph_without_spdats
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 
@@ -2167,7 +2114,7 @@ dq_ph_without_spdats <- function(served_in_date_range, Funder, rm_dates, vars, a
     dplyr::mutate(
       Issue = "HoHs in shelter for 8+ days without SPDAT",
       Type = "Warning",
-      Guidance = "Any household who has been in shelter or a Safe Haven for over 8 days should be assessed with the VI-SPDAT so that they can be prioritized for Permanent Housing (RRH or PSH)."
+      Guidance = guidance$lh_without_spdats
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 
@@ -2186,7 +2133,7 @@ dq_ph_without_spdats <- function(served_in_date_range, Funder, rm_dates, vars, a
     dplyr::mutate(
       Issue = "SPDAT Created on a Non-Head-of-Household",
       Type = "Warning",
-      Guidance = "It is very important to be sure that the VI-SPDAT score goes on the Head of Household of a given program stay because otherwise that score may not pull into any reporting. It is possible a Non Head of Household was a Head of Household in a past program stay, and in that situation, this should not be corrected unless the Head of Household of your program stay is missing their score. To correct this, you would need to completely re-enter the score on the correct client's record."
+      Guidance = guidance$spdat_on_non_hoh
       ) %>%
       dplyr::select(dplyr::all_of(vars$we_want))
 
@@ -2198,6 +2145,7 @@ dq_ph_without_spdats <- function(served_in_date_range, Funder, rm_dates, vars, a
 
 #' @title Find Conflicting Income yes/no at Entry or Exit
 #' @family DQ: Income Checks
+#' @family Clarity Checks
 #' @family DQ: EE Checks
 #' @description If the user answered Yes to Income from any source, then  there should be an income sub-assessment where it indicates which type of income the client is receiving. Similarly if the user answered No, there should not be any income records that say the client is receiving that type of income.
 #' @inherit data_quality_tables params return
@@ -2304,6 +2252,7 @@ dq_conflicting_income <- function(served_in_date_range, IncomeBenefits, vars, gu
 
 #' @title Find Conflicting Income yes/no at Entry or Exit
 #' @family DQ: Income Checks
+#' @family Clarity Checks
 #' @family DQ: EE Checks
 #' @description Please enter the data for this item by clicking into the Entry or Exit pencil on the given Client ID on the appropriate program stay.
 #' @inherit data_quality_tables params return
@@ -2358,6 +2307,7 @@ dq_missing_income <- function(served_in_date_range, IncomeBenefits, vars, guidan
 # Overlapping Enrollment/Move In Dates ------------------------------------
 
 #' @title Find Overlapping Project Stays
+#' @family Clarity Checks
 #' @family DQ: Overlapping Enrollment/Move-In Dates
 #' @description A client cannot reside in an ES, TH, or Safe Haven at the same time. Nor can they have a Move-In Date into a PSH or RRH project while they are still in an ES, TH, or Safe Haven. Further, they cannot be in any two RRH's or any two PSH's simultaneously, housed or not. Please look the client(s) up in HMIS and determine which project stay's Entry/Move-In/or Exit Date is incorrect. PLEASE NOTE: It may be the 'Previous Provider's' mistake, but if you are seeing clients here, it means your project stay was entered last. If the overlap is not your project's mistake, please work with the project that has the incorrect Entry/Move-In/or Exit Date to get this corrected or send an email to \href{mailto:hmis\@cohhio.org}{hmis\@cohhio.org} if you cannot get it resolved. These clients will NOT show on their Data Quality app. If YOUR dates are definitely correct, it is fine to continue with other data corrections as needed.
 #' @inherit data_quality_tables params return
@@ -2410,6 +2360,7 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
 }
 
 #' @title Find Overlapping Project Stays on the Same Day
+#' @family Clarity Checks
 #' @family DQ: Overlapping Enrollment/Move-In Dates
 #' @inherit dq_overlaps params return description
 #' @export
@@ -2456,6 +2407,7 @@ dq_overlaps_same_day <- function(served_in_date_range, vars, guidance, app_env =
 }
 
 #' @title Find Overlapping Project Stays for RRH
+#' @family Clarity Checks
 #' @family DQ: Overlapping Enrollment/Move-In Dates
 #' @inherit dq_overlaps params return description
 #' @export
@@ -2492,6 +2444,7 @@ dq_overlaps_rrh <- function(served_in_date_range, vars, guidance, app_env = get_
 }
 
 #' @title Find Overlapping Project Stays for PSH
+#' @family Clarity Checks
 #' @family DQ: Overlapping Enrollment/Move-In Dates
 #' @inherit dq_overlaps params return description
 #' @export
@@ -2530,6 +2483,7 @@ dq_overlaps_psh <- function(served_in_date_range, vars, guidance, app_env = get_
 
 # Missing Health Ins ------------------------------------------------------
 #' @title Find Missing Health Insurance at Entry
+#' @family Clarity Checks
 #' @family DQ: Health Insurance Checks
 #' @description This data element is required to be collected at project Entry or Exit. Please click into the client's Entry/Exit pencil to save this data to HMIS.
 #' @inherit data_quality_tables params return
@@ -2557,6 +2511,7 @@ dq_missing_hi_entry <- function(served_in_date_range,  IncomeBenefits, vars, gui
 }
 
 #' @title Find Missing Health Insurance at Exit
+#' @family Clarity Checks
 #' @family DQ: Health Insurance Checks
 #' @description This data element is required to be collected at project Entry or Exit. Please click into the client's Entry/Exit pencil to save this data to HMIS.
 #' @inherit data_quality_tables params return
@@ -2580,6 +2535,7 @@ dq_missing_hi_exit <- function(served_in_date_range,  IncomeBenefits, vars, guid
 }
 
 #' @title Find Conflicting Health Insurance at Entry/Exit
+#' @family Clarity Checks
 #' @family DQ: Health Insurance Checks
 #' @description If the user answered 'Yes' to 'Covered by Health Insurance?', then there should be a Health Insurance subassessment where it indicates which type of health insurance the client is receiving. Similarly if the user answered 'No', there should not be any Health Insurance records that say the client is receiving that type of Health Insurance.
 #' @inherit data_quality_tables params return
@@ -2645,6 +2601,7 @@ dq_conflicting_hi_ee <- function(served_in_date_range,  IncomeBenefits, vars, gu
 }
 
 #' @title Find Missing Non-Cash Benefits (NCBS) at Entry/Exit
+#' @family Clarity Checks
 #' @family DQ: Non-Cash Benefit Checks
 #' @description This data element is required to be collected at project Entry or Exit. Please click into the client's Entry/Exit pencil to save this data to HMIS.
 #' @inherit data_quality_tables params return
@@ -2695,10 +2652,11 @@ dq_missing_ncbs <- function(served_in_date_range, IncomeBenefits, vars, guidance
 
 #' @title Find Conflicting or Unlikely Non-Cash Benefits (NCBS) at Entry/Exit
 #' @family DQ: Non-Cash Benefit Checks
+#' @family Clarity Checks
 #' @description
 #' \itemize{
 #'   \item{Conflicting NCBs}{  If the user answered 'Yes' to 'Non-cash benefits from any source', then there should be a Non-cash benefits subassessment where it indicates which type of income the client is receiving. Similarly if the user answered 'No', then there should not be any non-cash records that say the client is receiving that type of benefit}
-#'   \item{Unlikley NCBs}{ This client has every single Non-Cash Benefit, according to HMIS, which is highly unlikely. Please correct (unless it's actually true).}
+#'   \item{Unlikeley NCBs}{ This client has every single Non-Cash Benefit, according to HMIS, which is highly unlikely. Please correct (unless it's actually true).}
 #' }
 #' @inherit data_quality_tables params return
 #' @export
@@ -2827,13 +2785,138 @@ dq_conflicting_unlikely_ncbs <- function(served_in_date_range, IncomeBenefits, v
 
 }
 
+#' @title Find SSI/SSDI but no Disability
+#' @family Clarity Checks
+#' @description `r guidance$check_disability_ssi`
+#' @inherit data_quality_tables params return
+#' @export
 
+dq_check_disability_ssi <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
 
+  served_in_date_range %>%
+    dplyr::select(dplyr::all_of(vars$prep),
+                  EnrollmentID,
+                  AgeAtEntry,
+                  DisablingCondition) %>%
+    dplyr::left_join(IncomeBenefits %>%
+                       dplyr::select(EnrollmentID, PersonalID, SSI, SSDI), by = c("EnrollmentID", "PersonalID")) %>%
+    dplyr::mutate(SSI = dplyr::if_else(is.na(SSI), 0, SSI),
+                  SSDI = dplyr::if_else(is.na(SSDI), 0, SSDI)) %>%
+    dplyr::filter(SSI + SSDI > 0 &
+                    DisablingCondition == 0 & AgeAtEntry > 17) %>%
+    dplyr::select(-DisablingCondition, -SSI, -SSDI, -AgeAtEntry) %>%
+    unique() %>%
+    dplyr::mutate(
+      Issue = "Client with No Disability Receiving SSI/SSDI (could be ok)",
+      Type = "Warning",
+      Guidance = guidance$check_disability_ssi
+    ) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+}
+
+#' @title Find Services on Household Members
+#' @family Clarity Checks
+#' @description `r guidance$services_on_non_hoh`
+#' @family DQ: Household Checks
+#' @inherit data_quality_tables params return
+#' @export
+
+dq_services_on_non_hoh <- function(served_in_date_range, vars, rm_dates, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
+
+  served_in_date_range %>%
+    dplyr::select(dplyr::all_of(vars$prep),
+                  EnrollmentID,
+                  RelationshipToHoH,
+                  GrantType) %>%
+    dplyr::filter(
+      RelationshipToHoH != 1 &
+        EntryDate >= rm_dates$hc$no_more_svcs_on_hh_members &
+        (GrantType != "SSVF" | is.na(GrantType))
+    ) %>%
+    dplyr::semi_join(Services, by = c("PersonalID", "EnrollmentID")) %>%
+    dplyr::mutate(Issue = "Service Transaction on a Non Head of Household",
+                  Type = "Warning",
+                  Guidance = guidance$services_on_non_hoh) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+}
+
+#' @title Find Services on Household Members in SSVF
+#' @family Clarity Checks
+#' @family DQ: Household Checks
+#' @inherit data_quality_tables params return
+#' @export
+
+dq_services_on_hh_members_ssvf <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
+  served_in_date_range %>%
+    dplyr::select(dplyr::all_of(vars$prep),
+                  EnrollmentID,
+                  RelationshipToHoH,
+                  GrantType) %>%
+    dplyr::filter(RelationshipToHoH != 1 &
+                    GrantType == "SSVF") %>%
+    dplyr::semi_join(Services, by = c("PersonalID", "EnrollmentID")) %>%
+    dplyr::mutate(Issue = "Service Transaction on a Non Head of Household (SSVF)",
+                  Type = "Error",
+                  Guidance = guidance$service_on_non_hoh) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+
+}
+
+#' @title Find Referrals on Household Members in SSVF
+#' @family Clarity Checks
+#' @family DQ: Household Checks
+#' @inherit data_quality_tables params return
+#' @export
+
+dq_referrals_on_hh_members_ssvf <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
+
+  served_in_date_range %>%
+    dplyr::select(dplyr::all_of(vars$prep),
+                  RelationshipToHoH,
+                  EnrollmentID,
+                  GrantType) %>%
+    dplyr::filter(RelationshipToHoH != 1 &
+                    GrantType == "SSVF") %>%
+    dplyr::semi_join(Referrals, by = c("PersonalID")) %>%
+    dplyr::mutate(Issue = "Referral on a Non Head of Household (SSVF)",
+                  Type = "Error",
+                  Guidance = guidance$referral_on_non_hoh) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+}
+
+#' @title Find Access Points with Entrys/Exits
+#' @family Clarity Checks
+#' @family DQ: EE Checks
+#' @inherit data_quality_tables params return
+#' @export
+
+dq_aps_with_ees <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
+  served_in_date_range %>%
+    dplyr::filter(ProjectType == 14) %>% # not incl Mah CE
+    dplyr::mutate(
+      Issue = "Access Point with Entry Exits",
+      Type = "High Priority",
+      Guidance = guidance$aps_with_ees
+    ) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+}
+
+if (is_sp()) {
 # ServicePoint DQ Checks ----
 # Tue Sep 14 10:14:17 2021
 #' @title Incorrect Entry/Exit Types
 #' @inherit data_quality_tables params return
-#' @family data_quality_servicepoint
+#' @family ServicePoint Checks
 #' @export
 
 dq_sp_incorrect_ee_type <- function(server_in_date_range) {
@@ -2873,12 +2956,15 @@ dq_sp_incorrect_ee_type <- function(server_in_date_range) {
     ) %>%
     dplyr::mutate(Issue = "Incorrect Entry Exit Type",
                   Type = "High Priority",
-                  Guidance = "The user selected the wrong Entry Exit Type. To correct,
-             click the Entry pencil and Save & Continue. The Entry Exit Type at
-             the top can then be changed. Click \"Update\" to make this change
-             take effect.") %>%
+                  Guidance = guidance$incorrect_ee_type) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
+
+#' @title Find Stray Services
+#' @inherit data_quality_tables params return
+#' @family ServicePoint Checks
+#' @export
+
 
 dq_sp_stray_services <- function(stray_services) {
   if (!is_sp())
@@ -2886,10 +2972,15 @@ dq_sp_stray_services <- function(stray_services) {
     stray_services %>%
     dplyr::mutate(Issue = "Service Not Attached to an Entry Exit",
                   Type = "Warning",
-                  Guidance = "This Service does not fall between any project stay,
-             so it will not show in any reporting.") %>%
+                  Guidance = guidance$stray_service) %>%
     dplyr::select(PersonalID, ServiceProvider, ServiceStartDate, Issue, Type)
 }
+
+
+#' @title Find Referrals on Household Members
+#' @inherit data_quality_tables params return
+#' @family ServicePoint Checks
+#' @export
 
 dq_sp_referrals_on_hh_members <- function(served_in_date_range, vars) {
   if (!is_sp())
@@ -2911,6 +3002,12 @@ dq_sp_referrals_on_hh_members <- function(served_in_date_range, vars) {
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
+
+#' @title Find Referrals on Household Members SSVF
+#' @inherit data_quality_tables params return
+#' @family ServicePoint Checks
+#' @export
+
 dq_sp_referrals_on_hh_members_ssvf <- function(served_in_date_range, vars) {
   if (!is_sp())
     rlang::abort(match.call()[[1]], " is a ServicePoint specific data quality check.")
@@ -2927,6 +3024,11 @@ dq_sp_referrals_on_hh_members_ssvf <- function(served_in_date_range, vars) {
                   Guidance = guidance$referral_on_non_hoh) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
+
+#' @title Find Internal Outstanding Referrals
+#' @inherit data_quality_tables params return
+#' @family ServicePoint Checks
+#' @export
 
 
 dq_internal_old_outstanding_referrals <- function(served_in_date_range, Referrals, vars) {
@@ -2958,7 +3060,7 @@ dq_internal_old_outstanding_referrals <- function(served_in_date_range, Referral
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
-
+}
 
 #' @title Make a Clarity Profile link using the UniqueID and PersonalID
 #' @description If used in a \link[DT]{datatable}, set `escape = FALSE`
@@ -2991,7 +3093,7 @@ make_profile_link <- function(pid, uid, chr) {
 #' @examples
 #' data.frame(a = letters, b = seq_along(letters)) |> make_profile_link() |>
 #' DT::datatable(escape = FALSE)
-dq_make_profile_link <- function(x) {
+make_profile_link_df <- function(x) {
   x |>
     dplyr::rowwise() |>
     dplyr::mutate(UniqueID = make_profile_link(PersonalID, UniqueID, chr = TRUE)) |>

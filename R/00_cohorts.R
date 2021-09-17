@@ -27,7 +27,7 @@
 # hohs = heads of household
 # adults = all adults in a household
 # clients = all members of the household
-#
+#' @include app_dependencies.R init_R6.R
 
 cohorts <- function(
   clarity_api,

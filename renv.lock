@@ -3,7 +3,7 @@
     "Version": "4.1.0",
     "Repositories": [
       {
-        "Name": null,
+        "Name": "https://cran.r-project.org",
         "URL": "https://cran.r-project.org"
       }
     ]
@@ -86,8 +86,8 @@
       "RemoteUsername": "yogat3ch",
       "RemoteRepo": "UU",
       "RemoteRef": "main",
-      "RemoteSha": "0ddcf5e3852ba81e7ef99f7d4ccfd3777a5541f4",
-      "Hash": "faa33306ca145d0a5c195937d2be43f9"
+      "RemoteSha": "f9f870ebed6261114c045475bd58a54b0931cedb",
+      "Hash": "2ea3a111cc4887475a38ef4e6dd05d01"
     },
     "askpass": {
       "Package": "askpass",
@@ -347,26 +347,12 @@
       "Repository": "CRAN",
       "Hash": "db9463f8f96444ac790bef2076048699"
     },
-    "crosstalk": {
-      "Package": "crosstalk",
-      "Version": "1.1.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "2b06f9e415a62b6762e4b8098d2aecbc"
-    },
     "curl": {
       "Package": "curl",
       "Version": "4.3.2",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "022c42d49c28e95d69ca60446dbabf88"
-    },
-    "data.table": {
-      "Package": "data.table",
-      "Version": "1.14.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "d1b8b1a821ee564a3515fa6c6d5c52dc"
     },
     "desc": {
       "Package": "desc",
@@ -534,13 +520,6 @@
       "Repository": "CRAN",
       "Hash": "af2c2531e55df5cf230c4b5444fc973c"
     },
-    "htmlwidgets": {
-      "Package": "htmlwidgets",
-      "Version": "1.5.3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "6fdaa86d0700f8b3e92ee3c445a5a10d"
-    },
     "httr": {
       "Package": "httr",
       "Version": "1.4.2",
@@ -551,10 +530,14 @@
     "hud.extract": {
       "Package": "hud.extract",
       "Version": "0.0.0.9000",
-      "Source": "Local",
-      "RemoteType": "local",
-      "RemoteUrl": "C:/Users/Administrator/Documents/R/Contributor_Repos/COHHIO/hud.extract",
-      "Hash": "4f2fbc2347100d6dba26bf629bca96de"
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "COHHIO",
+      "RemoteRepo": "hud.extract",
+      "RemoteRef": "main",
+      "RemoteSha": "e1f6d479f3d0142b4a92a4b303d62a4bfc846872",
+      "Hash": "68f790b00272af05ca5bdec57c6e82f2"
     },
     "ini": {
       "Package": "ini",
@@ -605,26 +588,12 @@
       "Repository": "CRAN",
       "Hash": "3d5108641f47470611a32d0bdf357a72"
     },
-    "later": {
-      "Package": "later",
-      "Version": "1.2.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "b61890ae77fea19fc8acadd25db70aa4"
-    },
     "lattice": {
       "Package": "lattice",
       "Version": "0.20-44",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "f36bf1a849d9106dc2af72e501f9de41"
-    },
-    "lazyeval": {
-      "Package": "lazyeval",
-      "Version": "0.2.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "d908914ae53b04d4c0c0fd72ecc35370"
     },
     "lifecycle": {
       "Package": "lifecycle",
@@ -743,13 +712,6 @@
       "Repository": "CRAN",
       "Hash": "463642747f81879e6752485aefb831cf"
     },
-    "plotly": {
-      "Package": "plotly",
-      "Version": "4.9.4.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "af4b92cb3828aa30002e2f945c49c2d7"
-    },
     "plyr": {
       "Package": "plyr",
       "Version": "1.8.6",
@@ -791,13 +753,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "14dc9f7a3c91ebb14ec5bb9208a07061"
-    },
-    "promises": {
-      "Package": "promises",
-      "Version": "1.2.0.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "4ab2c43adb4d4699cf3690acd378d75d"
     },
     "ps": {
       "Package": "ps",
@@ -901,13 +856,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "515f341d3affe0de9e4a7f762efb0456"
-    },
-    "rmarkdown": {
-      "Package": "rmarkdown",
-      "Version": "2.8",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "f518ba47713f92d0d603eec7c6888faf"
     },
     "roxygen2": {
       "Package": "roxygen2",
@@ -1030,13 +978,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "7243004a708d06d4716717fa1ff5b2fe"
-    },
-    "tinytex": {
-      "Package": "tinytex",
-      "Version": "0.31",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "25b572f764f3c19fef9aac33b5724f3d"
     },
     "tzdb": {
       "Package": "tzdb",

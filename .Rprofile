@@ -4,6 +4,7 @@ if (file.exists("~/.Rprofile"))
 if (file.exists(".Renviron"))
   readRenviron(".Renviron")
 options(renv.settings.ignored.packages = c("jobs"),
+        renv.settings.snapshot.type = "explicit",
         ggmap = list(google = list(second_limit = 50L,
                                    day_limit = 2500)),
         rpushbullet.dotfile = "inst/auth/rpushbullet.json",

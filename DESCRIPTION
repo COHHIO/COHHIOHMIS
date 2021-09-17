@@ -1,55 +1,36 @@
 Package: Rm_data
-Title: Data munging dependencies for Rminor & Rminor_elevated Shiny apps
+Title: Data munging dependencies for Rminor & Rminor_elevated
+       Shiny apps
 Version: 0.0.0.9000
-Authors@R: 
-    c(person(given = "Genelle",
-           family = "Denzin",
-           role = c("aut"),
-           email = "genelledenzin@cohhio.org"),
-           person(given = "Stephen",
-           family = "Holsenbeck",
-           role = c("cre", "aut"),
-           email = "stephenholsenbeck@cohhio.org"),
-           person(given = "Gwen",
-           family = "Beebe",
-           email = "gwenbeebe@gmail.com",
-           role = "con"))
-Description: This provides workflows for munging and porting data dependencies to the open-source Homeless Management Information System (HMIS) custom reporting apps Rminor & Rminor_elevated
+Authors@R: c(person(given = "Genelle", family = "Denzin", role
+       = c("aut"), email = "genelledenzin@cohhio.org"),
+       person(given = "Stephen", family = "Holsenbeck", role =
+       c("cre", "aut"), email =
+       "stephenholsenbeck@cohhio.org"), person(given = "Gwen",
+       family = "Beebe", email = "gwenbeebe@gmail.com", role =
+       "con"))
+Description: This provides workflows for munging and porting
+       data dependencies to the open-source Homeless
+       Management Information System (HMIS) custom reporting
+       apps Rminor & Rminor_elevated
 License: AGPL-3
 Depends: R (>= 4.1.0)
-Imports: 
-    clarity.looker,
-    cli,
-    devtools,
-    dplyr,
-    feather,
-    fs,
-    ggmap,
-    glue,
-    hud.extract,
-    janitor,
-    lookr,
-    lubridate,
-    plotly,
-    purrr,
-    readxl,
-    rlang,
-    RPushbullet,
-    scales,
-    slider,
-    UU
+Imports: clarity.looker, cli, devtools, dplyr, feather, ggmap,
+       ggplot2, glue, HMIS, htmltools, httr, hud.extract,
+       janitor, lubridate, purrr, R6, rdrop2, readr, readxl,
+       rlang, RPushbullet, scales, slider, stats,
+       stringr, tibble, tidyr, tidyselect, utils, UU
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1.9001
 URL: https://github.com/COHHIO/Rm_data
 BugReports: https://github.com/COHHIO/Rm_data/issues
-Remotes:
-    COHHIO/hud.extract,
-    COHHIO/clarity.looker,
-    COHHIO/lookr,
-    yogat3ch/UU
+Remotes: COHHIO/hud.extract, COHHIO/clarity.looker,
+       COHHIO/lookr, COHHIO/HMIS, yogat3ch/UU
 Collate: 
+    'init_R6.R'
+    'app_dependencies.R'
     '00_cohorts.R'
     '00_dates.R'
     '00_functions.R'
@@ -61,9 +42,9 @@ Collate:
     '02_QPR_SPDATs.R'
     '02_QPR_client_counts.R'
     '03_Veterans.R'
-    'app_dependencies.R'
     '04_DataQuality.R'
     '04_DataQuality_doses.R'
+    '04_DataQuality_plots.R'
     '04_DataQuality_utils.R'
     '04_Guidance.R'
     '05_Veterans_Active_List.R'
@@ -72,4 +53,3 @@ Collate:
     '08_Active_List.R'
     '09_covid.R'
     'aaa_imports.R'
-    'init_R6.R'

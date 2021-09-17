@@ -89,30 +89,31 @@ data_quality <- function(
                   rlang::eval_bare(.call)
                 })
 
-dqs <- dqs |>
-  dq_make_profile_link()
+dq_main <- dqs |>
+  make_profile_link_df()
+detail_eligibility <- dq_check_eligibility(detail = TRUE)
 
 
 
   # Missing Client Location -------------------------------------------------
-  missing_client_location <- dq_missing_client_location(served_in_date_range, vars)
+  # missing_client_location <- dq_missing_client_location(served_in_date_range, vars)
 
 
   # Household Issues --------------------------------------------------------
-  hh_children_only <- dq_hh_children_only(served_in_date_range, vars)
+  # hh_children_only <- dq_hh_children_only(served_in_date_range, vars)
 
 
 
 
 
 
-  hh_no_hoh <- dq_hh_no_hoh()
+  # hh_no_hoh <- dq_hh_no_hoh()
 
 
-  hh_too_many_hohs <- dq_hh_too_many_hohs()
-
-
-  hh_missing_rel_to_hoh <- dq_hh_missing_rel_to_hoh()
+  # hh_too_many_hohs <- dq_hh_too_many_hohs()
+  #
+  #
+  # hh_missing_rel_to_hoh <- dq_hh_missing_rel_to_hoh()
 
 
 
@@ -120,41 +121,41 @@ dqs <- dqs |>
   # Missing Data at Entry ---------------------------------------------------
   # Living Situation,  Length of Stay, LoSUnderThreshold, PreviousStreetESSH,
   # DateToStreetESSH, TimesHomelessPastThreeYears, MonthsHomelessPastThreeYears
-  dq_missing_approx_date_homeless <- missing_approx_date_homeless(served_in_date_range, guidance, vars)
+  # dq_missing_approx_date_homeless <- missing_approx_date_homeless(served_in_date_range, guidance, vars)
 
 
 
-  dq_missing_previous_street_ESSH <- missing_previous_street_ESSH(served_in_date_range, guidance, vars)
+  # dq_missing_previous_street_ESSH <- missing_previous_street_ESSH(served_in_date_range, guidance, vars)
 
 
 
-  dq_missing_residence_prior <- missing_residence_prior(served_in_date_range, guidance, vars)
+  # dq_missing_residence_prior <- missing_residence_prior(served_in_date_range, guidance, vars)
 
 
-  dkr_residence_prior <- dkr_residence_prior(served_in_date_range, guidance, vars)
-
-
-
-
-  dq_missing_LoS <- missing_LoS(served_in_date_range, vars = vars)
-
-  dkr_LoS <- dkr_LoS(served_in_date_range, vars, guidance)
+  # dkr_residence_prior <- dkr_residence_prior(served_in_date_range, guidance, vars)
 
 
 
 
-  dq_missing_months_times_homeless <- missing_months_times_homeless(served_in_date_range, vars, guidance, hc)
+  # dq_missing_LoS <- missing_LoS(served_in_date_range, vars = vars)
+
+  # dkr_LoS <- dkr_LoS(served_in_date_range, vars, guidance)
 
 
-  dq_dkr_months_times_homeless
 
 
-  invalid_months_times_homeless
-
-  missing_living_situation
+  # dq_missing_months_times_homeless <- missing_months_times_homeless(served_in_date_range, vars, guidance, hc)
 
 
-  dkr_living_situation
+  # dq_dkr_months_times_homeless
+
+
+  # invalid_months_times_homeless
+
+  # missing_living_situation
+
+
+  # dkr_living_situation
 
 
 
@@ -406,86 +407,33 @@ dqs <- dqs |>
 
 
   # SSI/SSDI but no Disability (Q) ------------------------------------------
-  smallIncome <- IncomeBenefits %>%
-    dplyr::select(EnrollmentID, PersonalID, SSI, SSDI)
 
-  check_disability_ssi <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep),
-                  EnrollmentID,
-                  AgeAtEntry,
-                  DisablingCondition) %>%
-    dplyr::left_join(smallIncome, by = c("EnrollmentID", "PersonalID")) %>%
-    dplyr::mutate(SSI = dplyr::if_else(is.na(SSI), 0, SSI),
-                  SSDI = dplyr::if_else(is.na(SSDI), 0, SSDI)) %>%
-    dplyr::filter(SSI + SSDI > 0 &
-                    DisablingCondition == 0 & AgeAtEntry > 17) %>%
-    dplyr::select(-DisablingCondition, -SSI, -SSDI, -AgeAtEntry) %>%
-    unique() %>%
-    dplyr::mutate(
-      Issue = "Client with No Disability Receiving SSI/SSDI (could be ok)",
-      Type = "Warning",
-      Guidance = "If a client is receiving SSI or SSDI for THEIR OWN disability,
-        that disability should be indicated in the Disabilities data elements. If
-        an adult is receiving SSI or SSDI benefits on behalf a minor child,
-        then there is no action needed."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
-  rm(smallIncome)
+  # check_disability_ssi <- dq_check_disability_ssi()
+
+
 
   # Non HoHs w Svcs or Referrals --------------------------------------------
   # SSVF projects should be showing this as an Error,7 whereas non-SSVF projects
   # should be showing it as a warning, and only back to Feb of 2019
-  services_on_hh_members <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep),
-                  EnrollmentID,
-                  RelationshipToHoH,
-                  GrantType) %>%
-    dplyr::filter(
-      RelationshipToHoH != 1 &
-        EntryDate >= rm_dates$hc$no_more_svcs_on_hh_members &
-        (GrantType != "SSVF" | is.na(GrantType))
-    ) %>%
-    dplyr::semi_join(Services, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::mutate(Issue = "Service Transaction on a Non Head of Household",
-                  Type = "Warning",
-                  Guidance = guidance$service_on_non_hoh) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  services_on_hh_members_ssvf <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep),
-                  EnrollmentID,
-                  RelationshipToHoH,
-                  GrantType) %>%
-    dplyr::filter(RelationshipToHoH != 1 &
-                    GrantType == "SSVF") %>%
-    dplyr::semi_join(Services, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::mutate(Issue = "Service Transaction on a Non Head of Household (SSVF)",
-                  Type = "Error",
-                  Guidance = guidance$service_on_non_hoh) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+  # services_on_hh_members <- dq_services_on_hh_members()
+  # services_on_hh_members_ssvf <- dq_services_on_hh_members_ssvf()
+# referrals_on_hh_members_ssvf <- dq_referrals_on_hh_members_ssvf()
 
 
 
+# AP entering project stays -----------------------------------------------
 
-  referrals_on_hh_members_ssvf <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep),
-                  RelationshipToHoH,
-                  EnrollmentID,
-                  GrantType) %>%
-    dplyr::filter(RelationshipToHoH != 1 &
-                    GrantType == "SSVF") %>%
-    dplyr::semi_join(Referrals, by = c("PersonalID")) %>%
-    dplyr::mutate(Issue = "Referral on a Non Head of Household (SSVF)",
-                  Type = "Error",
-                  Guidance = guidance$referral_on_non_hoh) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+#aps_with_ees <- dq_aps_with_ees
+
+
 
   # Stray Services (fall outside EE) ----------------------------------------
   # Because a lot of these records are stray Services due to there being no
   # Entry Exit at all, this can't be shown in the same data set as all the other
   # errors. I'm going to have to make this its own thing. :(
   # stray_services_warning <- dq_stray_services(stray_services)
+
 
   # AP No Recent Referrals --------------------------------------------------
   co_APs <- Project %>%
@@ -549,20 +497,7 @@ dqs <- dqs |>
 
   rm(aps_with_referrals, co_APs)
 
-  # AP entering project stays -----------------------------------------------
 
-  aps_with_ees <- served_in_date_range %>%
-    dplyr::filter(ProjectType == 14 & !ProjectID %in% c(2372, 1858)) %>% # not incl Mah CE
-    dplyr::mutate(
-      Issue = "Access Point with Entry Exits",
-      Type = "High Priority",
-      Guidance = "Access Points should only be entering Referrals and Diversion Services
-      into the AP provider- not Entry Exits. If a user has done this, the Entry
-      Exit should be deleted. Please see the
-      <a href=\"http://hmis.cohhio.org/index.php?pg=kb.page&id=151\"
-          target=\"_blank\">Coordinated Entry workflow</a>."
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
 
   # Side Door ---------------------------------------------------------------
   # use Referrals, get logic from ART report- it's pretty lax I think

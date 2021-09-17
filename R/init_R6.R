@@ -1,4 +1,4 @@
-if (Sys.info()["nodename"] == "DESKTOP-2SK9RKR") {
+if (Sys.info()["nodename"] == "DESKTOP-2SK9RKR" && file.exists("Rm_data.Rproj")) {
   if (!exists("cl_api")) {
 
     devtools::load_all("../clarity.looker")
