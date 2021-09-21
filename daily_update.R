@@ -12,16 +12,16 @@ RPushbullet::pbSetup(file.path("inst","auth","rpushbullet.json"))
 
 # must load Rm_data
 devtools::load_all()
-rstudioapi::jobRunScript(file.path("inst","src","update_data.R"), importEnv = TRUE)
+rstudioapi::jobRunScript(file.path("inst","src","update_data.R"), importEnv = TRUE, workingDir = getwd())
 
 Rm_env <- dates()
 Rm_env <- load_export()
 Rm_env <- client_counts()
+Rm_env$gather_deps(guidance)
+Rm_env <- data_quality()
 Rm_env$write_app_deps(Rm_env$app_objs$RminorElevated, Rm_env$app_deps$RminorElevated, file.path("data", "db", "RminorElevated"))
 # Uses RminorElevated as the default
 Rm_env$dropbox_upload()
-Rm_env <- data_quality()
-
 
 
 

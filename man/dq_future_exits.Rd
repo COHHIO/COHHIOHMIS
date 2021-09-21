@@ -103,9 +103,16 @@ Other Clarity Checks:
 Other DQ: EE Checks: 
 \code{\link{dq_aps_with_ees}()},
 \code{\link{dq_conflicting_income}()},
+\code{\link{dq_dkr_client_veteran_info}()},
 \code{\link{dq_duplicate_ees}()},
 \code{\link{dq_future_ees}()},
-\code{\link{dq_missing_income}()}
+\code{\link{dq_missing_income}()},
+\code{\link{dq_ssvf_missing_address}()},
+\code{\link{dq_ssvf_missing_percent_ami}()},
+\code{\link{dq_veteran_missing_branch}()},
+\code{\link{dq_veteran_missing_discharge_status}()},
+\code{\link{dq_veteran_missing_year_entered}()},
+\code{\link{dq_veteran_missing_year_separated}()}
 }
 \concept{Clarity Checks}
 \concept{DQ: EE Checks}

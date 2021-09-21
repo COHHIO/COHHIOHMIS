@@ -11,7 +11,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
-#' @include app_dependencies.R
+#' @include app_dependencies.R 04_DataQuality_utils.R
+
 dependencies$DataQuality <-
   c(
     "Client",
@@ -38,7 +39,7 @@ dependencies$DataQuality <-
 
 
 
-data_quality <- function(
+data_quality <- function(check_fns = stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq"), "^((?!\\_sp\\_)(?!dose)(?!vaccine)(?!referrals).)*$"),
   clarity_api = get_clarity_api(e = rlang::caller_env()),
   app_env = get_app_env(e = rlang::caller_env())
   ) {
@@ -53,10 +54,6 @@ data_quality <- function(
   projects_current_hmis <- projects_current_hmis()
 
   app_env$gather_deps(projects_current_hmis)
-  # Clients to Check --------------------------------------------------------
-
-  served_in_date_range <- served_in_date_range()
-  app_env$gather_deps(served_in_date_range)
   # The Variables That We Want ----------------------------------------------
 
   vars <- list()
@@ -79,21 +76,70 @@ data_quality <- function(
                             "Guidance")
   app_env$gather_deps(vars)
 
-  dqs <- purrr::imap(stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq"), "^((?!\\_sp\\_)(?!dose)(?!vaccine)(?!referrals).)*$"), ~{
+  # Clients to Check --------------------------------------------------------
+
+  served_in_date_range <- served_in_date_range()
+  app_env$gather_deps(served_in_date_range)
+
+  dqs <- purrr::imap(check_fns, ~{
     args <- names(rlang::fn_fmls(getFromNamespace(.x, "Rm_data"))) |>
       {\(x) {x[!x %in% c("app_env", "served_in_date_range")]}}()
-    Rm_env$merge_deps_to_env("served_in_date_range")
                   message(.x)
-                  .call <- rlang::call2(.x, !!!Rm_env$merge_deps_to_env(args, as_list = TRUE), app_env = NULL, served_in_date_range = served_in_date_range)
-
+                  .call <- rlang::call2(.x, app_env = app_env)
                   rlang::eval_bare(.call)
                 })
 
 dq_main <- dqs |>
-  make_profile_link_df()
+  make_profile_link_df() %>%
+  unique() %>%
+  dplyr::mutate(Type = factor(Type, levels = c("High Priority",
+                                               "Error",
+                                               "Warning"))) %>%
+  dplyr::filter(ProjectType != 14 |
+                  (
+                    ProjectType == 14 &
+                      Issue %in% c(
+                        "60 Days in Mahoning Coordinated Entry",
+                        "Access Point with Entry Exits",
+                        "Missing Date of Birth Data Quality",
+                        "Don't Know/Refused or Approx. Date of Birth",
+                        "Missing DOB",
+                        "Missing Name Data Quality",
+                        "Incomplete or Don't Know/Refused Name",
+                        "Rent Payment Made, No Move-In Date",
+                        "Invalid SSN",
+                        "Don't Know/Refused SSN",
+                        "Missing SSN",
+                        "Missing Veteran Status",
+                        "Don't Know/Refused Veteran Status",
+                        "Missing County Served"
+                      )
+                  ))
+
 detail_eligibility <- dq_check_eligibility(detail = TRUE)
 
 
+# Controls what is shown in the CoC-wide DQ tab ---------------------------
+
+# for CoC-wide DQ tab
+
+dq_past_year <- dq_main %>%
+  HMIS::served_between(rm_dates$hc$check_dq_back_to,
+                       lubridate::today()) |>
+  dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
+
+# for project evaluation reporting
+
+dq_for_pe <- dq_main  |>
+  HMIS::served_between(rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end)
+dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
+
+
+dq_providers <- sort(projects_current_hmis$ProjectName)
+
+# APs without referrals ----
+# Mon Sep 20 16:31:46 2021
+aps_no_referrals <- dq_aps()
 
   # Missing Client Location -------------------------------------------------
   # missing_client_location <- dq_missing_client_location(served_in_date_range, vars)
@@ -371,15 +417,8 @@ detail_eligibility <- dq_check_eligibility(detail = TRUE)
 
 
 
-# TODO SP: Add to SP Checks
-  # unsh_overlaps <- dq_overlaps %>%
-  #   dplyr::filter(ProjectName == "Unsheltered Clients - OUTREACH") %>%
-  #   dplyr::left_join(Users, by = "UserCreating") %>%
-  #   dplyr::select(PersonalID,
-  #                 DefaultProvider,
-  #                 EntryDate,
-  #                 ExitDate,
-  #                 PreviousProject)
+
+  #unsh_overlaps <- dq_overlaps(unsh = TRUE)
 
   # Missing Health Ins ------------------------------------------------------
 
@@ -435,298 +474,41 @@ detail_eligibility <- dq_check_eligibility(detail = TRUE)
   # stray_services_warning <- dq_stray_services(stray_services)
 
 
-  # AP No Recent Referrals --------------------------------------------------
-  co_APs <- Project %>%
-    dplyr::filter(ProjectType == 14) %>% # not incl Mah CE
-    dplyr::select(
-      ProjectID,
-      OperatingStartDate,
-      OperatingEndDate,
-      ProjectName,
-      HMISParticipatingProject,
-      ProjectCounty
-    )
-
-  aps_no_referrals <- Referrals %>%
-    dplyr::right_join(co_APs, by = c("ReferringProjectID" = "ProjectID")) %>%
-    dplyr::filter(is.na(PersonalID)) %>%
-    dplyr::select(ReferringProjectID) %>%
-    unique()
-
-  aps_with_referrals <- Referrals %>%
-    dplyr::right_join(co_APs, by = c("ReferringProjectID" = "ProjectID")) %>%
-    dplyr::filter(!is.na(PersonalID)) %>%
-    dplyr::select(ReferringProjectID) %>%
-    unique()
-
-  data_APs <- dplyr::data.frame(
-    category = c("No Referrals", "Has Created Referrals"),
-    count = c(nrow(aps_no_referrals), nrow(aps_with_referrals)),
-    providertype = rep("Access Points"),
-    total = rep(c(
-      nrow(aps_no_referrals) + nrow(aps_with_referrals)
-    )),
-    stringsAsFactors = FALSE
-  )
-
-  data_APs <- data_APs %>%
-    dplyr::mutate(percent = count / total,
-                  prettypercent = scales::percent(count / total))
-
-  dq_plot_aps_referrals <-
-    ggplot2::ggplot(data_APs, ggplot2::aes(fill = category, x = providertype, y = percent)) +
-    ggplot2::geom_bar(position = "fill",
-                      stat = "identity",
-                      width = .1) +
-    ggplot2::geom_label(
-      ggplot2::aes(label = paste(
-        data_APs$category,
-        "\n",
-        data_APs$prettypercent
-      )),
-      position = ggplot2::position_stack(),
-      vjust = 2,
-      fill = "white",
-      colour = "black",
-      fontface = "bold"
-    ) +
-    ggplot2::scale_fill_manual(values = c("#00952e", "#a11207"), guide = FALSE) +
-    ggplot2::theme_void()
 
 
 
-  rm(aps_with_referrals, co_APs)
 
 
 
   # Side Door ---------------------------------------------------------------
-  # use Referrals, get logic from ART report- it's pretty lax I think
-
-
-  # Old Outstanding Referrals -----------------------------------------------
-  # CW says ReferringProjectID should work instead of Referred-From Provider
-  # Using ReferringProjectID instead. Either way, I feel this should go in the
-  # Provider Dashboard, not the Data Quality report.
-# TODO Refresh this once ReferralOutcome is figured out in Clarity  2021-09-03
-#internal_old_outstanding_referrals <- dq_internal_old_outstanding_referrals(served_in_date_range, Referrals, vars)
-
-  # ^^this is pulling in neither the Unsheltered NOR referrals from APs
-
-  staging_outstanding_referrals <-
-    internal_old_outstanding_referrals %>%
-    dplyr::left_join(Project[c("ProjectName", "ProjectID")], by = "ProjectName") %>%
-    dplyr::select(ProjectName, ProjectID, PersonalID) %>%
-    dplyr::group_by(ProjectName, ProjectID) %>%
-    dplyr::summarise(Open_Referrals = dplyr::n()) %>%
-    dplyr::arrange(dplyr::desc(Open_Referrals)) %>%
-    dplyr::mutate(Project = paste0(ProjectName, ":", ProjectID))
+  # moved to Data_Quality_plots
 
 
 
 
-  # Unsheltered Incorrect Residence Prior -----------------------------------
-  unsheltered_enrollments <- served_in_date_range %>%
-    dplyr::filter(ProjectID == 1695) %>%
-    dplyr::select(
-      dplyr::all_of(vars$prep),
-      RelationshipToHoH,
-      LivingSituation,
-      AgeAtEntry,
-      Destination,
-      CountyServed,
-      ProjectCounty,
-      LivingSituation
-    )
 
-  # TODO SP: Add to SP Checks
-  unsheltered_not_unsheltered <- unsheltered_enrollments %>%
-    dplyr::filter(LivingSituation != 16) %>%
-    dplyr::mutate(
-      Type = "High Priority",
-      Issue = "Wrong Provider (Not Unsheltered)",
-      Guidance = "Clients who were incorrectly entered into the Unsheltered
-          provider should be exited. Otherwise, correct the data. Please review
-          the <a href=\"https://www.youtube.com/watch?v=qdmrqOHXoN0&t=174s\"
-          target=\"_blank\">data entry portion of the Unsheltered video training</a>
-          for more info.",
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-
-  # Unsheltered New Entries by County by Month ------------------------------
-  # TODO SP: Add to SP Checks
-  unsheltered_by_month <- unsheltered_enrollments %>%
-    dplyr::left_join(Users, by = "UserCreating") %>%
-    dplyr::mutate(ExitAdjust = dplyr::if_else(is.na(ExitDate), lubridate::today(), ExitDate),
-                  County = dplyr::if_else(is.na(CountyServed), UserCounty, CountyServed),
-                  EntryDateDisplay = format.Date(EntryDate, "%b %Y")) %>%
-    dplyr::select(EntryDate, EntryDateDisplay, HouseholdID, County)
 
 
   # SSVF --------------------------------------------------------------------
-
-  ssvf_served_in_date_range <- Enrollment %>%
-    dplyr::select(
-      EnrollmentID,
-      HouseholdID,
-      PersonalID,
-      ProjectName,
-      ProjectType,
-      EntryDate,
-      MoveInDateAdjust,
-      ExitDate,
-      UserCreating,
-      RelationshipToHoH,
-      PercentAMI,
-      LastPermanentStreet,
-      LastPermanentCity,
-      LastPermanentState,
-      LastPermanentZIP,
-      AddressDataQuality,
-      VAMCStation,
-      HPScreeningScore,
-      ThresholdScore,
-      IraqAfghanistan,
-      FemVet
-    ) %>%
-    dplyr::right_join(
-      served_in_date_range %>%
-        dplyr::filter(GrantType == "SSVF") %>%
-        dplyr::select(PersonalID, EnrollmentID, HouseholdID, ProjectRegion),
-      by = c("PersonalID", "EnrollmentID", "HouseholdID")
-    ) %>%
-    dplyr::left_join(
-      Client %>%
-        dplyr::select(
-          PersonalID,
-          VeteranStatus,
-          YearEnteredService,
-          YearSeparated,
-          WorldWarII,
-          KoreanWar,
-          VietnamWar,
-          DesertStorm,
-          AfghanistanOEF,
-          IraqOIF,
-          IraqOND,
-          OtherTheater,
-          MilitaryBranch,
-          DischargeStatus
-        ),
-      by = "PersonalID"
-    )
-
-  veteran_missing_year_entered <- ssvf_served_in_date_range %>%
-    dplyr::filter(VeteranStatus == 1) %>%
-    dplyr::mutate(
-      Issue = dplyr::case_when(
-        is.na(YearEnteredService) ~ "Missing Year Entered Service",
-        YearEnteredService > lubridate::year(lubridate::today()) ~ "Incorrect Year Entered Service"),
-      Type = "Error",
-      Guidance = guidance$missing_at_entry
-    ) %>%
-    dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  veteran_missing_year_separated <- ssvf_served_in_date_range %>%
-    dplyr::filter(VeteranStatus == 1) %>%
-    dplyr::mutate(
-      Issue = dplyr::case_when(
-        is.na(YearSeparated) ~ "Missing Year Separated",
-        YearSeparated > lubridate::year(lubridate::today()) ~ "Incorrect Year Separated"),
-      Type = "Error",
-      Guidance = guidance$missing_at_entry
-    ) %>%
-    dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  veteran_missing_wars <- ssvf_served_in_date_range %>%
-    dplyr::filter(
-      VeteranStatus == 1 &
-        (
-          is.na(WorldWarII) | WorldWarII == 99 |
-            is.na(KoreanWar) | KoreanWar == 99 |
-            is.na(VietnamWar) | VietnamWar == 99 |
-            is.na(DesertStorm) | DesertStorm == 99 |
-            is.na(AfghanistanOEF) | AfghanistanOEF == 99 |
-            is.na(IraqOIF) | IraqOIF == 99 |
-            is.na(IraqOND) | IraqOND == 99 |
-            is.na(OtherTheater) |
-            OtherTheater == 99
-        )
-    ) %>%
-    dplyr::mutate(Issue = "Missing War(s)",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_entry) %>%
-    dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  veteran_missing_branch <- ssvf_served_in_date_range %>%
-    dplyr::filter(VeteranStatus == 1 &
-                    is.na(MilitaryBranch)) %>%
-    dplyr::mutate(Issue = "Missing Military Branch",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_entry) %>%
-    dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  veteran_missing_discharge_status <- ssvf_served_in_date_range %>%
-    dplyr::filter(VeteranStatus == 1 & is.na(DischargeStatus)) %>%
-    dplyr::mutate(Issue = "Missing Discharge Status",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_entry) %>%
-    dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  dkr_client_veteran_info <- ssvf_served_in_date_range %>%
-    dplyr::filter(VeteranStatus == 1) %>%
-    dplyr::mutate(
-      Issue = dplyr::case_when(
-        WorldWarII %in% c(8, 9) |
-          KoreanWar %in% c(8, 9) |
-          VietnamWar %in% c(8, 9) |
-          DesertStorm  %in% c(8, 9) |
-          AfghanistanOEF %in% c(8, 9) |
-          IraqOIF %in% c(8, 9) |
-          IraqOND %in% c(8, 9) |
-          OtherTheater  %in% c(8, 9)  ~ "Don't Know/Refused War(s)",
-        MilitaryBranch %in% c(8, 9) ~ "Missing Military Branch",
-        DischargeStatus %in% c(8, 9) ~ "Missing Discharge Status"
-      ),
-      Type = "Warning",
-      Guidance = guidance$dkr_data
-    ) %>%
-    dplyr::filter(!is.na(Issue)) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  ssvf_missing_percent_ami <- ssvf_served_in_date_range %>%
-    dplyr::filter(RelationshipToHoH == 1 &
-                    is.na(PercentAMI)) %>%
-    dplyr::mutate(Issue = "Missing Percent AMI",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  ssvf_missing_vamc <- ssvf_served_in_date_range %>%
-    dplyr::filter(RelationshipToHoH == 1 &
-                    is.na(VAMCStation)) %>%
-    dplyr::mutate(Issue = "Missing VAMC Station Number",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  ssvf_missing_address <- ssvf_served_in_date_range %>%
-    dplyr::filter(RelationshipToHoH == 1 &
-                    (
-                      is.na(LastPermanentStreet) |
-                        is.na(LastPermanentCity) |
-                        # is.na(LastPermanentState) | # still not fixed in export
-                        is.na(LastPermanentZIP)
-                    )) %>%
-    dplyr::mutate(Issue = "Missing Some or All of Last Permanent Address",
-                  Type = "Error",
-                  Guidance = guidance$missing_at_entry) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+#
+#   ssvf_served_in_date_range <-
+#     ssvf_served_in_date_range()
+#
+#
+#   veteran_missing_year_entered <- dq_veteran_missing_year_entered()
+#
+#   veteran_missing_year_separated <- dq_veteran_missing_year_separated()
+#
+#   veteran_missing_branch <-
+#     dq_veteran_missing_branch()
+#
+#   veteran_missing_discharge_status <- dq_veteran_missing_discharge_status()
+#
+#   dkr_client_veteran_info <- dq_dkr_client_veteran_info()
+#
+#   ssvf_missing_percent_ami <- dq_ssvf_missing_percent_ami()
+#ssvf_missing_address <- dq_ssvf_missing_address()
+#
 
   # TEMPORARILY NOT REQUIRED FOR COVID-19 REASONS
   # ssvf_hp_screen <- ssvf_served_in_date_range %>%
@@ -743,334 +525,109 @@ detail_eligibility <- dq_check_eligibility(detail = TRUE)
   # All together now --------------------------------------------------------
 
 
-  dq_main <- rbind(
-    aps_with_ees,
-    check_disability_ssi,
-    check_eligibility,
-    conflicting_disabilities,
-    conflicting_health_insurance_entry,
-    conflicting_health_insurance_exit,
-    conflicting_income_entry,
-    conflicting_income_exit,
-    conflicting_ncbs_entry,
-    conflicting_ncbs_exit,
-    differing_manufacturers,
-    dkr_client_veteran_info,
-    dkr_destination,
-    dkr_living_situation,
-    dkr_LoS,
-    dkr_months_times_homeless,
-    dkr_residence_prior,
-    dose_date_error,
-    dose_date_warning,
-    dq_dob,
-    dq_ethnicity,
-    dq_gender,
-    dq_name,
-    dq_overlaps %>% dplyr::select(-PreviousProject),
-    dq_race,
-    dq_ssn,
-    dq_veteran,
-    duplicate_ees,
-    entered_ph_without_spdat,
-    extremely_long_stayers,
-    future_ees,
-    future_exits,
-    hh_issues,
-    incorrect_ee_type,
-    incorrect_path_contact_date,
-    internal_old_outstanding_referrals,
-    invalid_months_times_homeless,
-    lh_without_spdat,
-    mahoning_ce_60_days,
-    maybe_psh_destination,
-    # maybe_rrh_destination,
-    missing_approx_date_homeless,
-    missing_client_location,
-    missing_county_served,
-    missing_county_prior,
-    missing_destination,
-    missing_disabilities,
-    missing_health_insurance_entry,
-    missing_health_insurance_exit,
-    missing_income_entry,
-    missing_income_exit,
-    # missing_interims,
-    missing_living_situation,
-    missing_LoS,
-    missing_months_times_homeless,
-    missing_path_contact,
-    missing_previous_street_ESSH,
-    missing_ncbs_entry,
-    missing_ncbs_exit,
-    missing_residence_prior,
-    missing_vaccine_current,
-    missing_vaccine_exited,
-    no_bos_rrh,
-    no_bos_psh,
-    no_bos_th,
-    no_bos_sh,
-    path_enrolled_missing,
-    path_missing_los_res_prior,
-    path_no_status_at_exit,
-    path_reason_missing,
-    path_SOAR_missing_at_exit,
-    path_status_determination,
-    referrals_on_hh_members,
-    referrals_on_hh_members_ssvf,
-    rent_paid_no_move_in,
-    services_on_hh_members,
-    services_on_hh_members_ssvf,
-    should_be_psh_destination,
-    should_be_rrh_destination,
-    should_be_th_destination,
-    should_be_sh_destination,
-    spdat_on_non_hoh,
-    ssvf_missing_address,
-    ssvf_missing_vamc,
-    ssvf_missing_percent_ami,
-    # ssvf_hp_screen,
-    unknown_manufacturer_error,
-    unknown_manufacturer_warning,
-    unlikely_ncbs_entry,
-    veteran_missing_year_entered,
-    veteran_missing_year_separated,
-    veteran_missing_wars,
-    veteran_missing_branch,
-    veteran_missing_discharge_status
-  ) %>%
-    dplyr::filter(!ProjectName %in% c(
-      "Diversion from Homeless System",
-      "Unsheltered Clients - OUTREACH"
-    ))
-
-  dq_main <- dq_main %>%
-    unique()   %>%
-    dplyr::mutate(Type = factor(Type, levels = c("High Priority",
-                                                 "Error",
-                                                 "Warning")))
-
-  # filtering out AP errors that are irrlevant to APs
-
-  dq_main <- dq_main %>%
-    dplyr::filter(ProjectType != 14 |
-                    (
-                      ProjectType == 14 &
-                        Issue %in% c(
-                          "60 Days in Mahoning Coordinated Entry",
-                          "Access Point with Entry Exits",
-                          "Missing Date of Birth Data Quality",
-                          "Don't Know/Refused or Approx. Date of Birth",
-                          "Missing DOB",
-                          "Missing Name Data Quality",
-                          "Incomplete or Don't Know/Refused Name",
-                          "Rent Payment Made, No Move-In Date",
-                          "Invalid SSN",
-                          "Don't Know/Refused SSN",
-                          "Missing SSN",
-                          "Missing Veteran Status",
-                          "Don't Know/Refused Veteran Status",
-                          "Missing County Served"
-                        )
-                    ))
-
-  # # Waiting on Something ----------------------------------------------------
+  # dq_main <- rbind(
+  #   aps_with_ees,
+  #   check_disability_ssi,
+  #   check_eligibility,
+  #   conflicting_disabilities,
+  #   conflicting_health_insurance_entry,
+  #   conflicting_health_insurance_exit,
+  #   conflicting_income_entry,
+  #   conflicting_income_exit,
+  #   conflicting_ncbs_entry,
+  #   conflicting_ncbs_exit,
+  #   differing_manufacturers,
+  #   dkr_client_veteran_info,
+  #   dkr_destination,
+  #   dkr_living_situation,
+  #   dkr_LoS,
+  #   dkr_months_times_homeless,
+  #   dkr_residence_prior,
+  #   dose_date_error,
+  #   dose_date_warning,
+  #   dq_dob,
+  #   dq_ethnicity,
+  #   dq_gender,
+  #   dq_name,
+  #   dq_overlaps %>% dplyr::select(-PreviousProject),
+  #   dq_race,
+  #   dq_ssn,
+  #   dq_veteran,
+  #   duplicate_ees,
+  #   entered_ph_without_spdat,
+  #   extremely_long_stayers,
+  #   future_ees,
+  #   future_exits,
+  #   hh_issues,
+  #   incorrect_ee_type,
+  #   incorrect_path_contact_date,
+  #   internal_old_outstanding_referrals,
+  #   invalid_months_times_homeless,
+  #   lh_without_spdat,
+  #   mahoning_ce_60_days,
+  #   maybe_psh_destination,
+  #   # maybe_rrh_destination,
+  #   missing_approx_date_homeless,
+  #   missing_client_location,
+  #   missing_county_served,
+  #   missing_county_prior,
+  #   missing_destination,
+  #   missing_disabilities,
+  #   missing_health_insurance_entry,
+  #   missing_health_insurance_exit,
+  #   missing_income_entry,
+  #   missing_income_exit,
+  #   # missing_interims,
+  #   missing_living_situation,
+  #   missing_LoS,
+  #   missing_months_times_homeless,
+  #   missing_path_contact,
+  #   missing_previous_street_ESSH,
+  #   missing_ncbs_entry,
+  #   missing_ncbs_exit,
+  #   missing_residence_prior,
+  #   missing_vaccine_current,
+  #   missing_vaccine_exited,
+  #   no_bos_rrh,
+  #   no_bos_psh,
+  #   no_bos_th,
+  #   no_bos_sh,
+  #   path_enrolled_missing,
+  #   path_missing_los_res_prior,
+  #   path_no_status_at_exit,
+  #   path_reason_missing,
+  #   path_SOAR_missing_at_exit,
+  #   path_status_determination,
+  #   referrals_on_hh_members,
+  #   referrals_on_hh_members_ssvf,
+  #   rent_paid_no_move_in,
+  #   services_on_hh_members,
+  #   services_on_hh_members_ssvf,
+  #   should_be_psh_destination,
+  #   should_be_rrh_destination,
+  #   should_be_th_destination,
+  #   should_be_sh_destination,
+  #   spdat_on_non_hoh,
+  #   ssvf_missing_address,
+  #   ssvf_missing_vamc,
+  #   ssvf_missing_percent_ami,
+  #   # ssvf_hp_screen,
+  #   unknown_manufacturer_error,
+  #   unknown_manufacturer_warning,
+  #   unlikely_ncbs_entry,
+  #   veteran_missing_year_entered,
+  #   veteran_missing_year_separated,
+  #   veteran_missing_wars,
+  #   veteran_missing_branch,
+  #   veteran_missing_discharge_status
+  # ) %>%
+  #   dplyr::filter(!ProjectName %in% c(
+  #     "Diversion from Homeless System",
+  #     "Unsheltered Clients - OUTREACH"
+  #   ))
   #
-  #     dq_main <- dq_main %>%
-  #       filter(
-  #         !Issue %in% c(
-  #           "Missing PATH Contact", # waiting on AW comments
-  #           "No Contact End Date (PATH)", # waiting on AW comments
-  #           "No PATH Contact Entered at Entry" # waiting on AW comments
-  #         )
-  #       )
-
-  # Unsheltered DQ ----------------------------------------------------------
-
-  dq_unsheltered <- rbind(
-    check_disability_ssi,
-    dkr_destination,
-    dkr_months_times_homeless,
-    dkr_residence_prior,
-    dkr_LoS,
-    dq_dob,
-    dq_ethnicity,
-    dq_race,
-    dq_gender,
-    dq_name,
-    dq_overlaps %>% dplyr::select(-PreviousProject),
-    duplicate_ees,
-    future_ees,
-    future_exits,
-    hh_issues,
-    incorrect_ee_type,
-    internal_old_outstanding_referrals,
-    lh_without_spdat,
-    maybe_psh_destination,
-    # maybe_rrh_destination,
-    missing_approx_date_homeless,
-    missing_destination,
-    missing_county_served,
-    missing_LoS,
-    missing_months_times_homeless,
-    missing_residence_prior,
-    no_bos_rrh,
-    no_bos_psh,
-    no_bos_th,
-    no_bos_sh,
-    referrals_on_hh_members,
-    should_be_psh_destination,
-    should_be_rrh_destination,
-    should_be_th_destination,
-    should_be_sh_destination,
-    spdat_on_non_hoh,
-    unsheltered_not_unsheltered,
-    unsheltered_long_not_referred
-  ) %>%
-    dplyr::filter(ProjectName == "Unsheltered Clients - OUTREACH") %>%
-    dplyr::left_join(Users, by = "UserCreating") %>%
-    dplyr::select(-UserID,-UserName,-ProjectRegion) %>%
-    dplyr::filter(
-      UserCounty != "Franklin" &
-        !Issue %in% c(
-          "Conflicting Health Insurance yes/no at Entry",
-          "Conflicting Health Insurance yes/no at Exit",
-          "Conflicting Income yes/no at Entry",
-          "Conflicting Income yes/no at Exit",
-          "Conflicting Non-cash Benefits yes/no at Entry",
-          "Conflicting Non-cash Benefits yes/no at Exit",
-          "Health Insurance Missing at Entry",
-          "Health Insurance Missing at Exit",
-          "Income Missing at Entry",
-          "Income Missing at Exit",
-          "Non-cash Benefits Missing at Entry",
-          "Non-cash Benefits Missing at Exit"
-        )
-    )
-
-  dq_unsheltered <- dq_unsheltered %>%
-    dplyr::mutate(
-      Type = dplyr::if_else(Issue == "Missing County Served", "High Priority", Type),
-      Type = factor(Type, levels = c("High Priority",
-                                             "Error",
-                                             "Warning"))
-    )
-
-  # Controls what is shown in the CoC-wide DQ tab ---------------------------
-
-  # for CoC-wide DQ tab
-
-  dq_past_year <- dq_main %>%
-    HMIS::served_between(rm_dates$hc$check_dq_back_to,
-                         lubridate::today()) |>
-    dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
-
-  # for project evaluation reporting
-
-  dq_for_pe <- dq_main  |>
-    HMIS::served_between(rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end)
-    dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
 
 
-  dq_providers <- sort(projects_current_hmis$ProjectName)
 
-
-  # Clean up the house ------------------------------------------------------
-
-  rm(
-    aps_with_ees,
-    check_disability_ssi,
-    check_eligibility,
-    conflicting_disabilities,
-    conflicting_health_insurance_entry,
-    conflicting_health_insurance_exit,
-    conflicting_income_entry,
-    conflicting_income_exit,
-    conflicting_ncbs_entry,
-    conflicting_ncbs_exit,
-    # detail_eligibility, # the app needs this; keep this commented out
-    detail_missing_disabilities,
-    dkr_living_situation,
-    dkr_months_times_homeless,
-    dkr_residence_prior,
-    dkr_destination,
-    dkr_LoS,
-    dkr_client_veteran_info,
-    dq_data_unsheltered_high,
-    dq_dob,
-    dq_ethnicity,
-    dq_gender,
-    dq_name,
-    dq_race,
-    dq_ssn,
-    dq_veteran,
-    duplicate_ees,
-    entered_ph_without_spdat,
-    extremely_long_stayers,
-    future_ees,
-    future_exits,
-    hh_issues,
-    incorrect_ee_type,
-    incorrect_path_contact_date,
-    missing_path_contact,
-    internal_old_outstanding_referrals,
-    lh_without_spdat,
-    missing_approx_date_homeless,
-    missing_client_location,
-    missing_county_prior,
-    missing_county_served,
-    missing_destination,
-    missing_disabilities,
-    missing_health_insurance_entry,
-    missing_health_insurance_exit,
-    missing_income_entry,
-    missing_income_exit,
-    invalid_months_times_homeless,
-    missing_living_situation,
-    missing_LoS,
-    missing_months_times_homeless,
-    missing_ncbs_entry,
-    missing_ncbs_exit,
-    missing_previous_street_ESSH,
-    missing_residence_prior,
-    path_enrolled_missing,
-    path_missing_los_res_prior,
-    path_no_status_at_exit,
-    path_reason_missing,
-    path_SOAR_missing_at_exit,
-    path_status_determination,
-    projects_current_hmis,
-    referrals_on_hh_members,
-    referrals_on_hh_members_ssvf,
-    rent_paid_no_move_in,
-    served_in_date_range,
-    services_on_hh_members,
-    services_on_hh_members_ssvf,
-    project_small,
-    spdat_on_non_hoh,
-    ssvf_missing_address,
-    ssvf_missing_vamc,
-    ssvf_missing_percent_ami,
-    ssvf_served_in_date_range,
-    staging_outstanding_referrals,
-    stray_services_warning,
-    unlikely_ncbs_entry,
-    unsheltered_enrollments,
-    unsheltered_not_unsheltered,
-    unsheltered_long_not_referred,
-    va_funded,
-    vars$prep,
-    vars$we_want,
-    veteran_missing_year_entered,
-    veteran_missing_year_separated,
-    veteran_missing_wars,
-    veteran_missing_branch,
-    veteran_missing_discharge_status
-  )
-  rm(list = ls(pattern = "dq_data_"))
-  rm(list = ls(pattern = "guidance$"))
-
-  # WARNING save.image does not save the environment properly, save must be used.
-app_env$gather_deps()
-app_env
+app_env$gather_deps("everything")
 }

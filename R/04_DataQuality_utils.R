@@ -7,6 +7,12 @@ is_sp <- function() {
   getOption("HMIS")$ServicePoint
 }
 
+must_sp <- function(.call = match.call()[[1]]) {
+  if (!is_sp())
+    rlang::abort(.call, " is a ServicePoint specific data quality check.")
+  TRUE
+}
+
 get_null_names <- function(fmls = rlang::fn_fmls(), e = rlang::caller_env()) {
   browser()
   names(fmls)[purrr::imap_lgl(fmls, ~exists(.y, e, mode = "NULL"))]
@@ -90,7 +96,7 @@ projects_current_hmis <- function (Project,
 #' @return \code{(data.frame)}
 
 
-served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH_CL_AaE = NULL, Client = NULL, Project = NULL, Inventory = NULL, HealthAndDV = NULL, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH_CL_AaE = NULL, Client = NULL, Project = NULL, Inventory = NULL, HealthAndDV = NULL, vars, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$merge_deps_to_env(missing_fmls())
   Enrollment_extra_Exit_HH_CL_AaE  |>
@@ -98,53 +104,49 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH
     dplyr::left_join(Client  |>
                        dplyr::select(-DateCreated), by = "PersonalID") |>
     dplyr::select(
-      PersonalID,
-      FirstName,
-      NameDataQuality,
-      SSN,
-      SSNDataQuality,
-      DOB,
-      DOBDataQuality,
-      AmIndAKNative,
-      Asian,
-      BlackAfAmerican,
-      NativeHIOtherPacific,
-      White,
-      RaceNone,
-      Ethnicity,
-      Gender,
-      VeteranStatus,
-      EnrollmentID,
-      ProjectID,
-      EntryDate,
-      HouseholdID,
-      RelationshipToHoH,
-      LivingSituation,
-      LengthOfStay,
-      LOSUnderThreshold,
-      PreviousStreetESSH,
-      DateToStreetESSH,
-      TimesHomelessPastThreeYears,
-      AgeAtEntry,
-      MonthsHomelessPastThreeYears,
-      DisablingCondition,
-      DateOfEngagement,
-      MoveInDate,
-      MoveInDateAdjust,
-      CountyServed,
-      CountyPrior,
-      ExitDate,
-      Destination,
-      ExitAdjust,
-      DateCreated,
-      UserCreating,
-      ClientEnrolledInPATH,
-      LengthOfStay,
-      DateOfPATHStatus,
-      ReasonNotEnrolled,
-      ClientLocation,
-      PHTrack,
-      ExpectedPHDate
+      c(
+        vars$prep,
+        "FirstName",
+        "NameDataQuality",
+        "SSN",
+        "SSNDataQuality",
+        "DOB",
+        "DOBDataQuality",
+        "AmIndAKNative",
+        "Asian",
+        "BlackAfAmerican",
+        "NativeHIOtherPacific",
+        "White",
+        "RaceNone",
+        "Ethnicity",
+        "Gender",
+        "VeteranStatus",
+        "EnrollmentID",
+        "ProjectID",
+        "RelationshipToHoH",
+        "LivingSituation",
+        "LengthOfStay",
+        "LOSUnderThreshold",
+        "PreviousStreetESSH",
+        "DateToStreetESSH",
+        "TimesHomelessPastThreeYears",
+        "AgeAtEntry",
+        "MonthsHomelessPastThreeYears",
+        "DisablingCondition",
+        "DateOfEngagement",
+        "MoveInDate",
+        "CountyServed",
+        "CountyPrior",
+        "Destination",
+        "ExitAdjust",
+        "DateCreated",
+        "ClientEnrolledInPATH",
+        "DateOfPATHStatus",
+        "ReasonNotEnrolled",
+        "ClientLocation",
+        "PHTrack",
+        "ExpectedPHDate"
+      )
       #, EEType # Deprecated SP logic
     )  |>
     dplyr::inner_join(projects_current_hmis, by = "ProjectID") |>
@@ -2051,7 +2053,7 @@ dq_future_exits <- function(served_in_date_range, vars, app_env = get_app_env(e 
 #' @inherit data_quality_tables params return
 #' @export
 
-dq_ph_without_spdats <- function(served_in_date_range, Funder, rm_dates, vars, app_env = get_app_env(e = rlang::caller_env())) {
+dq_ph_without_spdats <- function(served_in_date_range, Funder, rm_dates, vars, app_env = get_app_env(e = rlang::caller_env()), unsh = FALSE) {
   if (is_app_env(app_env))
     app_env$merge_deps_to_env(missing_fmls())
 
@@ -2138,8 +2140,13 @@ dq_ph_without_spdats <- function(served_in_date_range, Funder, rm_dates, vars, a
       ) %>%
       dplyr::select(dplyr::all_of(vars$we_want))
 
-    dplyr::bind_rows(spdat_on_non_hoh, lh_without_spdat, entered_ph_without_spdat, va_funded)
-  }
+
+  out <- dplyr::bind_rows(spdat_on_non_hoh, lh_without_spdat, entered_ph_without_spdat, va_funded)
+  if (unsh && must_sp())
+    out <- dplyr::bind_rows(lh_without_spdat, spdat_on_non_hoh)
+
+  out
+}
 
 # Income Checks ----
 # Thu Sep 16 17:25:10 2021
@@ -2309,15 +2316,16 @@ dq_missing_income <- function(served_in_date_range, IncomeBenefits, vars, guidan
 
 #' @title Find Overlapping Project Stays
 #' @family Clarity Checks
+#' @family ServicePoint Checks
 #' @family DQ: Overlapping Enrollment/Move-In Dates
 #' @description A client cannot reside in an ES, TH, or Safe Haven at the same time. Nor can they have a Move-In Date into a PSH or RRH project while they are still in an ES, TH, or Safe Haven. Further, they cannot be in any two RRH's or any two PSH's simultaneously, housed or not. Please look the client(s) up in HMIS and determine which project stay's Entry/Move-In/or Exit Date is incorrect. PLEASE NOTE: It may be the 'Previous Provider's' mistake, but if you are seeing clients here, it means your project stay was entered last. If the overlap is not your project's mistake, please work with the project that has the incorrect Entry/Move-In/or Exit Date to get this corrected or send an email to \href{mailto:hmis\@cohhio.org}{hmis\@cohhio.org} if you cannot get it resolved. These clients will NOT show on their Data Quality app. If YOUR dates are definitely correct, it is fine to continue with other data corrections as needed.
 #' @inherit data_quality_tables params return
 #' @export
 
-dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+dq_overlaps <- function(served_in_date_range, Users, vars, guidance, app_env = get_app_env(e = rlang::caller_env()), unsh = FALSE) {
   if (is_app_env(app_env))
     app_env$merge_deps_to_env(missing_fmls())
-  served_in_date_range %>%
+  dq_overlaps <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
     dplyr::mutate(
       EntryAdjust = dplyr::case_when(
@@ -2357,7 +2365,19 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
       Overlap = lubridate::int_overlaps(LiterallyInProject, PreviousStay)
     ) %>%
     dplyr::filter(Overlap == TRUE) %>%
-    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
+    dplyr::select(dplyr::all_of(vars$we_want))
+
+  if (unsh && must_sp()) {
+    dq_overlaps <- dq_overlaps %>%
+      dplyr::filter(ProjectName == "Unsheltered Clients - OUTREACH") %>%
+      dplyr::left_join(Users, by = "UserCreating") %>%
+      dplyr::select(PersonalID,
+                    DefaultProvider,
+                    EntryDate,
+                    ExitDate,
+                    PreviousProject)
+  }
+  dq_overlaps
 }
 
 #' @title Find Overlapping Project Stays on the Same Day
@@ -2864,7 +2884,7 @@ dq_services_on_hh_members_ssvf <- function(served_in_date_range, vars, guidance,
     dplyr::semi_join(Services, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::mutate(Issue = "Service Transaction on a Non Head of Household (SSVF)",
                   Type = "Error",
-                  Guidance = guidance$service_on_non_hoh) %>%
+                  Guidance = guidance$services_on_non_hoh) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 
 }
@@ -2912,156 +2932,320 @@ dq_aps_with_ees <- function(served_in_date_range, vars, guidance, app_env = get_
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
-if (is_sp()) {
-# ServicePoint DQ Checks ----
-# Tue Sep 14 10:14:17 2021
-#' @title Incorrect Entry/Exit Types
-#' @inherit data_quality_tables params return
-#' @family ServicePoint Checks
+
+
+# SSVF --------------------------------------------------------------------
+
+#' @title Create `ssvf_served_in_date_range` for Clients receiving grants from SSVF
+#'
+#' @inherit served_in_date_range params return
 #' @export
 
-dq_sp_incorrect_ee_type <- function(server_in_date_range) {
-  if (!is_sp())
-    rlang::abort(match.call()[[1]], " is a ServicePoint specific data quality check.")
-  served_in_date_range %>%
+ssvf_served_in_date_range <- function(Enrollment, served_in_date_range, Client, app_env = get_app_env(e = rlang::caller_env())) {
+    if (is_app_env(app_env))
+      app_env$merge_deps_to_env(missing_fmls())
+
+    Enrollment %>%
+      dplyr::select(
+        EnrollmentID,
+        HouseholdID,
+        PersonalID,
+        ProjectName,
+        ProjectType,
+        EntryDate,
+        MoveInDateAdjust,
+        ExitDate,
+        UserCreating,
+        RelationshipToHoH,
+        PercentAMI,
+        LastPermanentStreet,
+        LastPermanentCity,
+        LastPermanentState,
+        LastPermanentZIP,
+        AddressDataQuality,
+        VAMCStation,
+        HPScreeningScore,
+        ThresholdScore,
+        IraqAfghanistan,
+        FemVet
+      ) %>%
+      dplyr::right_join(
+        served_in_date_range %>%
+          dplyr::filter(GrantType == "SSVF") %>%
+          dplyr::select(PersonalID, EnrollmentID, HouseholdID, ProjectRegion),
+        by = c("PersonalID", "EnrollmentID", "HouseholdID")
+      ) %>%
+      dplyr::left_join(
+        Client %>%
+          dplyr::select(
+            PersonalID,
+            VeteranStatus,
+            YearEnteredService,
+            YearSeparated,
+            WorldWarII,
+            KoreanWar,
+            VietnamWar,
+            DesertStorm,
+            AfghanistanOEF,
+            IraqOIF,
+            IraqOND,
+            OtherTheater,
+            MilitaryBranch,
+            DischargeStatus
+          ),
+        by = "PersonalID"
+      )
+  }
+
+#' @title Check for missing Year Entered on clients who are Veterans
+#'
+#' @param ssvf_served_in_date_range See \code{ssvf_served_in_date_range}
+#' @inherit data_quality_tables params return
+#' @family DQ: EE Checks
+#' @family DQ: SSVF Checks
+#' @export
+
+dq_veteran_missing_year_entered <- function(ssvf_served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
+
+  ssvf_served_in_date_range %>%
+    dplyr::filter(VeteranStatus == 1) %>%
+    dplyr::mutate(
+      Issue = dplyr::case_when(
+        is.na(YearEnteredService) ~ "Missing Year Entered Service",
+        YearEnteredService > lubridate::year(lubridate::today()) ~ "Incorrect Year Entered Service"),
+      Type = "Error",
+      Guidance = guidance$missing_at_entry
+    ) %>%
+    dplyr::filter(!is.na(Issue)) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+}
+
+
+#' @title Check for missing Year Separated on clients who are Veterans
+#'
+#' @inherit dq_veteran_missing_year_entered params return
+#' @family DQ: SSVF Checks
+#' @family DQ: EE Checks
+#' @export
+
+dq_veteran_missing_year_separated <- function(ssvf_served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
+
+  ssvf_served_in_date_range %>%
+    dplyr::filter(VeteranStatus == 1) %>%
+    dplyr::mutate(
+      Issue = dplyr::case_when(
+        is.na(YearSeparated) ~ "Missing Year Separated",
+        YearSeparated > lubridate::year(lubridate::today()) ~ "Incorrect Year Separated"),
+      Type = "Error",
+      Guidance = guidance$missing_at_entry
+    ) %>%
+    dplyr::filter(!is.na(Issue)) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+
+  veteran_missing_wars <- ssvf_served_in_date_range %>%
     dplyr::filter(
-      (
-        is.na(GrantType) &
-          !grepl("GPD", ProjectName) &
-          !grepl("HCHV", ProjectName) &
-          !grepl("VET", ProjectName) &
-          !grepl("Veterans", ProjectName) &
-          ProjectID != 1695 &
-          EEType != "HUD"
-      ) |
-        ((
-          GrantType == "SSVF" |
-            grepl("GPD", ProjectName) |
-            grepl("HCHV", ProjectName) |
-            grepl("Veterans", ProjectName) |
-            grepl("VET", ProjectName) |
-            grepl("VASH", ProjectName)
-        ) &
-          EEType != "VA"
-        ) |
-        (GrantType == "RHY" &
-           !grepl("YHDP", ProjectName) &
-           !grepl("ODH", ProjectName) &
-           EEType != "RHY") |
-        (GrantType == "RHY" &
-           grepl("YHDP", ProjectName) &
-           grepl("ODH", ProjectName) &
-           EEType != "HUD") |
-        (GrantType == "PATH" & EEType != "PATH") |
-        (ProjectID == 1695 & EEType != "Standard")
+      VeteranStatus == 1 &
+        (
+          is.na(WorldWarII) | WorldWarII == 99 |
+            is.na(KoreanWar) | KoreanWar == 99 |
+            is.na(VietnamWar) | VietnamWar == 99 |
+            is.na(DesertStorm) | DesertStorm == 99 |
+            is.na(AfghanistanOEF) | AfghanistanOEF == 99 |
+            is.na(IraqOIF) | IraqOIF == 99 |
+            is.na(IraqOND) | IraqOND == 99 |
+            is.na(OtherTheater) |
+            OtherTheater == 99
+        )
     ) %>%
-    dplyr::mutate(Issue = "Incorrect Entry Exit Type",
-                  Type = "High Priority",
-                  Guidance = guidance$incorrect_ee_type) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-}
-
-#' @title Find Stray Services
-#' @inherit data_quality_tables params return
-#' @family ServicePoint Checks
-#' @export
-
-
-dq_sp_stray_services <- function(stray_services) {
-  if (!is_sp())
-    rlang::abort(match.call()[[1]], " is a ServicePoint specific data quality check.")
-    stray_services %>%
-    dplyr::mutate(Issue = "Service Not Attached to an Entry Exit",
-                  Type = "Warning",
-                  Guidance = guidance$stray_service) %>%
-    dplyr::select(PersonalID, ServiceProvider, ServiceStartDate, Issue, Type)
-}
-
-
-#' @title Find Referrals on Household Members
-#' @inherit data_quality_tables params return
-#' @family ServicePoint Checks
-#' @export
-
-dq_sp_referrals_on_hh_members <- function(served_in_date_range, vars) {
-  if (!is_sp())
-    rlang::abort(match.call()[[1]], " is a ServicePoint specific data quality check.")
-  served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep),
-                  RelationshipToHoH,
-                  EnrollmentID,
-                  GrantType) %>%
-    dplyr::filter(RelationshipToHoH != 1 &
-                    (GrantType != "SSVF"  | is.na(GrantType))) %>%
-    dplyr::semi_join(Referrals,
-                     by = c("PersonalID", "ProjectName" = "ProviderCreating")) %>%
-    dplyr::mutate(
-      Issue = "Referral on a Non Head of Household",
-      Type = "Warning",
-      Guidance = guidance$referral_on_non_hoh
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-}
-
-
-#' @title Find Referrals on Household Members SSVF
-#' @inherit data_quality_tables params return
-#' @family ServicePoint Checks
-#' @export
-
-dq_sp_referrals_on_hh_members_ssvf <- function(served_in_date_range, vars) {
-  if (!is_sp())
-    rlang::abort(match.call()[[1]], " is a ServicePoint specific data quality check.")
-  served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep),
-                  RelationshipToHoH,
-                  EnrollmentID,
-                  GrantType) %>%
-    dplyr::filter(RelationshipToHoH != 1 &
-                    GrantType == "SSVF") %>%
-    dplyr::semi_join(Referrals, by = c("PersonalID")) %>%
-    dplyr::mutate(Issue = "Referral on a Non Head of Household (SSVF)",
+    dplyr::mutate(Issue = "Missing War(s)",
                   Type = "Error",
-                  Guidance = guidance$referral_on_non_hoh) %>%
+                  Guidance = guidance$missing_at_entry) %>%
+    dplyr::filter(!is.na(Issue)) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
-#' @title Find Internal Outstanding Referrals
-#' @inherit data_quality_tables params return
-#' @family ServicePoint Checks
+
+#' @title Check for missing Branch on clients who are Veterans
+#'
+#' @inherit dq_veteran_missing_year_entered params return
+#' @family DQ: SSVF Checks
+#' @family DQ: EE Checks
 #' @export
 
-
-dq_internal_old_outstanding_referrals <- function(served_in_date_range, Referrals, vars) {
-  served_in_date_range %>%
-    dplyr::semi_join(Referrals,
-                     by = c("PersonalID")) %>%
-    dplyr::left_join(Referrals,
-                     by = c("PersonalID")) %>%
-    dplyr::filter(ReferringProjectID == ProjectName &
-                    ProjectID != 1695) %>%
-    dplyr::select(dplyr::all_of(vars$prep),
-                  ReferringProjectID,
-                  ReferralDate,
-                  ReferralOutcome,
-                  EnrollmentID) %>%
-    dplyr::filter(is.na(ReferralOutcome) &
-                    ReferralDate < lubridate::today() - lubridate::days(14)) %>%
-    dplyr::mutate(
-      ProjectName = ReferringProjectID,
-      Issue = "Old Outstanding Referral",
-      Type = "Warning",
-      Guidance = "Referrals should be closed in about 2 weeks. Please be sure you are
-      following up with any referrals and helping the client to find permanent
-      housing. Once a Referral is made, the receiving agency should be saving
-      the \"Referral Outcome\" once it is known. If you have Referrals that are
-      legitimately still open after 2 weeks because there is a lot of follow
-      up going on, no action is needed since the HMIS data is accurate."
-    ) %>%
+dq_veteran_missing_branch <- function(ssvf_served_in_date_range, guidance, vars, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
+  ssvf_served_in_date_range %>%
+    dplyr::filter(VeteranStatus == 1 &
+                    is.na(MilitaryBranch)) %>%
+    dplyr::mutate(Issue = "Missing Military Branch",
+                  Type = "Error",
+                  Guidance = guidance$missing_at_entry) %>%
+    dplyr::filter(!is.na(Issue)) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
+#' @title Check for missing Discharge Status on clients who are Veterans
+#'
+#' @inherit dq_veteran_missing_year_entered params return
+#' @family DQ: SSVF Checks
+#' @family DQ: EE Checks
+#' @export
+
+dq_veteran_missing_discharge_status <- function(ssvf_served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+  ssvf_served_in_date_range %>%
+    dplyr::filter(VeteranStatus == 1 & is.na(DischargeStatus)) %>%
+    dplyr::mutate(Issue = "Missing Discharge Status",
+                  Type = "Error",
+                  Guidance = guidance$missing_at_entry) %>%
+    dplyr::filter(!is.na(Issue)) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
 }
+
+#' @title Check for Dont Know/Refused Wars/Branch/Discharge on clients who are Veterans
+#'
+#' @inherit dq_veteran_missing_year_entered params return
+#' @family DQ: SSVF Checks
+#' @family DQ: EE Checks
+#' @export
+
+dq_dkr_client_veteran_info <- function(ssvf_served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
+
+  ssvf_served_in_date_range %>%
+    dplyr::filter(VeteranStatus == 1) %>%
+    dplyr::mutate(
+      Issue = dplyr::case_when(
+        WorldWarII %in% c(8, 9) |
+          KoreanWar %in% c(8, 9) |
+          VietnamWar %in% c(8, 9) |
+          DesertStorm  %in% c(8, 9) |
+          AfghanistanOEF %in% c(8, 9) |
+          IraqOIF %in% c(8, 9) |
+          IraqOND %in% c(8, 9) |
+          OtherTheater  %in% c(8, 9)  ~ "Don't Know/Refused War(s)",
+        MilitaryBranch %in% c(8, 9) ~ "Missing Military Branch",
+        DischargeStatus %in% c(8, 9) ~ "Missing Discharge Status"
+      ),
+      Type = "Warning",
+      Guidance = guidance$dkr_data
+    ) %>%
+    dplyr::filter(!is.na(Issue)) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+}
+
+
+#' @title Check for missing Percent AMI on clients who are Veterans
+#'
+#' @inherit dq_veteran_missing_year_entered params return
+#' @family DQ: SSVF Checks
+#' @family DQ: EE Checks
+#' @export
+
+dq_ssvf_missing_percent_ami <- function(ssvf_served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
+  ssvf_served_in_date_range %>%
+    dplyr::filter(RelationshipToHoH == 1 &
+                    is.na(PercentAMI)) %>%
+    dplyr::mutate(Issue = "Missing Percent AMI",
+                  Type = "Error",
+                  Guidance = guidance$missing_at_entry) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+
+  ssvf_missing_vamc <- ssvf_served_in_date_range %>%
+    dplyr::filter(RelationshipToHoH == 1 &
+                    is.na(VAMCStation)) %>%
+    dplyr::mutate(Issue = "Missing VAMC Station Number",
+                  Type = "Error",
+                  Guidance = guidance$missing_at_entry) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+
+}
+
+#' @title Check for missing address on clients who are Veterans
+#'
+#' @inherit dq_veteran_missing_year_entered params return
+#' @family DQ: SSVF Checks
+#' @family DQ: EE Checks
+#' @export
+
+dq_ssvf_missing_address <-
+  function(ssvf_served_in_date_range,
+           vars,
+           guidance,
+           app_env = get_app_env(e = rlang::caller_env())) {
+    if (is_app_env(app_env))
+      app_env$merge_deps_to_env(missing_fmls())
+
+    ssvf_served_in_date_range %>%
+      dplyr::filter(RelationshipToHoH == 1 &
+                      (
+                        is.na(LastPermanentStreet) |
+                          is.na(LastPermanentCity) |
+                          # is.na(LastPermanentState) | # still not fixed in export
+                          is.na(LastPermanentZIP)
+                      )) %>%
+      dplyr::mutate(
+        Issue = "Missing Some or All of Last Permanent Address",
+        Type = "Error",
+        Guidance = guidance$missing_at_entry
+      ) %>%
+      dplyr::select(dplyr::all_of(vars$we_want))
+  }
+
+# AP No Recent Referrals --------------------------------------------------
+
+dq_aps <- function(Project, Referrals, data = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
+
+  co_APs <- Project %>%
+    dplyr::filter(ProjectType == 14) %>% # not incl Mah CE
+    dplyr::select(
+      ProjectID,
+      OperatingStartDate,
+      OperatingEndDate,
+      ProjectName,
+      HMISParticipatingProject,
+      ProjectCounty
+    )
+
+  aps_no_referrals <- Referrals %>%
+    dplyr::right_join(co_APs, by = c("ReferringProjectID" = "ProjectID")) %>%
+    dplyr::filter(is.na(PersonalID)) %>%
+    dplyr::select(ReferringProjectID) %>%
+    unique()
+
+  aps_with_referrals <- Referrals %>%
+    dplyr::right_join(co_APs, by = c("ReferringProjectID" = "ProjectID")) %>%
+    dplyr::filter(!is.na(PersonalID)) %>%
+    dplyr::select(ReferringProjectID) %>%
+    unique()
+
+  if (!data)
+    return(aps_no_referrals)
+
+  data_APs <- dplyr::data.frame(
+    category = c("No Referrals", "Has Created Referrals"),
+    count = c(nrow(aps_no_referrals), nrow(aps_with_referrals)),
+    providertype = rep("Access Points"),
+    total = rep(c(
+      nrow(aps_no_referrals) + nrow(aps_with_referrals)
+    )),
+    stringsAsFactors = FALSE
+  ) %>%
+    dplyr::mutate(percent = count / total,
+                  prettypercent = scales::percent(count / total))
+  data_APs
+
+}
+
 
 #' @title Make a Clarity Profile link using the UniqueID and PersonalID
 #' @description If used in a \link[DT]{datatable}, set `escape = FALSE`
@@ -3107,4 +3291,22 @@ read_roxygen <- function(file = file.path("R","04_DataQuality_utils.R"), tag = "
     na.omit() |>
     as.character() |>
     unique()
+}
+
+
+# Plot utils ----
+# Mon Sep 20 11:16:46 2021
+
+dq_plot_theme_labs <- function(g, x = NULL, y = NULL) {
+  .labs <- list()
+  if (!missing(x))
+    .labs <- list(x = x)
+  if (!missing(y))
+    .labs <- list(x = y)
+  g +
+    ggplot2::geom_col(show.legend = FALSE) +
+    ggplot2::coord_flip() +
+    do.call(ggplot2::labs, .labs) +
+    ggplot2::scale_fill_viridis_c(direction = -1) +
+    ggplot2::theme_minimal(base_size = 18)
 }

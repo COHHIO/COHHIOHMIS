@@ -6,9 +6,11 @@
 \usage{
 dq_overlaps(
   served_in_date_range,
+  Users,
   vars,
   guidance,
-  app_env = get_app_env(e = rlang::caller_env())
+  app_env = get_app_env(e = rlang::caller_env()),
+  unsh = FALSE
 )
 }
 \arguments{
@@ -110,3 +112,4 @@ Other DQ: Overlapping Enrollment/Move-In Dates:
 }
 \concept{Clarity Checks}
 \concept{DQ: Overlapping Enrollment/Move-In Dates}
+\concept{ServicePoint Checks}

@@ -258,9 +258,9 @@ Pe_add_regions <- function(provider_extras, dirs) {
 
   # Missing Regions
   # missing_region <- provider_extras |>
-  #   dplyr::filter(is.na(Region))
+  #   dplyr::filter(is.na(ProjectRegion))
   # missing_region |>
-  #   dplyr::pull(County) |>
+  #   dplyr::pull(ProjectCounty) |>
   #   unique()
   provider_extras
 }
