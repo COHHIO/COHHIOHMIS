@@ -39,6 +39,10 @@ load_export <- function(
     Client <- Client_redact(Client)
     clarity.looker::hud_feather(Client, dirs$export)
   }
+  # Veteran Client_extras ----
+  VeteranCE <- cl_api$`HUD Extras`$Client_extras()
+
+  Client <- Client_add_UniqueID(Client, VeteranCE)
 
   # Disabilities ------------------------------------------------------------
 
@@ -75,8 +79,7 @@ Project <- cl_api$Project() |>
     cl_api$EnrollmentCoC()
 
 
-  # Veteran Client_extras ----
-  VeteranCE <- cl_api$`HUD Extras`$Client_extras()
+
 
   # Enrollment --------------------------------------------------------------
 
@@ -93,7 +96,7 @@ Project <- cl_api$Project() |>
     # Add Client Location from EnrollmentCoC
     Enrollment_add_ClientLocation(EnrollmentCoC) |>
     # Add Client AgeAtEntry
-    Enrollment_add_AgeAtEntry(Client)
+    Enrollment_add_AgeAtEntry_UniqueID(Client)
 
 
   # Funder ------------------------------------------------------------------

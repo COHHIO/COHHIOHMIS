@@ -1,11 +1,25 @@
 #' @include 04_Guidance.R
+
+#' @title Is this instance using Clarity
+#' @description Set an option in `.Rprofile` using `usethis::edit_r_profile('project')` called HMIS which is a list containing two logical values:
+#' \itemize{
+#'   \item{\code{Clarity}}{ A logical to indicate whether Clarity is (or has been) used by this CoC}
+#'   \item{\code{ServicePoint}}{ A logical to indicate whether Servicepoint is (or has been) used by this CoC}
+#' }
+#' @return \code{(logical)}
 is_clarity <- function() {
   getOption("HMIS")$Clarity
 }
 
+#' @title Is this instance using ServicePoint
+#' @inherit is_clarity description return
+
 is_sp <- function() {
   getOption("HMIS")$ServicePoint
 }
+
+#' @title This instance must be using ServicePoint, otherwise throw an error.
+#' @inherit is_clarity description return
 
 must_sp <- function(.call = match.call()[[1]]) {
   if (!is_sp())
@@ -32,21 +46,6 @@ Funder_VA_ProjectID <- function(x, ids = c(27, 30, 33, 37:42, 45)) {
     dplyr::select(ProjectID)
 }
 
-#' @title Data Quality Tables
-#' @name data_quality_tables
-#' @param served_in_date_range \code{(data.frame)} See `served_in_date_range`
-#' @param IncomeBenefits \code{(data.frame)} From the HUD CSV Export
-#' @param mahoning_projects \code{(named numeric)} Vector of ProjectIDs associated with projects operating in Mahoning. Created in `load_export`.
-#' @param guidance \code{(list)} See `guidance`
-#' @param vars \code{(named list)}
-#' \itemize{
-#'   \item{\code{prep}}{ Column names for Prep}
-#'   \item{\code{we_want}}{ Column names for output}
-#' }
-#' @param rm_dates \code{(named list)} with all dates specified or calculated in `dates`
-#' @param app_env \code{(app_env)} Object containing dependencies. If all arguments to this function are saved in the `app_env`, then they will be called from there and arguments do not need to be specified.
-#' @return \code{(data.frame)} `vars$we_want` and `Issue` (Issue Name), `Type` (Error or Warning), and `Guidance` (How to correct the issue)
-NULL
 
 
 #' @title Filter for Current HMIS participating projects
@@ -104,51 +103,56 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH
     dplyr::left_join(Client  |>
                        dplyr::select(-DateCreated), by = "PersonalID") |>
     dplyr::select(
-      c(
-        vars$prep,
-        "FirstName",
-        "NameDataQuality",
-        "SSN",
-        "SSNDataQuality",
-        "DOB",
-        "DOBDataQuality",
-        "AmIndAKNative",
-        "Asian",
-        "BlackAfAmerican",
-        "NativeHIOtherPacific",
-        "White",
-        "RaceNone",
-        "Ethnicity",
-        "Gender",
-        "VeteranStatus",
-        "EnrollmentID",
-        "ProjectID",
-        "RelationshipToHoH",
-        "LivingSituation",
-        "LengthOfStay",
-        "LOSUnderThreshold",
-        "PreviousStreetESSH",
-        "DateToStreetESSH",
-        "TimesHomelessPastThreeYears",
-        "AgeAtEntry",
-        "MonthsHomelessPastThreeYears",
-        "DisablingCondition",
-        "DateOfEngagement",
-        "MoveInDate",
-        "CountyServed",
-        "CountyPrior",
-        "Destination",
-        "ExitAdjust",
-        "DateCreated",
-        "ClientEnrolledInPATH",
-        "DateOfPATHStatus",
-        "ReasonNotEnrolled",
-        "ClientLocation",
-        "PHTrack",
-        "ExpectedPHDate"
-      )
+      PersonalID,
+      FirstName,
+      NameDataQuality,
+      SSN,
+      SSNDataQuality,
+      DOB,
+      DOBDataQuality,
+      AmIndAKNative,
+      Asian,
+      BlackAfAmerican,
+      NativeHIOtherPacific,
+      White,
+      RaceNone,
+      Ethnicity,
+      Gender,
+      VeteranStatus,
+      EnrollmentID,
+      ProjectID,
+      EntryDate,
+      HouseholdID,
+      RelationshipToHoH,
+      LivingSituation,
+      LengthOfStay,
+      LOSUnderThreshold,
+      PreviousStreetESSH,
+      DateToStreetESSH,
+      TimesHomelessPastThreeYears,
+      AgeAtEntry,
+      MonthsHomelessPastThreeYears,
+      DisablingCondition,
+      DateOfEngagement,
+      MoveInDate,
+      MoveInDateAdjust,
       #, EEType # Deprecated SP logic
-    )  |>
+      CountyServed,
+      CountyPrior,
+      ExitDate,
+      Destination,
+      ExitAdjust,
+      DateCreated,
+      UserCreating,
+      ClientEnrolledInPATH,
+      LengthOfStay,
+      DateOfPATHStatus,
+      ReasonNotEnrolled,
+      ClientLocation,
+      PHTrack,
+      ExpectedPHDate
+
+      ) |>
     dplyr::inner_join(projects_current_hmis, by = "ProjectID") |>
     dplyr::left_join(
       HealthAndDV  |>

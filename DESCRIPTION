@@ -29,6 +29,7 @@ BugReports: https://github.com/COHHIO/Rm_data/issues
 Remotes: COHHIO/hud.extract, COHHIO/clarity.looker,
        COHHIO/lookr, COHHIO/HMIS, yogat3ch/UU
 Collate: 
+    'aaa_imports.R'
     'app_dependencies.R'
     'init_R6.R'
     '00_cohorts.R'
@@ -53,5 +54,4 @@ Collate:
     '07_SPMs.R'
     '08_Active_List.R'
     '09_covid.R'
-    'aaa_imports.R'
     'guidance.R'

@@ -11,6 +11,26 @@ if (Sys.info()["nodename"] == "DESKTOP-2SK9RKR" && file.exists("Rm_data.Rproj"))
 }
 
 
+#' @title Setup Rm_data options
+#'
+#' @param Clarity \code{(logical)} Does the CoC use Clarity HMIS? **Default** \code{TRUE}
+#' @param ServicePoint \code{(logical)} Does the CoC use ServicePoint HMIS? **Default** \code{FALSE}
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' setup_Rm_data(Clarity = TRUE, ServicePoint = FALSE)
+#' }
+setup_Rm_data <- function(Clarity = TRUE, ServicePoint = FALSE) {
+  if (!UU::is_legit(list.files(pattern = "^.Rprofile$")))
+    file.create(".Rprofile")
+  write(paste0("options(HMIS = list(Clarity = ",Clarity,",
+              ServicePoint = ",ServicePoint,"))", ".Rprofile"), append = TRUE)
+  cli::cli_alert_success("HMIS options written to .Rprofile in project directory.")
+}
+
 #' Find the `clarity_api` R6 object
 #' @family Get R6 Classes
 #' @param nm The name of the instantiated object

@@ -1,3 +1,4 @@
+#' @include aaa_imports.R
 app_deps <- list(
   ## to Rm:
   Rminor = c(

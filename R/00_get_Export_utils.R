@@ -50,6 +50,22 @@ Client_redact <- function(Client) {
 }
 
 
+#' @title Add the UniqueID to the Client export
+#'
+#' @param Client \code{(data.frame)} Client HUD CSV Export item
+#' @param Client_extras \code{(data.frame)} A custom look linking PersonalID & UniqueID
+#' @param app_env
+#'
+#' @return
+#' @export
+#'
+#' @examples
+Client_add_UniqueID <- function(Client, Client_extras, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
+  dplyr::left_join(Client, dplyr::select(Client_extras, c("PersonalID", "UniqueID")), by = "PersonalID")
+}
+
 #' Add Exit data to Enrollments
 #'
 #' @param Enrollment
@@ -197,8 +213,8 @@ Enrollment_add_ClientLocation = function(Enrollment, EnrollmentCoC) {
 #' @return \code{(data.frame)} Enrollment with `AgeAtEntry` column
 #' @export
 
-Enrollment_add_AgeAtEntry <- function(Enrollment, Client) {
-  dplyr::left_join(Enrollment, dplyr::select(Client, PersonalID, DOB), by = "PersonalID") |>
+Enrollment_add_AgeAtEntry_UniqueID <- function(Enrollment, Client) {
+  dplyr::left_join(Enrollment, dplyr::select(Client, UniqueID, PersonalID, DOB), by = "PersonalID") |>
     dplyr::mutate(AgeAtEntry = age_years(DOB, EntryDate)) |>
     dplyr::select(-DOB)
 }

@@ -11,6 +11,7 @@ served_in_date_range(
   Project = NULL,
   Inventory = NULL,
   HealthAndDV = NULL,
+  vars,
   rm_dates = NULL,
   app_env = get_app_env(e = rlang::caller_env())
 )

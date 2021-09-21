@@ -7,17 +7,19 @@
 # devtools::load_all("../../lookr")
 #devtools::load_all("../hud.extract")
 # This is the default directory tree used by hud_export. It can be changed and amended and passed to hud_export in the `dirs` argument if necessary.
+# RPushBullet setup
+#RPushbullet::pbSetup(conffile = file.path("inst","auth","rpushbullet.json"))
+
 dirs <- clarity.looker::dirs
-RPushbullet::pbSetup(file.path("inst","auth","rpushbullet.json"))
 
 # must load Rm_data
 devtools::load_all()
 rstudioapi::jobRunScript(file.path("inst","src","update_data.R"), importEnv = TRUE, workingDir = getwd())
 
+Rm_env$gather_deps(guidance)
 Rm_env <- dates()
 Rm_env <- load_export()
 Rm_env <- client_counts()
-Rm_env$gather_deps(guidance)
 Rm_env <- data_quality()
 Rm_env$write_app_deps(Rm_env$app_objs$RminorElevated, Rm_env$app_deps$RminorElevated, file.path("data", "db", "RminorElevated"))
 # Uses RminorElevated as the default
