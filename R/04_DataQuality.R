@@ -81,6 +81,9 @@ data_quality <- function(check_fns = stringr::str_subset(ls(envir = .getNamespac
   served_in_date_range <- served_in_date_range()
   app_env$gather_deps(served_in_date_range)
 
+  ssvf_served_in_date_range <- ssvf_served_in_date_range()
+  app_env$gather_deps(ssvf_served_in_date_range)
+
   dqs <- purrr::imap(check_fns, ~{
     args <- names(rlang::fn_fmls(getFromNamespace(.x, "Rm_data"))) |>
       {\(x) {x[!x %in% c("app_env", "served_in_date_range")]}}()
