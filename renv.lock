@@ -3,7 +3,7 @@
     "Version": "4.1.0",
     "Repositories": [
       {
-        "Name": "https://cran.r-project.org",
+        "Name": null,
         "URL": "https://cran.r-project.org"
       }
     ]
@@ -611,8 +611,8 @@
       "RemoteUsername": "COHHIO",
       "RemoteRepo": "lookr",
       "RemoteRef": "master",
-      "RemoteSha": "502db60e9aa8794d7a0fe726c778c5d4a56f252e",
-      "Hash": "f5acdbf08b7712a74536a107ac61c956"
+      "RemoteSha": "b9494dfab500887705b988ebe94f5354db180ff0",
+      "Hash": "60de87d9f61a2933d782bb76168b2400"
     },
     "lubridate": {
       "Package": "lubridate",
@@ -857,6 +857,13 @@
       "Repository": "CRAN",
       "Hash": "515f341d3affe0de9e4a7f762efb0456"
     },
+    "rmarkdown": {
+      "Package": "rmarkdown",
+      "Version": "2.8",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "f518ba47713f92d0d603eec7c6888faf"
+    },
     "roxygen2": {
       "Package": "roxygen2",
       "Version": "7.1.1.9001",
@@ -978,6 +985,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "7243004a708d06d4716717fa1ff5b2fe"
+    },
+    "tinytex": {
+      "Package": "tinytex",
+      "Version": "0.31",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "25b572f764f3c19fef9aac33b5724f3d"
     },
     "tzdb": {
       "Package": "tzdb",
