@@ -104,6 +104,7 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH
                        dplyr::select(-DateCreated), by = "PersonalID") |>
     dplyr::select(
       PersonalID,
+      UniqueID,
       FirstName,
       NameDataQuality,
       SSN,
@@ -2568,6 +2569,8 @@ dq_missing_hi_exit <- function(served_in_date_range,  IncomeBenefits, vars, guid
 
 
 dq_conflicting_hi_ee <- function(served_in_date_range,  IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
   hi_subs <-
     served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
@@ -2827,8 +2830,8 @@ dq_check_disability_ssi <- function(served_in_date_range, vars, guidance, app_en
                   DisablingCondition) %>%
     dplyr::left_join(IncomeBenefits %>%
                        dplyr::select(EnrollmentID, PersonalID, SSI, SSDI), by = c("EnrollmentID", "PersonalID")) %>%
-    dplyr::mutate(SSI = dplyr::if_else(is.na(SSI), 0, SSI),
-                  SSDI = dplyr::if_else(is.na(SSDI), 0, SSDI)) %>%
+    dplyr::mutate(SSI = dplyr::if_else(is.na(SSI), 0L, SSI),
+                  SSDI = dplyr::if_else(is.na(SSDI), 0L, SSDI)) %>%
     dplyr::filter(SSI + SSDI > 0 &
                     DisablingCondition == 0 & AgeAtEntry > 17) %>%
     dplyr::select(-DisablingCondition, -SSI, -SSDI, -AgeAtEntry) %>%
@@ -2945,11 +2948,11 @@ dq_aps_with_ees <- function(served_in_date_range, vars, guidance, app_env = get_
 #' @inherit served_in_date_range params return
 #' @export
 
-ssvf_served_in_date_range <- function(Enrollment, served_in_date_range, Client, app_env = get_app_env(e = rlang::caller_env())) {
+ssvf_served_in_date_range <- function(Enrollment_extra_Exit_HH_CL_AaE, served_in_date_range, Client, app_env = get_app_env(e = rlang::caller_env())) {
     if (is_app_env(app_env))
       app_env$merge_deps_to_env(missing_fmls())
 
-    Enrollment %>%
+  Enrollment_extra_Exit_HH_CL_AaE %>%
       dplyr::select(
         EnrollmentID,
         HouseholdID,
@@ -2983,6 +2986,7 @@ ssvf_served_in_date_range <- function(Enrollment, served_in_date_range, Client, 
         Client %>%
           dplyr::select(
             PersonalID,
+            UniqueID,
             VeteranStatus,
             YearEnteredService,
             YearSeparated,
