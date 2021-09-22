@@ -179,8 +179,10 @@ app_env <- R6::R6Class(
     merge_deps_to_env = function(...,
                                  env = rlang::caller_env(),
                                  as_list = FALSE) {
-      nms <- purrr::flatten_chr(rlang::dots_list(...))
-      if (!UU::is_legit(nms))
+      .dots <- rlang::dots_list(..., .named = TRUE)
+      nms <- purrr::flatten_chr(unname(.dots))
+      # If called with no arguments
+      if (!UU::is_legit(nms) && !UU::is_legit(names(.dots)))
         nms <- private$work_deps
       .missing_nms <- !nms %in% ls(self$.__enclos_env__)
       if (any(.missing_nms))
