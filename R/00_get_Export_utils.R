@@ -63,7 +63,7 @@ Client_redact <- function(Client) {
 Client_add_UniqueID <- function(Client, Client_extras, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$merge_deps_to_env(missing_fmls())
-  dplyr::left_join(Client, dplyr::select(Client_extras, c("PersonalID", "UniqueID")), by = "PersonalID")
+  dplyr::left_join(Client, dplyr::select(Client_extras, PersonalID, UniqueID), by = "PersonalID")
 }
 
 #' Add Exit data to Enrollments
@@ -233,11 +233,12 @@ Pe_add_regions <- function(provider_extras, dirs) {
   # geocodes is created by `hud.extract` using the hud_geocodes.R functions
   geocodes <- clarity.looker::hud_load("geocodes", dirs$public)
   # This should map a county to every geocode
-  provider_extras <- provider_extras |>
-    dplyr::left_join(geocodes |> dplyr::select(GeographicCode, County), by = c(Geocode = "GeographicCode"))
+  out <- provider_extras |>
+    dplyr::left_join(geocodes |> dplyr::select(GeographicCode, County), by = c(Geocode = "GeographicCode")) |>
+    dplyr::filter(!Geocode %in% c("000000", "429003", "399018"))
 
   # Some geocodes may be legacy and County will be NA - the following looks these geocodes up on the Google Geocode API via `ggmap`
-  fill_geocodes <- provider_extras |>
+  fill_geocodes <- out |>
     dplyr::filter(is.na(County)) |>
     dplyr::distinct(Geocode, .keep_all = TRUE)
   if (nrow(fill_geocodes) > 0) {
@@ -261,24 +262,30 @@ Pe_add_regions <- function(provider_extras, dirs) {
         tibble::add_row(GeographicCode = row$Geocode, State = "OH", County = row$County)
     }
     feather::write_feather(geocodes, hud_filename("geocodes", dirs$public))
-    provider_extras <- provider_extras |>
+    out <- out |>
       dplyr::left_join(geocodes, by = c(Geocode = "GeographicCode"))
   }
 
   Regions <- clarity.looker::hud_load("Regions", dirs$public)
 
-  provider_extras <- provider_extras |>
+  out <- out |>
     dplyr::left_join(Regions |> dplyr::select(- RegionName), by = "County") |>
     dplyr::rename(ProjectRegion = "Region",
                   ProjectCounty = "County")
 
+
+  # Special cases
+  #  St. Vincent de Paul of Dayton serves region 13
+  out[out$Geocode == 391361, "ProjectRegion"] <- 13
+
   # Missing Regions
-  # missing_region <- provider_extras |>
-  #   dplyr::filter(is.na(ProjectRegion))
+  # missing_region <- out |>
+  #   dplyr::filter(is.na(ProjectRegion) & ProgramCoC == "OH-507")
   # missing_region |>
   #   dplyr::pull(ProjectCounty) |>
   #   unique()
-  provider_extras
+
+  out |> dplyr::filter(!is.na(ProjectRegion))
 }
 
 #' Add Access Points to Provider_extras
