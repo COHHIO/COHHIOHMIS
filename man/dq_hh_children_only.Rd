@@ -52,7 +52,7 @@ Other Clarity Checks:
 \code{\link{dq_future_exits}()},
 \code{\link{dq_gender}()},
 \code{\link{dq_hh_missing_rel_to_hoh}()},
-\code{\link{dq_hh_no_oh}()},
+\code{\link{dq_hh_no_hoh}()},
 \code{\link{dq_hh_too_many_hohs}()},
 \code{\link{dq_incorrect_path_contact_date}()},
 \code{\link{dq_invalid_months_times_homeless}()},
@@ -105,7 +105,7 @@ Other Clarity Checks:
 
 Other DQ: Household Checks: 
 \code{\link{dq_hh_missing_rel_to_hoh}()},
-\code{\link{dq_hh_no_oh}()},
+\code{\link{dq_hh_no_hoh}()},
 \code{\link{dq_hh_too_many_hohs}()},
 \code{\link{dq_referrals_on_hh_members_ssvf}()},
 \code{\link{dq_services_on_hh_members_ssvf}()},

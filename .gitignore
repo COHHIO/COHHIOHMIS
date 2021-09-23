@@ -37,6 +37,9 @@ vignettes/*.pdf
 *.knit.md
 
 data/*
-inst/*
+inst/auth
+inst/html
 pkg_commands.R
 Looker.ini
+
+profile.rds

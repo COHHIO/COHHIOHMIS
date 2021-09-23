@@ -13,11 +13,10 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Rm_data
-
 *Note*: this is currently out of date and needs update (2021-08-26)
 
-An open-source Homeless Management Information System (HMIS) custom reporting project
+# Rm_data
+An open-source Homeless Management Information System (HMIS) custom reporting project.
 
 This repository would be helpful to any HUD-designated Continuum of Care looking for a way to get more out of their HMIS data. While there are some reports here, this repository's most important function is getting data from HMIS to a tidy form that can be used in other projects (and repositories). Think of it like a staging area for other projects.
 
@@ -47,18 +46,12 @@ You may not need to supplement the data in your HUD CSV export, so whatever you 
 
 If you want to know exactly what data I'm using, see below, and email me for more specifics if you need it.
 
-### Workflow
+# Setup
 
-The workflow I'm currently using (which I expect to become less tedious eventually) is the following:
-
+The [`clarity.looker`]{https://github.com/COHHIO/clarity.looker} package provides a setup function \link[clarity.looker]{setup_looker} for setting up an API connection with the Clarity Looker instance. An API key & secret will need to be requested. 
 0. Be sure you have the following directories in your R project:
    * **data** (to keep your HUD CSV files and whatever other data you will use)
-   * **images** (see #4)
-1. Download and unzip your HUD CSV export into the **data** directory of the R Studio project. Permanently delete the .zip once it has been extracted so the PII doesn't remain on your hard drive.
-2. If you're aiming to use the same exact ancillary data that I am, please see the notes below about what I'm pulling in and from where. You will probably want to build out your own data that's not available in the Export or you may find that the Export has everything you need for now. Either way, download any other necessary data into the **data** directory.
-3. Run 00_a_script_to_rule_them_all.R, which will run all the other scripts that begin with a number. You can modify yours to fit your needs.
-4. Doing 3. will create a .RData image file for each script that runs. Each image file has an extension of .RData and will be dropped into the **images** folder.
-5. Your other projects (like R minor or R minor elevated) each have **data** folders with symbolic links in them, each pointing to the relevant .RData files.
+   
 
 This will one day be written as a package, hopefully.
 

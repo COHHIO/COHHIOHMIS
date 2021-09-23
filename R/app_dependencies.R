@@ -120,7 +120,7 @@ app_deps <- list(
   )
 )
 missing_args <-
-  function(calling_function = sys.function(1),
+  function(calling_function = rlang::caller_fn(2),
            include_null = TRUE,
            exclude_defaults = TRUE)
   {
@@ -146,7 +146,7 @@ missing_args <-
     out
   }
 
-missing_fmls <- function(ma = UU::missing_args()) {
+missing_fmls <- function(ma = missing_args()) {
   ma[!ma %in% c("app_env", "clarity_api")]
 }
 
@@ -307,21 +307,23 @@ app_env <- R6::R6Class(
         rdrop2::drop_upload(.x, file.path(db_folder, basename(.x)))
       })
     },
-    #' @description Instantiate with default app dependencies to be collected (if they exist) each time \code{\$gather_deps} is called
-    initialize = function(app_deps, db_auth_token = "~/R/auth_tokens/db_token.rds") {
-      if (missing(app_deps))
-        app_deps <- Rm_data:::app_deps
-      self$app_deps <- app_deps
-      self$app_objs <- purrr::map(app_deps, ~list())
+    dropbox_auth = function(db_auth_token = "~/R/auth_tokens/db_token.rds") {
       # Dropbox Auth
       if (!file.exists(db_auth_token)) {
         token <- rdrop2::drop_auth(key = Sys.getenv("db_key"),
-                          secret = Sys.getenv("db_secret"),
-                          cache = FALSE)
+                                   secret = Sys.getenv("db_secret"),
+                                   cache = FALSE)
         saveRDS(token, db_auth_token)
       } else {
         rdrop2::drop_auth(rdstoken = db_auth_token)
       }
+    }
+    #' @description Instantiate with default app dependencies to be collected (if they exist) each time \code{\$gather_deps} is called
+    initialize = function(app_deps) {
+      if (missing(app_deps))
+        app_deps <- Rm_data:::app_deps
+      self$app_deps <- app_deps
+      self$app_objs <- purrr::map(app_deps, ~list())
     }
   ),
   private = list(#' @field Save a vector of the names of working dependencies that have been saved for future reference when \code{\$merge_deps_to_env} is called.

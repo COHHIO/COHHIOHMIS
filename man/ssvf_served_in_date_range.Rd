@@ -5,13 +5,15 @@
 \title{Create \code{ssvf_served_in_date_range} for Clients receiving grants from SSVF}
 \usage{
 ssvf_served_in_date_range(
-  Enrollment,
+  Enrollment_extra_Exit_HH_CL_AaE,
   served_in_date_range,
   Client,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }
 \arguments{
+\item{Enrollment_extra_Exit_HH_CL_AaE}{\code{(data.frame)} Enrollment with all additions from \code{load_export}}
+
 \item{Client}{\code{(data.frame)} Client with all additions from \code{load_export}}
 
 \item{app_env}{\code{(data.frame)} Instead of providing all arguments with NULL defaults,\code{app_env} with all arguments saved internally can be provided.}

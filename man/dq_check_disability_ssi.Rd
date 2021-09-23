@@ -6,6 +6,7 @@
 \usage{
 dq_check_disability_ssi(
   served_in_date_range,
+  IncomeBenefits,
   vars,
   guidance,
   app_env = get_app_env(e = rlang::caller_env())
@@ -13,6 +14,8 @@ dq_check_disability_ssi(
 }
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
+
+\item{IncomeBenefits}{\code{(data.frame)} From the HUD CSV Export}
 
 \item{vars}{\code{(named list)}
 \itemize{
@@ -52,7 +55,7 @@ Other Clarity Checks:
 \code{\link{dq_gender}()},
 \code{\link{dq_hh_children_only}()},
 \code{\link{dq_hh_missing_rel_to_hoh}()},
-\code{\link{dq_hh_no_oh}()},
+\code{\link{dq_hh_no_hoh}()},
 \code{\link{dq_hh_too_many_hohs}()},
 \code{\link{dq_incorrect_path_contact_date}()},
 \code{\link{dq_invalid_months_times_homeless}()},

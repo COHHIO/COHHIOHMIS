@@ -611,7 +611,7 @@ dq_hh_children_only <- function(served_in_date_range, vars, guidance = NULL, app
 #' @family Clarity Checks
 #' @family DQ: Household Checks
 #' @export
-dq_hh_no_oh <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
+dq_hh_no_hoh <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
     app_env$merge_deps_to_env(missing_fmls())
@@ -627,12 +627,7 @@ dq_hh_no_oh <- function(served_in_date_range, vars, guidance = NULL, app_env = g
     dplyr::mutate(
       Issue = "No Head of Household",
       Type = "High Priority",
-      Guidance = "Please be sure all members of the household are included in the program
-        stay, and that each household member's birthdate is correct. If those
-        things are both true, or the client is a single, check inside the Entry
-        pencil to be sure each household member has \"Relationship to Head of
-        Household\" answered and that one of them says Self (head of household).
-        Singles are always Self (head of household)."
+      Guidance = "Please be sure all members of the household are included in the program stay, and that each household member's birthdate is correct. If those things are both true, or the client is a single, check inside the Entry pencil to be sure each household member has \"Relationship to Head of Household\" answered and that one of them says Self (head of household). Singles are always Self (head of household)."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
@@ -673,9 +668,10 @@ dq_hh_missing_rel_to_hoh <- function(served_in_date_range, vars, guidance = NULL
 ) {
   if (is_app_env(app_env))
     app_env$merge_deps_to_env(missing_fmls())
+  hh_no_hoh <- dq_hh_no_hoh()
   served_in_date_range %>%
     dplyr::filter(RelationshipToHoH == 99) %>%
-    dplyr::anti_join(dq_hh_no_hoh()["HouseholdID"], by = "HouseholdID") %>%
+    dplyr::anti_join(hh_no_hoh["HouseholdID"], by = "HouseholdID") %>%
     dplyr::mutate(Issue = "Missing Relationship to Head of Household",
                   Type = "High Priority",
                   Guidance = "Check inside the Entry pencil to be sure each household member has
@@ -1021,27 +1017,29 @@ dq_dkr_living_situation <- function(served_in_date_range, vars, rm_dates = NULL,
 		app_env$merge_deps_to_env(missing_fmls())
   served_in_date_range %>%
     dplyr::select(
-      PersonalID,
-      HouseholdID,
-      EnrollmentID,
-      ProjectID,
-      ProjectType,
-      ProjectName,
-      ProjectRegion,
-      EntryDate,
-      MoveInDateAdjust,
-      ExitDate,
-      AgeAtEntry,
-      CountyServed,
-      RelationshipToHoH,
-      LivingSituation,
-      LengthOfStay,
-      LOSUnderThreshold,
-      PreviousStreetESSH,
-      DateToStreetESSH,
-      MonthsHomelessPastThreeYears,
-      TimesHomelessPastThreeYears,
-      UserCreating
+      dplyr::all_of(unique(c(vars$prep,
+                             "PersonalID",
+                             "HouseholdID",
+                             "EnrollmentID",
+                             "ProjectID",
+                             "ProjectType",
+                             "ProjectName",
+                             "ProjectRegion",
+                             "EntryDate",
+                             "MoveInDateAdjust",
+                             "ExitDate",
+                             "AgeAtEntry",
+                             "CountyServed",
+                             "RelationshipToHoH",
+                             "LivingSituation",
+                             "LengthOfStay",
+                             "LOSUnderThreshold",
+                             "PreviousStreetESSH",
+                             "DateToStreetESSH",
+                             "MonthsHomelessPastThreeYears",
+                             "TimesHomelessPastThreeYears",
+                             "UserCreating"))
+      )
     ) %>%
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
                     EntryDate > rm_dates$hc$prior_living_situation_required &
@@ -2819,7 +2817,7 @@ dq_conflicting_unlikely_ncbs <- function(served_in_date_range, IncomeBenefits, v
 #' @inherit data_quality_tables params return
 #' @export
 
-dq_check_disability_ssi <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+dq_check_disability_ssi <- function(served_in_date_range, IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$merge_deps_to_env(missing_fmls())
 
