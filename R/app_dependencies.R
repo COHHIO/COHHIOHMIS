@@ -204,7 +204,7 @@ app_env <- R6::R6Class(
     #' @description Gather the objects passed to \code{app_env}s internal environment to be passed to subsequent functions. Save app dependencies into a list.
     #' @param ... \code{(objects)} Dependencies for subsequent functions, passed as objects and not character vector of names. Use \code{"everything"} to capture all objects from the parent environment.
     gather_deps = function(...,
-                           app_deps = self$app_deps,
+                           app_deps = FALSE,
                            env = rlang::caller_env(),
                            .args = names(rlang::fn_fmls(rlang::call_fn(rlang::call_standardise(
                              match.call(call = sys.call(1))
@@ -248,21 +248,25 @@ app_env <- R6::R6Class(
         cli::cli_h2("Global")
         cli::cli_alert_success(paste0("dependencies saved: ", paste0(.new_wdeps, collapse = ", ")))
       })
-      #TODO need handling for unnamed
+
       rlang::env_bind(self$.__enclos_env__, !!!.work_deps)
+      if (!isFALSE(app_deps)) {
+        if (isTRUE(app_deps))
+          app_deps <- self$app_deps
 
+        purrr::iwalk(app_deps, ~ {
+          .deps <-
+            purrr::compact(rlang::env_get_list(env, .x, default = NULL))
+          if (UU::is_legit(.deps)) {
+            self$app_objs[[.y]] <<- purrr::list_modify(self$app_objs[[.y]],!!!.deps)
+            cli::cli({
+              cli::col_blue(cli::cli_h2(.y))
+              cli::cli_alert_success(paste0(" dependencies saved: ", paste0(names(.deps), collapse = ", ")))
+            })
+          }
+        })
+      }
 
-      purrr::iwalk(app_deps, ~ {
-        .deps <-
-          purrr::compact(rlang::env_get_list(env, .x, default = NULL))
-        if (UU::is_legit(.deps)) {
-          self$app_objs[[.y]] <<- purrr::list_modify(self$app_objs[[.y]],!!!.deps)
-          cli::cli({
-            cli::col_blue(cli::cli_h2(.y))
-            cli::cli_alert_success(paste0(" dependencies saved: ", paste0(names(.deps), collapse = ", ")))
-          })
-        }
-      })
       invisible(self)
     },
     #' @description Write app dependencies to disk
