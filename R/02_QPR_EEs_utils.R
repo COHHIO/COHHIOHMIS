@@ -1,4 +1,6 @@
 qpr_project_small <- function(Project, rm_dates, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
   Project |>
     dplyr::select(ProjectID,
                   OrganizationName,
@@ -19,6 +21,8 @@ qpr_project_small <- function(Project, rm_dates, app_env = get_app_env(e = rlang
 }
 
 qpr_enrollment_small <- function(Enrollment_extra_Exit_HH_CL_AaE, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
   Enrollment_extra_Exit_HH_CL_AaE |>
     dplyr::select(
       EnrollmentID,
@@ -42,6 +46,8 @@ qpr_enrollment_small <- function(Enrollment_extra_Exit_HH_CL_AaE, app_env = get_
 
 
 qpr_validation <- function(project_small, enrollment_small, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$merge_deps_to_env(missing_fmls())
   project_small |>
     dplyr::left_join(enrollment_small, by = "ProjectID") |>
     dplyr::select(

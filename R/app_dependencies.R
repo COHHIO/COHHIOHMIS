@@ -127,8 +127,12 @@ missing_args <-
     all_args <- formals(calling_function)
 
     arg_names <- names(all_args)
+    #fn_name <- trimws(stringr::str_extract(readLines(utils::getSrcFilename(calling_function, full.names = T))[utils::getSrcLocation(calling_function)], ".*(?=\\<\\-)"))
+
+    .call <- rlang::trace_back(bottom = 3) |>
+      {\(x) {x[[1]][[rlang::trace_length(x)]]}}()
     matched_call <- match.call(calling_function,
-                               sys.call(2),
+                               .call,
                                expand.dots = FALSE)
 
     passed_args <- names(as.list(matched_call)[-1])
