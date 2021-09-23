@@ -1,5 +1,5 @@
 #' @include app_dependencies.R
-if (Sys.info()["nodename"] == "DESKTOP-2SK9RKR" && file.exists("Rm_data.Rproj")) {
+if (Sys.info()["nodename"] %in% c("LAPTOP-O2IG5O1H", "DESKTOP-2SK9RKR") && file.exists("Rm_data.Rproj")) {
   if (!exists("cl_api")) {
 
     devtools::load_all("../clarity.looker")
