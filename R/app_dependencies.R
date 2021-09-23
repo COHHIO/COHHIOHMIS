@@ -128,7 +128,7 @@ missing_args <-
 
     arg_names <- names(all_args)
     matched_call <- match.call(calling_function,
-                               sys.call(1),
+                               sys.call(2),
                                expand.dots = FALSE)
 
     passed_args <- names(as.list(matched_call)[-1])
@@ -317,7 +317,7 @@ app_env <- R6::R6Class(
       } else {
         rdrop2::drop_auth(rdstoken = db_auth_token)
       }
-    }
+    },
     #' @description Instantiate with default app dependencies to be collected (if they exist) each time \code{\$gather_deps} is called
     initialize = function(app_deps) {
       if (missing(app_deps))

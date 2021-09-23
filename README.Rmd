@@ -48,7 +48,9 @@ If you want to know exactly what data I'm using, see below, and email me for mor
 
 # Setup
 
-The [`clarity.looker`]{https://github.com/COHHIO/clarity.looker} package provides a setup function \link[clarity.looker]{setup_looker} for setting up an API connection with the Clarity Looker instance. An API key & secret will need to be requested. 
+The [`clarity.looker`]{https://github.com/COHHIO/clarity.looker} package provides a setup function \link[clarity.looker]{setup_looker} for setting up an API connection with the Clarity Looker instance. An API key & secret will need to be requested.
+
+
 0. Be sure you have the following directories in your R project:
    * **data** (to keep your HUD CSV files and whatever other data you will use)
    
