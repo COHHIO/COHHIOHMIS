@@ -203,7 +203,7 @@ if (is_sp()) {
   #' @inherit data_quality_tables params return
 
 
-  dq_unsheltered <- function(app_env = get_app_env(e = rlang::caller_env())) {
+  dq_sp_unsheltered <- function(app_env = get_app_env(e = rlang::caller_env())) {
 
     unsh_dq <- c("dq_check_disability_ssi",
                  "dq_dkr_destination",

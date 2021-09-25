@@ -85,23 +85,23 @@ Other Clarity Checks:
 \code{\link{dq_path_reason_missing}()},
 \code{\link{dq_path_status_determination}()},
 \code{\link{dq_ph_without_spdats}()},
-\code{\link{dq_project_small}()},
 \code{\link{dq_psh_check_exit_destination}()},
 \code{\link{dq_psh_incorrect_destination}()},
 \code{\link{dq_psh_missing_project_stay}()},
 \code{\link{dq_race}()},
 \code{\link{dq_referrals_on_hh_members_ssvf}()},
-\code{\link{dq_rent_paid_no_move_in}()},
 \code{\link{dq_rrh_check_exit_destination}()},
 \code{\link{dq_rrh_missing_project_stay}()},
 \code{\link{dq_services_on_hh_members_ssvf}()},
 \code{\link{dq_services_on_non_hoh}()},
+\code{\link{dq_services_rent_paid_no_move_in}()},
 \code{\link{dq_sh_check_exit_destination}()},
 \code{\link{dq_sh_missing_project_stay}()},
 \code{\link{dq_ssn}()},
 \code{\link{dq_th_check_exit_destination}()},
 \code{\link{dq_th_stayers_bos}()},
-\code{\link{dq_veteran}()}
+\code{\link{dq_veteran}()},
+\code{\link{dqu_project_small}()}
 
 Other DQ: Incorrect Destinations: 
 \code{\link{dq_psh_check_exit_destination}()},

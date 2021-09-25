@@ -6,10 +6,11 @@
 
 # devtools::load_all("../../lookr")
 #devtools::load_all("../hud.extract")
-# This is the default directory tree used by hud_export. It can be changed and amended and passed to hud_export in the `dirs` argument if necessary.
+
 # RPushBullet setup
 #RPushbullet::pbSetup(conffile = file.path("inst","auth","rpushbullet.json"))
 
+# This is the default directory tree used by Rm_data. It can be changed and amended and passed to hud_export in the `dirs` argument if necessary.
 dirs <- clarity.looker::dirs
 
 # must load Rm_data
@@ -49,7 +50,6 @@ increment("Importing raw HMIS data\n")
 #   "sf",
 #   # "choroplethrMaps",
 #   "plotly") %>% sort %>% cat(sep = ",\n")
-
 
 
 # cohorts <- function(env) {

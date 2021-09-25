@@ -29,8 +29,10 @@ Save dependencies for future functions in an environment and put app dependencie
 \itemize{
 \item \href{#method-merge_deps_to_env}{\code{app_env$merge_deps_to_env()}}
 \item \href{#method-gather_deps}{\code{app_env$gather_deps()}}
+\item \href{#method-exec}{\code{app_env$exec()}}
 \item \href{#method-write_app_deps}{\code{app_env$write_app_deps()}}
 \item \href{#method-dropbox_upload}{\code{app_env$dropbox_upload()}}
+\item \href{#method-dropbox_auth}{\code{app_env$dropbox_auth()}}
 \item \href{#method-new}{\code{app_env$new()}}
 \item \href{#method-clone}{\code{app_env$clone()}}
 }
@@ -62,7 +64,7 @@ Gather the objects passed to \code{app_env}s internal environment to be passed t
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{app_env$gather_deps(
   ...,
-  app_deps = self$app_deps,
+  app_deps = FALSE,
   env = rlang::caller_env(),
   .args = names(rlang::fn_fmls(rlang::call_fn(rlang::call_standardise(match.call(call =
     sys.call(1))))))
@@ -75,6 +77,22 @@ Gather the objects passed to \code{app_env}s internal environment to be passed t
 \item{\code{...}}{\code{(objects)} Dependencies for subsequent functions, passed as objects and not character vector of names. Use \code{"everything"} to capture all objects from the parent environment.}
 
 \item{\code{app_deps}}{\code{(named list)} with items for each app that contain character vectors of the objects each app depends on to be saved.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-exec"></a>}}
+\if{latex}{\out{\hypertarget{method-exec}{}}}
+\subsection{Method \code{exec()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{app_env$exec(fn, save = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{fn}}{Function to evaluate}
 }
 \if{html}{\out{</div>}}
 }
@@ -118,12 +136,21 @@ Write app dependencies to disk
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-dropbox_auth"></a>}}
+\if{latex}{\out{\hypertarget{method-dropbox_auth}{}}}
+\subsection{Method \code{dropbox_auth()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{app_env$dropbox_auth(db_auth_token = "~/R/auth_tokens/db_token.rds")}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Instantiate with default app dependencies to be collected (if they exist) each time \code{\$gather_deps} is called
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$new(app_deps, db_auth_token = "~/R/auth_tokens/db_token.rds")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{app_env$new(app_deps)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

@@ -127,7 +127,7 @@ missing_args <-
     all_args <- formals(calling_function)
 
     arg_names <- names(all_args)
-    #fn_name <- trimws(stringr::str_extract(readLines(utils::getSrcFilename(calling_function, full.names = T))[utils::getSrcLocation(calling_function)], ".*(?=\\<\\-)"))
+
 
     .call <- rlang::trace_back(bottom = 3) |>
       {\(x) {x[[1]][[rlang::trace_length(x)]]}}()
@@ -164,6 +164,7 @@ fun_insert <-
                       f,
                       utils::packageName(rlang::fn_env(f)))
   }
+
 
 
 # app_env ----
@@ -220,6 +221,7 @@ app_env <- R6::R6Class(
         }()
       if (length(.work_deps) == 1 &&
           identical(.work_deps[[1]], "everything")) {
+        # Case when "everything" is specified
         .all_objs <- ls(env, all.names = TRUE)
         .args <- try(force(.args), silent = TRUE)
         if (UU::is_legit(.args))
@@ -230,8 +232,9 @@ app_env <- R6::R6Class(
           )
 
         .work_deps <- rlang::env_get_list(env, .all_objs)
-
+        app_deps <- TRUE
       } else if (length(.work_deps) == 1 && is.character(.work_deps[[1]]) && any(.work_deps[[1]] %in% ls(env))) {
+        # case when character vector of objects to gather is provided
         .work_deps <- rlang::env_get_list(env, .work_deps[[1]])
 
       }
@@ -245,7 +248,7 @@ app_env <- R6::R6Class(
         }()
 
       cli::cli({
-        cli::cli_h2("Global")
+        cli::cli_h2("Internal")
         cli::cli_alert_success(paste0("dependencies saved: ", paste0(.new_wdeps, collapse = ", ")))
       })
 
@@ -268,6 +271,21 @@ app_env <- R6::R6Class(
       }
 
       invisible(self)
+    },
+    #' @title Execute a function using the objects stored in the internal 'global' environment
+    #' @param fn Function to evaluate
+    exec = function(fn, save = FALSE) {
+      .nm <- UU::fn_name(fn)
+      if (stringr::str_detect(.nm, "dq\\_")) {
+        body <- rlang::expr(!!rlang::fn_body(fn)[[3]])
+      } else {
+        body <- rlang::expr(!!rlang::fn_body(fn))
+      }
+
+      out <- rlang::eval_bare(body, env = self$.__enclos_env__)
+      if (save)
+        assign(.nm, out, self$.__enclos_env__)
+      out
     },
     #' @description Write app dependencies to disk
     #' @param deps \code{(character)} with names of app dependencies.

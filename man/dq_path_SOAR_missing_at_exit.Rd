@@ -8,6 +8,7 @@ dq_path_SOAR_missing_at_exit(
   served_in_date_range,
   Project,
   IncomeBenefits,
+  vars,
   guidance,
   app_env = get_app_env(e = rlang::caller_env())
 )
@@ -18,6 +19,12 @@ dq_path_SOAR_missing_at_exit(
 \item{Project}{\code{(data.frame)} of Project with additional features added in \code{load_export}}
 
 \item{IncomeBenefits}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{vars}{\code{(named list)}
+\itemize{
+\item{\code{prep}}{ Column names for Prep}
+\item{\code{we_want}}{ Column names for output}
+}}
 
 \item{guidance}{\code{(list)} See \code{guidance}}
 
@@ -86,24 +93,24 @@ Other Clarity Checks:
 \code{\link{dq_path_reason_missing}()},
 \code{\link{dq_path_status_determination}()},
 \code{\link{dq_ph_without_spdats}()},
-\code{\link{dq_project_small}()},
 \code{\link{dq_psh_check_exit_destination}()},
 \code{\link{dq_psh_incorrect_destination}()},
 \code{\link{dq_psh_missing_project_stay}()},
 \code{\link{dq_race}()},
 \code{\link{dq_referrals_on_hh_members_ssvf}()},
-\code{\link{dq_rent_paid_no_move_in}()},
 \code{\link{dq_rrh_check_exit_destination}()},
 \code{\link{dq_rrh_missing_project_stay}()},
 \code{\link{dq_services_on_hh_members_ssvf}()},
 \code{\link{dq_services_on_non_hoh}()},
+\code{\link{dq_services_rent_paid_no_move_in}()},
 \code{\link{dq_sh_check_exit_destination}()},
 \code{\link{dq_sh_missing_project_stay}()},
 \code{\link{dq_ssn}()},
 \code{\link{dq_th_check_exit_destination}()},
 \code{\link{dq_th_missing_project_stay}()},
 \code{\link{dq_th_stayers_bos}()},
-\code{\link{dq_veteran}()}
+\code{\link{dq_veteran}()},
+\code{\link{dqu_project_small}()}
 
 Other DQ: Path Checks: 
 \code{\link{dq_incorrect_path_contact_date}()},
@@ -113,7 +120,7 @@ Other DQ: Path Checks:
 \code{\link{dq_path_no_status_at_exit}()},
 \code{\link{dq_path_reason_missing}()},
 \code{\link{dq_path_status_determination}()},
-\code{\link{dq_project_small}()}
+\code{\link{dqu_project_small}()}
 }
 \concept{Clarity Checks}
 \concept{DQ: Path Checks}

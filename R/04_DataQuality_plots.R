@@ -83,7 +83,7 @@
           fill = Open_Referrals
         )
       ) +
-      dq_plot_theme_labs(x = "",
+      dqu_plot_theme_labs(x = "",
                     y = "Referrals")
 
 
@@ -117,7 +117,7 @@
           fill = clientsWithErrors
         )
       ) +
-      dq_plot_theme_labs(x = "",
+      dqu_plot_theme_labs(x = "",
                     y = "Clients")
 
     dq_data_warnings_plot <- dq_past_year %>%
@@ -138,7 +138,7 @@
                         y = Warnings,
                         fill = Warnings
                       )) +
-      dq_plot_theme_labs(x = "",
+      dqu_plot_theme_labs(x = "",
                     y = "Clients")
 
     dq_data_error_types <- dq_past_year %>%
@@ -155,7 +155,7 @@
                         y = Errors,
                         fill = Errors
                       )) +
-      dq_plot_theme_labs(x = "",
+      dqu_plot_theme_labs(x = "",
                     y = "Clients")
 
     dq_data_warning_types <- dq_past_year %>%
@@ -172,7 +172,7 @@
                         y = Warnings,
                         fill = Warnings
                       )) +
-      dq_plot_theme_labs(x = "",
+      dqu_plot_theme_labs(x = "",
                     y = "Clients")
 
     dq_data_unsheltered_high <- dq_unsheltered %>%
@@ -194,7 +194,7 @@
           fill = clientsWithErrors
         )
       ) +
-      dq_plot_theme_labs(x = "",
+      dqu_plot_theme_labs(x = "",
                     y = "Clients")
 
     dq_data_hh_issues_plot <- dq_past_year %>%
@@ -225,10 +225,10 @@
                         y = Households,
                         fill = Households
                       )) +
-      dq_plot_theme_labs(x = "")
+      dqu_plot_theme_labs(x = "")
 
 
-    data_APs <- dq_aps(data = TRUE)
+    data_APs <- dqu_aps(data = TRUE)
 
     dq_plot_aps_referrals <-
       ggplot2::ggplot(data_APs, ggplot2::aes(fill = category, x = providertype, y = percent)) +
@@ -269,7 +269,7 @@
           fill = Households
         )
       ) +
-      dq_plot_theme_labs(x = "")
+      dqu_plot_theme_labs(x = "")
 
     dq_data_eligibility_plot <- dq_past_year %>%
       dplyr::filter(Type == "Warning" &
@@ -294,7 +294,7 @@
           fill = Households
         )
       ) +
-      dq_plot_theme_labs(x = "")
+      dqu_plot_theme_labs(x = "")
 
     dq_data_without_spdat_plot <- dq_past_year %>%
       dplyr::filter(
@@ -321,7 +321,7 @@
           fill = Households
         )
       ) +
-      dq_plot_theme_labs(x = "")
+      dqu_plot_theme_labs(x = "")
   }
 
 

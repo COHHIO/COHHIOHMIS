@@ -42,6 +42,6 @@ Other DQ: Path Checks:
 \code{\link{dq_path_no_status_at_exit}()},
 \code{\link{dq_path_reason_missing}()},
 \code{\link{dq_path_status_determination}()},
-\code{\link{dq_project_small}()}
+\code{\link{dqu_project_small}()}
 }
 \concept{DQ: Path Checks}

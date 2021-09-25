@@ -167,6 +167,9 @@ Project <- cl_api$Project() |>
   doses <- cl_api$`HUD Extras`$Client_Doses_extras()
 
 
+  # Users ----
+  # Thu Sep 23 14:38:19 2021
+  Users <- cl_api$User()
 
   # Services ----------------------------------------------------------------
 

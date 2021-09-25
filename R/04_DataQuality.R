@@ -37,15 +37,14 @@ dependencies$DataQuality <-
     "Users"
   )
 
+check_fns <- stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!dose)(?!\\_vaccine)(?!\\_referrals)(?!\\_services)(?!\\_spdats).)*$")
 
-
-data_quality <- function(check_fns = stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq"), "^((?!\\_sp\\_)(?!dose)(?!vaccine)(?!referrals).)*$"),
+data_quality <- function(check_fns = Rm_data::check_fns,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
   app_env = get_app_env(e = rlang::caller_env())
   ) {
   force(clarity_api)
   force(app_env)
-  app_env$merge_deps_to_env()
 
 
 
@@ -84,16 +83,22 @@ data_quality <- function(check_fns = stringr::str_subset(ls(envir = .getNamespac
   ssvf_served_in_date_range <- ssvf_served_in_date_range()
   app_env$gather_deps(ssvf_served_in_date_range)
 
-  dqs <- purrr::imap(check_fns, ~{
-    args <- names(rlang::fn_fmls(getFromNamespace(.x, "Rm_data"))) |>
-      {\(x) {x[!x %in% c("app_env", "served_in_date_range")]}}()
-                  message(.x)
-                  .call <- rlang::call2(.x, app_env = app_env)
-                  rlang::eval_bare(.call)
-                })
+  dqs <- purrr::map(rlang::set_names(check_fns), ~{
+    message(.x)
+    fn <- getFromNamespace(.x, "Rm_data")
+    arg_names <- rlang::set_names(rlang::fn_fmls_names(fn))
+    arg_names <- arg_names[!purrr::map_lgl(rlang::fn_fmls(fn), is.logical)]
+    arg_names <- arg_names[arg_names != c("app_env")]
 
-dq_main <- dqs |>
-  make_profile_link_df() %>%
+    .call <- rlang::call2(fn, !!!purrr::map(arg_names, ~rlang::expr(app_env$.__enclos_env__[[!!.x]])), app_env = NULL)
+
+    rlang::eval_bare(.call)
+  })
+message("Create data quality table...")
+browser()
+# TODO trying to create this object will overflow the RAM because some of the checks are returning inordinate amounts of errors.
+
+dq_main <- do.call(rbind, dqs) |>
   unique() %>%
   dplyr::mutate(Type = factor(Type, levels = c("High Priority",
                                                "Error",
@@ -118,6 +123,8 @@ dq_main <- dqs |>
                         "Missing County Served"
                       )
                   ))
+if (is_clarity())
+  dq_main <- make_profile_link_df(dq_main)
 
 detail_eligibility <- dq_check_eligibility(detail = TRUE)
 
@@ -134,15 +141,15 @@ dq_past_year <- dq_main %>%
 # for project evaluation reporting
 
 dq_for_pe <- dq_main  |>
-  HMIS::served_between(rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end)
-dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
+  HMIS::served_between(rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end) |>
+  dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
 
 
 dq_providers <- sort(projects_current_hmis$ProjectName)
 
 # APs without referrals ----
 # Mon Sep 20 16:31:46 2021
-aps_no_referrals <- dq_aps()
+aps_no_referrals <- dqu_aps()
 
   # Missing Client Location -------------------------------------------------
   # missing_client_location <- dq_missing_client_location(served_in_date_range, vars)
@@ -632,5 +639,5 @@ aps_no_referrals <- dq_aps()
 
 
 
-app_env$gather_deps("everything")
+app_env$gather_deps(served_in_date_range, dq_providers, dq_main, dq_past_year, dq_for_pe, aps_no_referrals, detail_eligibility)
 }
