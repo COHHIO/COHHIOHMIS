@@ -1,12 +1,14 @@
 
 #' @title Redact PII from Client HUD Export
 #' @description This redacts all PII (except DOB) from Client HUD Export
+#' @family Client functions
 #' @param Client \code{(tibble)} Client HUD Export
 #' @return \code{(tibble)} Redacted Client HUD Export
 #' @export
 
 Client_redact <- function(Client) {
   Client %>%
+    Client_filter() |>
     dplyr::mutate(
       FirstName = dplyr::case_when(
         NameDataQuality %in% c(8, 9) ~ "DKR",
@@ -49,6 +51,26 @@ Client_redact <- function(Client) {
     dplyr::mutate(SSN = dplyr::case_when(is.na(SSN) ~ "ok",!is.na(SSN) ~ SSN))
 }
 
+#' @title Filter out specific Clients
+#' @description Often used to filter test/training demo clients
+#' @param x \code{(data.frame)} With PersonalID or UniqueID column
+#' @param clients_to_filter \code{(character)} of PersonalIDs to filter with names corresponding their UniqueIDs (Clarity only)
+#' @family Client functions
+#' @return \code{(data.frame)} without `clients_to_filter`
+#' @export
+
+Client_filter <- function(x, clients_to_filter = c(`1E2025A5D` = "335")) {
+  .nms <- names(x)
+  if ("PersonalID" %in% .nms || "UniqueID" %in% .nms) {
+    ex <- purrr::when(.nms,
+                "PersonalID" %in% . ~ rlang::expr(!PersonalID %in% clients_to_filter),
+                "UniqueID" %in% . ~ rlang::expr(!UniqueID %in% names(clients_to_filter)))
+    out <- dplyr::filter(x, !!ex)
+  } else {
+    out <- x
+  }
+return(out)
+}
 
 #' @title Add the UniqueID to the Client export
 #'
