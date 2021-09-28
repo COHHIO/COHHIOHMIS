@@ -86,8 +86,8 @@
       "RemoteUsername": "yogat3ch",
       "RemoteRepo": "UU",
       "RemoteRef": "main",
-      "RemoteSha": "f9f870ebed6261114c045475bd58a54b0931cedb",
-      "Hash": "2ea3a111cc4887475a38ef4e6dd05d01"
+      "RemoteSha": "224be5157d83c7af60bf983ebc8fea405119f11a",
+      "Hash": "6588e8cf28eda0f991957dc0459d0988"
     },
     "askpass": {
       "Package": "askpass",
@@ -208,13 +208,6 @@
       "Repository": "CRAN",
       "Hash": "c4837a5ed530b4327914b54a2644990e"
     },
-    "base64enc": {
-      "Package": "base64enc",
-      "Version": "0.1-3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "543776ae6848fde2f48ff3816d0628bc"
-    },
     "bit": {
       "Package": "bit",
       "Version": "4.0.4",
@@ -250,13 +243,6 @@
       "Repository": "CRAN",
       "Hash": "2f01e16ff9571fe70381c7b9ae560dc4"
     },
-    "cachem": {
-      "Package": "cachem",
-      "Version": "1.0.5",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "5346f76a33eb7417812c270b04a5581b"
-    },
     "callr": {
       "Package": "callr",
       "Version": "3.7.0",
@@ -280,9 +266,9 @@
       "RemoteUsername": "COHHIO",
       "RemoteRepo": "clarity.looker",
       "RemoteRef": "main",
-      "RemoteSha": "3f176b2dfe07421d98b179a0734e0cde3c56f95c",
+      "RemoteSha": "0568dbb69e42eff390a83879d9acdb434e16cf26",
       "Remotes": "yogat3ch/UU, COHHIO/lookr",
-      "Hash": "cb7bbcb2533bf8689e1a4ee05fbb36ed"
+      "Hash": "0aa13cb8d7c8a6b14506d91683d2a397"
     },
     "cli": {
       "Package": "cli",
@@ -512,13 +498,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "e4bf161ccb74a2c1c0e8ac63bbe332b4"
-    },
-    "htmltools": {
-      "Package": "htmltools",
-      "Version": "0.5.1.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "af2c2531e55df5cf230c4b5444fc973c"
     },
     "httr": {
       "Package": "httr",
@@ -857,13 +836,6 @@
       "Repository": "CRAN",
       "Hash": "515f341d3affe0de9e4a7f762efb0456"
     },
-    "rmarkdown": {
-      "Package": "rmarkdown",
-      "Version": "2.8",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "f518ba47713f92d0d603eec7c6888faf"
-    },
     "roxygen2": {
       "Package": "roxygen2",
       "Version": "7.1.1.9001",
@@ -932,13 +904,6 @@
       "Repository": "CRAN",
       "Hash": "dfd843ee98246cf932823acf613b05dd"
     },
-    "stringi": {
-      "Package": "stringi",
-      "Version": "1.7.3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "7943cfae120c77a255025e5f63856532"
-    },
     "stringr": {
       "Package": "stringr",
       "Version": "1.4.0",
@@ -985,13 +950,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "7243004a708d06d4716717fa1ff5b2fe"
-    },
-    "tinytex": {
-      "Package": "tinytex",
-      "Version": "0.31",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "25b572f764f3c19fef9aac33b5724f3d"
     },
     "tzdb": {
       "Package": "tzdb",

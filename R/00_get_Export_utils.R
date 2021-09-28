@@ -133,7 +133,7 @@ Enrollment_add_Household = function(Enrollment, Project, rm_dates) {
     ) %>%
     dplyr::filter(!is.na(ValidMoveIn)) %>%
     dplyr::group_by(HouseholdID) %>%
-    dplyr::mutate(HHMoveIn = min(ValidMoveIn)) %>%
+    dplyr::mutate(HHMoveIn = min(ValidMoveIn, na.rm = TRUE)) %>%
     dplyr::ungroup() %>%
     dplyr::select(HouseholdID, HHMoveIn) %>%
     unique()
@@ -141,7 +141,7 @@ Enrollment_add_Household = function(Enrollment, Project, rm_dates) {
   HHEntry <- Enrollment %>%
     dplyr::left_join(small_project, by = "ProjectID") %>%
     dplyr::group_by(HouseholdID) %>%
-    dplyr::mutate(FirstEntry = min(EntryDate)) %>%
+    dplyr::mutate(FirstEntry = min(EntryDate, na.rm = TRUE)) %>%
     dplyr::ungroup() %>%
     dplyr::select(HouseholdID, "HHEntry" = FirstEntry) %>%
     unique() %>%
