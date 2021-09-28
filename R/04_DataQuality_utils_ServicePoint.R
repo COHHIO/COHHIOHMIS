@@ -9,7 +9,7 @@ if (is_sp()) {
   dq_sp_incorrect_ee_type <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
     must_sp()
     if (is_app_env(app_env))
-      app_env$merge_deps_to_env(missing_fmls())
+      app_env$set_parent(missing_fmls())
     served_in_date_range %>%
       dplyr::filter(
         (
@@ -57,7 +57,7 @@ if (is_sp()) {
   dq_sp_stray_services <- function(stray_services, guidance, app_env = get_app_env(e = rlang::caller_env())) {
     must_sp()
     if (is_app_env(app_env))
-      app_env$merge_deps_to_env(missing_fmls())
+      app_env$set_parent(missing_fmls())
     stray_services %>%
       dplyr::mutate(Issue = "Service Not Attached to an Entry Exit",
                     Type = "Warning",
@@ -74,7 +74,7 @@ if (is_sp()) {
   dq_sp_referrals_on_hh_members <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
     must_sp()
     if (is_app_env(app_env))
-      app_env$merge_deps_to_env(missing_fmls())
+      app_env$set_parent(missing_fmls())
     served_in_date_range %>%
       dplyr::select(dplyr::all_of(vars$prep),
                     RelationshipToHoH,
@@ -101,7 +101,7 @@ if (is_sp()) {
   dq_sp_referrals_on_hh_members_ssvf <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
     must_sp()
     if (is_app_env(app_env))
-      app_env$merge_deps_to_env(missing_fmls())
+      app_env$set_parent(missing_fmls())
     served_in_date_range %>%
       dplyr::select(dplyr::all_of(vars$prep),
                     RelationshipToHoH,
@@ -125,7 +125,7 @@ if (is_sp()) {
   dq_internal_old_outstanding_referrals <- function(served_in_date_range, Referrals, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
     must_sp()
     if (is_app_env(app_env))
-      app_env$merge_deps_to_env(missing_fmls())
+      app_env$set_parent(missing_fmls())
     served_in_date_range %>%
       dplyr::semi_join(Referrals,
                        by = c("PersonalID")) %>%
@@ -152,7 +152,7 @@ if (is_sp()) {
   # Unsheltered Incorrect Residence Prior -----------------------------------
   dq_sp_unsheltered_enrollments <- function(served_in_date_range, Users, unsheltered_ProjectID = 1695, by_month = FALSE, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
     if (is_app_env(app_env))
-      app_env$merge_deps_to_env(missing_fmls())
+      app_env$set_parent(missing_fmls())
     # Unsheltered
     unsheltered_enrollments <- served_in_date_range %>%
       dplyr::filter(ProjectID == unsheltered_ProjectID) %>%

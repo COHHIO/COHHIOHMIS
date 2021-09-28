@@ -61,7 +61,7 @@ projects_current_hmis <- function (Project,
                                    rm_dates,
                                    app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   Project %>%
     dplyr::left_join(Inventory, by = "ProjectID") |>
     HMIS::operating_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
@@ -97,7 +97,7 @@ projects_current_hmis <- function (Project,
 
 served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH_CL_AaE = NULL, Client = NULL, Project = NULL, Inventory = NULL, HealthAndDV = NULL, vars, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   Enrollment_extra_Exit_HH_CL_AaE  |>
     HMIS::served_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End)  |>
     dplyr::left_join(Client  |>
@@ -219,7 +219,7 @@ enrolled_in <-
 
 dq_name <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   served_in_date_range  |>
     dplyr::mutate(
       Issue = dplyr::case_when(
@@ -249,7 +249,7 @@ dq_name <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env 
 
 dq_dob <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::mutate(
       Issue = dplyr::case_when(
@@ -291,7 +291,7 @@ dq_dob <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env =
 
 dq_ssn <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::mutate(
       Issue = dplyr::case_when(
@@ -326,7 +326,7 @@ dq_ssn <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env =
 
 dq_race <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
    served_in_date_range %>%
     dplyr::mutate(
       Issue = dplyr::case_when(
@@ -353,7 +353,7 @@ dq_race <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env 
 
 dq_ethnicity <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::mutate(
       Issue = dplyr::case_when(
@@ -380,7 +380,7 @@ dq_ethnicity <- function(served_in_date_range, guidance = NULL, vars = NULL, app
 #TODO Change for FY 2022
 dq_gender <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::mutate(
       Issue = dplyr::case_when(
@@ -407,7 +407,7 @@ dq_gender <- function(served_in_date_range, guidance = NULL, vars = NULL, app_en
 
 dq_veteran <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::mutate(
       Issue = dplyr::case_when(
@@ -451,7 +451,7 @@ dq_veteran <- function(served_in_date_range, guidance = NULL, vars = NULL, app_e
 
 dq_missing_vaccine_exited <- function(served_in_date_range, dose_counts, vars, mahoning_projects = NULL, doses = NULL, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   # TODO Representation of C19ConsentToVaccine is likely different in Clarity. Once this data is populated this will need to be updated.
   if (!missing(app_env))
     app_env$merge_deps_to_env("mahoning_projects", "doses", "hc")
@@ -499,7 +499,7 @@ dq_missing_vaccine_exited <- function(served_in_date_range, dose_counts, vars, m
 #' @inherit data_quality_tables params return
 dq_missing_vaccine_current <- function(served_in_date_range, vars, dose_counts, doses = NULL, mahoning_projects = NULL, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
 
   # TODO Representation of C19ConsentToVaccine is likely different in Clarity. Once this data is populated this will need to be updated.
   served_in_date_range  |>
@@ -547,7 +547,7 @@ dq_missing_vaccine_current <- function(served_in_date_range, vars, dose_counts, 
 #' @export
 dq_dose_date_error <- function(served_in_date_range, vars, doses, guidance = NULL, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   doses %>%
     dplyr::filter(C19DoseDate < rm_dates$hc$first_vaccine_administered_in_us) %>%
     dplyr::left_join(HMIS::served_between(served_in_date_range, rm_dates$hc$bos_start_vaccine_data, lubridate::today()),
@@ -564,7 +564,7 @@ dq_dose_date_error <- function(served_in_date_range, vars, doses, guidance = NUL
 #' @export
 dq_missing_client_location <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   served_in_date_range %>%
     dplyr::filter(is.na(ClientLocation),
@@ -585,7 +585,7 @@ dq_missing_client_location <- function(served_in_date_range, vars, guidance = NU
 #' @export
 dq_hh_children_only <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::filter(GrantType != "RHY" |
                     is.na(GrantType)) %>% # not checking for children-only hhs for RHY
@@ -615,7 +615,7 @@ dq_hh_children_only <- function(served_in_date_range, vars, guidance = NULL, app
 dq_hh_no_hoh <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::group_by(HouseholdID) %>%
     dplyr::summarise(hasHoH = dplyr::if_else(min(RelationshipToHoH) != 1,
@@ -641,7 +641,7 @@ dq_hh_no_hoh <- function(served_in_date_range, vars, guidance = NULL, app_env = 
 dq_hh_too_many_hohs <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::filter(RelationshipToHoH == 1) %>%
     dplyr::group_by(HouseholdID) %>%
@@ -668,7 +668,7 @@ dq_hh_too_many_hohs <- function(served_in_date_range, vars, guidance = NULL, app
 dq_hh_missing_rel_to_hoh <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   hh_no_hoh <- dq_hh_no_hoh(served_in_date_range, vars, guidance, app_env = NULL)
   served_in_date_range %>%
     dplyr::filter(RelationshipToHoH == 99) %>%
@@ -690,7 +690,7 @@ dq_hh_missing_rel_to_hoh <- function(served_in_date_range, vars, guidance = NULL
 #' @export
 dq_missing_approx_date_homeless <- function(served_in_date_range, vars, guidance = NULL, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   missing_approx_date_homeless <- served_in_date_range %>%
     dplyr::select(
       dplyr::all_of(vars$prep),
@@ -721,7 +721,7 @@ dq_missing_approx_date_homeless <- function(served_in_date_range, vars, guidance
 #' @export
 dq_missing_previous_street_ESSH <- function(served_in_date_range, vars, guidance = NULL, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   missing_previous_street_ESSH <- served_in_date_range %>%
     dplyr::select(
       dplyr::all_of(vars$prep),
@@ -749,7 +749,7 @@ dq_missing_previous_street_ESSH <- function(served_in_date_range, vars, guidance
 #' @export
 dq_missing_residence_prior <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   missing_residence_prior <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
@@ -772,7 +772,7 @@ dq_missing_residence_prior <- function(served_in_date_range, vars, guidance = NU
 #' @export
 dq_dkr_residence_prior <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   dkr_residence_prior <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
@@ -793,7 +793,7 @@ dq_dkr_residence_prior <- function(served_in_date_range, vars, guidance = NULL, 
 #' @export
 dq_missing_LoS <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   missing_LoS <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
@@ -817,7 +817,7 @@ dq_missing_LoS <- function(served_in_date_range, vars, guidance = NULL, app_env 
 #' @export
 dq_dkr_LoS <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
@@ -838,7 +838,7 @@ dq_dkr_LoS <- function(served_in_date_range, vars, guidance = NULL, app_env = ge
 dq_missing_months_times_homeless <- function(served_in_date_range, vars, guidance = NULL, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
 
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   missing_months_times_homeless <- served_in_date_range %>%
     dplyr::select(
@@ -871,7 +871,7 @@ dq_missing_months_times_homeless <- function(served_in_date_range, vars, guidanc
 #' @export
 dq_dkr_months_times_homeless <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
 
   served_in_date_range %>%
     dplyr::select(
@@ -902,7 +902,7 @@ dq_dkr_months_times_homeless <- function(served_in_date_range, vars, rm_dates = 
 dq_invalid_months_times_homeless <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::select(
       dplyr::all_of(vars$prep),
@@ -965,7 +965,7 @@ dq_invalid_months_times_homeless <- function(served_in_date_range, vars, rm_date
 dq_missing_living_situation <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::select(
       dplyr::all_of(vars$prep),
@@ -1015,7 +1015,7 @@ dq_missing_living_situation <- function(served_in_date_range, vars, rm_dates = N
 dq_dkr_living_situation <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::select(
       dplyr::all_of(unique(c(vars$prep,
@@ -1065,7 +1065,7 @@ dq_detail_missing_disabilities <- function(served_in_date_range, Disabilities, v
 ) {
 
 if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
 
   detail_missing_disabilities <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep),
@@ -1134,7 +1134,7 @@ if (is_app_env(app_env))
 dq_mahoning_ce_60_days <- function(served_in_date_range, mahoning_projects, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   mahoning_ce <- mahoning_projects[stringr::str_detect(names(mahoning_projects), "Coordinated Entry")]
   served_in_date_range %>%
     dplyr::filter(ProjectID == mahoning_ce &
@@ -1155,7 +1155,7 @@ dq_mahoning_ce_60_days <- function(served_in_date_range, mahoning_projects, vars
 dq_th_stayers_bos <- function(served_in_date_range, mahoning_projects, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   th_stayers_bos <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep), ProjectID) %>%
     dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate))) %>%
@@ -1269,7 +1269,7 @@ dq_th_stayers_bos <- function(served_in_date_range, mahoning_projects, vars, gui
 dq_rrh_check_exit_destination <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
 
   enrolled_in_type <- enrolled_in(served_in_date_range, type = 13, has_movein = TRUE) |> dplyr::select(PersonalID, MoveInDateAdjust)
 
@@ -1299,7 +1299,7 @@ dq_rrh_check_exit_destination <- function(served_in_date_range, vars, guidance =
 dq_psh_check_exit_destination <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   enrolled_in_type <- enrolled_in(served_in_date_range, type = c(3,9), TRUE)
 
   served_in_date_range %>%
@@ -1324,7 +1324,7 @@ dq_psh_check_exit_destination <- function(served_in_date_range, vars, guidance =
 dq_psh_incorrect_destination <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   enrolled_in_type <- enrolled_in(served_in_date_range, type = c(3,9), TRUE)
 
   served_in_date_range %>%
@@ -1350,7 +1350,7 @@ dq_psh_incorrect_destination <- function(served_in_date_range, vars, guidance = 
 dq_th_check_exit_destination <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   enrolled_in_type <- enrolled_in(served_in_date_range, type = 2)
   served_in_date_range %>%
     dplyr::left_join(enrolled_in_type, by = "PersonalID", suffix = c("", "_th")) %>%
@@ -1374,7 +1374,7 @@ dq_th_check_exit_destination <- function(served_in_date_range, vars, guidance = 
 dq_sh_check_exit_destination <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   enrolled_in_type <- enrolled_in(served_in_date_range, type = 8)
   served_in_date_range %>%
     dplyr::left_join(enrolled_in_type, by = "PersonalID", suffix = c("", "_sh")) %>%
@@ -1399,7 +1399,7 @@ dq_sh_check_exit_destination <- function(served_in_date_range, vars, guidance = 
 dq_rrh_missing_project_stay <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
 
   served_in_date_range %>%
     dplyr::filter(Destination == 31) %>%
@@ -1420,7 +1420,7 @@ dq_rrh_missing_project_stay <- function(served_in_date_range, vars, guidance = N
 dq_psh_missing_project_stay <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::filter(Destination == 3) %>%
     dplyr::anti_join(enrolled_in(served_in_date_range, type = c(3,9), TRUE), by = "PersonalID", suffix = c("", "_psh")) %>%
@@ -1441,7 +1441,7 @@ dq_psh_missing_project_stay <- function(served_in_date_range, vars, guidance = N
 dq_th_missing_project_stay <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-		app_env$merge_deps_to_env(missing_fmls())
+		app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::filter(Destination == 2) %>%
     dplyr::anti_join(enrolled_in(served_in_date_range, type = 2), by = "PersonalID") %>%
@@ -1461,7 +1461,7 @@ dq_th_missing_project_stay <- function(served_in_date_range, vars, guidance = NU
 dq_sh_missing_project_stay <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
 ) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::filter(Destination == 18) %>%
     dplyr::anti_join(enrolled_in(served_in_date_range, type = 8), by = "PersonalID", suffix = c("", "_sh")) %>%
@@ -1480,7 +1480,7 @@ dq_sh_missing_project_stay <- function(served_in_date_range, vars, guidance = NU
 
 dq_missing_county_served <- function(served_in_date_range, mahoning_projects, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::filter(is.na(CountyServed) & !ProjectID %in% c(mahoning_projects)) %>%
     dplyr::mutate(
@@ -1498,7 +1498,7 @@ dq_missing_county_served <- function(served_in_date_range, mahoning_projects, va
 
 dq_missing_county_prior <- function(served_in_date_range, mahoning_projects, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::filter(is.na(CountyPrior) & !ProjectID %in% c(mahoning_projects) &
                     (AgeAtEntry > 17 |
@@ -1520,7 +1520,7 @@ dq_missing_county_prior <- function(served_in_date_range, mahoning_projects, var
 #' @export
 dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, rm_dates, app_env = get_app_env(e = rlang::caller_env()), detail = FALSE) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   check_eligibility <- served_in_date_range %>%
     dplyr::select(
       dplyr::all_of(vars$prep),
@@ -1622,7 +1622,7 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
 #' @export
 dq_services_rent_paid_no_move_in <- function(served_in_date_range, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::filter(is.na(MoveInDateAdjust) &
                     RelationshipToHoH == 1 &
@@ -1654,7 +1654,7 @@ dq_services_rent_paid_no_move_in <- function(served_in_date_range, vars, app_env
 
 dq_missing_destination <- function(served_in_date_range,  mahoning_projects, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::filter(!is.na(ExitDate) &
                     (is.na(Destination) | Destination %in% c(99, 30))) %>%
@@ -1675,7 +1675,7 @@ dq_dkr_destination <- function(served_in_date_range,
                                vars,
                                app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::filter(Destination %in% c(8, 9)) %>%
     dplyr::mutate(Issue = "Don't Know/Refused Destination",
@@ -1708,7 +1708,7 @@ dqu_project_small <- function(Project) {
 #' @export
 dq_path_missing_los_res_prior <- function(served_in_date_range, Project, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::select(
       dplyr::all_of(vars$prep),
@@ -1737,7 +1737,7 @@ dq_path_missing_los_res_prior <- function(served_in_date_range, Project, vars, g
 #' @export
 dq_path_no_status_at_exit <- function(served_in_date_range, vars, Project, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   force(Project)
   served_in_date_range %>%
     dplyr::select(
@@ -1775,7 +1775,7 @@ dq_path_no_status_at_exit <- function(served_in_date_range, vars, Project, guida
 
 dq_path_status_determination <- function(served_in_date_range, Project, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
@@ -1804,7 +1804,7 @@ dq_path_status_determination <- function(served_in_date_range, Project, vars, ap
 #' @export
 dq_path_enrolled_missing <- function(served_in_date_range, Project, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep), AgeAtEntry, ClientEnrolledInPATH) %>%
     dplyr::left_join(dqu_project_small(Project), by = "ProjectName") %>%
@@ -1833,7 +1833,7 @@ dq_path_enrolled_missing <- function(served_in_date_range, Project, vars, app_en
 #' @export
 dq_path_reason_missing <- function(served_in_date_range, Project, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   served_in_date_range %>%
     dplyr::select(
@@ -1866,7 +1866,7 @@ dq_path_reason_missing <- function(served_in_date_range, Project, vars, app_env 
 #' @export
 dq_path_SOAR_missing_at_exit <- function(served_in_date_range, Project, IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   smallIncomeSOAR <- IncomeBenefits %>%
     dplyr::select(PersonalID,
@@ -1906,7 +1906,7 @@ dq_missing_path_contact <- function(served_in_date_range, Contacts, rm_dates, va
   ## if the contact was an "Outreach" record after 10/1/2019, it is being
   ## filtered out because they should be using CLS subs past that date.
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   small_contacts <-  Contacts %>%
     dplyr::left_join(served_in_date_range, by = "PersonalID") %>%
     dplyr::filter(
@@ -1950,7 +1950,7 @@ dq_missing_path_contact <- function(served_in_date_range, Contacts, rm_dates, va
 
 dq_incorrect_path_contact_date <- function(served_in_date_range, Contacts, rm_dates, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   first_contact <- Contacts %>%
     dplyr::filter(ContactDate < rm_dates$hc$outreach_to_cls) %>%
@@ -1992,7 +1992,7 @@ dq_incorrect_path_contact_date <- function(served_in_date_range, Contacts, rm_da
 #' @export
 dq_duplicate_ees <- function(served_in_date_range, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   janitor::get_dupes(served_in_date_range, PersonalID, ProjectID, EntryDate) %>%
     dplyr::mutate(
       Issue = "Duplicate Entry Exits",
@@ -2011,7 +2011,7 @@ dq_duplicate_ees <- function(served_in_date_range, vars, app_env = get_app_env(e
 
 dq_future_ees <- function(served_in_date_range, rm_dates, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   served_in_date_range %>%
     dplyr::filter(EntryDate > DateCreated &
@@ -2038,7 +2038,7 @@ dq_future_ees <- function(served_in_date_range, rm_dates, vars, app_env = get_ap
 #' @export
 dq_future_exits <- function(served_in_date_range, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
   dplyr::filter(ExitDate > lubridate::today()) %>%
   dplyr::mutate(
@@ -2065,7 +2065,7 @@ dq_future_exits <- function(served_in_date_range, vars, app_env = get_app_env(e 
 
 dq_ph_without_spdats <- function(served_in_date_range, Funder, rm_dates, vars, app_env = get_app_env(e = rlang::caller_env()), unsh = FALSE) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   va_funded <- Funder |>
     Funder_VA_ProjectID()
@@ -2172,7 +2172,7 @@ dq_ph_without_spdats <- function(served_in_date_range, Funder, rm_dates, vars, a
 
 dq_conflicting_income <- function(served_in_date_range, IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   # Not calculating Conflicting Income Amounts bc they're calculating the TMI from the
   # subs instead of using the field itself. Understandable but that means I would
@@ -2278,7 +2278,7 @@ dq_conflicting_income <- function(served_in_date_range, IncomeBenefits, vars, gu
 
 dq_missing_income <- function(served_in_date_range, IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   missing_income_entry <- served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::select(
@@ -2334,7 +2334,7 @@ dq_missing_income <- function(served_in_date_range, IncomeBenefits, vars, guidan
 
 dq_overlaps <- function(served_in_date_range, Users, vars, guidance, app_env = get_app_env(e = rlang::caller_env()), unsh = FALSE) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   dq_overlaps <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
     dplyr::mutate(
@@ -2397,7 +2397,7 @@ dq_overlaps <- function(served_in_date_range, Users, vars, guidance, app_env = g
 #' @export
 dq_overlaps_same_day <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   served_in_date_range %>%
     dplyr::filter((ProjectType == 13 & MoveInDateAdjust == ExitDate) |
@@ -2444,7 +2444,7 @@ dq_overlaps_same_day <- function(served_in_date_range, vars, guidance, app_env =
 #' @export
 dq_overlaps_rrh <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
     dplyr::mutate(
@@ -2481,7 +2481,7 @@ dq_overlaps_rrh <- function(served_in_date_range, vars, guidance, app_env = get_
 #' @export
 dq_overlaps_psh <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
@@ -2523,7 +2523,7 @@ dq_overlaps_psh <- function(served_in_date_range, vars, guidance, app_env = get_
 
 dq_missing_hi_entry <- function(served_in_date_range,  IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
@@ -2549,7 +2549,7 @@ dq_missing_hi_entry <- function(served_in_date_range,  IncomeBenefits, vars, gui
 #' @export
 dq_missing_hi_exit <- function(served_in_date_range,  IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::select(dplyr::all_of(vars$prep),
@@ -2575,7 +2575,7 @@ dq_missing_hi_exit <- function(served_in_date_range,  IncomeBenefits, vars, guid
 
 dq_conflicting_hi_ee <- function(served_in_date_range,  IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   hi_subs <-
     served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
@@ -2642,7 +2642,7 @@ dq_conflicting_hi_ee <- function(served_in_date_range,  IncomeBenefits, vars, gu
 
 dq_missing_ncbs <- function(served_in_date_range, IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   missing_ncbs_entry <- served_in_date_range %>%
     dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
@@ -2696,7 +2696,7 @@ dq_missing_ncbs <- function(served_in_date_range, IncomeBenefits, vars, guidance
 
 dq_conflicting_unlikely_ncbs <- function(served_in_date_range, IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   ncb_subs <- IncomeBenefits %>%
     dplyr::select(
@@ -2826,7 +2826,7 @@ dq_conflicting_unlikely_ncbs <- function(served_in_date_range, IncomeBenefits, v
 
 dq_check_disability_ssi <- function(served_in_date_range, IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep),
@@ -2858,7 +2858,7 @@ dq_check_disability_ssi <- function(served_in_date_range, IncomeBenefits, vars, 
 
 dq_services_on_non_hoh <- function(served_in_date_range, vars, rm_dates, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep),
@@ -2885,7 +2885,7 @@ dq_services_on_non_hoh <- function(served_in_date_range, vars, rm_dates, guidanc
 
 dq_services_on_hh_members_ssvf <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep),
                   EnrollmentID,
@@ -2909,7 +2909,7 @@ dq_services_on_hh_members_ssvf <- function(served_in_date_range, vars, guidance,
 
 dq_referrals_on_hh_members_ssvf <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep),
@@ -2933,7 +2933,7 @@ dq_referrals_on_hh_members_ssvf <- function(served_in_date_range, vars, guidance
 
 dq_aps_with_ees <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   served_in_date_range %>%
     dplyr::filter(ProjectType == 14) %>% # not incl Mah CE
     dplyr::mutate(
@@ -2955,7 +2955,7 @@ dq_aps_with_ees <- function(served_in_date_range, vars, guidance, app_env = get_
 
 ssvf_served_in_date_range <- function(Enrollment_extra_Exit_HH_CL_AaE, served_in_date_range, Client, app_env = get_app_env(e = rlang::caller_env())) {
     if (is_app_env(app_env))
-      app_env$merge_deps_to_env(missing_fmls())
+      app_env$set_parent(missing_fmls())
 
   Enrollment_extra_Exit_HH_CL_AaE %>%
       dplyr::select(
@@ -3020,7 +3020,7 @@ ssvf_served_in_date_range <- function(Enrollment_extra_Exit_HH_CL_AaE, served_in
 
 dq_veteran_missing_year_entered <- function(ssvf_served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   ssvf_served_in_date_range %>%
     dplyr::filter(VeteranStatus == 1) %>%
@@ -3045,7 +3045,7 @@ dq_veteran_missing_year_entered <- function(ssvf_served_in_date_range, vars, gui
 
 dq_veteran_missing_year_separated <- function(ssvf_served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   ssvf_served_in_date_range %>%
     dplyr::filter(VeteranStatus == 1) %>%
@@ -3091,7 +3091,7 @@ dq_veteran_missing_year_separated <- function(ssvf_served_in_date_range, vars, g
 
 dq_veteran_missing_branch <- function(ssvf_served_in_date_range, guidance, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   ssvf_served_in_date_range %>%
     dplyr::filter(VeteranStatus == 1 &
                     is.na(MilitaryBranch)) %>%
@@ -3128,7 +3128,7 @@ dq_veteran_missing_discharge_status <- function(ssvf_served_in_date_range, vars,
 
 dq_dkr_client_veteran_info <- function(ssvf_served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   ssvf_served_in_date_range %>%
     dplyr::filter(VeteranStatus == 1) %>%
@@ -3162,7 +3162,7 @@ dq_dkr_client_veteran_info <- function(ssvf_served_in_date_range, vars, guidance
 
 dq_ssvf_missing_percent_ami <- function(ssvf_served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
   ssvf_served_in_date_range %>%
     dplyr::filter(RelationshipToHoH == 1 &
                     is.na(PercentAMI)) %>%
@@ -3194,7 +3194,7 @@ dq_ssvf_missing_address <-
            guidance,
            app_env = get_app_env(e = rlang::caller_env())) {
     if (is_app_env(app_env))
-      app_env$merge_deps_to_env(missing_fmls())
+      app_env$set_parent(missing_fmls())
 
     ssvf_served_in_date_range %>%
       dplyr::filter(RelationshipToHoH == 1 &
@@ -3216,7 +3216,7 @@ dq_ssvf_missing_address <-
 
 dqu_aps <- function(Project, Referrals, data = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   co_APs <- Project %>%
     dplyr::filter(ProjectType == 14) %>% # not incl Mah CE

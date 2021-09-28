@@ -24,7 +24,7 @@
 #' @examples
   data_quality_plots <- function(served_in_date_range, Referrals, Project, dq_past_year, dq_unsheltered, rm_dates, data_APs, ProjectDisplay, app_env = get_app_env(e = rlang::caller_env())) {
     if (is_app_env(app_env))
-      app_env$merge_deps_to_env(missing_fmls())
+      app_env$set_parent(missing_fmls())
     # Plots -------------------------------------------------------------------
     # Side Door ---------------------------------------------------------------
     # use Referrals, get logic from ART report- it's pretty lax I think

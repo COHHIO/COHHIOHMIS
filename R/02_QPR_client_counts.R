@@ -1,6 +1,6 @@
 client_counts <- function(Project, Enrollment_extra_Exit_HH_CL_AaE, rm_dates, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-    app_env$merge_deps_to_env(missing_fmls())
+    app_env$set_parent(missing_fmls())
 
   project_small <- qpr_project_small(Project, rm_dates)
 
