@@ -60,10 +60,10 @@ load_export <- function(
   # Project -----------------------------------------------------------------
   # provider_extras
   # Thu Aug 12 14:23:50 2021
-  provider_extras <- cl_api$`HUD Extras`$Project_extras()
-  provider_extras <- provider_extras_helpers$add_ProjectType(provider_extras)
-  provider_extras <- provider_extras_helpers$add_regions(provider_extras, dirs)
-  provider_extras <- provider_extras_helpers$add_GrantType(provider_extras)
+  provider_extras <- cl_api$`HUD Extras`$Project_extras() |>
+    Pe_add_ProjectType() |>
+    Pe_add_regions(dirs) |>
+    Pe_add_GrantType()
 
   # Rminor: Coordinated Entry Access Points [CEAP]
   APs <- provider_extras_helpers$create_APs(provider_extras, dirs)
@@ -86,7 +86,7 @@ Project <- cl_api$Project() |>
   # from sheets 1 and 2, getting EE-related data, joining both to En
   Enrollment_extras <- cl_api$`HUD Extras`$Enrollment_extras()
   Enrollment <- cl_api$Enrollment()
-  Enrollment_extra_Exit_HH_CL_AaE <- dplyr::inner_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
+  Enrollment_extra_Exit_HH_CL_AaE <- dplyr::left_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
     # Add Exit
     Enrollment_add_Exit(cl_api$Exit()) |>
     # Add Households
