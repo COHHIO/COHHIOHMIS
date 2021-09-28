@@ -70,7 +70,8 @@ load_export <- function(
 
 Project <- cl_api$Project() |>
   dplyr::select(-ProjectCommonName) |>
-  {\(x) {dplyr::left_join(x, provider_extras, by = UU::common_names(x, provider_extras))}}()
+  {\(x) {dplyr::left_join(x, provider_extras |> dplyr::select(-ProjectName), by = c("ProjectID", "ProjectType"))}}() |>
+  dplyr::distinct(ProjectID, ProjectType, .keep_all = T)
 
 
   # EnrollmentCoC -----------------------------------------------------------
@@ -83,7 +84,7 @@ Project <- cl_api$Project() |>
 
   # Enrollment --------------------------------------------------------------
 
-  # from sheets 1 and 2, getting EE-related data, joining both to En
+  # getting EE-related data, joining both to En
   Enrollment_extras <- cl_api$`HUD Extras`$Enrollment_extras()
   Enrollment <- cl_api$Enrollment()
   Enrollment_extra_Exit_HH_CL_AaE <- dplyr::left_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
