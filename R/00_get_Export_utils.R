@@ -124,8 +124,7 @@ Enrollment_add_Household = function(Enrollment, Project, rm_dates) {
 
 
   small_project <- Project %>%
-    dplyr::select(ProjectID, ProjectType, ProjectName) |>
-    dplyr::distinct(ProjectID, ProjectType, .keep_all = TRUE)
+    dplyr::select(ProjectID, ProjectType, ProjectName)
   # TODO Check to see if Enrollment data has the MoveInDate
   # TODO Does Move-in Date in Clarity auto-populate from previous enrollments?
   HHMoveIn <- Enrollment %>%
