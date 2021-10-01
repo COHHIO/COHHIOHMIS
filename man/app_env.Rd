@@ -29,7 +29,7 @@ Save dependencies for future functions in an environment and put app dependencie
 \itemize{
 \item \href{#method-merge_deps_to_env}{\code{app_env$merge_deps_to_env()}}
 \item \href{#method-gather_deps}{\code{app_env$gather_deps()}}
-\item \href{#method-exec}{\code{app_env$exec()}}
+\item \href{#method-set_parent}{\code{app_env$set_parent()}}
 \item \href{#method-write_app_deps}{\code{app_env$write_app_deps()}}
 \item \href{#method-dropbox_upload}{\code{app_env$dropbox_upload()}}
 \item \href{#method-dropbox_auth}{\code{app_env$dropbox_auth()}}
@@ -82,17 +82,19 @@ Gather the objects passed to \code{app_env}s internal environment to be passed t
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-exec"></a>}}
-\if{latex}{\out{\hypertarget{method-exec}{}}}
-\subsection{Method \code{exec()}}{
+\if{html}{\out{<a id="method-set_parent"></a>}}
+\if{latex}{\out{\hypertarget{method-set_parent}{}}}
+\subsection{Method \code{set_parent()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$exec(fn, save = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{app_env$set_parent(vars_to_remove, env = rlang:::caller_env())}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{fn}}{Function to evaluate}
+\item{\code{vars_to_remove}}{missing variables to remove from env that will otherwise mask the objects in the parent environment}
+
+\item{\code{env}}{child environment}
 }
 \if{html}{\out{</div>}}
 }

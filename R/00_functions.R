@@ -268,13 +268,30 @@ project_type <- function(ReferenceNo){
   )
 }
 
-replace_yes_no <- function(column_name) {
-  if (inherits(column_name, "character") && all(names(table(column_name)) %in% c("Yes", "No"))) {
-    out <- dplyr::if_else(column_name == "No" | is.na(column_name), 0, 1)
-  } else {
-    out <- column_name
-  }
+
+#' @title replace "yes"/"no" character vector
+#'
+#' @param column_name \code{(character)}
+#' @param numeric \code{(logical)} if `numeric = TRUE` numeric, otherwise logical. **Default** `TRUE`
+#'
+#' @return if `numeric = TRUE` numeric, otherwise logical.
+#' @export
+
+replace_yes_no <- function(column_name, numeric = TRUE) {
+  if (!all(stringr::str_detect(names(table(column_name)), stringr::regex("Yes|No", ignore_case = TRUE))))
+    stop("The vector has more options than yes/no.")
+  if (numeric)
+    out <- dplyr::if_else(column_name == "No" ~ 0,
+                          column_name == "Yes" ~ 1,
+                          is.na(column_name) ~ NA_real_)
+  else
+    out <- dplyr::if_else(column_name == "No" ~ TRUE,
+                          column_name == "Yes" ~ FALSE,
+                          is.na(column_name) ~ NA)
+  out
 }
+
+
 
 enhanced_yes_no_translator <- function(ReferenceNo) {
   dplyr::case_when(
@@ -292,7 +309,8 @@ translate_HUD_yes_no <- function(column_name){
   dplyr::case_when(
     column_name == 1 ~ "Yes",
     column_name == 0 ~ "No",
-    column_name %in% c(8, 9, 99) ~ "Unknown"
+    column_name %in% c(8, 9, 99) ~ "Unknown",
+    is.na(column_name) ~ NA_character_
   )
 }
 
