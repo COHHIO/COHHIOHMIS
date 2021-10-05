@@ -281,15 +281,103 @@ replace_yes_no <- function(column_name, numeric = TRUE) {
   if (!all(stringr::str_detect(names(table(column_name)), stringr::regex("Yes|No", ignore_case = TRUE))))
     stop("The vector has more options than yes/no.")
   if (numeric)
-    out <- dplyr::if_else(column_name == "No" ~ 0,
+    out <- dplyr::case_when(column_name == "No" ~ 0,
                           column_name == "Yes" ~ 1,
                           is.na(column_name) ~ NA_real_)
   else
-    out <- dplyr::if_else(column_name == "No" ~ TRUE,
-                          column_name == "Yes" ~ FALSE,
+    out <- dplyr::case_when(column_name == "No" ~ FALSE,
+                          column_name == "Yes" ~ TRUE,
                           is.na(column_name) ~ NA)
   out
 }
+
+sp2cl_tables <- list(
+  tibble::tribble(
+    ~Value,                 ~Text,
+    1, "Healthcare Provider",
+    2,         "Self-Report",
+    3,        "Vaccine Card"
+  ),
+  tibble::tribble(
+    ~Value,                                                                   ~Text,
+    1,                                                     "Johnson & Johnson",
+    2,                                                               "Moderna",
+    3,                                                                "Pfizer",
+    4,  "Client doesn't know and data could not be obtained from other source"
+  ),
+  tibble::tribble(
+    ~Value,      ~Text,
+    0, "Negative",
+    1, "Positive",
+    2,  "Unknown"
+  ),
+  tibble::tribble(
+    ~Value,       ~Text,
+    1,  "HUD VASH",
+    2,  "Other PH",
+    3, "Other RRH",
+    4,  "SSVF RRH"
+  ),
+  tibble::tribble(
+    ~Value,             ~Text,
+    1,   "VI-SPDAT [V2]",
+    2, "VI-F-SPDAT [V2]",
+    3, "VI-Y-SPDAT [V1]"
+  )
+) |>
+  rlang::set_names(c("c_covid19_vaccine_documentation",
+                     "c_covid19_vaccine_manufacturer",
+                     "c_covid19_test_results",
+                     "c_offer_type",
+                     "c_vispdat_type"))
+
+tables_from_compare_list <- function(columns_to_parse = c("c_covid19_vaccine_documentation",
+                                                          "c_covid19_vaccine_manufacturer",
+                                                          "c_covid19_test_results",
+                                                          "c_offer_type",
+                                                          "c_vispdat_type"), data_match) {
+  sp2cl_tables <-  columns_to_parse |>
+    rlang::set_names() |>
+    purrr::map(~{
+      nm <- .x
+      .matches <- purrr::map(purrr::keep(data_match, ~nm %in% names(.x)), nm) |> purrr::map(~unique(na.omit(.x)))
+      unique(unlist(.matches)) |>
+        {\(x) {tibble::tibble(Value = as.numeric(x[1:length(x) %% 2 != 0]), Text = x[1:length(x) %% 2 == 0])}}()
+    })
+
+}
+
+case_when_text <- function(.x, .y, out = c("Text", "Value")[1]) {
+  nms <- c("Text", "Value")
+  rlang::parse_expr(paste0("dplyr::case_when(\n\t", paste0(append(
+    slider::slide(x, ~{
+      rlang::expr(x == !!.x[[setdiff(nms, out)]] ~ !!.x[[out]])
+    }),
+    rlang::expr(is.na(x) ~ !!ifelse(out == "Text", NA_character_, NA_real_))
+  ), collapse = ",\n\t"), "\n)"))
+}
+
+#' @title Service Point / Clarity Field representation translations (numeric/character)
+#' @inherit hud.extract::hud_translate param return
+#' @export
+sp2cl_translations <-
+  purrr::imap(sp2cl_tables, ~{
+    rlang::new_function(args = rlang::pairlist2(.x = , table = FALSE), body = rlang::expr({
+      hash <- sp2cl_tables[[!!.y]]
+      if (table) {
+        out <- hash
+      } else {
+        out <- hud.extract::hud_translate(.x, hash)
+      }
+      out
+    })
+    )
+  })|>
+  {\(x) {rlang::list2(
+    !!!x
+  )}}()
+
+
 
 
 
@@ -307,8 +395,8 @@ enhanced_yes_no_translator <- function(ReferenceNo) {
 # and returns yes, no, or unknown as appropriate
 translate_HUD_yes_no <- function(column_name){
   dplyr::case_when(
-    column_name == 1 ~ "Yes",
     column_name == 0 ~ "No",
+    column_name == 1 ~ "Yes",
     column_name %in% c(8, 9, 99) ~ "Unknown",
     is.na(column_name) ~ NA_character_
   )
