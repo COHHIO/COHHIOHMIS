@@ -29,9 +29,9 @@ Bed_Unit_Utilization <- function(
 # despite the fact we're pulling in usually more than 2 years of data, the
 # utilization reporting will only go back 2 years. (decision based on lack of
 # a need to go back further and time to code all that.)
-FileEnd <- format.Date(rm_dates$calc$two_yrs_prior_end, "%m-%d-%Y")
-FileStart <- format.Date(rm_dates$calc$two_yrs_prior_start, "%m-%d-%Y")
-FilePeriod <- rm_dates$calc$two_yrs_prior_range
+
+
+
 
 # Creating Beds table -----------------------------------------------------
 
@@ -41,7 +41,7 @@ small_project <- Project %>%
          ProjectType,
          HMISParticipatingProject) %>%
   dplyr::filter(ProjectType %in% c(project_types_w_beds) &
-           HMIS::operating_between(Project, FileStart, FileEnd) &
+           HMIS::operating_between(Project, rm_dates$calc$two_yrs_prior_start, rm_dates$calc$two_yrs_prior_end) &
            is.na(Project$GrantType) &
            HMISParticipatingProject == 1)
 
@@ -55,9 +55,9 @@ small_inventory <- Inventory %>%
     InventoryEndDate
     )  %>%
   dplyr::filter((
-    lubridate::ymd(InventoryStartDate) <= lubridate::mdy(FileEnd) &
+    InventoryStartDate <= rm_dates$calc$two_yrs_prior_end &
       (
-        lubridate::ymd(InventoryEndDate) >= lubridate::mdy(FileStart) |
+        InventoryEndDate >= rm_dates$calc$two_yrs_prior_start |
           is.na(InventoryEndDate)
       )
   ) &
@@ -79,7 +79,7 @@ small_enrollment <- Enrollment %>%
          HouseholdID,
          RelationshipToHoH,
          MoveInDate) %>%
-  dplyr::filter(HMIS::served_between(., FileStart, FileEnd))
+  dplyr::filter(HMIS::served_between(., rm_dates$calc$two_yrs_prior_start, rm_dates$calc$two_yrs_prior_end))
 
 Utilizers <- dplyr::semi_join(small_enrollment, Beds, by = "ProjectID")
 
@@ -105,15 +105,15 @@ Utilizers <- dplyr::left_join(Utilizers, small_project, by = "ProjectID") %>%
 # filtering out any PSH or RRH records without a proper Move-In Date plus the
 # fake training providers
 utilizers_clients <- Utilizers %>%
-  dplyr::mutate(StayWindow = lubridate::interval(lubridate::ymd(EntryAdjust), lubridate::ymd(ExitAdjust))) %>%
+  dplyr::mutate(StayWindow = lubridate::interval(EntryAdjust, ExitAdjust)) %>%
   dplyr::filter(
-    lubridate::int_overlaps(StayWindow, FilePeriod) &
+    lubridate::int_overlaps(StayWindow, rm_dates$calc$two_yrs_prior_range) &
       (
     (
       ProjectType %in% c(3, 9) &
         !is.na(EntryAdjust) &
-        lubridate::ymd(MoveInDateAdjust) >= lubridate::ymd(EntryDate) &
-        lubridate::ymd(MoveInDateAdjust) < lubridate::ymd(ExitAdjust)
+        MoveInDateAdjust >= EntryDate &
+        MoveInDateAdjust < ExitAdjust
     ) |
       ProjectType %in% c(1, 2, 8)
   ) &
@@ -136,14 +136,14 @@ bed_nights_per_ee <- function(table, interval) {
             # if the exit date precedes the end of the interval, then the exit
             # date, otherwise the end of the interval
             dplyr::if_else(
-              lubridate::ymd(table$ExitAdjust) <=  lubridate::int_end(interval),
+              table$ExitAdjust <=  lubridate::int_end(interval),
               as.POSIXct(table$ExitAdjust),
               lubridate::int_end(interval) + lubridate::days(1)
             ),
             # if the entry date is after the start of the interval, then the
             # entry date, otherwise the beginning of the interval
             dplyr::if_else(
-              lubridate::ymd(table$EntryAdjust) >= lubridate::int_start(interval),
+              table$EntryAdjust >= lubridate::int_start(interval),
               as.POSIXct(table$EntryAdjust),
               lubridate::int_start(interval)
             ),
@@ -154,8 +154,8 @@ bed_nights_per_ee <- function(table, interval) {
 }
 
 nth_Month <- function(n) {
-  lubridate::interval(lubridate::floor_date(lubridate::mdy(FileStart) %m+% months(n - 1), unit = "months"),
-           seq(as.Date(lubridate::floor_date(lubridate::mdy(FileStart) %m+% months(n), unit = "months")),
+  lubridate::interval(lubridate::floor_date(rm_dates$calc$two_yrs_prior_start %m+% months(n - 1), unit = "months"),
+           seq(as.Date(lubridate::floor_date(rm_dates$calc$two_yrs_prior_start %m+% months(n), unit = "months")),
                length = 1, by = "1 month") - 1)
 }
 
@@ -187,7 +187,7 @@ TwentyfourthMonth <- nth_Month(24)
 
 utilizers_clients <- utilizers_clients %>%
   dplyr::mutate(
-    # FilePeriod = bed_nights_per_ee(utilizers_clients, FilePeriod),
+    # rm_dates$calc$two_yrs_prior_range = bed_nights_per_ee(utilizers_clients, rm_dates$calc$two_yrs_prior_range),
     Month1 = bed_nights_per_ee(utilizers_clients, FirstMonth),
     Month2 = bed_nights_per_ee(utilizers_clients, SecondMonth),
     Month3 = bed_nights_per_ee(utilizers_clients, ThirdMonth),
@@ -225,7 +225,7 @@ utilizers_clients <- as.data.frame(utilizers_clients)
 BedNights <- utilizers_clients %>%
   dplyr::group_by(ProjectName, ProjectID, ProjectType) %>%
   dplyr::summarise(
-    # BNY = sum(FilePeriod, na.rm = TRUE),
+    # BNY = sum(rm_dates$calc$two_yrs_prior_range, na.rm = TRUE),
     BN1 = sum(Month1, na.rm = TRUE),
     BN2 = sum(Month2, na.rm = TRUE),
     BN3 = sum(Month3, na.rm = TRUE),
@@ -263,13 +263,13 @@ BedCapacity <- Beds %>%
          InventoryStartDate,
          InventoryEndDate) %>%
   dplyr::mutate(InventoryEndAdjust = dplyr::if_else(is.na(InventoryEndDate),
-                                      lubridate::mdy(FileEnd),
-                                      lubridate::ymd(InventoryEndDate)),
-         InventoryStartAdjust = dplyr::if_else(lubridate::ymd(InventoryStartDate) >= lubridate::mdy(FileStart),
-                                        lubridate::ymd(InventoryStartDate),
-                                        lubridate::mdy(FileStart)),
-         AvailableWindow = lubridate::interval(lubridate::ymd(InventoryStartAdjust),
-                                    lubridate::ymd(InventoryEndAdjust)))
+                                      rm_dates$calc$two_yrs_prior_end,
+                                      InventoryEndDate),
+         InventoryStartAdjust = dplyr::if_else(InventoryStartDate >= rm_dates$calc$two_yrs_prior_start,
+                                        InventoryStartDate,
+                                        rm_dates$calc$two_yrs_prior_start),
+         AvailableWindow = lubridate::interval(InventoryStartAdjust,
+                                    InventoryEndAdjust))
 
 # function for bed capacity at the bed record level
 
@@ -277,12 +277,12 @@ bed_capacity <- function(interval) {
   dplyr::if_else(lubridate::int_overlaps(BedCapacity$AvailableWindow, interval),
           (as.numeric(difftime(
             dplyr::if_else(
-              lubridate::ymd(BedCapacity$InventoryEndAdjust) <=  lubridate::int_end(interval),
+              BedCapacity$InventoryEndAdjust <=  lubridate::int_end(interval),
               as.POSIXct(BedCapacity$InventoryEndAdjust),
               lubridate::int_end(interval)
             ),
             dplyr::if_else(
-              lubridate::ymd(BedCapacity$InventoryStartAdjust) >= lubridate::int_start(interval),
+              BedCapacity$InventoryStartAdjust >= lubridate::int_start(interval),
               as.POSIXct(BedCapacity$InventoryStartAdjust),
               lubridate::int_start(interval)
             ),
@@ -293,8 +293,8 @@ bed_capacity <- function(interval) {
 
 BedCapacity <- BedCapacity %>%
   dplyr::mutate(
-    # PE_DateRange = bed_capacity(PE_FilePeriod),
-    # FilePeriod = bed_capacity(FilePeriod),
+    # PE_DateRange = bed_capacity(PE_rm_dates$calc$two_yrs_prior_range),
+    # rm_dates$calc$two_yrs_prior_range = bed_capacity(rm_dates$calc$two_yrs_prior_range),
     Month1 = bed_capacity(FirstMonth),
     Month2 = bed_capacity(SecondMonth),
     Month3 = bed_capacity(ThirdMonth),
@@ -332,7 +332,7 @@ BedCapacity <- BedCapacity %>%
   dplyr::group_by(ProjectID, ProjectName, ProjectType) %>%
   dplyr::summarise(
     # BCPE = sum(PE_DateRange, na.rm = TRUE),
-    # BCY = sum(FilePeriod, na.rm = TRUE),
+    # BCY = sum(rm_dates$calc$two_yrs_prior_range, na.rm = TRUE),
     BC1 = sum(Month1, na.rm = TRUE),
     BC2 = sum(Month2, na.rm = TRUE),
     BC3 = sum(Month3, na.rm = TRUE),
@@ -367,7 +367,7 @@ utilization_bed <-
             BedNights,
             by = c("ProjectID", "ProjectName", "ProjectType")) %>%
   dplyr::mutate(
-    # FilePeriod = BNY / BCY, accuracy = .1,
+    # rm_dates$calc$two_yrs_prior_range = BNY / BCY, accuracy = .1,
     Month1 = BN1 / BC1, accuracy = .1,
     Month2 = BN2 / BC2, accuracy = .1,
     Month3 = BN3 / BC3, accuracy = .1,
@@ -441,23 +441,23 @@ HHUtilizers <- Utilizers %>%
       ProjectType %in% c(3, 9) ~ MoveInDateAdjust
     ),
     ExitAdjust = dplyr::if_else(
-      is.na(ExitDate) & lubridate::ymd(EntryAdjust) <= lubridate::mdy(FileEnd),
-      lubridate::mdy(FileEnd),
-      lubridate::ymd(ExitDate)
+      is.na(ExitDate) & EntryAdjust <= rm_dates$calc$two_yrs_prior_end,
+      rm_dates$calc$two_yrs_prior_end,
+      ExitDate
     ),
-    StayWindow = lubridate::interval(lubridate::ymd(EntryAdjust), lubridate::ymd(ExitAdjust))
+    StayWindow = lubridate::interval(EntryAdjust, ExitAdjust)
   ) %>%
   dplyr::filter(
     stringr::str_detect(HouseholdID, stringr::fixed("s_")) |
       (stringr::str_detect(HouseholdID, stringr::fixed("h_")) &
          RelationshipToHoH == 1) &
-      lubridate::int_overlaps(StayWindow, FilePeriod) &
+      lubridate::int_overlaps(StayWindow, rm_dates$calc$two_yrs_prior_range) &
       (
         (
           ProjectType %in% c(3, 9) &
             !is.na(EntryAdjust) &
-            lubridate::ymd(MoveInDateAdjust) >= lubridate::ymd(EntryDate) &
-            lubridate::ymd(MoveInDateAdjust) <= lubridate::ymd(ExitAdjust)
+            MoveInDateAdjust >= EntryDate &
+            MoveInDateAdjust <= ExitAdjust
         ) |
           ProjectType %in% c(lh_project_types)
       ) &
@@ -467,7 +467,7 @@ HHUtilizers <- Utilizers %>%
 
 HHUtilizers <- HHUtilizers %>%
   dplyr::mutate(
-    # FilePeriod = bed_nights_per_ee(HHUtilizers, FilePeriod),
+    # rm_dates$calc$two_yrs_prior_range = bed_nights_per_ee(HHUtilizers, rm_dates$calc$two_yrs_prior_range),
     Month1 = bed_nights_per_ee(HHUtilizers, FirstMonth),
     Month2 = bed_nights_per_ee(HHUtilizers, SecondMonth),
     Month3 = bed_nights_per_ee(HHUtilizers, ThirdMonth),
@@ -503,7 +503,7 @@ HHUtilizers <- as.data.frame(HHUtilizers)
 HHNights <- HHUtilizers %>%
   dplyr::group_by(ProjectName, ProjectID, ProjectType) %>%
   dplyr::summarise(
-    # HNY = sum(FilePeriod, na.rm = TRUE),
+    # HNY = sum(rm_dates$calc$two_yrs_prior_range, na.rm = TRUE),
     HN1 = sum(Month1, na.rm = TRUE),
     HN2 = sum(Month2, na.rm = TRUE),
     HN3 = sum(Month3, na.rm = TRUE),
@@ -549,13 +549,13 @@ UnitCapacity <- Beds %>%
          InventoryStartDate,
          InventoryEndDate) %>%
   dplyr::mutate(InventoryEndAdjust = dplyr::if_else(is.na(InventoryEndDate),
-                                      lubridate::mdy(FileEnd),
-                                      lubridate::ymd(InventoryEndDate)),
-         InventoryStartAdjust = dplyr::if_else(lubridate::ymd(InventoryStartDate) >= lubridate::mdy(FileStart),
-                                        lubridate::ymd(InventoryStartDate),
-                                        lubridate::mdy(FileStart)),
-         AvailableWindow = lubridate::interval(lubridate::ymd(InventoryStartAdjust),
-                                    lubridate::ymd(InventoryEndAdjust)),
+                                      rm_dates$calc$two_yrs_prior_end,
+                                      InventoryEndDate),
+         InventoryStartAdjust = dplyr::if_else(InventoryStartDate >= rm_dates$calc$two_yrs_prior_start,
+                                        InventoryStartDate,
+                                        rm_dates$calc$two_yrs_prior_start),
+         AvailableWindow = lubridate::interval(InventoryStartAdjust,
+                                    InventoryEndAdjust),
          UnitCount = dplyr::if_else(HouseholdType == 3,
                              UnitInventory, BedInventory))
 
@@ -567,12 +567,12 @@ unit_capacity <- function(interval) {
     (as.numeric(
       difftime(
         dplyr::if_else(
-          lubridate::ymd(UnitCapacity$InventoryEndAdjust) <=  lubridate::int_end(interval),
+          UnitCapacity$InventoryEndAdjust <=  lubridate::int_end(interval),
           as.POSIXct(UnitCapacity$InventoryEndAdjust),
           lubridate::int_end(interval)
         ),
         dplyr::if_else(
-          lubridate::ymd(UnitCapacity$InventoryStartAdjust) >= lubridate::int_start(interval),
+          UnitCapacity$InventoryStartAdjust >= lubridate::int_start(interval),
           as.POSIXct(UnitCapacity$InventoryStartAdjust),
           lubridate::int_start(interval)
         ),
@@ -585,8 +585,8 @@ unit_capacity <- function(interval) {
 
 UnitCapacity <- UnitCapacity %>%
   dplyr::mutate(
-    # PE_Date_Range = unit_capacity(PE_FilePeriod),
-    # FilePeriod = unit_capacity(FilePeriod),
+    # PE_Date_Range = unit_capacity(PE_rm_dates$calc$two_yrs_prior_range),
+    # rm_dates$calc$two_yrs_prior_range = unit_capacity(rm_dates$calc$two_yrs_prior_range),
     Month1 = unit_capacity(FirstMonth),
     Month2 = unit_capacity(SecondMonth),
     Month3 = unit_capacity(ThirdMonth),
@@ -616,7 +616,7 @@ UnitCapacity <- UnitCapacity %>%
   dplyr::group_by(ProjectID, ProjectName, ProjectType) %>%
   dplyr::summarise(
     # UCPE = sum(PE_Date_Range, na.rm = TRUE),
-    # UCY = sum(FilePeriod, na.rm = TRUE),
+    # UCY = sum(rm_dates$calc$two_yrs_prior_range, na.rm = TRUE),
     UC1 = sum(Month1, na.rm = TRUE),
     UC2 = sum(Month2, na.rm = TRUE),
     UC3 = sum(Month3, na.rm = TRUE),
@@ -650,7 +650,7 @@ utilization_unit <- dplyr::left_join(UnitCapacity,
                               HHNights,
                               by = c("ProjectID", "ProjectName", "ProjectType")) %>%
   dplyr::mutate(
-    # FilePeriod = HNY / UCY,
+    # rm_dates$calc$two_yrs_prior_range = HNY / UCY,
     # accuracy = .1,
     Month1 = HN1 / UC1,
     accuracy = .1,
@@ -704,14 +704,14 @@ utilization_unit <- dplyr::left_join(UnitCapacity,
   dplyr::select(ProjectID,
          ProjectName,
          ProjectType,
-         # FilePeriod,
+         # rm_dates$calc$two_yrs_prior_range,
          tidyselect::starts_with("Month"))
 
 rm(UnitCapacity, HHNights, Utilizers)
 
 names(utilization_unit) <-
   c("ProjectID", "ProjectName", "ProjectType",
-    # "FilePeriod",
+    # "rm_dates$calc$two_yrs_prior_range",
     format.Date(lubridate::int_start(FirstMonth), "%m%d%Y"),
     format.Date(lubridate::int_start(SecondMonth), "%m%d%Y"),
     format.Date(lubridate::int_start(ThirdMonth), "%m%d%Y"),
@@ -741,7 +741,7 @@ rm(bed_capacity, bed_nights_per_ee, unit_capacity)
 
 small_project <- Project %>%
   dplyr::filter(ProjectType %in% c(project_types_w_beds) &
-           lubridate::ymd(OperatingStartDate) <= lubridate::today() &
+           OperatingStartDate <= lubridate::today() &
            (is.na(OperatingEndDate) | OperatingEndDate >= lubridate::today()) &
            is.na(Project$GrantType)) %>%
   dplyr::select(ProjectID,
@@ -753,9 +753,9 @@ small_project <- Project %>%
 # Current Bed Utilization -------------------------------------------------
 
 small_inventory <- Inventory %>%
-  dplyr::filter((lubridate::ymd(InventoryStartDate) <= lubridate::today() &
+  dplyr::filter((InventoryStartDate <= lubridate::today() &
             (
-              lubridate::ymd(InventoryEndDate) >= lubridate::today() |
+              InventoryEndDate >= lubridate::today() |
                 is.na(InventoryEndDate)
             )) &
            Inventory$CoCCode %in% c("OH-507", "OH-504")) %>%
@@ -895,13 +895,13 @@ rm(list = ls(all.names = TRUE, pattern = "co_"))
 # Find Outliers for HIC Purposes ------------------------------------------
 
 # utilization_unit_overall <- utilization_unit %>%
-#   select(ProjectID, ProjectName, ProjectType, FilePeriod)
+#   select(ProjectID, ProjectName, ProjectType, rm_dates$calc$two_yrs_prior_range)
 #
 # outliers_hi <- subset(utilization_unit_overall,
-#                       FilePeriod > quantile(FilePeriod, prob = 0.90))
+#                       rm_dates$calc$two_yrs_prior_range > quantile(rm_dates$calc$two_yrs_prior_range, prob = 0.90))
 #
 # outliers_lo <- subset(utilization_unit_overall,
-#                       FilePeriod < quantile(FilePeriod, prob = 0.03))
+#                       rm_dates$calc$two_yrs_prior_range < quantile(rm_dates$calc$two_yrs_prior_range, prob = 0.03))
 #
 # outliers <- rbind(outliers_hi, outliers_lo)
 
