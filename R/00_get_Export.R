@@ -161,7 +161,13 @@ Project <- cl_api$Project() |>
   # COVID-19 ----------------------------------------------------------------
 
   covid19 <- cl_api$`HUD Extras`$Client_COVID_extras() |>
-    dplyr::mutate(dplyr::across(.f = replace_yes_no))
+    dplyr::mutate(dplyr::across(.cols = dplyr::all_of(
+      c(
+        dplyr::matches("^C19Tested$"),
+        dplyr::starts_with("HR"),
+        dplyr::starts_with("Symptom2")
+      )
+    ), .f = replace_yes_no))
 
 
   doses <- cl_api$`HUD Extras`$Client_Doses_extras()
