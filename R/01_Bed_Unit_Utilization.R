@@ -293,8 +293,6 @@ bed_capacity <- function(interval) {
 
 BedCapacity <- BedCapacity %>%
   dplyr::mutate(
-    # PE_DateRange = bed_capacity(PE_rm_dates$calc$two_yrs_prior_range),
-    # rm_dates$calc$two_yrs_prior_range = bed_capacity(rm_dates$calc$two_yrs_prior_range),
     Month1 = bed_capacity(FirstMonth),
     Month2 = bed_capacity(SecondMonth),
     Month3 = bed_capacity(ThirdMonth),
@@ -585,8 +583,6 @@ unit_capacity <- function(interval) {
 
 UnitCapacity <- UnitCapacity %>%
   dplyr::mutate(
-    # PE_Date_Range = unit_capacity(PE_rm_dates$calc$two_yrs_prior_range),
-    # rm_dates$calc$two_yrs_prior_range = unit_capacity(rm_dates$calc$two_yrs_prior_range),
     Month1 = unit_capacity(FirstMonth),
     Month2 = unit_capacity(SecondMonth),
     Month3 = unit_capacity(ThirdMonth),

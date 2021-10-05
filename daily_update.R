@@ -5,7 +5,7 @@
 # These are necessary when rapidly modifying these dependencies
 
 # devtools::load_all("../../lookr")
-#devtools::load_all("../hud.extract")
+# devtools::load_all("../hud.extract")
 
 # RPushBullet setup
 #RPushbullet::pbSetup(conffile = file.path("inst","auth","rpushbullet.json"))

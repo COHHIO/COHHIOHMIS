@@ -4,7 +4,12 @@
 \alias{Pe_create_APs}
 \title{Add Access Points to Provider_extras}
 \usage{
-Pe_create_APs(provider_extras, dirs)
+Pe_create_APs(
+  provider_extras,
+  ProjectCoC,
+  dirs,
+  app_env = get_app_env(e = rlang::caller_env())
+)
 }
 \arguments{
 \item{provider_extras}{\code{(data.frame)} provider_extras with Regions, see \code{Pe_add_regions}}
