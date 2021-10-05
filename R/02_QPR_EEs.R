@@ -26,7 +26,7 @@ if (missing(app_env))
 
 # decided to continue to use a separate file for Goals (instead of building it
 # in a tribble) because this way the CoC team can review it more easily.
-goals <- readr::read_csv("public_data/BoSGoals.csv", col_types = "cccdddddddd")
+goals <- readr::read_csv(file.path(dirs$public, "BoSGoals.csv"), col_types = "cccdddddddd")
 
 goals <- goals %>%
   tidyr::gather(key = "ProjectType",
