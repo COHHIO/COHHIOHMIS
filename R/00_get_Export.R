@@ -55,6 +55,7 @@ load_export <- function(
 
 
 
+  app_env$merge_deps_to_env("dirs")
 
 
   # Project -----------------------------------------------------------------
