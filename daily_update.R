@@ -16,8 +16,11 @@ dirs <- clarity.looker::dirs
 # must load Rm_data
 devtools::load_all()
 rstudioapi::jobRunScript(file.path("inst","src","update_data.R"), importEnv = TRUE, workingDir = getwd())
+# Try services
+# rstudioapi::jobRunScript(file.path("inst","src","Services_test.R"), importEnv = TRUE, workingDir = getwd())
 
 Rm_env$gather_deps(guidance)
+Rm_env$gather_deps(dirs)
 Rm_env <- dates()
 Rm_env <- load_export()
 Rm_env <- client_counts()
