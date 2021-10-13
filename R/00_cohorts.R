@@ -30,18 +30,13 @@
 #' @include app_dependencies.R init_R6.R
 
 cohorts <- function(
-  clarity_api,
-  app_env,
-  e = rlang::caller_env()
-  ) {
-  if (missing(clarity_api))
-    clarity_api <- get_clarity_api(e = e)
-  if (missing(app_env))
-    app_env <- get_app_env(e = e)
+  clarity_api = get_clarity_api(e = rlang::caller_env()),
+  app_env = get_app_env(e = rlang::caller_env())
+) {
+
   if (is_app_env(app_env))
     app_env$set_parent()
-  vars <- list()
-  vars$we_want <- c(
+  vars <- list(we_want = c(
     "PersonalID",
     "EnrollmentID",
     "CountyServed",
@@ -59,7 +54,8 @@ cohorts <- function(
     "ExitDate",
     "ExitAdjust",
     "Destination"
-  )
+  ))
+
 
   # Transition Aged Youth
 
@@ -180,8 +176,6 @@ cohorts <- function(
 
 
 
-  rm(list = ls(pattern = "summary_"))
-
 
   # PIT Counts --------------------------------------------------------------
 
@@ -242,9 +236,8 @@ cohorts <- function(
 
 
 
-  # Save it out -------------------------------------------------------------
-  # WARNING save.image does not save the environment properly, save must be used.
-  save(list = ls(), file = "images/cohorts.RData")
+  app_env$gather_deps("everything")
+
 }
 
 
