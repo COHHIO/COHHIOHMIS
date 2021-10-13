@@ -14,15 +14,20 @@
 
 
 
+#' @title Bed Utilizations
+#'
+#' @inheritParams load_export
+#'
+#' @export
+#'
+#' @include 01_Bed_Unit_Utilization_utils.R
 Bed_Unit_Utilization <- function(
-               clarity_api,
-               app_env,
-               e = rlang::caller_env()
+               clarity_api = get_clarity_api(e = rlang::caller_env()),
+               app_env = get_app_env(e = rlang::caller_env())
              ) {
-  if (missing(clarity_api))
-    clarity_api <- get_clarity_api(e = e)
-  if (missing(app_env))
-    app_env <- get_app_env(e = e)
+
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
 
 
 
@@ -41,7 +46,7 @@ small_project <- Project %>%
          ProjectType,
          HMISParticipatingProject) %>%
   dplyr::filter(ProjectType %in% c(project_types_w_beds) &
-           HMIS::operating_between(Project, rm_dates$calc$two_yrs_prior_start, rm_dates$calc$two_yrs_prior_end) &
+           HMIS::operating_between(Project, rm_dates$calc$two_yrs_prior_start, rm_dates$calc$two_yrs_prior_end, lgl = TRUE) &
            is.na(Project$GrantType) &
            HMISParticipatingProject == 1)
 
@@ -78,8 +83,8 @@ small_enrollment <- Enrollment %>%
          ExitAdjust,
          HouseholdID,
          RelationshipToHoH,
-         MoveInDate) %>%
-  dplyr::filter(HMIS::served_between(., rm_dates$calc$two_yrs_prior_start, rm_dates$calc$two_yrs_prior_end))
+         MoveInDate) |>
+  HMIS::served_between(rm_dates$calc$two_yrs_prior_start, rm_dates$calc$two_yrs_prior_end)
 
 Utilizers <- dplyr::semi_join(small_enrollment, Beds, by = "ProjectID")
 
@@ -116,142 +121,47 @@ utilizers_clients <- Utilizers %>%
         MoveInDateAdjust < ExitAdjust
     ) |
       ProjectType %in% c(1, 2, 8)
-  ) &
-    !ProjectID %in% c(1775, 1695, fake_projects))
+  ))
 
 # filtering Beds object to exclude any providers that served 0 hhs in date range
 
-Beds <- Beds %>%
-  dplyr::right_join(utilizers_clients %>%
+Beds <- dplyr::right_join(Beds, utilizers_clients %>%
                dplyr::select(ProjectID) %>%
                unique(), by = "ProjectID")
 
-# function for adding bed nights per ee
 
-bed_nights_per_ee <- function(table, interval) {
-  # if the ee date range and a given interval (in my reporting, a month) overlap,
-  dplyr::if_else(lubridate::int_overlaps(table$StayWindow, interval),
-          # then return the difference between
-          as.numeric(difftime(
-            # if the exit date precedes the end of the interval, then the exit
-            # date, otherwise the end of the interval
-            dplyr::if_else(
-              table$ExitAdjust <=  lubridate::int_end(interval),
-              as.POSIXct(table$ExitAdjust),
-              lubridate::int_end(interval) + lubridate::days(1)
-            ),
-            # if the entry date is after the start of the interval, then the
-            # entry date, otherwise the beginning of the interval
-            dplyr::if_else(
-              table$EntryAdjust >= lubridate::int_start(interval),
-              as.POSIXct(table$EntryAdjust),
-              lubridate::int_start(interval)
-            ),
-            # give it to me in days
-            units = "days"
-          )), NULL
+
+
+utilizers_clients <- 1:24 |>
+  {\(x) {rlang::set_names(x, paste0("Month",x))}}() |>
+  purrr::map(nth_Month) |>
+  purrr::map_dfc(~bed_nights_per_ee(utilizers_clients, .x)) |>
+  dplyr::bind_cols(utilizers_clients) |>
+  dplyr::select(
+    ProjectName,
+    ProjectID,
+    ProjectType,
+    PersonalID,
+    EnrollmentID,
+    EntryDate,
+    MoveInDateAdjust,
+    ExitDate,
+    tidyselect::starts_with("Month")
   )
-}
 
-nth_Month <- function(n) {
-  lubridate::interval(lubridate::floor_date(rm_dates$calc$two_yrs_prior_start %m+% months(n - 1), unit = "months"),
-           seq(as.Date(lubridate::floor_date(rm_dates$calc$two_yrs_prior_start %m+% months(n), unit = "months")),
-               length = 1, by = "1 month") - 1)
-}
 
-FirstMonth <- nth_Month(1)
-SecondMonth <- nth_Month(2)
-ThirdMonth <- nth_Month(3)
-FourthMonth <- nth_Month(4)
-FifthMonth <- nth_Month(5)
-SixthMonth <- nth_Month(6)
-SeventhMonth <- nth_Month(7)
-EighthMonth <- nth_Month(8)
-NinthMonth <- nth_Month(9)
-TenthMonth <- nth_Month(10)
-EleventhMonth <- nth_Month(11)
-TwelfthMonth <- nth_Month(12)
-ThirteenthMonth <- nth_Month(13)
-FourteenthMonth <- nth_Month(14)
-FifteenthMonth <- nth_Month(15)
-SixteenthMonth <- nth_Month(16)
-SeventeenthMonth <- nth_Month(17)
-EighteenthMonth <- nth_Month(18)
-NineteenthMonth <- nth_Month(19)
-TwentiethMonth <- nth_Month(20)
-TwentyfirstMonth <- nth_Month(21)
-TwentysecondMonth <- nth_Month(22)
-TwentythirdMonth <- nth_Month(23)
-TwentyfourthMonth <- nth_Month(24)
-# adding in month columns with utilization numbers
 
-utilizers_clients <- utilizers_clients %>%
-  dplyr::mutate(
-    # rm_dates$calc$two_yrs_prior_range = bed_nights_per_ee(utilizers_clients, rm_dates$calc$two_yrs_prior_range),
-    Month1 = bed_nights_per_ee(utilizers_clients, FirstMonth),
-    Month2 = bed_nights_per_ee(utilizers_clients, SecondMonth),
-    Month3 = bed_nights_per_ee(utilizers_clients, ThirdMonth),
-    Month4 = bed_nights_per_ee(utilizers_clients, FourthMonth),
-    Month5 = bed_nights_per_ee(utilizers_clients, FifthMonth),
-    Month6 = bed_nights_per_ee(utilizers_clients, SixthMonth),
-    Month7 = bed_nights_per_ee(utilizers_clients, SeventhMonth),
-    Month8 = bed_nights_per_ee(utilizers_clients, EighthMonth),
-    Month9 = bed_nights_per_ee(utilizers_clients, NinthMonth),
-    Month10 = bed_nights_per_ee(utilizers_clients, TenthMonth),
-    Month11 = bed_nights_per_ee(utilizers_clients, EleventhMonth),
-    Month12 = bed_nights_per_ee(utilizers_clients, TwelfthMonth),
-    Month13 = bed_nights_per_ee(utilizers_clients, ThirteenthMonth),
-    Month14 = bed_nights_per_ee(utilizers_clients, FourteenthMonth),
-    Month15 = bed_nights_per_ee(utilizers_clients, FifteenthMonth),
-    Month16 = bed_nights_per_ee(utilizers_clients, SixteenthMonth),
-    Month17 = bed_nights_per_ee(utilizers_clients, SeventeenthMonth),
-    Month18 = bed_nights_per_ee(utilizers_clients, EighteenthMonth),
-    Month19 = bed_nights_per_ee(utilizers_clients, NineteenthMonth),
-    Month20 = bed_nights_per_ee(utilizers_clients, TwentiethMonth),
-    Month21 = bed_nights_per_ee(utilizers_clients, TwentyfirstMonth),
-    Month22 = bed_nights_per_ee(utilizers_clients, TwentysecondMonth),
-    Month23 = bed_nights_per_ee(utilizers_clients, TwentythirdMonth),
-    Month24 = bed_nights_per_ee(utilizers_clients, TwentyfourthMonth)
-  ) %>%
-  dplyr::mutate(
-    dplyr::across(tidyselect::starts_with("Month"), ~dplyr::if_else(is.na(.x), 0, .x))
-  ) %>%
-  dplyr::select(ProjectName, ProjectID, ProjectType, PersonalID, EnrollmentID,
-         EntryDate, MoveInDateAdjust, ExitDate, tidyselect::starts_with("Month"))
 
-utilizers_clients <- as.data.frame(utilizers_clients)
 
 # making granularity by provider instead of by enrollment id
-BedNights <- utilizers_clients %>%
+BedNights <- utilizers_clients  |>
   dplyr::group_by(ProjectName, ProjectID, ProjectType) %>%
   dplyr::summarise(
     # BNY = sum(rm_dates$calc$two_yrs_prior_range, na.rm = TRUE),
-    BN1 = sum(Month1, na.rm = TRUE),
-    BN2 = sum(Month2, na.rm = TRUE),
-    BN3 = sum(Month3, na.rm = TRUE),
-    BN4 = sum(Month4, na.rm = TRUE),
-    BN5 = sum(Month5, na.rm = TRUE),
-    BN6 = sum(Month6, na.rm = TRUE),
-    BN7 = sum(Month7, na.rm = TRUE),
-    BN8 = sum(Month8, na.rm = TRUE),
-    BN9 = sum(Month9, na.rm = TRUE),
-    BN10 = sum(Month10, na.rm = TRUE),
-    BN11 = sum(Month11, na.rm = TRUE),
-    BN12 = sum(Month12, na.rm = TRUE),
-    BN13 = sum(Month13, na.rm = TRUE),
-    BN14 = sum(Month14, na.rm = TRUE),
-    BN15 = sum(Month15, na.rm = TRUE),
-    BN16 = sum(Month16, na.rm = TRUE),
-    BN17 = sum(Month17, na.rm = TRUE),
-    BN18 = sum(Month18, na.rm = TRUE),
-    BN19 = sum(Month19, na.rm = TRUE),
-    BN20 = sum(Month20, na.rm = TRUE),
-    BN21 = sum(Month21, na.rm = TRUE),
-    BN22 = sum(Month22, na.rm = TRUE),
-    BN23 = sum(Month23, na.rm = TRUE),
-    BN24 = sum(Month24, na.rm = TRUE)
-  ) %>%
-  dplyr::ungroup()
+    dplyr::across(dplyr::starts_with("Month"), sum, na.rm = TRUE)
+  ) |>
+  dplyr::ungroup() |>
+  dplyr::rename_with(.cols = dplyr::starts_with("Month"), .fn = ~stringr::str_replace(.x, "Month", "BN"))
 
 # Bed Capacity ------------------------------------------------------------
 
@@ -271,52 +181,11 @@ BedCapacity <- Beds %>%
          AvailableWindow = lubridate::interval(InventoryStartAdjust,
                                     InventoryEndAdjust))
 
-# function for bed capacity at the bed record level
 
-bed_capacity <- function(interval) {
-  dplyr::if_else(lubridate::int_overlaps(BedCapacity$AvailableWindow, interval),
-          (as.numeric(difftime(
-            dplyr::if_else(
-              BedCapacity$InventoryEndAdjust <=  lubridate::int_end(interval),
-              as.POSIXct(BedCapacity$InventoryEndAdjust),
-              lubridate::int_end(interval)
-            ),
-            dplyr::if_else(
-              BedCapacity$InventoryStartAdjust >= lubridate::int_start(interval),
-              as.POSIXct(BedCapacity$InventoryStartAdjust),
-              lubridate::int_start(interval)
-            ),
-            units = "days"
-          ))+1) * BedCapacity$BedInventory, NULL
-  )
-}
 
 BedCapacity <- BedCapacity %>%
   dplyr::mutate(
-    Month1 = bed_capacity(FirstMonth),
-    Month2 = bed_capacity(SecondMonth),
-    Month3 = bed_capacity(ThirdMonth),
-    Month4 = bed_capacity(FourthMonth),
-    Month5 = bed_capacity(FifthMonth),
-    Month6 = bed_capacity(SixthMonth),
-    Month7 = bed_capacity(SeventhMonth),
-    Month8 = bed_capacity(EighthMonth),
-    Month9 = bed_capacity(NinthMonth),
-    Month10 = bed_capacity(TenthMonth),
-    Month11 = bed_capacity(EleventhMonth),
-    Month12 = bed_capacity(TwelfthMonth),
-    Month13 = bed_capacity(ThirteenthMonth),
-    Month14 = bed_capacity(FourteenthMonth),
-    Month15 = bed_capacity(FifteenthMonth),
-    Month16 = bed_capacity(SixteenthMonth),
-    Month17 = bed_capacity(SeventeenthMonth),
-    Month18 = bed_capacity(EighteenthMonth),
-    Month19 = bed_capacity(NineteenthMonth),
-    Month20 = bed_capacity(TwentiethMonth),
-    Month21 = bed_capacity(TwentyfirstMonth),
-    Month22 = bed_capacity(TwentysecondMonth),
-    Month23 = bed_capacity(TwentythirdMonth),
-    Month24 = bed_capacity(TwentyfourthMonth)
+    dplyr::across(dplyr::starts_with("Month"), ~bed_capacity(BedCapacity, .x))
   ) %>%
   dplyr::select(
     -InventoryStartDate,
@@ -327,36 +196,13 @@ BedCapacity <- BedCapacity %>%
   )
 
 BedCapacity <- BedCapacity %>%
-  dplyr::group_by(ProjectID, ProjectName, ProjectType) %>%
+  dplyr::group_by(ProjectName, ProjectID, ProjectType) %>%
   dplyr::summarise(
-    # BCPE = sum(PE_DateRange, na.rm = TRUE),
-    # BCY = sum(rm_dates$calc$two_yrs_prior_range, na.rm = TRUE),
-    BC1 = sum(Month1, na.rm = TRUE),
-    BC2 = sum(Month2, na.rm = TRUE),
-    BC3 = sum(Month3, na.rm = TRUE),
-    BC4 = sum(Month4, na.rm = TRUE),
-    BC5 = sum(Month5, na.rm = TRUE),
-    BC6 = sum(Month6, na.rm = TRUE),
-    BC7 = sum(Month7, na.rm = TRUE),
-    BC8 = sum(Month8, na.rm = TRUE),
-    BC9 = sum(Month9, na.rm = TRUE),
-    BC10 = sum(Month10, na.rm = TRUE),
-    BC11 = sum(Month11, na.rm = TRUE),
-    BC12 = sum(Month12, na.rm = TRUE),
-    BC13 = sum(Month13, na.rm = TRUE),
-    BC14 = sum(Month14, na.rm = TRUE),
-    BC15 = sum(Month15, na.rm = TRUE),
-    BC16 = sum(Month16, na.rm = TRUE),
-    BC17 = sum(Month17, na.rm = TRUE),
-    BC18 = sum(Month18, na.rm = TRUE),
-    BC19 = sum(Month19, na.rm = TRUE),
-    BC20 = sum(Month20, na.rm = TRUE),
-    BC21 = sum(Month21, na.rm = TRUE),
-    BC22 = sum(Month22, na.rm = TRUE),
-    BC23 = sum(Month23, na.rm = TRUE),
-    BC24 = sum(Month24, na.rm = TRUE)
-  ) %>%
-  dplyr::ungroup()
+    # BNY = sum(rm_dates$calc$two_yrs_prior_range, na.rm = TRUE),
+    dplyr::across(dplyr::starts_with("Month"), sum, na.rm = TRUE)
+  ) |>
+  dplyr::ungroup() |>
+  dplyr::rename_with(.cols = dplyr::starts_with("Month"), .fn = ~stringr::str_replace(.x, "Month", "BC"))
 
 # Bed Utilization ---------------------------------------------------------
 
@@ -458,8 +304,7 @@ HHUtilizers <- Utilizers %>%
             MoveInDateAdjust <= ExitAdjust
         ) |
           ProjectType %in% c(lh_project_types)
-      ) &
-      !ProjectID %in% c(1775, 1695, fake_projects)
+      )
   ) %>%
   dplyr::select(-EntryDate,-MoveInDateAdjust,-HouseholdID,-RelationshipToHoH)
 
