@@ -102,7 +102,7 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   # from sheets 1 and 2, getting EE-related data, joining both to En
   Enrollment_extras <- cl_api$`HUD Extras`$Enrollment_extras()
   Enrollment <- cl_api$Enrollment()
-  Enrollment_extra_Exit_HH_CL_AaE <- dplyr::inner_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
+  Enrollment_extra_Exit_HH_CL_AaE <- dplyr::left_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
     # Add Exit
     Enrollment_add_Exit(cl_api$Exit()) |>
     # Add Households
