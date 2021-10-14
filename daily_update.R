@@ -10,8 +10,7 @@
 # RPushBullet setup
 #RPushbullet::pbSetup(conffile = file.path("inst","auth","rpushbullet.json"))
 
-# This is the default directory tree used by Rm_data. It can be changed and amended and passed to hud_export in the `dirs` argument if necessary.
-dirs <- clarity.looker::dirs
+
 
 # must load Rm_data
 devtools::load_all()
@@ -24,6 +23,7 @@ Rm_env$gather_deps(dirs)
 Rm_env <- dates()
 Rm_env <- load_export()
 Rm_env <- client_counts()
+Rm_env <- cohorts()
 Rm_env <- data_quality()
 Rm_env$write_app_deps(Rm_env$app_objs$RminorElevated, Rm_env$app_deps$RminorElevated, file.path("data", "db", "RminorElevated"))
 # Uses RminorElevated as the default
