@@ -160,7 +160,7 @@ cohorts <- function(
     dplyr::left_join(Client, by = "PersonalID") %>%
     dplyr::select(tidyselect::all_of(vars$we_want))
 
-  summary <- summary_clients_served %>%
+  summary <- hoh_count(co_clients_served) %>%
     dplyr::full_join(hoh_count(co_clients_moved_in), by = "ProjectName") %>%
     dplyr::full_join(hoh_count(co_hohs_moved_in_leavers), by = "ProjectName") %>%
     dplyr::full_join(hoh_count(co_adults_served), by = "ProjectName") %>%
