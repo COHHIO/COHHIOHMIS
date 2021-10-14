@@ -21,7 +21,7 @@
 #' @export
 #'
 #' @include 01_Bed_Unit_Utilization_utils.R
-Bed_Unit_Utilization <- function(
+bed_unit_utilization <- function(
                clarity_api = get_clarity_api(e = rlang::caller_env()),
                app_env = get_app_env(e = rlang::caller_env())
              ) {
