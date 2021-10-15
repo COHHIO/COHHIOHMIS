@@ -265,7 +265,10 @@ app_env <- R6::R6Class(
           if (UU::is_legit(.deps)) {
             # Add Client_filter for all dependencies to ensure test clients are removed from reporting
             # .deps <- purrr::map_if(.deps, is.data.frame, Client_filter)
-            self$app_objs[[.y]] <<- purrr::list_modify(self$app_objs[[.y]],!!!.deps)
+            .new_objs <- try({self$app_objs[[.y]] <<- purrr::list_modify(self$app_objs[[.y]],!!!.deps)}, silent = TRUE)
+            if (!UU::is_legit(.new_objs))
+              self$app_objs[[.y]][names(self$app_objs[[.y]]) %in% names(.deps)] <<- .deps[names(.deps) %in% names(self$app_objs[[.y]])]
+
             cli::cli({
               cli::col_blue(cli::cli_h2(.y))
               cli::cli_alert_success(paste0(" dependencies saved: ", paste0(names(.deps), collapse = ", ")))
