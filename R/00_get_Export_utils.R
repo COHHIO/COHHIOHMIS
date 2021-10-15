@@ -59,7 +59,7 @@ Client_redact <- function(Client) {
 #' @return \code{(data.frame)} without `clients_to_filter`
 #' @export
 
-Client_filter <- function(x, clients_to_filter = c(`1E2025A5D` = "335")) {
+Client_filter <- function(x, clients_to_filter = c(`1E2025A5D` = "335", `08EF0EF09` = "1")) {
   .nms <- names(x)
   if ("PersonalID" %in% .nms || "UniqueID" %in% .nms) {
     ex <- purrr::when(.nms,
