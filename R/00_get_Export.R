@@ -67,6 +67,7 @@ load_export <- function(
   # Project_extras -----------------------------------------------------------------
   # provider_extras
   # Thu Aug 12 14:23:50 2021
+
   provider_extras <- cl_api$`HUD Extras`$Project_extras()
   provider_extras <- pe_add_ProjectType(provider_extras)
   provider_extras <- pe_add_regions(provider_extras, dirs = dirs)
@@ -78,6 +79,7 @@ load_export <- function(
 Project <- cl_api$Project() |>
   dplyr::select(-ProjectCommonName) |>
   {\(x) {dplyr::left_join(x, provider_extras, by = UU::common_names(x, provider_extras))}}()
+
 
 mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   dplyr::select(ProjectID) |>
@@ -92,21 +94,21 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   # EnrollmentCoC -----------------------------------------------------------
 
   EnrollmentCoC <-
-    cl_api$EnrollmentCoC()
-
+    cl_api$EnrollmentCoC() |>
+    EnrollmentCoC_RemoveCoCCodes()
 
 
 
   # Enrollment --------------------------------------------------------------
 
-  # from sheets 1 and 2, getting EE-related data, joining both to En
+  # getting EE-related data, joining both to En
   Enrollment_extras <- cl_api$`HUD Extras`$Enrollment_extras()
   Enrollment <- cl_api$Enrollment()
   Enrollment_extra_Exit_HH_CL_AaE <- dplyr::left_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
     # Add Exit
     Enrollment_add_Exit(cl_api$Exit()) |>
     # Add Households
-    Enrollment_add_Household(Project, app_env$.__enclos_env__$rm_dates) |>
+    Enrollment_add_Household(Project) |>
     # Add Veteran Coordinated Entry
     Enrollment_add_VeteranCE(VeteranCE) |>
     # Add Client Location from EnrollmentCoC

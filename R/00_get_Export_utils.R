@@ -1,12 +1,14 @@
 
 #' @title Redact PII from Client HUD Export
 #' @description This redacts all PII (except DOB) from Client HUD Export
+#' @family Client functions
 #' @param Client \code{(tibble)} Client HUD Export
 #' @return \code{(tibble)} Redacted Client HUD Export
 #' @export
 
 Client_redact <- function(Client) {
   Client %>%
+    Client_filter() |>
     dplyr::mutate(
       FirstName = dplyr::case_when(
         NameDataQuality %in% c(8, 9) ~ "DKR",
@@ -49,6 +51,26 @@ Client_redact <- function(Client) {
     dplyr::mutate(SSN = dplyr::case_when(is.na(SSN) ~ "ok",!is.na(SSN) ~ SSN))
 }
 
+#' @title Filter out specific Clients
+#' @description Often used to filter test/training demo clients
+#' @param x \code{(data.frame)} With PersonalID or UniqueID column
+#' @param clients_to_filter \code{(character)} of PersonalIDs to filter with names corresponding their UniqueIDs (Clarity only)
+#' @family Client functions
+#' @return \code{(data.frame)} without `clients_to_filter`
+#' @export
+
+Client_filter <- function(x, clients_to_filter = c(`1E2025A5D` = "335", `08EF0EF09` = "1")) {
+  .nms <- names(x)
+  if ("PersonalID" %in% .nms || "UniqueID" %in% .nms) {
+    ex <- purrr::when(.nms,
+                "PersonalID" %in% . ~ rlang::expr(!PersonalID %in% clients_to_filter),
+                "UniqueID" %in% . ~ rlang::expr(!UniqueID %in% names(clients_to_filter)))
+    out <- dplyr::filter(x, !!ex)
+  } else {
+    out <- x
+  }
+return(out)
+}
 
 #' @title Add the UniqueID to the Client export
 #'
@@ -92,11 +114,13 @@ Enrollment_add_Exit <- function(Enrollment, Exit) {
 #' @param Enrollment with Exit data. See `Enrollment_add_Exit`
 #' @param Project
 #' @param hc From `dates`
-#'
+#' @inheritParams R6classes
 #' @return \code{(data.frame)} of Enrollment with Household Columns `MoveInDateAdjust` appended
 #' @export
 
-Enrollment_add_Household = function(Enrollment, Project, rm_dates) {
+Enrollment_add_Household = function(Enrollment, Project, rm_dates, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
   # getting HH information
   # only doing this for RRH and PSHs since Move In Date doesn't matter for ES, etc.
 
@@ -219,6 +243,21 @@ Enrollment_add_AgeAtEntry_UniqueID <- function(Enrollment, Client) {
     dplyr::select(-DOB)
 }
 
+
+#' @title Remove specific CoCCode's from EnrollmentCoC
+#'
+#' @param EnrollmentCoC \code{(data.frame)} HUD CSV Item
+#' @param codes_to_remove \code{(character)} codes to remove by filtering the \code{CoCCode} column
+#'
+#' @return \code{(data.frame)} without the entries for the specified \code{CoCCode}s
+#' @export
+
+EnrollmentCoC_RemoveCoCCodes <- function(EnrollmentCoC, codes_to_remove = c("Default")) {
+  if ("CoCCode" %in% names(EnrollmentCoC))
+    out <- dplyr::filter(EnrollmentCoC, !CoCCode %in% codes_to_remove)
+  else
+    out <- EnrollmentCoC
+}
 
 
 #' Add the Corresponding Region for each Project by way of Geocode matching
