@@ -45,6 +45,7 @@ load_export <- function(
   VeteranCE <- cl_api$`HUD Extras`$Client_extras()
 
   Client <- Client_add_UniqueID(Client, VeteranCE)
+  UU::join_check(cl_api$Client(), Client)
 
   # Disabilities ------------------------------------------------------------
 
@@ -69,17 +70,20 @@ load_export <- function(
   # Thu Aug 12 14:23:50 2021
 
   provider_extras <- cl_api$`HUD Extras`$Project_extras()
-  provider_extras <- pe_add_ProjectType(provider_extras)
-  provider_extras <- pe_add_regions(provider_extras, dirs = dirs)
-  provider_extras <- pe_add_GrantType(provider_extras)
+  provider_extras <- pe_add_ProjectType(provider_extras) |>
+    pe_add_regions(dirs = dirs) |>
+    pe_add_GrantType()
 
   # Rminor: Coordinated Entry Access Points [CEAP]
   APs <- pe_create_APs(provider_extras, ProjectCoC, dirs = dirs)
 
-Project <- cl_api$Project() |>
-  dplyr::select(-ProjectCommonName) |>
-  {\(x) {dplyr::left_join(x, provider_extras, by = UU::common_names(x, provider_extras))}}()
 
+
+Project <- cl_api$Project()
+Project <- Project |>
+  dplyr::select(-ProjectCommonName) |>
+  {\(x) {dplyr::left_join(x, provider_extras |> dplyr::select(- dplyr::matches("FundingSource")) |> dplyr::distinct(ProjectID, .keep_all = TRUE), by = UU::common_names(x, provider_extras))}}()
+UU::join_check(cl_api$Project(), Project)
 
 mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   dplyr::select(ProjectID) |>
@@ -100,7 +104,6 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
 
 
   # Enrollment --------------------------------------------------------------
-
   # getting EE-related data, joining both to En
   Enrollment_extras <- cl_api$`HUD Extras`$Enrollment_extras()
   Enrollment <- cl_api$Enrollment()
@@ -115,6 +118,8 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
     Enrollment_add_ClientLocation(EnrollmentCoC) |>
     # Add Client AgeAtEntry
     Enrollment_add_AgeAtEntry_UniqueID(Client)
+
+  UU::join_check(Enrollment, Enrollment_extra_Exit_HH_CL_AaE)
 
 
   # Funder ------------------------------------------------------------------
