@@ -280,9 +280,10 @@ app_env <- R6::R6Class(
     #' @title Set the given environment to inherit from the internal 'global' environment
     #' @param vars_to_remove missing variables to remove from env that will otherwise mask the objects in the parent environment
     #' @param env child environment
-    set_parent = function(vars_to_remove, env = rlang:::caller_env()) {
+    set_parent = function(vars_to_remove = NULL, env = rlang:::caller_env()) {
       if (UU::is_legit(vars_to_remove))
         rm(list = vars_to_remove, envir = env)
+      parent.env(self$.__enclos_env__) <- .GlobalEnv
       parent.env(env) <- self$.__enclos_env__
     },
     #' @description Write app dependencies to disk
