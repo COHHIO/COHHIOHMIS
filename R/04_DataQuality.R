@@ -90,7 +90,7 @@ data_quality <- function(check_fns = Rm_data::check_fns,
                         total = .total)
   dqs <- purrr::map(rlang::set_names(check_fns), ~{
     cli::cli_progress_update(id = .pid,
-                             status = paste0(.x," ", which(check_fns == .x),"/",.total))
+                             status = paste0(which(check_fns == .x),"/",.total,": ",.x))
     fn <- getFromNamespace(.x, "Rm_data")
     arg_names <- rlang::set_names(rlang::fn_fmls_names(fn))
     arg_names <- arg_names[!purrr::map_lgl(rlang::fn_fmls(fn), is.logical)]
@@ -101,8 +101,21 @@ data_quality <- function(check_fns = Rm_data::check_fns,
     rlang::eval_bare(.call)
   })
 message("Create data quality table...")
+#TODO These have abnormally high numbers of errors. Functions need debugging
+# dq_aps_with_ees
+# dq_detail_missing_disabilities
+# dq_invalid_months_times_homeless
+# dq_missing_county_prior
+# dq_missing_county_served
+# dq_missing_destination
+# dq_missing_income
+# dq_missing_ncbs
+# dq_path_enrolled_missing
+# dq_path_no_status_at_exit
+# dq_path_SOAR_missing_at_exit
+# dq_veteran
 browser()
-# TODO trying to create this object will overflow the RAM because some of the checks are returning inordinate amounts of errors.
+
 
 dq_main <- do.call(rbind, dqs) |>
   unique() %>%
