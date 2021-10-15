@@ -101,58 +101,63 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH
   Enrollment_extra_Exit_HH_CL_AaE  |>
     HMIS::served_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End)  |>
     dplyr::left_join(Client  |>
-                       dplyr::select(-DateCreated), by = "PersonalID") |>
+                       dplyr::select(- dplyr::all_of(stringr::str_subset(UU::common_names(Enrollment_extra_Exit_HH_CL_AaE, Client), "PersonalID", negate = TRUE))), by = "PersonalID") |>
     dplyr::select(
-      PersonalID,
-      UniqueID,
-      FirstName,
-      NameDataQuality,
-      SSN,
-      SSNDataQuality,
-      DOB,
-      DOBDataQuality,
-      AmIndAKNative,
-      Asian,
-      BlackAfAmerican,
-      NativeHIOtherPacific,
-      White,
-      RaceNone,
-      Ethnicity,
-      Gender,
-      VeteranStatus,
-      EnrollmentID,
-      ProjectID,
-      EntryDate,
-      HouseholdID,
-      RelationshipToHoH,
-      LivingSituation,
-      LengthOfStay,
-      LOSUnderThreshold,
-      PreviousStreetESSH,
-      DateToStreetESSH,
-      TimesHomelessPastThreeYears,
-      AgeAtEntry,
-      MonthsHomelessPastThreeYears,
-      DisablingCondition,
-      DateOfEngagement,
-      MoveInDate,
-      MoveInDateAdjust,
-      #, EEType # Deprecated SP logic
-      CountyServed,
-      CountyPrior,
-      ExitDate,
-      Destination,
-      ExitAdjust,
-      DateCreated,
-      UserCreating,
-      ClientEnrolledInPATH,
-      LengthOfStay,
-      DateOfPATHStatus,
-      ReasonNotEnrolled,
-      ClientLocation,
-      PHTrack,
-      ExpectedPHDate
-
+      dplyr::all_of(
+      c(
+        "AgeAtEntry",
+        "AmIndAKNative",
+        "Asian",
+        "BlackAfAmerican",
+        "ClientEnrolledInPATH",
+        "ClientLocation",
+        "CountyPrior",
+        "CountyServed",
+        "DateCreated",
+        "DateOfEngagement",
+        "DateOfPATHStatus",
+        "DateToStreetESSH",
+        "Destination",
+        "DisablingCondition",
+        "DOB",
+        "DOBDataQuality",
+        "EnrollmentID",
+        "EntryDate",
+        "Ethnicity",
+        "ExitAdjust",
+        "ExitDate",
+        "ExpectedPHDate",
+        "Female",
+        "FirstName",
+        "HouseholdID",
+        "LengthOfStay",
+        "LengthOfStay",
+        "LivingSituation",
+        "LOSUnderThreshold",
+        "Male",
+        "MonthsHomelessPastThreeYears",
+        "MoveInDate",
+        "MoveInDateAdjust",
+        "NameDataQuality",
+        "NativeHIPacific",
+        "NoSingleGender",
+        "PersonalID",
+        "PHTrack",
+        "PreviousStreetESSH",
+        "ProjectID",
+        "Questioning",
+        "RaceNone",
+        "ReasonNotEnrolled",
+        "RelationshipToHoH",
+        "SSN",
+        "SSNDataQuality",
+        "TimesHomelessPastThreeYears",
+        "Transgender",
+        "UniqueID",
+        "UserCreating",
+        "VeteranStatus",
+        "White"
+      ))
       ) |>
     dplyr::inner_join(projects_current_hmis, by = "ProjectID") |>
     dplyr::left_join(
@@ -372,6 +377,7 @@ dq_ethnicity <- function(served_in_date_range, guidance = NULL, vars = NULL, app
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
+gender_qs <- c("Questioning", "GenderNone", "Male", "Female", "NoSingleGender", "Transgender")
 #' @title Data quality report on Gender Data
 #' @family Clarity Checks
 #' @family DQ: Missing UDEs
@@ -384,12 +390,12 @@ dq_gender <- function(served_in_date_range, guidance = NULL, vars = NULL, app_en
   served_in_date_range %>%
     dplyr::mutate(
       Issue = dplyr::case_when(
-        Gender == 99 ~ "Missing Gender",
-        Gender %in% c(8, 9) ~ "Don't Know/Refused Gender"
+        GenderNone == 99 ~ "Missing Gender",
+        GenderNone %in% c(8, 9) ~ "Don't Know/Refused Gender"
       ),
       Type = dplyr::case_when(
-        Issue == "Missing Gender" ~ "Error",
-        Issue == "Don't Know/Refused Gender" ~ "Warning"
+        GenderNone == 99 ~ "Error",
+        GenderNone %in% c(8, 9) ~ "Warning"
       ),
       Guidance = dplyr::if_else(Type == "Warning",
                                 guidance$dkr_data,
@@ -2958,29 +2964,30 @@ ssvf_served_in_date_range <- function(Enrollment_extra_Exit_HH_CL_AaE, served_in
       app_env$set_parent(missing_fmls())
 
   Enrollment_extra_Exit_HH_CL_AaE %>%
-      dplyr::select(
-        EnrollmentID,
-        HouseholdID,
-        PersonalID,
-        ProjectName,
-        ProjectType,
-        EntryDate,
-        MoveInDateAdjust,
-        ExitDate,
-        UserCreating,
-        RelationshipToHoH,
-        PercentAMI,
-        LastPermanentStreet,
-        LastPermanentCity,
-        LastPermanentState,
-        LastPermanentZIP,
-        AddressDataQuality,
-        VAMCStation,
-        HPScreeningScore,
-        ThresholdScore,
-        IraqAfghanistan,
-        FemVet
-      ) %>%
+      dplyr::select(dplyr::all_of(
+        c(
+          "AddressDataQuality",
+          "EnrollmentID",
+          "EntryDate",
+          "ExitDate",
+          "HouseholdID",
+          "HPScreeningScore",
+          "LastPermanentCity",
+          "LastPermanentState",
+          "LastPermanentStreet",
+          "LastPermanentZIP",
+          "MoveInDateAdjust",
+          "PercentAMI",
+          "PersonalID",
+          "ProjectName",
+          "ProjectType",
+          "RelationshipToHoH",
+          "ThresholdScore",
+          "UniqueID",
+          "UserCreating",
+          "VAMCStation"
+        )
+      )) %>%
       dplyr::right_join(
         served_in_date_range %>%
           dplyr::filter(GrantType == "SSVF") %>%
@@ -2989,23 +2996,22 @@ ssvf_served_in_date_range <- function(Enrollment_extra_Exit_HH_CL_AaE, served_in
       ) %>%
       dplyr::left_join(
         Client %>%
-          dplyr::select(
-            PersonalID,
-            UniqueID,
-            VeteranStatus,
-            YearEnteredService,
-            YearSeparated,
-            WorldWarII,
-            KoreanWar,
-            VietnamWar,
-            DesertStorm,
-            AfghanistanOEF,
-            IraqOIF,
-            IraqOND,
-            OtherTheater,
-            MilitaryBranch,
-            DischargeStatus
-          ),
+          dplyr::select(dplyr::all_of(
+            c("PersonalID",
+            "VeteranStatus",
+            "YearEnteredService",
+            "YearSeparated",
+            "WorldWarII",
+            "KoreanWar",
+            "VietnamWar",
+            "DesertStorm",
+            "AfghanistanOEF",
+            "IraqOIF",
+            "IraqOND",
+            "OtherTheater",
+            "MilitaryBranch",
+            "DischargeStatus")
+          )),
         by = "PersonalID"
       )
   }

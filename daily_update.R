@@ -14,6 +14,8 @@
 
 # must load Rm_data
 devtools::load_all()
+# must set directories if using a directory structure differing from the default in clarity.looker:
+dirs <- clarity.looker::dirs
 rstudioapi::jobRunScript(file.path("inst","src","update_data.R"), importEnv = TRUE, workingDir = getwd())
 # Try services
 # rstudioapi::jobRunScript(file.path("inst","src","Services_test.R"), importEnv = TRUE, workingDir = getwd())

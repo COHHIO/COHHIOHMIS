@@ -86,7 +86,7 @@ Gather the objects passed to \code{app_env}s internal environment to be passed t
 \if{latex}{\out{\hypertarget{method-set_parent}{}}}
 \subsection{Method \code{set_parent()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$set_parent(vars_to_remove, env = rlang:::caller_env())}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{app_env$set_parent(vars_to_remove = NULL, env = rlang:::caller_env())}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
