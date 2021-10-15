@@ -39,6 +39,7 @@ vignettes/*.pdf
 data/*
 inst/auth
 inst/html
+inst/src/**/*.rds
 pkg_commands.R
 Looker.ini
 
