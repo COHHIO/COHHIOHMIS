@@ -83,8 +83,14 @@ data_quality <- function(check_fns = Rm_data::check_fns,
   ssvf_served_in_date_range <- ssvf_served_in_date_range()
   app_env$gather_deps(ssvf_served_in_date_range)
 
+  .total <- length(check_fns)
+  .pid <- cli::cli_progress_bar(name = "DQ Checks",
+                        status = "in progress",
+                        type = "iterator",
+                        total = .total)
   dqs <- purrr::map(rlang::set_names(check_fns), ~{
-    message(.x)
+    cli::cli_progress_update(id = .pid,
+                             status = paste0(.x," ", which(check_fns == .x),"/",.total))
     fn <- getFromNamespace(.x, "Rm_data")
     arg_names <- rlang::set_names(rlang::fn_fmls_names(fn))
     arg_names <- arg_names[!purrr::map_lgl(rlang::fn_fmls(fn), is.logical)]

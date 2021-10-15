@@ -78,7 +78,8 @@ projects_current_hmis <- function (Project,
       OrganizationName,
       ProjectCounty,
       ProjectRegion
-    ) |>  unique()
+    ) |>
+    dplyr::distinct(ProjectID, .keep_all = TRUE)
 }
 
 #' @title Create the data.frame of Clients to Check `served_in_date_range`
@@ -129,6 +130,7 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH
         "ExpectedPHDate",
         "Female",
         "FirstName",
+        "GenderNone",
         "HouseholdID",
         "LengthOfStay",
         "LengthOfStay",
