@@ -252,8 +252,7 @@ app_env <- R6::R6Class(
         cli::cli_alert_success(paste0("dependencies saved: ", paste0(.new_wdeps, collapse = ", ")))
       })
 
-      # Add Client_filter for all dependencies to ensure test clients are removed from reporting. 2021-10-15 Seems like excess, and will add substantial overhead. Client_filter in Client_redact should be suitable.
-      # .work_deps <- purrr::map_if(.work_deps, is.data.frame, Client_filter)
+
       rlang::env_bind(self$.__enclos_env__, !!!.work_deps)
       if (!isFALSE(app_deps)) {
         if (isTRUE(app_deps))
@@ -265,7 +264,7 @@ app_env <- R6::R6Class(
 
           if (UU::is_legit(.deps)) {
             # Add Client_filter for all dependencies to ensure test clients are removed from reporting
-            .deps <- purrr::map_if(.deps, is.data.frame, Client_filter)
+            # .deps <- purrr::map_if(.deps, is.data.frame, Client_filter)
             self$app_objs[[.y]] <<- purrr::list_modify(self$app_objs[[.y]],!!!.deps)
             cli::cli({
               cli::col_blue(cli::cli_h2(.y))
