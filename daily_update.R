@@ -5,22 +5,30 @@
 # These are necessary when rapidly modifying these dependencies
 
 # devtools::load_all("../../lookr")
-#devtools::load_all("../hud.extract")
+# devtools::load_all("../hud.extract")
 
 # RPushBullet setup
 #RPushbullet::pbSetup(conffile = file.path("inst","auth","rpushbullet.json"))
 
-# This is the default directory tree used by Rm_data. It can be changed and amended and passed to hud_export in the `dirs` argument if necessary.
-dirs <- clarity.looker::dirs
+
 
 # must load Rm_data
 devtools::load_all()
+# must set directories if using a directory structure differing from the default in clarity.looker:
+dirs <- clarity.looker::dirs
+# Use the HUD CSV from the UI until the Looker API is fixed
+dirs$export <- "data"
+cl_api$.__enclos_env__$self$dirs <- dirs
 rstudioapi::jobRunScript(file.path("inst","src","update_data.R"), importEnv = TRUE, workingDir = getwd())
+# Try services
+# rstudioapi::jobRunScript(file.path("inst","src","Services_test.R"), importEnv = TRUE, workingDir = getwd())
 
 Rm_env$gather_deps(guidance)
+Rm_env$gather_deps(dirs)
 Rm_env <- dates()
 Rm_env <- load_export()
 Rm_env <- client_counts()
+Rm_env <- cohorts()
 Rm_env <- data_quality()
 Rm_env$write_app_deps(Rm_env$app_objs$RminorElevated, Rm_env$app_deps$RminorElevated, file.path("data", "db", "RminorElevated"))
 # Uses RminorElevated as the default

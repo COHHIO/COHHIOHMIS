@@ -238,7 +238,7 @@ Enrollment_add_ClientLocation = function(Enrollment, EnrollmentCoC) {
 #' @export
 
 Enrollment_add_AgeAtEntry_UniqueID <- function(Enrollment, Client) {
-  dplyr::left_join(Enrollment, dplyr::select(Client, UniqueID, PersonalID, DOB), by = "PersonalID") |>
+  dplyr::left_join(Enrollment, dplyr::select(Client, UniqueID, PersonalID, DOB), by = c("PersonalID", "UniqueID")) |>
     dplyr::mutate(AgeAtEntry = age_years(DOB, EntryDate)) |>
     dplyr::select(-DOB)
 }
@@ -268,7 +268,7 @@ EnrollmentCoC_RemoveCoCCodes <- function(EnrollmentCoC, codes_to_remove = c("Def
 #' @return \code{(data.frame)} provider_extras with Regions column
 #' @export
 
-Pe_add_regions <- function(provider_extras, dirs) {
+pe_add_regions <- function(provider_extras, dirs) {
   # geocodes is created by `hud.extract` using the hud_geocodes.R functions
   geocodes <- clarity.looker::hud_load("geocodes", dirs$public)
   # This should map a county to every geocode
@@ -329,13 +329,14 @@ Pe_add_regions <- function(provider_extras, dirs) {
 
 #' Add Access Points to Provider_extras
 #' @description Create data.frame of Coordinated Entry Access Points with info about the Counties & Populations Served
-#' @param provider_extras \code{(data.frame)} provider_extras with Regions, see `Pe_add_regions`
+#' @param provider_extras \code{(data.frame)} provider_extras with Regions, see `pe_add_regions`
 #' @param dirs
 #'
 #' @return \code{(data.frame)}
 #' @export
 
-Pe_create_APs = function(provider_extras, dirs) {
+pe_create_APs = function(provider_extras, ProjectCoC, dirs, app_env = get_app_env(e = rlang::caller_env())) {
+
   Regions <- clarity.looker::hud_load("Regions", dirs$public)
   APs <- provider_extras |>
     dplyr::select( !tidyselect::starts_with("CoCComp") & !Geocode:ZIP) |>
@@ -343,6 +344,14 @@ Pe_create_APs = function(provider_extras, dirs) {
     tidyr::pivot_longer(tidyselect::starts_with("AP"), names_to = "TargetPop", names_pattern = "(?<=^APCounties)(\\w+)", values_to = "CountiesServed") |>
     dplyr::filter(!is.na(CountiesServed)) |>
     dplyr::select(!tidyselect::starts_with("AP") & !ProjectTypeCode)
+
+  project_addresses <- ProjectCoC %>%
+    dplyr::select(ProjectID, CoCCode, Address1, Address2, City, State, ZIP) |>
+    dplyr::distinct() |>
+    dplyr::mutate(
+      City = paste0(City, ", ", State, " ", ZIP),
+      Addresses = dplyr::coalesce(Address1, Address2)
+    )
 
   # Programs serve multiple Counties which may fall into multiple regions. This creates a row for each Region served by a Program such that Coordinated Entry Access Points will show all the appropriate programs when filtering by Region.
   # @Rm
@@ -353,7 +362,24 @@ Pe_create_APs = function(provider_extras, dirs) {
       dplyr::select(- ProjectRegion) |>
       dplyr::bind_cols(Region = unique(Regions$Region[Regions$County %in% .counties]))
   }) |>
-    dplyr::distinct_all()
+    dplyr::distinct_all() |>
+    dplyr::mutate(OrgLink = dplyr::if_else(!is.na(Website), paste0(
+      "<a href='",
+      Website,
+      "' target='_blank'>",
+      ProjectName,
+      "</a><small> (#",
+      ProjectID,
+      ")</small>"
+    ), paste0(ProjectName,
+              "<small> (#",
+              ProjectID,
+              ")</small>"))) |>
+    dplyr::left_join(project_addresses, by = "ProjectID")  |>
+    dplyr::select(ProjectID, OrganizationName, ProjectName, TargetPop,
+                  "ProjectCountyServed" = CountiesServed
+                  #, ProjectAreaServed
+                  , Hours, Phone, OrgLink, CoCCode, Addresses, City)
 
   APs
 }
@@ -363,7 +389,7 @@ Pe_create_APs = function(provider_extras, dirs) {
 #' @param provider_extras
 #' @return \code{(data.frame)}
 
-Pe_add_ProjectType <- function(provider_extras) {
+pe_add_ProjectType <- function(provider_extras) {
   PT <- hud.extract::hud_translations$`2.02.6 ProjectType`(table = TRUE) |>
     tibble::add_row(Value = 12, Text = "Homeless Prevention")
   purrr::map_dbl(provider_extras$ProjectTypeCode, ~PT$Value[agrepl(stringr::str_remove(.x, "\\s\\([\\w\\s]+\\)$"), PT$Text)])
@@ -379,7 +405,7 @@ Pe_add_ProjectType <- function(provider_extras) {
 #'
 #' @return
 #' @export
-Pe_add_GrantType = function(provider_extras) {
+pe_add_GrantType = function(provider_extras) {
   hash <- hud.extract::hud_translations$`2.06.1 FundingSource`(table = TRUE)
 
   gt <- list(HOPWA = c(13:19), PATH = 21, SSVF = 33, RHY = 22:26)
@@ -393,8 +419,8 @@ Pe_add_GrantType = function(provider_extras) {
 }
 
 provider_extras_helpers <- list(
-  add_regions = Pe_add_regions,
-  add_ProjectType = Pe_add_ProjectType,
-  create_APs = Pe_create_APs,
-  add_GrantType = Pe_add_GrantType
+  add_regions = pe_add_regions,
+  add_ProjectType = pe_add_ProjectType,
+  create_APs = pe_create_APs,
+  add_GrantType = pe_add_GrantType
 )

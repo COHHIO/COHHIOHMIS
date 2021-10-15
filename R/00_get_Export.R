@@ -23,7 +23,9 @@ load_export <- function(
 ) {
 
   force(clarity_api)
-  force(app_env)
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+
   # Service Areas -----------------------------------------------------------
   ServiceAreas <- clarity.looker::hud_load("ServiceAreas.feather", dirs$public)
 
@@ -53,25 +55,40 @@ load_export <- function(
 
   EmploymentEducation <- cl_api$EmploymentEducation()
 
+  # ProjectCoC --------------------------------------------------------------
+
+  ProjectCoC <-
+    cl_api$ProjectCoC()
 
 
+  app_env$merge_deps_to_env("dirs")
+  force(dirs)
 
-
-  # Project -----------------------------------------------------------------
+  # Project_extras -----------------------------------------------------------------
   # provider_extras
   # Thu Aug 12 14:23:50 2021
-  provider_extras <- cl_api$`HUD Extras`$Project_extras() |>
-    Pe_add_ProjectType() |>
-    Pe_add_regions(dirs) |>
-    Pe_add_GrantType()
+
+  provider_extras <- cl_api$`HUD Extras`$Project_extras()
+  provider_extras <- pe_add_ProjectType(provider_extras)
+  provider_extras <- pe_add_regions(provider_extras, dirs = dirs)
+  provider_extras <- pe_add_GrantType(provider_extras)
 
   # Rminor: Coordinated Entry Access Points [CEAP]
-  APs <- provider_extras_helpers$create_APs(provider_extras, dirs)
+  APs <- pe_create_APs(provider_extras, ProjectCoC, dirs = dirs)
 
 Project <- cl_api$Project() |>
   dplyr::select(-ProjectCommonName) |>
   {\(x) {dplyr::left_join(x, provider_extras |> dplyr::select(-ProjectName), by = c("ProjectID", "ProjectType"))}}() |>
   dplyr::distinct(ProjectID, ProjectType, .keep_all = T)
+
+mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
+  dplyr::select(ProjectID) |>
+  {\(x) {
+    dplyr::left_join(x, dplyr::select(Project, ProjectID, ProjectTypeCode, ProjectName), by = "ProjectID") |>
+      dplyr::filter(stringr::str_detect(ProjectName, "^zz", negate = TRUE)) |>
+      dplyr::distinct(ProjectID, .keep_all = TRUE) |>
+      {\(y) {rlang::set_names(y$ProjectID, dplyr::pull(y, ProjectTypeCode))}}()
+  }}()
 
 
   # EnrollmentCoC -----------------------------------------------------------
@@ -125,20 +142,6 @@ Project <- cl_api$Project() |>
   Organization <-
     cl_api$Organization()
 
-  # ProjectCoC --------------------------------------------------------------
-
-  ProjectCoC <-
-    cl_api$ProjectCoC()
-
-  mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
-    dplyr::select(ProjectID) |>
-    {\(x) {
-      dplyr::left_join(x, dplyr::select(Project, ProjectID, ProjectTypeCode, ProjectName), by = "ProjectID") |>
-      dplyr::filter(stringr::str_detect(ProjectName, "^zz", negate = TRUE)) |>
-      dplyr::distinct(ProjectID, .keep_all = TRUE) |>
-        {\(y) {rlang::set_names(y$ProjectID, dplyr::pull(y, ProjectTypeCode))}}()
-      }}()
-
 
   # Contacts ----------------------------------------------------------------
   # only pulling in contacts made between an Entry Date and an Exit Date
@@ -159,10 +162,6 @@ Project <- cl_api$Project() |>
   #                 OfferDate = lubridate::ymd(as.Date(OfferDate, origin = "1899-12-30")))
 
 
-  # COVID-19 ----------------------------------------------------------------
-
-  covid19 <- cl_api$`HUD Extras`$Client_COVID_extras() |>
-    dplyr::mutate(dplyr::across(.f = replace_yes_no))
 
 
   doses <- cl_api$`HUD Extras`$Client_Doses_extras()

@@ -3,6 +3,7 @@
 #' @description Functions imported from other packages
 #' @importFrom rlang `%||%`
 #' @importFrom dplyr `%>%`
+#' @importFrom clarity.looker dirs
 NULL
 
 #' @title Roxygen Template for `app_env` & `clarity_api`

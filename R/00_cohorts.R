@@ -30,16 +30,13 @@
 #' @include app_dependencies.R init_R6.R
 
 cohorts <- function(
-  clarity_api,
-  app_env,
-  e = rlang::caller_env()
-  ) {
-  if (missing(clarity_api))
-    clarity_api <- get_clarity_api(e = e)
-  if (missing(app_env))
-    app_env <- get_app_env(e = e)
-  vars <- list()
-  vars$we_want <- c(
+  clarity_api = get_clarity_api(e = rlang::caller_env()),
+  app_env = get_app_env(e = rlang::caller_env())
+) {
+
+  if (is_app_env(app_env))
+    app_env$set_parent()
+  vars <- list(we_want = c(
     "PersonalID",
     "EnrollmentID",
     "CountyServed",
@@ -57,7 +54,8 @@ cohorts <- function(
     "ExitDate",
     "ExitAdjust",
     "Destination"
-  )
+  ))
+
 
   # Transition Aged Youth
 
@@ -73,218 +71,110 @@ cohorts <- function(
 
   # Leaver and Stayer HoHs who were served during the reporting period
   co_hohs_served <-  Enrollment_extra_Exit_HH_CL_AaE %>%
-    dplyr::filter(HMIS::served_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End) &
-                    RelationshipToHoH == 1) %>%
+    HMIS::served_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
+    dplyr::filter(RelationshipToHoH == 1) %>%
     dplyr::left_join(Client, by = "PersonalID") %>%
     dplyr::select(tidyselect::all_of(vars$we_want))
 
-  summary_hohs_served <- co_hohs_served %>%
-    dplyr::distinct(PersonalID, ProjectName) %>%
-    dplyr::group_by(ProjectName) %>%
-    dplyr::summarise(hohs_served = dplyr::n())
+
 
   # Leaver HoHs served during the reporting period
   co_hohs_served_leavers <-  Enrollment_extra_Exit_HH_CL_AaE %>%
-    dplyr::filter(
-      HMIS::exited_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End) &
-        RelationshipToHoH == 1
-    ) %>%
+    HMIS::exited_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
+    dplyr::filter(RelationshipToHoH == 1) %>%
     dplyr::left_join(Client, by = "PersonalID") %>%
     dplyr::select(tidyselect::all_of(vars$we_want))
 
-  summary_hohs_served_leavers <- co_hohs_served_leavers %>%
-    dplyr::distinct(PersonalID, ProjectName) %>%
-    dplyr::group_by(ProjectName) %>%
-    dplyr::summarise(hohs_served_leavers = dplyr::n())
 
   #	Leavers	who were Served During Reporting Period	Deaths
   co_hohs_served_leavers_died <- Enrollment_extra_Exit_HH_CL_AaE %>%
+    HMIS::exited_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
     dplyr::filter(
-      HMIS::exited_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End) &
-        RelationshipToHoH == 1,
+      RelationshipToHoH == 1,
       Destination == 24
     ) %>%
     dplyr::left_join(Client, by = "PersonalID") %>%
     dplyr::select(tidyselect::all_of(vars$we_want))
 
-  summary_hohs_served_leavers_died  <- co_hohs_served_leavers_died  %>%
-    dplyr::distinct(PersonalID, ProjectName) %>%
-    dplyr::group_by(ProjectName) %>%
-    dplyr::summarise(hohs_served_leavers_died = dplyr::n())
-
   #	Leavers and Stayers	who were Served During Reporting Period	All
   co_clients_served <-  Enrollment_extra_Exit_HH_CL_AaE %>%
-    dplyr::filter(HMIS::served_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End)) %>%
+    HMIS::served_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
     dplyr::left_join(Client, by = "PersonalID") %>%
     dplyr::select(tidyselect::all_of(vars$we_want))
-
-  summary_clients_served <- co_clients_served %>%
-    dplyr::distinct(PersonalID, ProjectName) %>%
-    dplyr::group_by(ProjectName) %>%
-    dplyr::summarise(clients_served = dplyr::n())
 
   #	Leavers and Stayers	who were Served During Reporting Period	Adults
   co_adults_served <-  Enrollment_extra_Exit_HH_CL_AaE %>%
-    dplyr::filter(HMIS::served_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End) &
-                    AgeAtEntry > 17) %>%
+    HMIS::served_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
+    dplyr::filter(AgeAtEntry > 17) %>%
     dplyr::left_join(Client, by = "PersonalID") %>%
     dplyr::select(tidyselect::all_of(vars$we_want))
-
-  summary_adults_served <- co_adults_served %>%
-    dplyr::distinct(PersonalID, ProjectName) %>%
-    dplyr::group_by(ProjectName) %>%
-    dplyr::summarise(adults_served = dplyr::n())
 
   #	Leavers and Stayers	who	Entered During Reporting Period	Adults
 
   co_adults_entered <-  Enrollment_extra_Exit_HH_CL_AaE %>%
-    dplyr::filter(HMIS::entered_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End) &
-                    AgeAtEntry > 17) %>%
+    HMIS::entered_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
+    dplyr::filter(AgeAtEntry > 17) %>%
     dplyr::left_join(Client, by = "PersonalID") %>%
     dplyr::select(tidyselect::all_of(vars$we_want))
-
-  summary_adults_entered <- co_adults_entered %>%
-    dplyr::distinct(PersonalID, ProjectName) %>%
-    dplyr::group_by(ProjectName) %>%
-    dplyr::summarise(adults_entered = dplyr::n())
 
   #	Leavers and Stayers	who	Entered During Reporting Period	HoHs
   co_hohs_entered <- Enrollment_extra_Exit_HH_CL_AaE %>%
-    dplyr::filter(
-      HMIS::entered_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End) &
-        RelationshipToHoH == 1
-    ) %>%
+    HMIS::entered_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
+    dplyr::filter(RelationshipToHoH == 1) %>%
     dplyr::left_join(Client, by = "PersonalID") %>%
     dplyr::select(tidyselect::all_of(vars$we_want))
-
-  summary_hohs_entered <- co_hohs_entered %>%
-    dplyr::distinct(PersonalID, ProjectName) %>%
-    dplyr::group_by(ProjectName) %>%
-    dplyr::summarise(hohs_entered = dplyr::n())
 
   #	Leavers and Stayers	who were Served During Reporting Period (and Moved In)	All
   co_clients_moved_in <-  Enrollment_extra_Exit_HH_CL_AaE %>%
-    dplyr::filter(
-      HMIS::stayed_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End)
-    ) %>%
+    HMIS::stayed_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) %>%
     dplyr::left_join(Client, by = "PersonalID") %>%
     dplyr::select(tidyselect::all_of(vars$we_want))
-
-  summary_clients_moved_in <- co_clients_moved_in %>%
-    dplyr::distinct(PersonalID, ProjectName) %>%
-    dplyr::group_by(ProjectName) %>%
-    dplyr::summarise(clients_moved_in = dplyr::n())
 
   #	Leavers and Stayers	who were Served During Reporting Period (and Moved In)	Adults
   co_adults_moved_in <-  Enrollment_extra_Exit_HH_CL_AaE %>%
-    dplyr::filter(HMIS::stayed_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End) &
-                    AgeAtEntry > 17) %>%
+    HMIS::stayed_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
+    dplyr::filter(AgeAtEntry > 17) %>%
     dplyr::left_join(Client, by = "PersonalID") %>%
     dplyr::select(tidyselect::all_of(vars$we_want))
-
-  summary_adults_moved_in <- co_adults_moved_in %>%
-    dplyr::distinct(PersonalID, ProjectName) %>%
-    dplyr::group_by(ProjectName) %>%
-    dplyr::summarise(adults_moved_in = dplyr::n())
 
   #	Leavers	who were Served During Reporting Period (and Moved In)	All
   co_clients_moved_in_leavers <-  Enrollment_extra_Exit_HH_CL_AaE %>%
-    dplyr::filter(HMIS::exited_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End) &
-                    HMIS::stayed_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End)) %>%
+    dplyr::filter(HMIS::exited_between(., rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) &
+                    HMIS::stayed_between(., rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End)) %>%
     dplyr::left_join(Client, by = "PersonalID") %>%
     dplyr::select(tidyselect::all_of(vars$we_want))
 
-  summary_clients_moved_in_leavers <- co_clients_moved_in_leavers %>%
-    dplyr::distinct(PersonalID, ProjectName) %>%
-    dplyr::group_by(ProjectName) %>%
-    dplyr::summarise(clients_moved_in_leavers = dplyr::n())
-
   #	Leaver hohs	who were Served (and Moved In) During Reporting Period	HoHs
   co_hohs_moved_in_leavers <-  Enrollment_extra_Exit_HH_CL_AaE %>%
-    dplyr::filter(HMIS::stayed_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End) &
-                    HMIS::exited_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End) &
+    dplyr::filter(HMIS::stayed_between(., rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) &
+                    HMIS::exited_between(., rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) &
                     RelationshipToHoH == 1) %>%
     dplyr::left_join(Client, by = "PersonalID") %>%
     dplyr::select(tidyselect::all_of(vars$we_want))
 
-  summary_hohs_moved_in_leavers <- co_hohs_moved_in_leavers %>%
-    dplyr::distinct(PersonalID, ProjectName) %>%
-    dplyr::group_by(ProjectName) %>%
-    dplyr::summarise(hohs_moved_in_leavers = dplyr::n())
-
   #	Leavers	who were Served During Reporting Period (and Moved In)	Adults
   co_adults_moved_in_leavers <-  Enrollment_extra_Exit_HH_CL_AaE %>%
-    dplyr::filter(HMIS::exited_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End) &
-                    HMIS::stayed_between(., lubridate::ymd(rm_dates$calc$data_goes_back_to), rm_dates$meta_HUDCSV$Export_End) &
+    dplyr::filter(HMIS::exited_between(., rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) &
+                    HMIS::stayed_between(., rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) &
                     AgeAtEntry > 17) %>%
     dplyr::left_join(Client, by = "PersonalID") %>%
     dplyr::select(tidyselect::all_of(vars$we_want))
 
-  summary_adults_moved_in_leavers <- co_adults_moved_in_leavers %>%
-    dplyr::distinct(PersonalID, ProjectName) %>%
-    dplyr::group_by(ProjectName) %>%
-    dplyr::summarise(adults_moved_in_leavers = dplyr::n())
+  summary <- hoh_count(co_clients_served) %>%
+    dplyr::full_join(hoh_count(co_clients_moved_in), by = "ProjectName") %>%
+    dplyr::full_join(hoh_count(co_hohs_moved_in_leavers), by = "ProjectName") %>%
+    dplyr::full_join(hoh_count(co_adults_served), by = "ProjectName") %>%
+    dplyr::full_join(hoh_count(co_adults_moved_in), by = "ProjectName") %>%
+    dplyr::full_join(hoh_count(co_clients_moved_in_leavers), by = "ProjectName") %>%
+    dplyr::full_join(hoh_count(co_adults_moved_in_leavers), by = "ProjectName") %>%
+    dplyr::full_join(hoh_count(co_hohs_served), by = "ProjectName") %>%
+    dplyr::full_join(hoh_count(co_hohs_entered), by = "ProjectName") %>%
+    dplyr::full_join(hoh_count(co_hohs_served_leavers), by= "ProjectName") %>%
+    dplyr::full_join(hoh_count(co_adults_entered), by = "ProjectName") %>%
+    dplyr::full_join(hoh_count(co_hohs_served_leavers_died), by = "ProjectName")
 
-  summary <- summary_clients_served %>%
-    dplyr::full_join(summary_clients_moved_in, by = "ProjectName") %>%
-    dplyr::full_join(summary_hohs_moved_in_leavers, by = "ProjectName") %>%
-    dplyr::full_join(summary_adults_served, by = "ProjectName") %>%
-    dplyr::full_join(summary_adults_moved_in, by = "ProjectName") %>%
-    dplyr::full_join(summary_clients_moved_in_leavers, by = "ProjectName") %>%
-    dplyr::full_join(summary_adults_moved_in_leavers, by = "ProjectName") %>%
-    dplyr::full_join(summary_hohs_served, by = "ProjectName") %>%
-    dplyr::full_join(summary_hohs_entered, by = "ProjectName") %>%
-    dplyr::full_join(summary_hohs_served_leavers, by= "ProjectName") %>%
-    dplyr::full_join(summary_adults_entered, by = "ProjectName") %>%
-    dplyr::full_join(summary_hohs_served_leavers_died, by = "ProjectName")
 
-  rm(vars$we_want)
 
-  # APs ---------------------------------------------------------------------
-
-  project_addresses <- ProjectCoC %>%
-    dplyr::select(ProjectID, CoCCode, Address1, Address2, City, State, ZIP)
-
-  APs <- Project %>%
-    dplyr::inner_join(provider_geo, by = c("ProjectID", "ProjectName")) %>%
-    dplyr::filter(ProjectType == 14) %>%
-    dplyr::left_join(provider_services, by = "ProjectID") %>%
-    dplyr::select(
-      ProjectID,
-      OrganizationName,
-      ProjectName,
-      TargetPop,
-      CountiesServed,
-      ProjectAreaServed,
-      ProjectHours,
-      ProjectWebsite,
-      ProjectTelNo
-    ) %>%
-    unique() %>%
-    dplyr::mutate(OrgLink = dplyr::if_else(!is.na(ProjectWebsite), paste0(
-      "<a href='",
-      ProjectWebsite,
-      "' target='_blank'>",
-      ProjectName,
-      "</a><small> (#",
-      ProjectID,
-      ")</small>"
-    ), paste0(ProjectName,
-              "<small> (#",
-              ProjectID,
-              ")</small>"))) %>%
-    dplyr::left_join(project_addresses, by = "ProjectID") %>%
-    dplyr::mutate(
-      City = paste0(City, ", ", State, " ", ZIP),
-      Addresses = dplyr::coalesce(Address1, Address2)
-    ) %>%
-    dplyr::select(ProjectID, OrganizationName, ProjectName, TargetPop,
-                  "ProjectCountyServed" = CountiesServed, ProjectAreaServed,
-                  ProjectHours, ProjectTelNo, OrgLink, CoCCode, Addresses, City)
-
-  readr::write_csv(APs, "public_data/aps.csv")
-
-  rm(list = ls(pattern = "summary_"))
 
 
   # PIT Counts --------------------------------------------------------------
@@ -346,9 +236,8 @@ cohorts <- function(
 
 
 
-  # Save it out -------------------------------------------------------------
-  # WARNING save.image does not save the environment properly, save must be used.
-  save(list = ls(), file = "images/cohorts.RData")
+  app_env$gather_deps("everything")
+
 }
 
 
