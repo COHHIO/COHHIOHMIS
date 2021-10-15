@@ -85,7 +85,9 @@ return(out)
 Client_add_UniqueID <- function(Client, Client_extras, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  dplyr::left_join(Client, dplyr::select(Client_extras, PersonalID, UniqueID), by = "PersonalID")
+  out <- dplyr::left_join(Client, dplyr::distinct(dplyr::select(Client_extras, PersonalID, UniqueID), PersonalID, UniqueID), by = "PersonalID")
+  UU::join_check(Client, out)
+  out
 }
 
 #' Add Exit data to Enrollments
@@ -97,7 +99,7 @@ Client_add_UniqueID <- function(Client, Client_extras, app_env = get_app_env(e =
 #' @export
 
 Enrollment_add_Exit <- function(Enrollment, Exit) {
-  Enrollment <- dplyr::left_join(Enrollment, Exit |> dplyr::select(EnrollmentID,
+  out <- dplyr::left_join(Enrollment, Exit |> dplyr::select(EnrollmentID,
                                                      ExitDate,
                                                      Destination,
                                                      OtherDestination), by = "EnrollmentID")  |>
@@ -105,6 +107,8 @@ Enrollment_add_Exit <- function(Enrollment, Exit) {
                                   ExitDate > Sys.Date(),
                                 Sys.Date(), ExitDate))
 
+  UU::join_check(Enrollment, out)
+  out
 }
 
 
@@ -126,7 +130,8 @@ Enrollment_add_Household = function(Enrollment, Project, rm_dates, app_env = get
 
 
   small_project <- Project %>%
-    dplyr::select(ProjectID, ProjectType, ProjectName)
+    dplyr::select(ProjectID, ProjectType, ProjectName) |>
+    dplyr::distinct()
   # TODO Check to see if Enrollment data has the MoveInDate
   # TODO Does Move-in Date in Clarity auto-populate from previous enrollments?
   HHMoveIn <- Enrollment %>%
@@ -172,7 +177,7 @@ Enrollment_add_Household = function(Enrollment, Project, rm_dates, app_env = get
     dplyr::left_join(HHMoveIn, by = "HouseholdID")
 
 
-  Enrollment <- Enrollment %>%
+  out <- Enrollment %>%
     dplyr::left_join(small_project, by = "ProjectID") %>%
     dplyr::left_join(HHEntry, by = "HouseholdID") %>%
     dplyr::mutate(
@@ -188,7 +193,8 @@ Enrollment_add_Household = function(Enrollment, Project, rm_dates, app_env = get
           !is.na(MoveInDateAdjust) ~ MoveInDateAdjust
       )
     )
-  Enrollment
+  UU::join_check(Enrollment, out)
+  out
 }
 
 #' Add Veteran Coordinated Entry Date to Enrollments
@@ -202,7 +208,7 @@ Enrollment_add_VeteranCE = function(Enrollment, VeteranCE) {
 
   Enrollment |>
     # Join Veteran data
-    dplyr::left_join(VeteranCE  |>  dplyr::select(EnrollmentID, PHTrack, ExpectedPHDate), by = "EnrollmentID") |>
+    dplyr::left_join(VeteranCE  |>  dplyr::select(EnrollmentID, PHTrack, ExpectedPHDate) |> dplyr::distinct(EnrollmentID, .keep_all = TRUE), by = "EnrollmentID") |>
     dplyr::mutate(
       ExitAdjust = dplyr::if_else(
         is.na(ExitDate) |
@@ -238,7 +244,7 @@ Enrollment_add_ClientLocation = function(Enrollment, EnrollmentCoC) {
 #' @export
 
 Enrollment_add_AgeAtEntry_UniqueID <- function(Enrollment, Client) {
-  dplyr::left_join(Enrollment, dplyr::select(Client, UniqueID, PersonalID, DOB), by = c("PersonalID", "UniqueID")) |>
+  dplyr::left_join(Enrollment, dplyr::select(Client, UniqueID, PersonalID, DOB) |> dplyr::distinct(PersonalID, .keep_all = TRUE), by = c("PersonalID", "UniqueID")) |>
     dplyr::mutate(AgeAtEntry = age_years(DOB, EntryDate)) |>
     dplyr::select(-DOB)
 }
