@@ -70,8 +70,8 @@ load_export <- function(
 
 Project <- cl_api$Project() |>
   dplyr::select(-ProjectCommonName) |>
-  {\(x) {dplyr::left_join(x, provider_extras |> dplyr::select(-ProjectName), by = c("ProjectID", "ProjectType"))}}() |>
-  dplyr::distinct(ProjectID, ProjectType, .keep_all = T)
+  {\(x) {dplyr::left_join(x, provider_extras, by = UU::common_names(x, provider_extras))}}()
+
 
 
   # EnrollmentCoC -----------------------------------------------------------
