@@ -15,8 +15,4 @@ Client_redact(Client)
 \description{
 This redacts all PII (except DOB) from Client HUD Export
 }
-\seealso{
-Other Client functions: 
-\code{\link{Client_filter}()}
-}
 \concept{Client functions}

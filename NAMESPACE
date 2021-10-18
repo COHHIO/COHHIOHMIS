@@ -2,7 +2,6 @@
 
 export()
 export(Client_add_UniqueID)
-export(Client_filter)
 export(Client_redact)
 export(EnrollmentCoC_RemoveCoCCodes)
 export(Enrollment_add_AgeAtEntry_UniqueID)
