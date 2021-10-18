@@ -37,7 +37,7 @@ load_export <- function(
 
   Client <- cl_api$Client()
   # this saves Client as a feather file with redacted PII as a security measure.
-  if(ncol(Client) == 36) {
+  if (!all(Client$SSN %in% c("ok" ,"Invalid", "DKR", "Missing"))) {
     Client <- Client_redact(Client)
     clarity.looker::hud_feather(Client, dirs$export)
   }
