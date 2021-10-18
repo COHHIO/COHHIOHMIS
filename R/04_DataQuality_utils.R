@@ -911,7 +911,7 @@ dq_invalid_months_times_homeless <- function(served_in_date_range, vars, rm_date
 ) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  served_in_date_range %>%
+  out <- served_in_date_range %>%
     dplyr::select(
       dplyr::all_of(vars$prep),
       AgeAtEntry,
@@ -943,26 +943,14 @@ dq_invalid_months_times_homeless <- function(served_in_date_range, vars, rm_date
       Type = "Warning",
       Guidance = dplyr::case_when(
         MonthDiff <= 0 ~
-          "This client has an Approximate Date Homeless in their Entry that is after
-          their Entry Date. The information in the Entry should reflect the
-          client's situation at the point of Entry, so this date may have been
-          incorrectly entered.",
+          "This client has an Approximate Date Homeless in their Entry that is after their Entry Date. The information in the Entry should reflect the client's situation at the point of Entry, so this date may have been incorrectly entered.",
         MonthsHomelessPastThreeYears < 100 ~
-          "According to this client's entry, they experienced a single episode of
-          homelessness in the three years prior to their entry and the approximate
-          start date of their homelessness is known, but there was no response
-          entered for the number of months they experienced homelessness prior to
-          this entry. It should be possible to determine and enter the number of
-          months homeless based on the Approximate Date Homeless and the Entry Date.",
+          "According to this client's entry, they experienced a single episode of homelessness in the three years prior to their entry and the approximate start date of their homelessness is known, but there was no response entered for the number of months they experienced homelessness prior to this entry. It should be possible to determine and enter the number of months homeless based on the Approximate Date Homeless and the Entry Date.",
         DateMonthsMismatch == 1 ~
-          "According to this client's entry, they experienced a single episode of
-          homelessness in the three years prior to their entry and the approximate
-          start date of their homelessness is known, but the recorded number of
-          months they experienced homelessness prior to this entry is inconsistent
-          with the given dates. Please double-check this information for
-          consistency and accuracy.")) %>%
+          "According to this client's entry, they experienced a single episode of homelessness in the three years prior to their entry and the approximate start date of their homelessness is known, but the recorded number of months they experienced homelessness prior to this entry is inconsistent with the given dates. Please double-check this information for consistency and accuracy.")) %>%
     dplyr::filter(!is.na(Guidance)) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
+  return(out)
 }
 
 #' @title Find Missing Living Situation
@@ -1075,7 +1063,7 @@ dq_detail_missing_disabilities <- function(served_in_date_range, Disabilities, v
 if (is_app_env(app_env))
 		app_env$set_parent(missing_fmls())
 
-  detail_missing_disabilities <- served_in_date_range %>%
+  missing_disabilities <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
                   RelationshipToHoH,
@@ -1084,9 +1072,7 @@ if (is_app_env(app_env))
                     is.na(DisablingCondition)) %>%
     dplyr::mutate(Issue = "Missing Disabling Condition",
                   Type = "Error",
-                  Guidance = guidance$missing_at_entry)
-
-  missing_disabilities <- detail_missing_disabilities %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 
 
@@ -1113,7 +1099,7 @@ if (is_app_env(app_env))
 
   # Developmental & HIV/AIDS get automatically IndefiniteAndImpairs = 1 per FY2020
 
-  served_in_date_range %>%
+  conflicting_disabilities <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep),
                   EnrollmentID,
                   AgeAtEntry,
@@ -1132,6 +1118,8 @@ if (is_app_env(app_env))
       Guidance = "If the user answered 'Yes' to the 'Does the client have a disabling condition?', then there should be a disability subassessment that indicates the disability determination is Yes *and* the 'If yes,... long duration' question is Yes. Similarly if the user answered 'No', the client should not have any disability subassessments that indicate that they do have a Disabling Condition."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
+  out <- dplyr::bind_rows(missing_disabilities, conflicting_disabilities)
+  return(out)
 }
 
 #' @title Find Clients in Mahoning with 60 Days elapsed in Coordinated Entry
