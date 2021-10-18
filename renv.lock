@@ -86,8 +86,8 @@
       "RemoteUsername": "yogat3ch",
       "RemoteRepo": "UU",
       "RemoteRef": "main",
-      "RemoteSha": "8e575fcb0c5b4ff153efc8a5dbc9ab2b6d0d01a2",
-      "Hash": "d751139d86575a8cc0373c9809a9027b"
+      "RemoteSha": "a30d5df65811b897eb8cceab5922f47ef1825e95",
+      "Hash": "7bd84b56190d90ea3873590d3521d78c"
     },
     "askpass": {
       "Package": "askpass",
@@ -266,9 +266,9 @@
       "RemoteUsername": "COHHIO",
       "RemoteRepo": "clarity.looker",
       "RemoteRef": "main",
-      "RemoteSha": "3f782add6495670aa53627bfe1a9b72c6cf19463",
+      "RemoteSha": "60a3daebac9ea6bc25041dfd595bd272ced88803",
       "Remotes": "yogat3ch/UU, COHHIO/lookr",
-      "Hash": "f169587d236d5b8bacab135a91b96bb1"
+      "Hash": "caf59f07469dd8db6c7d7035fcc54f7a"
     },
     "cli": {
       "Package": "cli",
