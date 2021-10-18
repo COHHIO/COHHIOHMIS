@@ -48,6 +48,27 @@ if (is_sp()) {
       dplyr::select(dplyr::all_of(vars$we_want))
   }
 
+
+  #' @title Find Access Points with Entrys/Exits
+  #' @family ServicePoints Checks
+  #' @family DQ: EE Checks
+  #' @inherit data_quality_tables params return
+  #' @export
+
+  dq_sp_aps_with_ees <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+    must_sp()
+    if (is_app_env(app_env))
+      app_env$set_parent(missing_fmls())
+    served_in_date_range %>%
+      dplyr::filter(ProjectType == 14) %>% # not incl Mah CE
+      dplyr::mutate(
+        Issue = "Access Point with Entry Exits",
+        Type = "High Priority",
+        Guidance = guidance$aps_with_ees
+      ) %>%
+      dplyr::select(dplyr::all_of(vars$we_want))
+  }
+
   #' @title Find Stray Services
   #' @inherit data_quality_tables params return
   #' @family ServicePoint Checks
@@ -122,7 +143,7 @@ if (is_sp()) {
   #' @export
 
 
-  dq_internal_old_outstanding_referrals <- function(served_in_date_range, Referrals, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+  dq_sp_internal_old_outstanding_referrals <- function(served_in_date_range, Referrals, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
     must_sp()
     if (is_app_env(app_env))
       app_env$set_parent(missing_fmls())

@@ -102,8 +102,7 @@ data_quality <- function(check_fns = Rm_data::check_fns,
   })
 message("Create data quality table...")
 #TODO These have abnormally high numbers of errors. Functions need debugging
-# dq_aps_with_ees
-# dq_detail_missing_disabilities
+
 # dq_invalid_months_times_homeless
 # dq_missing_county_prior
 # dq_missing_county_served

@@ -2933,26 +2933,6 @@ dq_referrals_on_hh_members_ssvf <- function(served_in_date_range, vars, guidance
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
-#' @title Find Access Points with Entrys/Exits
-#' @family Clarity Checks
-#' @family DQ: EE Checks
-#' @inherit data_quality_tables params return
-#' @export
-
-dq_aps_with_ees <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
-  if (is_app_env(app_env))
-    app_env$set_parent(missing_fmls())
-  served_in_date_range %>%
-    dplyr::filter(ProjectType == 14) %>% # not incl Mah CE
-    dplyr::mutate(
-      Issue = "Access Point with Entry Exits",
-      Type = "High Priority",
-      Guidance = guidance$aps_with_ees
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-}
-
-
 
 # SSVF --------------------------------------------------------------------
 
