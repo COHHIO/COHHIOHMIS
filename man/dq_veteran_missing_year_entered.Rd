@@ -32,7 +32,6 @@ Check for missing Year Entered on clients who are Veterans
 }
 \seealso{
 Other DQ: EE Checks: 
-\code{\link{dq_aps_with_ees}()},
 \code{\link{dq_conflicting_income}()},
 \code{\link{dq_dkr_client_veteran_info}()},
 \code{\link{dq_duplicate_ees}()},

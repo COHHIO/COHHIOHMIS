@@ -40,7 +40,6 @@ Other DQ: SSVF Checks:
 \code{\link{dq_veteran_missing_year_separated}()}
 
 Other DQ: EE Checks: 
-\code{\link{dq_aps_with_ees}()},
 \code{\link{dq_conflicting_income}()},
 \code{\link{dq_dkr_client_veteran_info}()},
 \code{\link{dq_duplicate_ees}()},

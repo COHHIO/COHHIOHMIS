@@ -38,7 +38,6 @@ The Residence Prior may suggest that the project is serving ineligible household
 }
 \seealso{
 Other Clarity Checks: 
-\code{\link{dq_aps_with_ees}()},
 \code{\link{dq_check_disability_ssi}()},
 \code{\link{dq_conflicting_hi_ee}()},
 \code{\link{dq_conflicting_income}()},

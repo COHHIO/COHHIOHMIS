@@ -58,4 +58,5 @@ Collate:
     '07_SPMs.R'
     '08_Active_List.R'
     '09_covid.R'
+    'convenience_funs.R'
     'guidance.R'

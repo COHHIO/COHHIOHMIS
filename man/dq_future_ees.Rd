@@ -32,7 +32,6 @@ Users should not be entering a client into a project on a date in the future. If
 }
 \seealso{
 Other Clarity Checks: 
-\code{\link{dq_aps_with_ees}()},
 \code{\link{dq_check_disability_ssi}()},
 \code{\link{dq_check_eligibility}()},
 \code{\link{dq_conflicting_hi_ee}()},
@@ -104,7 +103,6 @@ Other Clarity Checks:
 \code{\link{dqu_project_small}()}
 
 Other DQ: EE Checks: 
-\code{\link{dq_aps_with_ees}()},
 \code{\link{dq_conflicting_income}()},
 \code{\link{dq_dkr_client_veteran_info}()},
 \code{\link{dq_duplicate_ees}()},

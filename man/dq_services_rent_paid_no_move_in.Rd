@@ -29,7 +29,6 @@ This client does not have a valid Move-In Date, but there is at least one rent/d
 }
 \seealso{
 Other Clarity Checks: 
-\code{\link{dq_aps_with_ees}()},
 \code{\link{dq_check_disability_ssi}()},
 \code{\link{dq_check_eligibility}()},
 \code{\link{dq_conflicting_hi_ee}()},

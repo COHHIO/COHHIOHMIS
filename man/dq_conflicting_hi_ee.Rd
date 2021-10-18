@@ -35,7 +35,6 @@ If the user answered 'Yes' to 'Covered by Health Insurance?', then there should 
 }
 \seealso{
 Other Clarity Checks: 
-\code{\link{dq_aps_with_ees}()},
 \code{\link{dq_check_disability_ssi}()},
 \code{\link{dq_check_eligibility}()},
 \code{\link{dq_conflicting_income}()},

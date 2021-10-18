@@ -35,7 +35,6 @@ Users should not checkbox all the household members when creating a Service Tran
 }
 \seealso{
 Other Clarity Checks: 
-\code{\link{dq_aps_with_ees}()},
 \code{\link{dq_check_disability_ssi}()},
 \code{\link{dq_check_eligibility}()},
 \code{\link{dq_conflicting_hi_ee}()},

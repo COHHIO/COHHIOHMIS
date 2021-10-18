@@ -4,10 +4,17 @@
 \alias{Enrollment_add_Household}
 \title{Add Household Information to Enrollment from Project}
 \usage{
-Enrollment_add_Household(Enrollment, Project, rm_dates)
+Enrollment_add_Household(
+  Enrollment,
+  Project,
+  rm_dates,
+  app_env = get_app_env(e = rlang::caller_env())
+)
 }
 \arguments{
 \item{Enrollment}{with Exit data. See \code{Enrollment_add_Exit}}
+
+\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 
 \item{hc}{From \code{dates}}
 }
