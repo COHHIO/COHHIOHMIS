@@ -89,8 +89,10 @@ data_quality <- function(check_fns = Rm_data::check_fns,
                         type = "iterator",
                         total = .total)
   dqs <- purrr::map(rlang::set_names(check_fns), ~{
-    cli::cli_progress_update(id = .pid,
-                             status = paste0(which(check_fns == .x),"/",.total,": ",.x))
+    i <- which(check_fns == .x)
+    cli::cli_progress_update(id = .pid,,
+                             status = paste0(i,"/",.total,": ",stringr::str_remove(.x, "^dq\\_")),
+                             extra = list(Function = .x))
     fn <- getFromNamespace(.x, "Rm_data")
     arg_names <- rlang::set_names(rlang::fn_fmls_names(fn))
     arg_names <- arg_names[!purrr::map_lgl(rlang::fn_fmls(fn), is.logical)]
@@ -98,23 +100,11 @@ data_quality <- function(check_fns = Rm_data::check_fns,
 
     .call <- rlang::call2(fn, !!!purrr::map(arg_names, ~rlang::expr(app_env$.__enclos_env__[[!!.x]])), app_env = NULL)
 
-    rlang::eval_bare(.call)
+    rlang::eval_bare(.call)  |>
+      dplyr::distinct(PersonalID, Issue, .keep_all = TRUE)
+
   })
-message("Create data quality table...")
-#TODO These have abnormally high numbers of errors. Functions need debugging
-
-# dq_invalid_months_times_homeless
-# dq_missing_county_prior
-# dq_missing_county_served
-# dq_missing_destination
-# dq_missing_income
-# dq_missing_ncbs
-# dq_path_enrolled_missing
-# dq_path_no_status_at_exit
-# dq_path_SOAR_missing_at_exit
-# dq_veteran
-browser()
-
+  message("Create data quality table...")
 
 dq_main <- do.call(rbind, dqs) |>
   unique() %>%
@@ -145,12 +135,15 @@ if (is_clarity())
   dq_main <- make_profile_link_df(dq_main)
 
 detail_eligibility <- dq_check_eligibility(detail = TRUE)
+# TODO See note in dq_overlaps
+# if (is_sp()) {
+#   unsh_overlaps <- dq_overlaps(unsh = TRUE)
+# }
 
 
 # Controls what is shown in the CoC-wide DQ tab ---------------------------
-
 # for CoC-wide DQ tab
-
+app_env$merge_deps_to_env(c("rm_dates", "Project"))
 dq_past_year <- dq_main %>%
   HMIS::served_between(rm_dates$hc$check_dq_back_to,
                        lubridate::today()) |>
@@ -167,7 +160,8 @@ dq_providers <- sort(projects_current_hmis$ProjectName)
 
 # APs without referrals ----
 # Mon Sep 20 16:31:46 2021
-aps_no_referrals <- dqu_aps()
+aps_no_referrals <- dqu_aps(data_APs = FALSE)
+data_APs <- dqu_aps()
 
   # Missing Client Location -------------------------------------------------
   # missing_client_location <- dq_missing_client_location(served_in_date_range, vars)
@@ -657,5 +651,5 @@ aps_no_referrals <- dqu_aps()
 
 
 
-app_env$gather_deps(served_in_date_range, dq_providers, dq_main, dq_past_year, dq_for_pe, aps_no_referrals, detail_eligibility)
+app_env$gather_deps(served_in_date_range, dq_providers, dq_main, dq_past_year, dq_for_pe, aps_no_referrals, data_APs, detail_eligibility)
 }
