@@ -2978,6 +2978,7 @@ ssvf_served_in_date_range <- function(Enrollment_extra_Exit_HH_CL_AaE, served_in
           "MoveInDateAdjust",
           "PercentAMI",
           "PersonalID",
+          "ProjectID",
           "ProjectName",
           "ProjectType",
           "RelationshipToHoH",

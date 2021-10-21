@@ -58,6 +58,7 @@ data_quality <- function(check_fns = Rm_data::check_fns,
   vars <- list()
   vars$prep <- c(
     "HouseholdID",
+    "ProjectID",
     "PersonalID",
     "UniqueID",
     "ProjectName",
@@ -87,12 +88,11 @@ data_quality <- function(check_fns = Rm_data::check_fns,
   .pid <- cli::cli_progress_bar(name = "DQ Checks",
                         status = "in progress",
                         type = "iterator",
-                        total = .total)
+                        total = .total + 3)
   dqs <- purrr::map(rlang::set_names(check_fns), ~{
     i <- which(check_fns == .x)
     cli::cli_progress_update(id = .pid,,
-                             status = paste0(i,"/",.total,": ",stringr::str_remove(.x, "^dq\\_")),
-                             extra = list(Function = .x))
+                             status = paste0(i,"/",.total,": ",stringr::str_remove(.x, "^dq\\_")))
     fn <- getFromNamespace(.x, "Rm_data")
     arg_names <- rlang::set_names(rlang::fn_fmls_names(fn))
     arg_names <- arg_names[!purrr::map_lgl(rlang::fn_fmls(fn), is.logical)]
@@ -100,12 +100,14 @@ data_quality <- function(check_fns = Rm_data::check_fns,
 
     .call <- rlang::call2(fn, !!!purrr::map(arg_names, ~rlang::expr(app_env$.__enclos_env__[[!!.x]])), app_env = NULL)
 
-    rlang::eval_bare(.call)  |>
+    out <- rlang::eval_bare(.call)  |>
       dplyr::distinct(PersonalID, Issue, .keep_all = TRUE)
-
+    UU::join_check(out)
+    out
   })
-  message("Create data quality table...")
 
+  cli::cli_progress_update(id = .pid,,
+                           status = "Creating data quality table")
 dq_main <- do.call(rbind, dqs) |>
   unique() %>%
   dplyr::mutate(Type = factor(Type, levels = c("High Priority",
@@ -131,6 +133,8 @@ dq_main <- do.call(rbind, dqs) |>
                         "Missing County Served"
                       )
                   ))
+cli::cli_progress_update(id = .pid,,
+                         status = "Addtl data")
 if (is_clarity())
   dq_main <- make_profile_link_df(dq_main)
 
@@ -144,16 +148,16 @@ detail_eligibility <- dq_check_eligibility(detail = TRUE)
 # Controls what is shown in the CoC-wide DQ tab ---------------------------
 # for CoC-wide DQ tab
 app_env$merge_deps_to_env(c("rm_dates", "Project"))
-dq_past_year <- dq_main %>%
-  HMIS::served_between(rm_dates$hc$check_dq_back_to,
-                       lubridate::today()) |>
-  dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
 
-# for project evaluation reporting
+dq_main <- dq_main |>
+  {\(x) {
+    app_env$gather_deps(
+      dq_past_year = HMIS::served_between(x, rm_dates$hc$check_dq_back_to, lubridate::today()),
+      # for project evaluation reporting
+      dq_for_pe = HMIS::served_between(x, rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end))
+      dplyr::select(x, -ProjectID)
+    }}()
 
-dq_for_pe <- dq_main  |>
-  HMIS::served_between(rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end) |>
-  dplyr::left_join(Project[c("ProjectID", "ProjectName")], by = "ProjectName")
 
 
 dq_providers <- sort(projects_current_hmis$ProjectName)
@@ -650,6 +654,7 @@ data_APs <- dqu_aps()
   #
 
 
-
+cli::cli_progress_update(id = .pid,,
+                         status = "Gathering dependencies")
 app_env$gather_deps(served_in_date_range, dq_providers, dq_main, dq_past_year, dq_for_pe, aps_no_referrals, data_APs, detail_eligibility)
 }
