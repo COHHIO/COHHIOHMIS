@@ -1105,7 +1105,7 @@ if (is_app_env(app_env))
                   AgeAtEntry,
                   RelationshipToHoH,
                   DisablingCondition) %>%
-    dplyr::inner_join(
+    dplyr::left_join(
       smallDisabilities %>%
         dplyr::filter(IndefiniteAndImpairs == 1L),
       by = c("PersonalID", "EnrollmentID")
