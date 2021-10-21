@@ -178,8 +178,9 @@ app_env <- R6::R6Class(
   "app_env",
   public = rlang::list2(
     #' @description Pass all dependencies saved from previous functions to an environment for use
-    #' @param nms \code{(character)} of the names of the dependencies to load into the `env`. **Default** load all previously stored objects.
+    #' @param ... \code{(character)} names of objects to share with `env`. **Default** load all previously stored objects.
     #' @param env \code{(environment)} to pass dependencies to. **Default** the calling environment
+    #' @param as_list \code{(logical)} `TRUE` return the named objects as a list. `FALSE` saves them directly to the environment
     merge_deps_to_env = function(...,
                                  env = rlang::caller_env(),
                                  as_list = FALSE) {
@@ -202,9 +203,13 @@ app_env <- R6::R6Class(
 
     },
     #' @description Gather the objects passed to \code{app_env}s internal environment to be passed to subsequent functions. Save app dependencies into a list.
-    #' @param ... \code{(objects)} Dependencies for subsequent functions, passed as objects and not character vector of names. Use \code{"everything"} to capture all objects from the parent environment.
+    #' @param ... \code{(objects)} Dependencies for subsequent functions, passed as named objects or a character of the object name. If no name is provided, the name of the object will be retained. Use \code{"everything"} to capture all objects from the parent environment.
+    #' @param app_deps \code{(logical/character)} **Default: `TRUE`** to save all app dependencies specified at initialization of the `app_env` object. Otherwise, a character vector of app dependencies to save.
+    #' @param env \code{(env)} The environment from which objects should be saved. **Default: the calling environment**
+    #' @param .args I don't remember why this is here but it has to be for the function to work properly.
+    #' @return \code{(environment)} The `app_env` object with the saved objects in the internal environment.
     gather_deps = function(...,
-                           app_deps = FALSE,
+                           app_deps = TRUE,
                            env = rlang::caller_env(),
                            .args = names(rlang::fn_fmls(rlang::call_fn(rlang::call_standardise(
                              match.call(call = sys.call(1))
@@ -231,7 +236,6 @@ app_env <- R6::R6Class(
           )
 
         .work_deps <- rlang::env_get_list(env, .all_objs)
-        app_deps <- TRUE
       } else if (length(.work_deps) == 1 && is.character(.work_deps[[1]]) && any(.work_deps[[1]] %in% ls(env))) {
         # case when character vector of objects to gather is provided
         .work_deps <- rlang::env_get_list(env, .work_deps[[1]])
@@ -278,7 +282,7 @@ app_env <- R6::R6Class(
 
       invisible(self)
     },
-    #' @title Set the given environment to inherit from the internal 'global' environment
+    #' @description Set the given environment to inherit from the internal 'global' environment
     #' @param vars_to_remove missing variables to remove from env that will otherwise mask the objects in the parent environment
     #' @param env child environment
     set_parent = function(vars_to_remove = NULL, env = rlang:::caller_env()) {
@@ -288,12 +292,14 @@ app_env <- R6::R6Class(
       parent.env(env) <- self$.__enclos_env__
     },
     #' @description Write app dependencies to disk
-    #' @param deps \code{(character)} with names of app dependencies.
+    #' @param objs \code{(list)} of objects to write to disk
     #' @param path \code{(character)} of directory to write app dependencies to
-    #' @param overwrite \code{(logical)} Whether to overwrite existing files.
+    #' @param dep_nms \code{(character)} with names of app dependencies. *Optional*
+    #' @param overwrite \code{(logical)} Whether to overwrite existing files. **Default:`TRUE`**
+    #' @return \code{(character)} vector of the files written
     write_app_deps = function (objs,
-                               deps,
                                path = file.path("data", "db", "RminorElevated"),
+                               dep_nms = NULL,
                                overwrite = TRUE)
     {
       # Dir check
@@ -301,13 +307,16 @@ app_env <- R6::R6Class(
         UU::mkpath(path)
 
       .nms <- names(objs)
-      .missing <- setdiff(deps, .nms)
+      if (!is.null(dep_nms)) {
+        .missing <- setdiff(dep_nms, .nms)
         if (UU::is_legit(.missing)) {
           rlang::warn(paste0(
             "The following objects are missing from the app dependencies and will not be written to disk: ",
             paste0(.missing, collapse = ", ")))
 
         }
+      }
+
 
 
       purrr::iwalk(objs, ~{
@@ -319,21 +328,32 @@ app_env <- R6::R6Class(
         }
       })
 
-
-
+      list.files(path, full.names = TRUE)
     },
-    #' @field \code{(list)} with all app dependencies as objects
+    #' @field app_objs \code{(list)} with all app dependencies as objects
     app_objs = list(),
-    #' @field \code{(list)} with all app dependencies as character vectors
+    #' @field app_deps \code{(list)} with all app dependencies as character vectors
     app_deps = c(),
+
+#' @description Upload all files in the data dependencies folder to Dropbox. Requires an authorized token to dropbox. See `dropbox_auth`.
+#' @param folder \code{(character)} path to folder
+#' @param db_folder \code{(character)} folder on dropbox to upload too. This will be created inside the `HMIS Apps` folder.
+#' @return
+
     dropbox_upload = function(folder = file.path("data","db","RminorElevated"), db_folder = "RminorElevated") {
       files <- list.files(folder, full.names = TRUE)
+      cli::cli_progress_bar(status = "Uploading: ", type = "iterator",
+                            total = length(files))
       purrr::walk(files, ~{
-        message("Uploading ",.x)
+        cli::cli_progress_update(status = basename(.x))
         rdrop2::drop_upload(.x, file.path(db_folder, basename(.x)))
       })
     },
-    dropbox_auth = function(db_auth_token = "~/R/auth_tokens/db_token.rds") {
+
+#' @description Authorize Dropbox
+#' @param db_auth_token \code{(character)} path to the Dropbox authorization token. See \link[rdrop2]{drop_auth}
+    dropbox_auth = function(db_auth_token = file.path("~","R","auth_tokens", "db_token.rds")) {
+      db_auth_token <- path.expand(db_auth_token)
       # Dropbox Auth
       if (!file.exists(db_auth_token)) {
         token <- rdrop2::drop_auth(key = Sys.getenv("db_key"),
@@ -345,6 +365,7 @@ app_env <- R6::R6Class(
       }
     },
     #' @description Instantiate with default app dependencies to be collected (if they exist) each time \code{\$gather_deps} is called
+    #' @param app_deps \code{(list)} with each app and it's dependencies as a character vector. See `app_deps` for formatting.
     initialize = function(app_deps) {
       if (missing(app_deps))
         app_deps <- Rm_data:::app_deps
