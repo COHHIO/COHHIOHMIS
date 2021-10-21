@@ -1733,7 +1733,7 @@ dq_path_missing_los_res_prior <- function(served_in_date_range, vars, guidance, 
 dq_path_no_status_at_exit <- function(served_in_date_range, vars,  guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  force(Project)
+
   served_in_date_range |>
     dplyr::select(
       dplyr::all_of(vars$prep),
