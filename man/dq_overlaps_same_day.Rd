@@ -8,6 +8,7 @@ dq_overlaps_same_day(
   served_in_date_range,
   vars,
   guidance,
+  unsh = FALSE,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }

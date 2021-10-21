@@ -104,6 +104,9 @@ Other Clarity Checks:
 \code{\link{dq_veteran}()},
 \code{\link{dqu_project_small}()}
 
+Other ServicePoint Checks: 
+\code{\link{dq_overlaps_rrh}()}
+
 Other DQ: Overlapping Enrollment/Move-In Dates: 
 \code{\link{dq_overlaps_psh}()},
 \code{\link{dq_overlaps_rrh}()},

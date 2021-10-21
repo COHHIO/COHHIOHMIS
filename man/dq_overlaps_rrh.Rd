@@ -8,6 +8,7 @@ dq_overlaps_rrh(
   served_in_date_range,
   vars,
   guidance,
+  unsh = FALSE,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }
@@ -102,6 +103,9 @@ Other Clarity Checks:
 \code{\link{dq_veteran}()},
 \code{\link{dqu_project_small}()}
 
+Other ServicePoint Checks: 
+\code{\link{dq_overlaps}()}
+
 Other DQ: Overlapping Enrollment/Move-In Dates: 
 \code{\link{dq_overlaps_psh}()},
 \code{\link{dq_overlaps_same_day}()},
@@ -109,3 +113,5 @@ Other DQ: Overlapping Enrollment/Move-In Dates:
 }
 \concept{Clarity Checks}
 \concept{DQ: Overlapping Enrollment/Move-In Dates}
+\concept{ServicePoint Checks}
+\concept{Unsheltered Checks}
