@@ -1702,9 +1702,8 @@ dqu_project_small <- function(Project) {
 #' @title PATH: Missing Residence Prior Length of Stay
 #' @inherit data_quality_tables params return
 #' @family DQ: Path Checks
-#' @inheritParams dqu_project_small
 #' @export
-dq_path_missing_los_res_prior <- function(served_in_date_range, Project, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+dq_path_missing_los_res_prior <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   served_in_date_range %>%
@@ -1714,8 +1713,7 @@ dq_path_missing_los_res_prior <- function(served_in_date_range, Project, vars, g
       AgeAtEntry,
       ClientEnrolledInPATH,
       LengthOfStay
-    ) %>%
-    dplyr::left_join(dqu_project_small(Project), by = c("ProjectID", "ProjectName")) %>%
+    )  |>
     dplyr::filter(AgeAtEntry > 17 &
                     ClientEnrolledInPATH == 1 &
                     (is.na(LengthOfStay) | LengthOfStay == 99)) %>%
@@ -1731,21 +1729,19 @@ dq_path_missing_los_res_prior <- function(served_in_date_range, Project, vars, g
 #' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @inherit data_quality_tables params return
-#' @inheritParams dqu_project_small
 #' @export
-dq_path_no_status_at_exit <- function(served_in_date_range, vars, Project, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+dq_path_no_status_at_exit <- function(served_in_date_range, vars,  guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  force(Project)
-  served_in_date_range %>%
+
+  served_in_date_range |>
     dplyr::select(
       dplyr::all_of(vars$prep),
       AgeAtEntry,
       ClientEnrolledInPATH,
       DateOfPATHStatus,
       ReasonNotEnrolled
-    ) %>%
-    dplyr::left_join(dqu_project_small(Project), by = "ProjectName") %>%
+    ) |>
     dplyr::filter(!is.na(ExitDate) &
                     AgeAtEntry > 17 &
                     (
@@ -1753,7 +1749,7 @@ dq_path_no_status_at_exit <- function(served_in_date_range, vars, Project, guida
                         is.na(DateOfPATHStatus) |
                         (ClientEnrolledInPATH == 0 &
                            is.na(ReasonNotEnrolled))
-                    )) %>%
+                    )) |>
     dplyr::mutate(Issue = "PATH Status at Exit Missing or Incomplete",
                   Type = "Error",
                   Guidance = guidance$missing_at_exit) %>%
@@ -1767,23 +1763,21 @@ dq_path_no_status_at_exit <- function(served_in_date_range, vars, Project, guida
 #' @family DQ: Path Checks
 #' @family Clarity Checks
 #' @inherit data_quality_tables params return
-#' @inheritParams dqu_project_small
 #' @details Status Determination at Exit &adult, PATH-Enrolled is not null & Date of Status is null -> error
 #' @export
 
-dq_path_status_determination <- function(served_in_date_range, Project, vars, app_env = get_app_env(e = rlang::caller_env())) {
+dq_path_status_determination <- function(served_in_date_range, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  served_in_date_range %>%
+  served_in_date_range |>
     dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
                   ClientEnrolledInPATH,
-                  DateOfPATHStatus) %>%
-    dplyr::left_join(dqu_project_small(Project), by = "ProjectName") %>%
+                  DateOfPATHStatus) |>
     dplyr::filter(AgeAtEntry > 17 &
                     !is.na(ClientEnrolledInPATH) &
                     is.na(DateOfPATHStatus)
-    ) %>%
+    )  |>
     dplyr::mutate(Issue = "Missing Date of PATH Status",
                   Type = "Error",
                   Guidance = "Users must indicate the PATH Status Date for any adult enrolled in PATH.") %>%
@@ -1797,25 +1791,23 @@ dq_path_status_determination <- function(served_in_date_range, Project, vars, ap
 #' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @inherit data_quality_tables params return
-#' @inheritParams dqu_project_small
 #' @details PATH Enrolled at Exit & adult & PATH Enrolled null or DNC -> error
 #' @export
-dq_path_enrolled_missing <- function(served_in_date_range, Project, vars, app_env = get_app_env(e = rlang::caller_env())) {
+dq_path_enrolled_missing <- function(served_in_date_range, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  out <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep), AgeAtEntry, ClientEnrolledInPATH) %>%
-    dplyr::left_join(dqu_project_small(Project), by = "ProjectName") %>%
+  out <- served_in_date_range |>
+    dplyr::select(dplyr::all_of(vars$prep), AgeAtEntry, ClientEnrolledInPATH) |>
     dplyr::filter(!is.na(ExitDate) &
                     AgeAtEntry > 17 &
                     (ClientEnrolledInPATH == 99 |
                        is.na(ClientEnrolledInPATH))
-    ) %>%
+    ) |>
     dplyr::mutate(
       Issue = "Missing PATH Enrollment at Exit",
       Type = "Error",
       Guidance = guidance$path_enrolled_missing
-    ) %>%
+    ) |>
     dplyr::select(dplyr::all_of(vars$we_want))
   return(out)
 }
@@ -1827,22 +1819,20 @@ dq_path_enrolled_missing <- function(served_in_date_range, Project, vars, app_en
 #' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @inherit data_quality_tables params return
-#' @inheritParams dqu_project_small
 #' @details adult & PATH Enrolled = No & Reason is null -> error
 #' @export
-dq_path_reason_missing <- function(served_in_date_range, Project, vars, app_env = get_app_env(e = rlang::caller_env())) {
+dq_path_reason_missing <- function(served_in_date_range, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
-  served_in_date_range %>%
+  served_in_date_range |>
     dplyr::select(
       dplyr::all_of(vars$prep),
       AgeAtEntry,
       ClientEnrolledInPATH,
       ReasonNotEnrolled,
       ProjectType
-    ) %>%
-    dplyr::left_join(dqu_project_small(Project), by = "ProjectName") %>%
+    ) |>
     dplyr::filter(AgeAtEntry > 17 &
                     ClientEnrolledInPATH == 0 &
                     is.na(ReasonNotEnrolled)) %>%
@@ -1860,10 +1850,9 @@ dq_path_reason_missing <- function(served_in_date_range, Project, vars, app_env 
 #' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @inherit data_quality_tables params return
-#' @inheritParams dqu_project_small
 #' @details adult & Connection w/ SOAR is null or DNC -> error
 #' @export
-dq_path_SOAR_missing_at_exit <- function(served_in_date_range, Project, IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+dq_path_SOAR_missing_at_exit <- function(served_in_date_range, IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
@@ -1878,8 +1867,7 @@ dq_path_SOAR_missing_at_exit <- function(served_in_date_range, Project, IncomeBe
     dplyr::select(dplyr::all_of(vars$prep),
                   EnrollmentID,
                   AgeAtEntry,
-                  ClientEnrolledInPATH) %>%
-    dplyr::left_join(dqu_project_small(Project), by = "ProjectName") %>%
+                  ClientEnrolledInPATH) |>
     dplyr::left_join(smallIncomeSOAR, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::filter(AgeAtEntry > 17 &
                     DataCollectionStage == 3 &
@@ -1896,7 +1884,6 @@ dq_path_SOAR_missing_at_exit <- function(served_in_date_range, Project, IncomeBe
 #' @family DQ: Path Checks
 #' @description  Every adult or Head of Household must have a Living Situation contact record. If you see a record there but there is no Date of Contact, saving the Date of Contact will correct this issue. This is a high priority DQ issue.
 #' @inherit data_quality_tables params return
-#' @inheritParams dqu_project_small
 #' @param Contacts \code{(data.frame)} From the HUD CSV Export
 #' @details client is adult/hoh and has no contact record in the EE -> error
 #' @export
@@ -1942,7 +1929,6 @@ dq_missing_path_contact <- function(served_in_date_range, Contacts, rm_dates, va
 #' @family DQ: Path Checks
 #' @description Every adult or head of household should have a Living Situation contact record where the Contact Date matches the Entry Date. This would represent the initial contact made with the client.
 #' @inherit data_quality_tables params return
-#' @inheritParams dqu_project_small
 #' @param Contacts \code{(data.frame)} From the HUD CSV Export
 #' @details client is adult/hoh, has a contact record, and the first record in the EE does not equal the Entry Date ->  error
 #' @export
@@ -3279,12 +3265,14 @@ dqu_aps <- function(Project, Referrals, data_APs = TRUE, app_env = get_app_env(e
 #' @examples
 #' data.frame(a = letters, b = seq_along(letters)) |> dplyr::rowwise() |>  dplyr::mutate(a = make_profile_link(a, b)) |> DT::datatable(escape = FALSE)
 
-make_profile_link <- function(pid, uid, chr) {
+make_profile_link <- function(pid, uid, chr = TRUE) {
   href <- httr::parse_url(getOption("HMIS")$Clarity_URL)
-  href$path <- c("client",pid, "profile")
-  out <- htmltools::tags$a(href = httr::build_url(href), uid, target = "_blank")
-  if (chr)
-    out <- as.character(out)
+  purrr::map2(pid, uid, ~{
+    href$path <- c("client",.x, "profile")
+    out <- htmltools::tags$a(href = httr::build_url(href), .y, target = "_blank")
+    if (chr)
+      out <- as.character(out)
+  })
 }
 
 
@@ -3300,8 +3288,7 @@ make_profile_link <- function(pid, uid, chr) {
 #' DT::datatable(escape = FALSE)
 make_profile_link_df <- function(x) {
   x |>
-    dplyr::rowwise() |>
-    dplyr::mutate(UniqueID = make_profile_link(PersonalID, UniqueID, chr = TRUE)) |>
+    dplyr::mutate(UniqueID = make_profile_link(PersonalID, UniqueID)) |>
     dplyr::select( - PersonalID)
 }
 
