@@ -3265,12 +3265,14 @@ dqu_aps <- function(Project, Referrals, data_APs = TRUE, app_env = get_app_env(e
 #' @examples
 #' data.frame(a = letters, b = seq_along(letters)) |> dplyr::rowwise() |>  dplyr::mutate(a = make_profile_link(a, b)) |> DT::datatable(escape = FALSE)
 
-make_profile_link <- function(pid, uid, chr) {
+make_profile_link <- function(pid, uid, chr = TRUE) {
   href <- httr::parse_url(getOption("HMIS")$Clarity_URL)
-  href$path <- c("client",pid, "profile")
-  out <- htmltools::tags$a(href = httr::build_url(href), uid, target = "_blank")
-  if (chr)
-    out <- as.character(out)
+  purrr::map2(pid, uid, ~{
+    href$path <- c("client",.x, "profile")
+    out <- htmltools::tags$a(href = httr::build_url(href), .y, target = "_blank")
+    if (chr)
+      out <- as.character(out)
+  })
 }
 
 
@@ -3286,8 +3288,7 @@ make_profile_link <- function(pid, uid, chr) {
 #' DT::datatable(escape = FALSE)
 make_profile_link_df <- function(x) {
   x |>
-    dplyr::rowwise() |>
-    dplyr::mutate(UniqueID = make_profile_link(PersonalID, UniqueID, chr = TRUE)) |>
+    dplyr::mutate(UniqueID = make_profile_link(PersonalID, UniqueID)) |>
     dplyr::select( - PersonalID)
 }
 
