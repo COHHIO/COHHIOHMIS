@@ -58,9 +58,9 @@ data_quality <- function(check_fns = Rm_data::check_fns,
   vars <- list()
   vars$prep <- c(
     "HouseholdID",
-    "ProjectID",
     "PersonalID",
     "UniqueID",
+    "ProjectID",
     "ProjectName",
     "ProjectType",
     "EntryDate",
