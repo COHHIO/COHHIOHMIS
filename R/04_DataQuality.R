@@ -89,19 +89,11 @@ data_quality <- function(check_fns = Rm_data::check_fns,
                         type = "iterator",
                         total = .total)
   #TODO These have abnormally high numbers of errors. Functions need debugging
-  c("dq_invalid_months_times_homeless",
-    "dq_missing_county_prior",
-    "dq_missing_county_served",
-    "dq_missing_destination",
-    "dq_missing_income",
-    "dq_missing_ncbs",
-    "dq_path_enrolled_missing",
-    "dq_path_no_status_at_exit",
-    "dq_path_SOAR_missing_at_exit",
-    "dq_veteran") |>
+  c("dq_invalid_months_times_homeless") |>
     purrr::walk(debug)
 
   browser()
+  dq_invalid_months_times_homeless()
   dqs <- purrr::map(rlang::set_names(check_fns), ~{
     cli::cli_progress_update(id = .pid,
                              status = paste0(which(check_fns == .x),"/",.total,": ",.x))
