@@ -63,6 +63,7 @@ data_quality <- function(check_fns = Rm_data::check_fns,
     "ProjectID",
     "ProjectName",
     "ProjectType",
+    "EntryAdjust",
     "EntryDate",
     "MoveInDateAdjust",
     "ExitDate",
@@ -85,9 +86,7 @@ data_quality <- function(check_fns = Rm_data::check_fns,
   app_env$gather_deps(ssvf_served_in_date_range)
 
   .total <- length(check_fns)
-  .pid <- cli::cli_progress_bar(name = "DQ Checks",
-                        status = "in progress",
-                        type = "iterator",
+  .pid <- cli::cli_progress_bar(type = "iterator",
                         total = .total + 3)
   dqs <- purrr::map(rlang::set_names(check_fns), ~{
     i <- which(check_fns == .x)
@@ -148,14 +147,18 @@ dq_main |>
       dq_past_year = HMIS::served_between(x, rm_dates$hc$check_dq_back_to, lubridate::today()),
       # for project evaluation reporting
       dq_for_pe = HMIS::served_between(x, rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end),
-      dq_main = dplyr::select(x, -ProjectID))
+      dq_main = dplyr::select(x, -ProjectID, - EntryAdjust))
 
   }}()
 
 
 cli::cli_progress_update(id = .pid,,
                          status = "Addtl Data")
+
 detail_eligibility <- dq_check_eligibility(detail = TRUE)
+
+if (is_clarity())
+  detail_eligibility <- make_profile_link_df(detail_eligibility)
 # TODO See note in dq_overlaps
 # if (is_sp()) {
 #   unsh_overlaps <- dq_overlaps(unsh = TRUE)

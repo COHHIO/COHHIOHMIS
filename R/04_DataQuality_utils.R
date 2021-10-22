@@ -124,6 +124,7 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH
         "DOBDataQuality",
         "EnrollmentID",
         "EntryDate",
+        "EntryAdjust",
         "Ethnicity",
         "ExitAdjust",
         "ExitDate",
@@ -1574,6 +1575,7 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
   if (detail) {
     out <- check_eligibility %>%
       dplyr::select(
+        UniqueID,
         PersonalID,
         ProjectName,
         ProjectType,
@@ -1587,17 +1589,7 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
       dplyr::mutate(
         ResidencePrior =
           living_situation(LivingSituation),
-        LengthOfStay = dplyr::case_when(
-          LengthOfStay == 2 ~ "One week or more but less than one month",
-          LengthOfStay == 3 ~ "One month or more but less than 90 days",
-          LengthOfStay == 4 ~ "90 days or more but less than one year",
-          LengthOfStay == 5 ~ "One year or longer",
-          LengthOfStay == 8 ~ "Client doesn't know",
-          LengthOfStay == 9 ~ "Client refused",
-          LengthOfStay == 10 ~ "One night or less",
-          LengthOfStay == 11 ~ "Two to six nights",
-          LengthOfStay == 99 ~ "Data not collected"
-        )
+        LengthOfStay = hud.extract::hud_translations$`3.917.2 LengthOfStay`(LengthOfStay)
       )
   } else {
     out <- check_eligibility %>%
@@ -2953,6 +2945,7 @@ ssvf_served_in_date_range <- function(Enrollment_extra_Exit_HH_CL_AaE, served_in
         c(
           "AddressDataQuality",
           "EnrollmentID",
+          "EntryAdjust",
           "EntryDate",
           "ExitDate",
           "HouseholdID",
@@ -3267,7 +3260,10 @@ dqu_aps <- function(Project, Referrals, data_APs = TRUE, app_env = get_app_env(e
 
 make_profile_link <- function(pid, uid, chr = TRUE) {
   href <- httr::parse_url(getOption("HMIS")$Clarity_URL)
-  purrr::map2(pid, uid, ~{
+  fn <- purrr::when(chr,
+              . ~ purrr::map2_chr,
+              ~ purrr::map2)
+  fn(pid, uid, ~{
     href$path <- c("client",.x, "profile")
     out <- htmltools::tags$a(href = httr::build_url(href), .y, target = "_blank")
     if (chr)
