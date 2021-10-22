@@ -311,7 +311,7 @@ app_env <- R6::R6Class(
         .missing <- setdiff(dep_nms, .nms)
         if (UU::is_legit(.missing)) {
           rlang::warn(paste0(
-            "The following objects are missing from the app dependencies and will not be written to disk: ",
+            "The following objects are missing from the app dependencies environment and will not be written to disk:\n",
             paste0(.missing, collapse = ", ")))
 
         }
@@ -342,11 +342,11 @@ app_env <- R6::R6Class(
 
     dropbox_upload = function(folder = file.path("data","db","RminorElevated"), db_folder = "RminorElevated") {
       files <- list.files(folder, full.names = TRUE)
-      cli::cli_progress_bar(status = "Uploading: ", type = "iterator",
+      .pid <- cli::cli_progress_bar(status = "Uploading: ", type = "iterator",
                             total = length(files))
       purrr::walk(files, ~{
-        cli::cli_progress_update(status = basename(.x))
-        rdrop2::drop_upload(.x, file.path(db_folder, basename(.x)))
+        cli::cli_progress_update(id = .pid, status = basename(.x))
+        rdrop2::drop_upload(.x, file.path(db_folder))
       })
     },
 

@@ -30,7 +30,8 @@ Rm_env <- load_export()
 Rm_env <- client_counts()
 Rm_env <- cohorts()
 Rm_env <- data_quality()
-Rm_env$write_app_deps(Rm_env$app_objs$RminorElevated, Rm_env$app_deps$RminorElevated, file.path("data", "db", "RminorElevated"))
+Rm_env <- bed_unit_utilization()
+Rm_env$write_app_deps(Rm_env$app_objs$RminorElevated, file.path("data", "db", "RminorElevated"), Rm_env$app_deps$RminorElevated)
 # Uses RminorElevated as the default
 Rm_env$dropbox_upload()
 
