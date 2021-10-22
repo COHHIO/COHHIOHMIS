@@ -45,9 +45,9 @@ small_project <- Project %>%
          ProjectName,
          ProjectType,
          HMISParticipatingProject) %>%
-  dplyr::filter(ProjectType %in% c(project_types_w_beds) &
+  dplyr::filter(ProjectType %in% project_types_w_beds &
            HMIS::operating_between(Project, rm_dates$calc$two_yrs_prior_start, rm_dates$calc$two_yrs_prior_end, lgl = TRUE) &
-           is.na(Project$GrantType) &
+           is.na(GrantType) &
            HMISParticipatingProject == 1)
 
 small_inventory <- Inventory %>%
