@@ -44,8 +44,8 @@ load_export <- function(
   # Veteran Client_extras ----
   VeteranCE <- cl_api$`HUD Extras`$Client_extras()
 
-  Client <- Client_add_UniqueID(Client, VeteranCE)
-  UU::join_check(cl_api$Client(), Client)
+  Client <- Client_add_UniqueID(Client, cl_api$`HUD Extras`$Client_UniqueID_extras())
+
 
   # Disabilities ------------------------------------------------------------
 
