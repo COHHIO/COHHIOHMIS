@@ -62,7 +62,7 @@ app_deps <- list(
     "dq_unsheltered",
     "data_APs",
     "dq_overlaps",
-    "detail_eligibility",
+    "eligibility_detail",
     "dq_plot_eligibility",
     "dq_plot_errors",
     "dq_plot_hh_errors",
@@ -292,12 +292,14 @@ app_env <- R6::R6Class(
       parent.env(env) <- self$.__enclos_env__
     },
     #' @description Write app dependencies to disk
-    #' @param objs \code{(list)} of objects to write to disk
+    #' @param ... \code{(objects)} objects to write to disk. Files will named after the object name.
+    #' @param objs \code{(list)} of objects to write to disk, overrides `...`.
     #' @param path \code{(character)} of directory to write app dependencies to
     #' @param dep_nms \code{(character)} with names of app dependencies. *Optional*
     #' @param overwrite \code{(logical)} Whether to overwrite existing files. **Default:`TRUE`**
     #' @return \code{(character)} vector of the files written
-    write_app_deps = function (objs,
+    write_app_deps = function (...,
+                               objs,
                                path = file.path("data", "db", "RminorElevated"),
                                dep_nms = NULL,
                                overwrite = TRUE)
@@ -305,6 +307,9 @@ app_env <- R6::R6Class(
       # Dir check
       if (!dir.exists(path))
         UU::mkpath(path)
+
+      if (missing(objs))
+        objs <- rlang::dots_list(..., .named = TRUE)
 
       .nms <- names(objs)
       if (!is.null(dep_nms)) {
@@ -319,34 +324,52 @@ app_env <- R6::R6Class(
 
 
 
-      purrr::iwalk(objs, ~{
-        if (overwrite) {
+      out <- purrr::imap(objs, ~{
           fp <- file.path(path, paste0(.y, UU::object_ext(.x)))
+        if (overwrite || !file.exists(fp)) {
+          if (all(names(.x) %in% c("PersonalID", "UniqueID")) && is_clarity())
+            .x <- make_profile_link_df(.x)
           rlang::exec(UU::object_fn(.x), .x, fp)
           if (file.info(fp)$mtime > Sys.Date())
             cli::cli_alert_success(fp, " saved.")
         }
+        fp
       })
 
-      list.files(path, full.names = TRUE)
+
+      purrr::flatten_chr(out)
     },
     #' @field app_objs \code{(list)} with all app dependencies as objects
     app_objs = list(),
     #' @field app_deps \code{(list)} with all app dependencies as character vectors
     app_deps = c(),
 
-#' @description Upload all files in the data dependencies folder to Dropbox. Requires an authorized token to dropbox. See `dropbox_auth`.
-#' @param folder \code{(character)} path to folder
-#' @param db_folder \code{(character)} folder on dropbox to upload too. This will be created inside the `HMIS Apps` folder.
+#' @description Transfer all files in the data dependencies folder to the applications via dropbox or `file.copy`. If using dropbox, requires an authorized token to dropbox. See `dropbox_auth`.
+#' @param ... \code{(character)} character vectors of files to write to disk
+#' @param folder \code{(character)} path to folder with files to transfer transfer
+#' @param dest_folder \code{(character)} folder to transfer too. This will be created inside the `HMIS Apps` folder if using Dropbox.
 #' @return
 
-    dropbox_upload = function(folder = file.path("data","db","RminorElevated"), db_folder = "RminorElevated") {
-      files <- list.files(folder, full.names = TRUE)
-      .pid <- cli::cli_progress_bar(status = "Uploading: ", type = "iterator",
+    deps_to_apps = function(..., folder = file.path("data","db","RminorElevated"), dest_folder = "RminorElevated", dropbox = TRUE) {
+      if (!dropbox)
+        dest_folder = "../RminorElevated/data"
+      .files <- rlang::dots_list(...)
+      if (UU::is_legit(.files)) {
+        if (is.character(.files[[1]]) && length(.files[[1]]) > 1)
+          .files <- .files[[1]]
+        files <- purrr::map_chr(.files, hud_filename, path = folder)
+
+      } else
+        files <- list.files(folder, full.names = TRUE)
+      .pid <- cli::cli_progress_bar(status = "Transferring: ", type = "iterator",
                             total = length(files))
       purrr::walk(files, ~{
         cli::cli_progress_update(id = .pid, status = basename(.x))
-        rdrop2::drop_upload(.x, file.path(db_folder))
+        if (dropbox) {
+          rdrop2::drop_upload(.x, file.path(dest_folder))
+        } else {
+          file.copy(.x, file.path(dest_folder, basename(.x)), overwrite = TRUE)
+        }
       })
     },
 

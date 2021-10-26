@@ -224,7 +224,7 @@ Enrollment_add_ClientLocation = function(Enrollment, EnrollmentCoC) {
 #' @export
 
 Enrollment_add_AgeAtEntry_UniqueID <- function(Enrollment, Client) {
-  dplyr::left_join(Enrollment, dplyr::select(Client, UniqueID, PersonalID, DOB) |> dplyr::distinct(PersonalID, .keep_all = TRUE), by = c("PersonalID", "UniqueID")) |>
+  dplyr::left_join(Enrollment, dplyr::select(Client, UniqueID, PersonalID, DOB) |> dplyr::distinct(PersonalID, .keep_all = TRUE), by = c("PersonalID")) |>
     dplyr::mutate(AgeAtEntry = age_years(DOB, EntryDate)) |>
     dplyr::select(-DOB)
 }

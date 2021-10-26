@@ -1,4 +1,4 @@
-# Must set GGMAP_GOOGLE_API_KEY in .Renviron (should not be needed until 2022), see ?ggmap::register_google for details.
+# Must set GGMAP_GOOGLE_API_KEY in .Renviron (should not be neeqded until 2022), see ?ggmap::register_google for details.
 # Set this option to bypass errors in ggmap
 # options(ggmap = list(google = list(second_limit = 50L,
 #                                    day_limit = 2500)))
@@ -31,9 +31,10 @@ Rm_env <- client_counts()
 Rm_env <- cohorts()
 Rm_env <- data_quality()
 Rm_env <- bed_unit_utilization()
-Rm_env$write_app_deps(Rm_env$app_objs$RminorElevated, file.path("data", "db", "RminorElevated"), Rm_env$app_deps$RminorElevated)
+Rm_env$write_app_deps(objs = Rm_env$app_objs$RminorElevated, path = file.path("data", "db", "RminorElevated"), dep_nms = Rm_env$app_deps$RminorElevated)
 # Uses RminorElevated as the default
-Rm_env$dropbox_upload()
+Rm_env$dropbox_auth()
+Rm_env$deps_to_apps(dropbox = F)
 
 
 

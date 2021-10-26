@@ -113,7 +113,7 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
     # Add Households
     Enrollment_add_Household(Project) |>
     # Add Veteran Coordinated Entry
-    Enrollment_add_VeteranCE(VeteranCE) |>
+    Enrollment_add_VeteranCE(VeteranCE = VeteranCE) |>
     # Add Client Location from EnrollmentCoC
     Enrollment_add_ClientLocation(EnrollmentCoC) |>
     # Add Client AgeAtEntry

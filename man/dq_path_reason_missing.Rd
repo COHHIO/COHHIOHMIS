@@ -6,15 +6,12 @@
 \usage{
 dq_path_reason_missing(
   served_in_date_range,
-  Project,
   vars,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
-
-\item{Project}{\code{(data.frame)} of Project with additional features added in \code{load_export}}
 
 \item{vars}{\code{(named list)}
 \itemize{

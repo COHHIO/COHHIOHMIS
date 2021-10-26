@@ -6,7 +6,6 @@
 \usage{
 dq_path_SOAR_missing_at_exit(
   served_in_date_range,
-  Project,
   IncomeBenefits,
   vars,
   guidance,
@@ -15,8 +14,6 @@ dq_path_SOAR_missing_at_exit(
 }
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
-
-\item{Project}{\code{(data.frame)} of Project with additional features added in \code{load_export}}
 
 \item{IncomeBenefits}{\code{(data.frame)} From the HUD CSV Export}
 

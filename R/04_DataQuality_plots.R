@@ -279,11 +279,10 @@
       dplyr::group_by(ProjectName, ProjectID) %>%
       dplyr::summarise(Households = dplyr::n()) %>%
       dplyr::ungroup() %>%
-      dplyr::arrange(dplyr::desc(Households))
+      dplyr::arrange(dplyr::desc(Households)) |>
+      dplyr::mutate(hover = paste0(ProjectName, ":", ProjectID))
 
-    dq_data_eligibility_plot$hover <-
-      with(dq_data_eligibility_plot,
-           paste0(ProjectName, ":", ProjectID))
+
 
     dq_plot_eligibility <-
       ggplot2::ggplot(

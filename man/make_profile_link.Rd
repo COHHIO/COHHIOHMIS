@@ -4,7 +4,7 @@
 \alias{make_profile_link}
 \title{Make a Clarity Profile link using the UniqueID and PersonalID}
 \usage{
-make_profile_link(pid, uid, chr)
+make_profile_link(pid, uid, chr = TRUE)
 }
 \arguments{
 \item{pid}{\code{(character/data.frame)} Either the \code{PersonalID} column, or the \code{data.frame} with it.}

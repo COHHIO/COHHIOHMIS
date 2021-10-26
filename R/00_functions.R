@@ -26,7 +26,7 @@ stop_with_instructions <- function(..., error = FALSE) {
   cli::cli_alert_danger(cli::col_red(.msg))
   #TODO Who to reference for help? This will display if the app crashes
   cli::cli_alert_info(
-    "Please contact sholsen@alumni.emory.edu for help!"
+    "Please contact hmisapps@cohhio.org for help!"
   )
   if (error)
     stop(.msg, call. = FALSE)

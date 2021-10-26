@@ -37,7 +37,7 @@ dependencies$DataQuality <-
     "Users"
   )
 
-check_fns <- stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!dose)(?!\\_vaccine)(?!\\_referrals)(?!\\_services)(?!\\_spdats).)*$")
+check_fns <- stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!dose)(?!\\_vaccine)(?!\\_referrals)(?!\\_services)(?!\\_spdats)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
 
 data_quality <- function(check_fns = Rm_data::check_fns,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
@@ -57,18 +57,18 @@ data_quality <- function(check_fns = Rm_data::check_fns,
 
   vars <- list()
   vars$prep <- c(
-    "HouseholdID",
-    "PersonalID",
-    "UniqueID",
-    "ProjectID",
-    "ProjectName",
-    "ProjectType",
     "EntryAdjust",
     "EntryDate",
-    "MoveInDateAdjust",
     "ExitDate",
-    "UserCreating",
-    "ProjectRegion"
+    "HouseholdID",
+    "MoveInDateAdjust",
+    "PersonalID",
+    "ProjectID",
+    "ProjectName",
+    "ProjectRegion",
+    "ProjectType",
+    "UniqueID",
+    "UserCreating"
   )
 
   vars$we_want <- c(vars$prep,
@@ -147,7 +147,7 @@ dq_main |>
       dq_past_year = HMIS::served_between(x, rm_dates$hc$check_dq_back_to, lubridate::today()),
       # for project evaluation reporting
       dq_for_pe = HMIS::served_between(x, rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end),
-      dq_main = dplyr::select(x, -ProjectID, - EntryAdjust))
+      dq_main = x)
 
   }}()
 
@@ -155,10 +155,14 @@ dq_main |>
 cli::cli_progress_update(id = .pid,,
                          status = "Addtl Data")
 
-detail_eligibility <- dq_check_eligibility(detail = TRUE)
+eligibility_detail <- dq_check_eligibility()
+dq_overlaps <- dq_overlaps()
 
-if (is_clarity())
-  detail_eligibility <- make_profile_link_df(detail_eligibility)
+if (is_clarity()) {
+  eligibility_detail <- make_profile_link_df(eligibility_detail)
+  dq_overlaps <- make_profile_link_df(dq_overlaps)
+}
+
 # TODO See note in dq_overlaps
 # if (is_sp()) {
 #   unsh_overlaps <- dq_overlaps(unsh = TRUE)
@@ -349,5 +353,5 @@ data_APs <- dqu_aps()
 
 
 
-app_env$gather_deps(served_in_date_range, dq_providers, aps_no_referrals, data_APs, detail_eligibility)
+app_env$gather_deps(served_in_date_range, dq_providers, aps_no_referrals, data_APs, eligibility_detail, dq_overlaps)
 }

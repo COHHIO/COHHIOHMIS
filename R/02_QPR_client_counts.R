@@ -7,6 +7,8 @@ client_counts <- function(Project, Enrollment_extra_Exit_HH_CL_AaE, rm_dates, ap
   enrollment_small <- qpr_enrollment_small(Enrollment_extra_Exit_HH_CL_AaE)
 
   validation <- qpr_validation(project_small, enrollment_small)
+  if (is_clarity())
+    validation <- make_profile_link_df(validation)
   app_env$gather_deps("everything")
 }
 

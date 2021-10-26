@@ -7,7 +7,6 @@
 dq_path_no_status_at_exit(
   served_in_date_range,
   vars,
-  Project,
   guidance,
   app_env = get_app_env(e = rlang::caller_env())
 )
@@ -20,8 +19,6 @@ dq_path_no_status_at_exit(
 \item{\code{prep}}{ Column names for Prep}
 \item{\code{we_want}}{ Column names for output}
 }}
-
-\item{Project}{\code{(data.frame)} of Project with additional features added in \code{load_export}}
 
 \item{guidance}{\code{(list)} See \code{guidance}}
 

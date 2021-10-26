@@ -1516,13 +1516,12 @@ dq_missing_county_prior <- function(served_in_date_range, mahoning_projects, var
 #' @param detail \code{(logical)} Whether to return eligibility detail
 #'
 #' @export
-dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, rm_dates, app_env = get_app_env(e = rlang::caller_env()), detail = FALSE) {
+dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, rm_dates, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   check_eligibility <- served_in_date_range %>%
     dplyr::select(
       dplyr::all_of(vars$prep),
-      ProjectID,
       AgeAtEntry,
       RelationshipToHoH,
       LivingSituation,
@@ -1572,34 +1571,19 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
         )
     )
 
-  if (detail) {
-    out <- check_eligibility %>%
-      dplyr::select(
-        UniqueID,
-        PersonalID,
-        ProjectName,
-        ProjectType,
-        LivingSituation,
-        EntryDate,
-        ExitDate,
-        LengthOfStay,
-        LOSUnderThreshold,
-        PreviousStreetESSH
-      ) %>%
+
+    out <- check_eligibility |>
       dplyr::mutate(
-        ResidencePrior =
-          living_situation(LivingSituation),
+        ResidencePrior = hud.extract::hud_translations$`3.12.1 Living Situation Option List`(LivingSituation),
         LengthOfStay = hud.extract::hud_translations$`3.917.2 LengthOfStay`(LengthOfStay)
-      )
-  } else {
-    out <- check_eligibility %>%
+      ) |>
       dplyr::mutate(
         Issue = "Check Eligibility",
         Type = "Warning",
         Guidance = "Your Residence Prior data suggests that this project is either serving ineligible households, the household was entered into the wrong project, or the Residence Prior data at Entry is incorrect. Please check the terms of your grant or speak with your CoC Team Coordinator if you are unsure of eligibility criteria for your project type."
       ) %>%
-      dplyr::select(dplyr::all_of(vars$we_want))
-  }
+      dplyr::select(dplyr::all_of(vars$we_want), PreviousStreetESSH, LengthOfStay, ResidencePrior)
+
   return(out)
 }
 
@@ -2309,7 +2293,7 @@ dq_missing_income <- function(served_in_date_range, IncomeBenefits, vars, guidan
 #' @family DQ: Overlapping Enrollment/Move-In Dates
 #' @inherit dq_overlaps params return description
 #' @export
-dq_overlaps_same_day <- function(served_in_date_range, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
+overlaps_same_day <- function(served_in_date_range, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
@@ -2348,10 +2332,8 @@ dq_overlaps_same_day <- function(served_in_date_range, vars, guidance, unsh = FA
     dplyr::filter(ExitDate > PreviousEntryAdjust &
                     ExitDate < PreviousExitAdjust) %>%
     dplyr::ungroup()
-  .vars <- purrr::when(unsh,
-                       . ~ c(vars$we_want, "PreviousProject", "UserCreating"),
-                       ~ vars$we_want)
-  out <- dplyr::select(out, dplyr::all_of(.vars))
+
+  out <- dplyr::select(out, dplyr::all_of(c(vars$we_want, "PreviousProject")))
   return(out)
 }
 
@@ -2362,7 +2344,7 @@ dq_overlaps_same_day <- function(served_in_date_range, vars, guidance, unsh = FA
 #' @family DQ: Overlapping Enrollment/Move-In Dates
 #' @inherit dq_overlaps params return description
 #' @export
-dq_overlaps_rrh <- function(served_in_date_range, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
+overlaps_rrh <- function(served_in_date_range, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   out <- served_in_date_range %>%
@@ -2391,10 +2373,8 @@ dq_overlaps_rrh <- function(served_in_date_range, vars, guidance, unsh = FALSE, 
       Overlap = lubridate::int_overlaps(InProject, PreviousStay)
     ) %>%
     dplyr::filter(Overlap == TRUE)
-  .vars <- purrr::when(unsh,
-                       . ~ c(vars$we_want, "PreviousProject", "UserCreating"),
-                       ~ vars$we_want)
-  out <- dplyr::select(out, dplyr::all_of(.vars))
+
+  out <- dplyr::select(out, dplyr::all_of(c(vars$we_want, "PreviousProject")))
     return(out)
 }
 
@@ -2403,7 +2383,7 @@ dq_overlaps_rrh <- function(served_in_date_range, vars, guidance, unsh = FALSE, 
 #' @family DQ: Overlapping Enrollment/Move-In Dates
 #' @inherit dq_overlaps params return description
 #' @export
-dq_overlaps_psh <- function(served_in_date_range, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
+overlaps_psh <- function(served_in_date_range, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
@@ -2433,10 +2413,8 @@ dq_overlaps_psh <- function(served_in_date_range, vars, guidance, unsh = FALSE, 
       Overlap = lubridate::int_overlaps(InProject, PreviousStay)
     ) %>%
     dplyr::filter(Overlap == TRUE)
-  .vars <- purrr::when(unsh,
-                       . ~ c(vars$we_want, "PreviousProject", "UserCreating"),
-                       ~ vars$we_want)
-  out <- dplyr::select(out, dplyr::all_of(.vars))
+
+  out <- dplyr::select(out, dplyr::all_of(c(vars$we_want, "PreviousProject")))
   return(out)
 }
 
@@ -2489,30 +2467,23 @@ dq_overlaps <- function(served_in_date_range, Users, vars, guidance, app_env = g
     dplyr::mutate(
       PreviousStay = lubridate::interval(PreviousEntryAdjust, PreviousExitAdjust),
       Overlap = lubridate::int_overlaps(LiterallyInProject, PreviousStay)
-    ) %>%
-    dplyr::filter(Overlap == TRUE)
+    )  %>%
+    dplyr::filter(Overlap == TRUE) |>
+    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
 
-  .vars <- purrr::when(unsh,
-                       . ~ c(vars$we_want, c("PreviousProject", "UserCreating")),
-                       ~ vars$we_want)
-  dq_overlaps <- dplyr::select(dq_overlaps, dplyr::all_of(.vars))
 
+  psh <- overlaps_psh()
+  rrh <- overlaps_rrh()
+  same_day <- overlaps_same_day()
+
+  out <- dplyr::bind_rows(psh, rrh, same_day, dq_overlaps)
   if (unsh && must_sp()) {
     # TODO This needs an intermediate look to link the UserID in Users to the UserCreating alias in Clarity if Clarity users want to use it.
-    psh <- dq_overlaps_psh(unsh = TRUE)
-    rrh <- dq_overlaps_rrh(unsh = TRUE)
-    same_day <- dq_overlaps_same_day(unsh = TRUE)
-    dq_overlaps <- dplyr::bind_rows(psh, rrh, same_day, dq_overlaps)
-    dq_overlaps <- dq_overlaps %>%
-      dplyr::filter(ProjectName == "Unsheltered Clients - OUTREACH") %>%
-      dplyr::left_join(Users, by = "UserCreating") %>%
-      dplyr::select(PersonalID,
-                    DefaultProvider,
-                    EntryDate,
-                    ExitDate,
-                    PreviousProject)
+    out <- out  |>
+      dplyr::filter(ProjectName == "Unsheltered Clients - OUTREACH")
   }
-  return(dq_overlaps)
+
+  return(out)
 }
 # Missing Health Ins ------------------------------------------------------
 #' @title Find Missing Health Insurance at Entry
@@ -3259,16 +3230,17 @@ dqu_aps <- function(Project, Referrals, data_APs = TRUE, app_env = get_app_env(e
 #' data.frame(a = letters, b = seq_along(letters)) |> dplyr::rowwise() |>  dplyr::mutate(a = make_profile_link(a, b)) |> DT::datatable(escape = FALSE)
 
 make_profile_link <- function(pid, uid, chr = TRUE) {
-  href <- httr::parse_url(getOption("HMIS")$Clarity_URL)
-  fn <- purrr::when(chr,
-              . ~ purrr::map2_chr,
-              ~ purrr::map2)
-  fn(pid, uid, ~{
-    href$path <- c("client",.x, "profile")
-    out <- htmltools::tags$a(href = httr::build_url(href), .y, target = "_blank")
-    if (chr)
-      out <- as.character(out)
-  })
+  href <- getOption("HMIS")$Clarity_URL
+  if (chr) {
+    sprintf("<a href=\"%s/client/%s/profile\" target=\"_blank\">%s</a>",href, pid, uid)
+  } else {
+    href <- httr::parse_url(href)
+    out <- purrr::map(pid, uid, ~{
+      href$path <- c("client",.x, "profile")
+      htmltools::tags$a(href = httr::build_url(href), .y, target = "_blank")
+    })
+  }
+
 }
 
 
