@@ -12,15 +12,21 @@
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
 Active_List <- function(
-             clarity_api,
-             app_env,
-             e = rlang::caller_env()
-            ) {
-if (missing(clarity_api))
-  clarity_api <- get_clarity_api(e = e)
-if (missing(app_env))
-  app_env <- get_app_env(e = e)
-
+  co_clients_served,
+  co_currently_homeless,
+  covid19,
+  Disabilities,
+  Enrollment_extra_Exit_HH_CL_AaE,
+  HealthAndDV,
+  IncomeBenefits,
+  Project,
+  Scores,
+  clarity_api = get_clarity_api(e = rlang::caller_env()),
+  app_env = get_app_env(e = rlang::caller_env())
+) {
+force(clarity_api)
+if (is_app_env(app_env))
+  app_env$set_parent(missing_fmls())
 # clients currently entered into a homeless project in our system
 
 co_currently_homeless <- co_clients_served %>%
