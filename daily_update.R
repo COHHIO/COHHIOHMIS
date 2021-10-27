@@ -16,11 +16,12 @@
 devtools::load_all()
 # must set directories if using a directory structure differing from the default in clarity.looker:
 dirs <- clarity.looker::dirs
+guidance <- guidance
 # Use the HUD CSV from the UI until the Looker API is fixed
 dirs$export <- "data"
 cl_api$.__enclos_env__$self$dirs <- dirs
-run_bg(bg_scripts["update_extras"])
-# Try services
+run_bg(bg_scripts["extras_dq"])
+2# Try services
 # rstudioapi::jobRunScript(file.path("inst","src","Services_test.R"), importEnv = TRUE, workingDir = getwd())
 
 Rm_env$gather_deps(guidance)
@@ -34,7 +35,7 @@ Rm_env <- bed_unit_utilization()
 Rm_env$write_app_deps(objs = Rm_env$app_objs$RminorElevated, path = file.path("data", "db", "RminorElevated"), dep_nms = Rm_env$app_deps$RminorElevated)
 # Uses RminorElevated as the default
 Rm_env$dropbox_auth()
-Rm_env$deps_to_apps(dropbox = F)
+Rm_env$deps_to_apps()
 
 
 
