@@ -391,8 +391,7 @@ nights for the month of April (which has 30 days in it) is 30 x 5, which is 150.
 Example D: Using what we know from Example B of PSH Project A's total bed nights for the month of June, let's calculate what their bed utilization was for that month. They have 11 beds and June has 30 days so since 11 × 30 = 330 possible bed nights. Their bed utilization is bed nights (300) divided by possible bed nights (330), which is: 91%!"
 
 # removing all the Value objects we created as those are not used in the apps
-rm(list = ls(all.names = TRUE, pattern = "Month$"))
-rm(list = ls(all.names = TRUE, pattern = "co_"))
+
 
 
 # Find Outliers for HIC Purposes ------------------------------------------
@@ -409,7 +408,7 @@ rm(list = ls(all.names = TRUE, pattern = "co_"))
 # outliers <- rbind(outliers_hi, outliers_lo)
 
 # WARNING save.image does not save the environment properly, save must be used.
-app_env$gather_deps()
+app_env$gather_deps("everything")
 app_env
 
 }
