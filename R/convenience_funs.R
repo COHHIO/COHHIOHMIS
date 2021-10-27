@@ -1,5 +1,5 @@
-go_to <- function(x) {
-  f <- list.files("R", pattern = x, full.names = TRUE)
+go_to <- function(x, path = "R") {
+  f <- list.files(path, pattern = x, full.names = TRUE)
   if (UU::is_legit(f))
     rstudioapi::navigateToFile(f)
   else
