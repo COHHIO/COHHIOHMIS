@@ -1,0 +1,10 @@
+if (!exists("dirs"))
+  dirs <- clarity.looker::dirs
+cl_api$get_folder_looks(cl_api$folders$`HUD Extras`, .write = TRUE, path = dirs$extras)
+Rm_env$gather_deps(guidance)
+Rm_env$gather_deps(dirs)
+Rm_env <- dates()
+Rm_env <- load_export()
+Rm_env <- client_counts()
+Rm_env <- cohorts()
+Rm_env <- data_quality()

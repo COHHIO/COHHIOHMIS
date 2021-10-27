@@ -79,9 +79,6 @@ Other Clarity Checks:
 \code{\link{dq_missing_vaccine_current}()},
 \code{\link{dq_missing_vaccine_exited}()},
 \code{\link{dq_name}()},
-\code{\link{dq_overlaps_psh}()},
-\code{\link{dq_overlaps_rrh}()},
-\code{\link{dq_overlaps_same_day}()},
 \code{\link{dq_overlaps}()},
 \code{\link{dq_path_SOAR_missing_at_exit}()},
 \code{\link{dq_path_enrolled_missing}()},
@@ -106,7 +103,10 @@ Other Clarity Checks:
 \code{\link{dq_th_missing_project_stay}()},
 \code{\link{dq_th_stayers_bos}()},
 \code{\link{dq_veteran}()},
-\code{\link{dqu_project_small}()}
+\code{\link{dqu_project_small}()},
+\code{\link{overlaps_psh}()},
+\code{\link{overlaps_rrh}()},
+\code{\link{overlaps_same_day}()}
 
 Other DQ: EE Checks: 
 \code{\link{dq_conflicting_income}()},

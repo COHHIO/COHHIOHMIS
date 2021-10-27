@@ -19,7 +19,7 @@ dirs <- clarity.looker::dirs
 # Use the HUD CSV from the UI until the Looker API is fixed
 dirs$export <- "data"
 cl_api$.__enclos_env__$self$dirs <- dirs
-run_bg(bg_scripts["extras"])
+run_bg(bg_scripts["update_extras"])
 # Try services
 # rstudioapi::jobRunScript(file.path("inst","src","Services_test.R"), importEnv = TRUE, workingDir = getwd())
 

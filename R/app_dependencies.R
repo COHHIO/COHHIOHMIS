@@ -30,7 +30,7 @@ app_deps <- list(
     "qpr_spdats_county",
     "qpr_spdats_project",
     "qpr_spending",
-    "regions",
+    "Regions",
     "Scores",
     "Services",
     "spm_Metric_1b",
@@ -97,7 +97,7 @@ app_deps <- list(
     "qpr_spdats_project",
     "qpr_spdats_county",
     "Referrals",
-    "regions",
+    "Regions",
     "responsible_providers",
     "Scores",
     "summary_pe_final_scoring",
@@ -327,7 +327,7 @@ app_env <- R6::R6Class(
       out <- purrr::imap(objs, ~{
           fp <- file.path(path, paste0(.y, UU::object_ext(.x)))
         if (overwrite || !file.exists(fp)) {
-          if (all(names(.x) %in% c("PersonalID", "UniqueID")) && is_clarity())
+          if (UU::is_legit(names(.x)) && isTRUE(all(names(.x) %in% c("PersonalID", "UniqueID"))) && is_clarity())
             .x <- make_profile_link_df(.x)
           rlang::exec(UU::object_fn(.x), .x, fp)
           if (file.info(fp)$mtime > Sys.Date())
@@ -361,7 +361,7 @@ app_env <- R6::R6Class(
 
       } else
         files <- list.files(folder, full.names = TRUE)
-      .pid <- cli::cli_progress_bar(status = "Transferring: ", type = "iterator",
+      .pid <- cli::cli_progress_bar(status = "Transferring3: ", type = "iterator",
                             total = length(files))
       purrr::walk(files, ~{
         cli::cli_progress_update(id = .pid, status = basename(.x))

@@ -22,7 +22,7 @@ Save dependencies for future functions in an environment and put app dependencie
 \item \href{#method-gather_deps}{\code{app_env$gather_deps()}}
 \item \href{#method-set_parent}{\code{app_env$set_parent()}}
 \item \href{#method-write_app_deps}{\code{app_env$write_app_deps()}}
-\item \href{#method-dropbox_upload}{\code{app_env$dropbox_upload()}}
+\item \href{#method-deps_to_apps}{\code{app_env$deps_to_apps()}}
 \item \href{#method-dropbox_auth}{\code{app_env$dropbox_auth()}}
 \item \href{#method-new}{\code{app_env$new()}}
 \item \href{#method-clone}{\code{app_env$clone()}}
@@ -107,6 +107,7 @@ Set the given environment to inherit from the internal 'global' environment
 Write app dependencies to disk
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{app_env$write_app_deps(
+  ...,
   objs,
   path = file.path("data", "db", "RminorElevated"),
   dep_nms = NULL,
@@ -117,7 +118,9 @@ Write app dependencies to disk
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{objs}}{\code{(list)} of objects to write to disk}
+\item{\code{...}}{\code{(objects)} objects to write to disk. Files will named after the object name.}
+
+\item{\code{objs}}{\code{(list)} of objects to write to disk, overrides \code{...}.}
 
 \item{\code{path}}{\code{(character)} of directory to write app dependencies to}
 
@@ -132,23 +135,27 @@ Write app dependencies to disk
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-dropbox_upload"></a>}}
-\if{latex}{\out{\hypertarget{method-dropbox_upload}{}}}
-\subsection{Method \code{dropbox_upload()}}{
-Upload all files in the data dependencies folder to Dropbox. Requires an authorized token to dropbox. See \code{dropbox_auth}.
+\if{html}{\out{<a id="method-deps_to_apps"></a>}}
+\if{latex}{\out{\hypertarget{method-deps_to_apps}{}}}
+\subsection{Method \code{deps_to_apps()}}{
+Transfer all files in the data dependencies folder to the applications via dropbox or \code{file.copy}. If using dropbox, requires an authorized token to dropbox. See \code{dropbox_auth}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$dropbox_upload(
+\if{html}{\out{<div class="r">}}\preformatted{app_env$deps_to_apps(
+  ...,
   folder = file.path("data", "db", "RminorElevated"),
-  db_folder = "RminorElevated"
+  dest_folder = "RminorElevated",
+  dropbox = TRUE
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{folder}}{\code{(character)} path to folder}
+\item{\code{...}}{\code{(character)} character vectors of files to write to disk}
 
-\item{\code{db_folder}}{\code{(character)} folder on dropbox to upload too. This will be created inside the \verb{HMIS Apps} folder.}
+\item{\code{folder}}{\code{(character)} path to folder with files to transfer transfer}
+
+\item{\code{dest_folder}}{\code{(character)} folder to transfer too. This will be created inside the \verb{HMIS Apps} folder if using Dropbox.}
 }
 \if{html}{\out{</div>}}
 }
