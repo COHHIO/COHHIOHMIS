@@ -254,7 +254,7 @@ EnrollmentCoC_RemoveCoCCodes <- function(EnrollmentCoC, codes_to_remove = c("Def
 #' @return \code{(data.frame)} provider_extras with Regions column
 #' @export
 
-pe_add_regions <- function(provider_extras, dirs) {
+pe_add_regions <- function(provider_extras, Regions = clarity.looker::hud_load("Regions", dirs$public), dirs) {
   # geocodes is created by `hud.extract` using the hud_geocodes.R functions
   geocodes <- clarity.looker::hud_load("geocodes", dirs$public)
   # This should map a county to every geocode
@@ -290,8 +290,6 @@ pe_add_regions <- function(provider_extras, dirs) {
     out <- out |>
       dplyr::left_join(geocodes, by = c(Geocode = "GeographicCode"))
   }
-
-  Regions <- clarity.looker::hud_load("Regions", dirs$public)
 
   out <- out |>
     dplyr::left_join(Regions |> dplyr::select(- RegionName), by = "County") |>
