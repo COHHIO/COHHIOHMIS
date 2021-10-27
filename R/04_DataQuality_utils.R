@@ -8,14 +8,22 @@
 #' }
 #' @return \code{(logical)}
 is_clarity <- function() {
-  getOption("HMIS")$Clarity
+  x <- getOption("HMIS")
+  if (UU::is_legit(x))
+    x$Clarity
+  else
+    FALSE
 }
 
 #' @title Is this instance using ServicePoint
 #' @inherit is_clarity description return
 
 is_sp <- function() {
-  getOption("HMIS")$ServicePoint
+  x <- getOption("HMIS")
+  if (UU::is_legit(x))
+    x$ServicePoint
+  else
+    FALSE
 }
 
 #' @title This instance must be using ServicePoint, otherwise throw an error.
