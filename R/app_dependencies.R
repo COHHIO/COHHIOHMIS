@@ -103,9 +103,8 @@ app_deps <- list(
     "summary_pe_final_scoring",
     "unsheltered_by_month",
     "Users",
-    "utilizers_clients",
+    "utilization_clients",
     "utilization",
-    "utilization_bed",
     "vaccine_needs_second_dose",
     "vaccine_status",
     # QPR_client_counts
@@ -327,7 +326,7 @@ app_env <- R6::R6Class(
       out <- purrr::imap(objs, ~{
           fp <- file.path(path, paste0(.y, UU::object_ext(.x)))
         if (overwrite || !file.exists(fp)) {
-          if (UU::is_legit(names(.x)) && isTRUE(all(names(.x) %in% c("PersonalID", "UniqueID"))) && is_clarity())
+          if (UU::is_legit(names(.x)) && isTRUE(all(c("PersonalID", "UniqueID") %in% names(.x))) && is_clarity())
             .x <- make_profile_link_df(.x)
           rlang::exec(UU::object_fn(.x), .x, fp)
           if (file.info(fp)$mtime > Sys.Date())
