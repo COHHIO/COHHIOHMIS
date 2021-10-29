@@ -2086,7 +2086,7 @@ dq_ph_without_spdats <- function(served_in_date_range, Funder, rm_dates, vars, a
                     ExpectedPHDate < lubridate::today()) %>%
     dplyr::anti_join(ees_with_spdats, by = "EnrollmentID") %>%
     dplyr::filter(
-      ProjectType %in% c(1, 4, 8) &
+      ProjectType %in% c(1, 4, 8, 14) &
         VeteranStatus != 1 &
         RelationshipToHoH == 1 &
         EntryDate < lubridate::today() - lubridate::days(8) &
