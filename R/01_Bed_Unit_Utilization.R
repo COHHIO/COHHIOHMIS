@@ -75,23 +75,28 @@ Beds <- dplyr::inner_join(small_project, small_inventory, by = "ProjectID")
 # Creating Utilizers table ------------------------------------------------
 
 small_enrollment <- Enrollment_extra_Exit_HH_CL_AaE %>%
-  dplyr::select(PersonalID,
-         EnrollmentID,
-         ProjectID,
-         EntryDate,
-         EntryAdjust,
-         MoveInDateAdjust,
-         ExitDate,
-         ExitAdjust,
-         HouseholdID,
-         RelationshipToHoH,
-         MoveInDate) |>
-  HMIS::served_between(rm_dates$calc$two_yrs_prior_start, rm_dates$calc$two_yrs_prior_end)
+  dplyr::select(
+    UniqueID,
+    PersonalID,
+    EnrollmentID,
+    ProjectID,
+    EntryDate,
+    EntryAdjust,
+    MoveInDateAdjust,
+    ExitDate,
+    ExitAdjust,
+    HouseholdID,
+    RelationshipToHoH,
+    MoveInDate
+  ) |>
+  HMIS::served_between(rm_dates$calc$two_yrs_prior_start,
+                       rm_dates$calc$two_yrs_prior_end)
 
 Utilizers <- dplyr::semi_join(small_enrollment, Beds, by = "ProjectID")
 
 Utilizers <- dplyr::left_join(Utilizers, small_project, by = "ProjectID") %>%
   dplyr::select(
+    UniqueID,
     PersonalID,
     EnrollmentID,
     ProjectID,
@@ -111,7 +116,7 @@ Utilizers <- dplyr::left_join(Utilizers, small_project, by = "ProjectID") %>%
 
 # filtering out any PSH or RRH records without a proper Move-In Date plus the
 # fake training providers
-utilizers_clients <- Utilizers %>%
+utilization_clients <- Utilizers %>%
   dplyr::mutate(StayWindow = lubridate::interval(EntryAdjust, ExitAdjust)) %>%
   dplyr::filter(
     lubridate::int_overlaps(StayWindow, rm_dates$calc$two_yrs_prior_range) &
@@ -127,22 +132,24 @@ utilizers_clients <- Utilizers %>%
 
 # filtering Beds object to exclude any providers that served 0 hhs in date range
 
-Beds <- dplyr::right_join(Beds, utilizers_clients %>%
+Beds <- dplyr::right_join(Beds, utilization_clients %>%
                dplyr::select(ProjectID) %>%
                unique(), by = "ProjectID")
 
 
 
 
-utilizers_clients <- bu_add_month_counts(utilizers_clients) |>
+utilization_clients <- bu_add_month_counts(utilization_clients) |>
   dplyr::select(
     ProjectName,
+    UniqueID,
     ProjectID,
     ProjectType,
     PersonalID,
     EnrollmentID,
     EntryDate,
     MoveInDateAdjust,
+    EntryAdjust,
     ExitDate,
     tidyselect::matches("\\w{3}\\d{4}")
   )
@@ -154,7 +161,7 @@ utilizers_clients <- bu_add_month_counts(utilizers_clients) |>
 
 
 # making granularity by provider instead of by enrollment id
-BedNights <- utilizers_clients  |>
+BedNights <- utilization_clients  |>
   bu_sum_months("_BN")
 
 # Bed Capacity ------------------------------------------------------------
