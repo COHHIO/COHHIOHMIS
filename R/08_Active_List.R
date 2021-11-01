@@ -11,7 +11,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
-Active_List <- function(
+active_list <- function(
   co_clients_served,
   co_currently_homeless,
   covid19,
@@ -151,10 +151,22 @@ co_currently_homeless <- co_currently_homeless %>%
          ChronicStatus = dplyr::if_else(max(SinglyChronic) == 1, "Chronic", "Not Chronic")
   ) %>%
   dplyr::ungroup() %>%
-  dplyr::select("PersonalID", "ProjectName", "ProjectType", "HouseholdID", "EnrollmentID",
-         "RelationshipToHoH", "VeteranStatus", "EntryDate", "AgeAtEntry",
-         "DisablingCondition", "HouseholdSize", "IncomeInHH", "DisabilityInHH",
-         "ChronicStatus")
+  dplyr::select(
+    "PersonalID",
+    "ProjectName",
+    "ProjectType",
+    "HouseholdID",
+    "EnrollmentID",
+    "RelationshipToHoH",
+    "VeteranStatus",
+    "EntryDate",
+    "AgeAtEntry",
+    "DisablingCondition",
+    "HouseholdSize",
+    "IncomeInHH",
+    "DisabilityInHH",
+    "ChronicStatus"
+  )
 
 # Account for Multiple EEs -------------------------------------------------
 
