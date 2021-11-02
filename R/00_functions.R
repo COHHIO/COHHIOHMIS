@@ -13,6 +13,59 @@
 # <https://www.gnu.org/licenses/>.
 
 
+#' @title Make a Clarity Profile link using the UniqueID and PersonalID
+#' @description If used in a \link[DT]{datatable}, set `escape = FALSE`
+#' @param pid \code{(character/data.frame)} Either the `PersonalID` column, or the \code{data.frame} with it.
+#' @param uid \code{(character)} The `UniqueID` column, unnecessary to specific if \code{data.frame} supplied to PersonalID
+#' @param chr \code{(logical)} Whether to output a character or a `shiny.tag` if `FALSE`. **Default** TRUE
+#'
+#' @return \code{(character/data.frame/shiny.tag)} If `PersonalID` is a character vector (IE nested in a mutate), and `chr = TRUE` a character vector, if `chr = FALSE` a `shiny.tag`. If `PersonalID` is a `data.frame` a `data.frame` with the `UniqueID` column replaced with the link to the profile and the `UniqueID` as the text
+#' @export
+#'
+#' @examples
+#' data.frame(a = letters, b = seq_along(letters)) |> dplyr::rowwise() |>  dplyr::mutate(a = make_profile_link(a, b)) |> DT::datatable(escape = FALSE)
+
+make_profile_link <- function(pid, uid, chr = TRUE) {
+  href <- getOption("HMIS")$Clarity_URL
+  if (chr) {
+    sprintf("<a href=\"%s/client/%s/profile\" target=\"_blank\">%s</a>",href, pid, uid)
+  } else {
+    href <- httr::parse_url(href)
+    out <- purrr::map(pid, uid, ~{
+      href$path <- c("client",.x, "profile")
+      htmltools::tags$a(href = httr::build_url(href), .y, target = "_blank")
+    })
+  }
+
+}
+
+ids_from_profile_link <- function(UniqueID, ID = "PersonalID") {
+  col_nm <- UU::match_letters(ID, p = "PersonalID", u = "UniqueID")
+
+}
+
+id_from_profile_link_df <- function(x) {
+  out <- x
+  if (!"PersonalID" %in% names(x))
+    out$PersonalID <- stringr::str_extract(x$UniqueID, "(?<=client\\/)\\d+")
+
+  out$UniqueID <- stringr::str_extract(x$UniqueID, "(?<=\\>)[:alnum:]+(?=\\<)")
+  out
+}
+#' @title Make UniqueID into a Clarity client profile link
+#' @param x \code{(data.frame)} must have `PersonalID` & `UniqueID` columns.
+#'
+#' @return \code{(data.frame)} With `UniqueID` as a profile link and PersonalID removed.
+#' @export
+#'
+#' @examples
+#' data.frame(a = letters, b = seq_along(letters)) |> make_profile_link() |>
+#' DT::datatable(escape = FALSE)
+make_profile_link_df <- function(x) {
+  x |>
+    dplyr::mutate(UniqueID = make_profile_link(PersonalID, UniqueID)) |>
+    dplyr::select( - PersonalID)
+}
 
 # stop_with_instructions ----
 # Wed Mar 24 16:38:01 2021
@@ -325,7 +378,7 @@ case_when_text <- function(.x, .y, out = c("Text", "Value")[1]) {
 }
 
 #' @title Service Point / Clarity Field representation translations (numeric/character)
-#' @inherit hud.extract::hud_translate param return
+#' @inherit hud.extract::hud_translate params return
 #' @export
 sp2cl_translations <-
   purrr::imap(sp2cl_tables, ~{
