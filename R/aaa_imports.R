@@ -16,6 +16,10 @@ NULL
 #' @name data_quality_tables
 #' @param served_in_date_range \code{(data.frame)} See `served_in_date_range`
 #' @param IncomeBenefits \code{(data.frame)} From the HUD CSV Export
+#' @param Project \code{(data.frame)} From the HUD CSV Export
+#' @param Enrollment \code{(data.frame)} From the HUD CSV Export
+#' @param Exit \code{(data.frame)} From the HUD CSV Export
+#' @param Client \code{(data.frame)} From the HUD CSV Export
 #' @param mahoning_projects \code{(named numeric)} Vector of ProjectIDs associated with projects operating in Mahoning. Created in `load_export`.
 #' @param guidance \code{(list)} See `guidance`
 #' @param vars \code{(named list)}
