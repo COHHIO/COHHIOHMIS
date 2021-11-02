@@ -234,7 +234,7 @@ app_env <- R6::R6Class(
             pattern = paste0("(?:^", .args, "$)", collapse = "|")
           )
 
-        .work_deps <- rlang::env_get_list(env, .all_objs)
+        .work_deps <- rlang::env_get_list(env, stringr::str_subset(.all_objs, "(?:app_env)|(?:clarity_api)", negate = TRUE))
       } else if (length(.work_deps) == 1 && is.character(.work_deps[[1]]) && any(.work_deps[[1]] %in% ls(env))) {
         # case when character vector of objects to gather is provided
         .work_deps <- rlang::env_get_list(env, .work_deps[[1]])
