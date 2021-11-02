@@ -58,10 +58,9 @@ Client_redact <- function(Client) {
 #' @param Client_extras \code{(data.frame)} A custom look linking PersonalID & UniqueID
 #' @param app_env
 #'
-#' @return
+#' @return \code{(data.frame)} with UniqueID column
 #' @export
-#'
-#' @examples
+
 Client_add_UniqueID <- function(Client, Client_UniqueIDs, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
@@ -70,10 +69,10 @@ Client_add_UniqueID <- function(Client, Client_UniqueIDs, app_env = get_app_env(
   out
 }
 
-#' Add Exit data to Enrollments
+#' @title Add Exit data to Enrollments
 #'
-#' @param Enrollment
-#' @param Exit
+#' @param Enrollment \code{(data.frame)} HUD CSV Export Item
+#' @param Exit \code{(data.frame)} HUD CSV Export Item
 #'
 #' @return \code{(data.frame)} Enrollments with `ExitDate`, `Destination`, `OtherDestination` and derived column `ExitAdjust`
 #' @export
@@ -96,8 +95,7 @@ Enrollment_add_Exit <- function(Enrollment, Exit) {
 #' Add Household Information to Enrollment from Project
 #'
 #' @param Enrollment with Exit data. See `Enrollment_add_Exit`
-#' @param Project
-#' @param hc From `dates`
+#' @inheritParams data_quality_tables
 #' @inheritParams R6classes
 #' @return \code{(data.frame)} of Enrollment with Household Columns `MoveInDateAdjust` appended
 #' @export

@@ -26,8 +26,8 @@ chrt_hoh_count <- function(served) {
 #' @param vars \code{(character)} vector of column names to retrain
 #' @param app_env
 #'
-#' @return
-#' @export \code{(data.frame)} Output with filter and select applied.
+#' @return \code{(data.frame)} Output with filter and select applied.
+#' @export
 
 chrt_filter_select <- function(x,
                                ...,

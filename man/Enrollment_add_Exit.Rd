@@ -7,7 +7,9 @@
 Enrollment_add_Exit(Enrollment, Exit)
 }
 \arguments{
-\item{Exit}{}
+\item{Enrollment}{\code{(data.frame)} HUD CSV Export Item}
+
+\item{Exit}{\code{(data.frame)} HUD CSV Export Item}
 }
 \value{
 \code{(data.frame)} Enrollments with \code{ExitDate}, \code{Destination}, \code{OtherDestination} and derived column \code{ExitAdjust}

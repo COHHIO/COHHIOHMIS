@@ -18,7 +18,7 @@ Client_add_UniqueID(
 \item{Client_extras}{\code{(data.frame)} A custom look linking PersonalID & UniqueID}
 }
 \value{
-
+\code{(data.frame)} with UniqueID column
 }
 \description{
 Add the UniqueID to the Client export

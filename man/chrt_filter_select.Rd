@@ -36,7 +36,7 @@ chrt_filter_select(
 \item{app_env}{}
 }
 \value{
-
+\code{(data.frame)} Output with filter and select applied.
 }
 \description{
 All _*\emph{between} filters use \code{rm_dates$calc$data_goes_back_to} as the beginning of the period and \code{rm_dates$meta_HUDCSV$Export_End} as the end. See \code{dates} for details on these values.

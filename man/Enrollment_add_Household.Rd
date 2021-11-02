@@ -14,9 +14,11 @@ Enrollment_add_Household(
 \arguments{
 \item{Enrollment}{with Exit data. See \code{Enrollment_add_Exit}}
 
-\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
+\item{Project}{\code{(data.frame)} From the HUD CSV Export}
 
-\item{hc}{From \code{dates}}
+\item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
+
+\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \value{
 \code{(data.frame)} of Enrollment with Household Columns \code{MoveInDateAdjust} appended
