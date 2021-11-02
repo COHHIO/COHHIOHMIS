@@ -39,6 +39,7 @@ co_currently_homeless <- co_clients_served %>%
               ))) %>%
   dplyr::select(
     PersonalID,
+    UniqueID,
     ProjectName,
     ProjectType,
     HouseholdID,
@@ -57,28 +58,29 @@ co_currently_homeless <- co_clients_served %>%
 
 income_data <- co_currently_homeless %>%
   dplyr::left_join(
-    IncomeBenefits %>%
-      dplyr::select(
-        PersonalID,
-        EnrollmentID,
-        IncomeFromAnySource,
-        DateCreated,
-        DataCollectionStage
-      ),
+    dplyr::select(
+      IncomeBenefits,
+      PersonalID,
+      EnrollmentID,
+      IncomeFromAnySource,
+      DateCreated,
+      DataCollectionStage
+    ),
     by = c("PersonalID", "EnrollmentID")
   ) %>%
-  dplyr::mutate(DateCreated = lubridate::ymd_hms(DateCreated),
-         IncomeFromAnySource = dplyr::if_else(is.na(IncomeFromAnySource),
-                                       dplyr::if_else(AgeAtEntry >= 18 |
-                                                 is.na(AgeAtEntry), 99, 0),
-                                       IncomeFromAnySource)) %>%
+  dplyr::mutate(IncomeFromAnySource = dplyr::if_else(
+    is.na(IncomeFromAnySource),
+    dplyr::if_else(AgeAtEntry >= 18L |
+                     is.na(AgeAtEntry), 99L, 0L),
+    IncomeFromAnySource
+  )) %>%
   dplyr::group_by(PersonalID, EnrollmentID) %>%
   dplyr::arrange(dplyr::desc(DateCreated)) %>%
   dplyr::slice(1L) %>%
   dplyr::ungroup() %>%
   dplyr::select(PersonalID,
-         EnrollmentID,
-         IncomeFromAnySource)
+                EnrollmentID,
+                IncomeFromAnySource)
 
 # Check Whether Each Client Has Any Indication of Disability ------------
 
@@ -89,70 +91,113 @@ income_data <- co_currently_homeless %>%
 # flags that enrollment as belonging to a disabled client. Otherwise,
 # the enrollment is marked not disabled.
 
+
 extended_disability <- co_currently_homeless %>%
-  dplyr::left_join(Disabilities, by = c("EnrollmentID"))  %>%
+  dplyr::left_join(
+    dplyr::select(
+      Disabilities,
+      EnrollmentID,
+      DisabilityResponse,
+      IndefiniteAndImpairs),
+    by = c("EnrollmentID"))  %>%
   dplyr::group_by(EnrollmentID) %>%
-  dplyr::mutate(D_Disability = dplyr::if_else(DisabilityResponse == 1 &
-                                  IndefiniteAndImpairs != 0, 1, 0),
-         D_Disability = max(D_Disability)) %>%
+  dplyr::mutate(
+    D_Disability = dplyr::if_else(DisabilityResponse == 1 &
+                                    IndefiniteAndImpairs != 0, 1, 0),
+    D_Disability = max(D_Disability)
+  ) %>%
   dplyr::select(EnrollmentID, D_Disability) %>%
-  dplyr::left_join(IncomeBenefits, by = c("EnrollmentID")) %>%
-  dplyr::mutate(I_Disability = dplyr::if_else(SSDI == 1 |
-                                  VADisabilityService == 1 |
-                                  VADisabilityNonService == 1 |
-                                  PrivateDisability == 1,
-                                1, 0),
-         I_Disability = max(I_Disability)) %>%
+  dplyr::left_join(
+    dplyr::select(
+      IncomeBenefits,
+      EnrollmentID,
+      SSDI,
+      VADisabilityService,
+      VADisabilityNonService,
+      PrivateDisability),
+    by = c("EnrollmentID")) %>%
+  dplyr::mutate(
+    I_Disability = dplyr::if_else(
+      SSDI == 1 |
+        VADisabilityService == 1 |
+        VADisabilityNonService == 1 |
+        PrivateDisability == 1,
+      1,
+      0
+    ),
+    I_Disability = max(I_Disability)
+  ) %>%
   dplyr::select(EnrollmentID, D_Disability, I_Disability) %>%
   dplyr::ungroup() %>%
   dplyr::distinct() %>%
-  dplyr::left_join(Enrollment, by = c("EnrollmentID")) %>%
-  dplyr::mutate(any_disability = dplyr::case_when(D_Disability == 1 |
-                                    I_Disability == 1 |
-                                    DisablingCondition == 1 ~ 1,
-                                    TRUE ~ 0)) %>%
+  dplyr::left_join(
+    dplyr::select(Enrollment,
+                  EnrollmentID,
+                  DisablingCondition),
+                   by = c("EnrollmentID")) %>%
+  dplyr::mutate(
+    any_disability = dplyr::case_when(
+      D_Disability == 1 |
+        I_Disability == 1 |
+        DisablingCondition == 1 ~ 1,
+      TRUE ~ 0
+    )
+  ) %>%
   dplyr::select(EnrollmentID, any_disability)
 
 # adding household aggregations into the full client list
 co_currently_homeless <- co_currently_homeless %>%
-  dplyr::left_join(
-    income_data,
-    by = c("PersonalID", "EnrollmentID")) %>%
+  dplyr::left_join(income_data,
+                   by = c("PersonalID", "EnrollmentID")) %>%
   dplyr::left_join(extended_disability, by = "EnrollmentID") %>%
   dplyr::left_join(
-    Enrollment %>%
-      dplyr::select(EnrollmentID, PersonalID, HouseholdID, LivingSituation,
-             DateToStreetESSH, TimesHomelessPastThreeYears, ExitAdjust,
-             MonthsHomelessPastThreeYears, DisablingCondition),
+    dplyr::select(
+      Enrollment_extra_Exit_HH_CL_AaE,
+      EnrollmentID,
+      PersonalID,
+      HouseholdID,
+      LivingSituation,
+      DateToStreetESSH,
+      TimesHomelessPastThreeYears,
+      ExitAdjust,
+      MonthsHomelessPastThreeYears,
+      DisablingCondition
+    ),
     by = c("PersonalID",
            "EnrollmentID",
            "HouseholdID")
   ) %>%
   dplyr::mutate(SinglyChronic =
-           dplyr::if_else(((lubridate::ymd(DateToStreetESSH) + lubridate::days(365) <= lubridate::ymd(EntryDate) &
-                       !is.na(DateToStreetESSH)) |
-                      (
-                        MonthsHomelessPastThreeYears %in% c(112, 113) &
-                          TimesHomelessPastThreeYears == 4 &
-                          !is.na(MonthsHomelessPastThreeYears) &
-                          !is.na(TimesHomelessPastThreeYears)
-                      )
-           ) &
-             DisablingCondition == 1 &
-             !is.na(DisablingCondition), 1, 0)) %>%
+                  dplyr::if_else(((
+                    DateToStreetESSH + lubridate::years(1) <= EntryDate &
+                      !is.na(DateToStreetESSH)
+                  ) |
+                    (
+                      MonthsHomelessPastThreeYears %in% c(112, 113) &
+                        TimesHomelessPastThreeYears == 4 &
+                        !is.na(MonthsHomelessPastThreeYears) &
+                        !is.na(TimesHomelessPastThreeYears)
+                    )
+                  ) &
+                    DisablingCondition == 1 &
+                    !is.na(DisablingCondition), 1, 0)) %>%
   dplyr::group_by(PersonalID) %>%
   dplyr::mutate(SinglyChronic = max(SinglyChronic)) %>%
   dplyr::ungroup() %>%
   dplyr::group_by(HouseholdID) %>%
-  dplyr::mutate(HouseholdSize = length(PersonalID),
-         IncomeInHH = max(dplyr::if_else(IncomeFromAnySource == 1, 100, IncomeFromAnySource)),
-         IncomeInHH = dplyr::if_else(IncomeInHH == 100, 1, IncomeInHH),
-         DisabilityInHH = max(dplyr::if_else(any_disability == 1, 1, 0)),
-         ChronicStatus = dplyr::if_else(max(SinglyChronic) == 1, "Chronic", "Not Chronic")
+  dplyr::mutate(
+    HouseholdSize = length(unique(PersonalID)),
+    IncomeInHH = max(
+      dplyr::if_else(IncomeFromAnySource == 1, 100L, IncomeFromAnySource)
+    ),
+    IncomeInHH = dplyr::if_else(IncomeInHH == 100, 1L, IncomeInHH),
+    DisabilityInHH = max(dplyr::if_else(any_disability == 1, 1, 0)),
+    ChronicStatus = dplyr::if_else(max(SinglyChronic) == 1, "Chronic", "Not Chronic")
   ) %>%
   dplyr::ungroup() %>%
   dplyr::select(
     "PersonalID",
+    "UniqueID",
     "ProjectName",
     "ProjectType",
     "HouseholdID",
@@ -211,9 +256,9 @@ ALL_HHIDs <- active_list %>% dplyr::select(HouseholdID) %>% unique()
 # marking who is a hoh (accounts for singles not marked as hohs in the data)
 active_list <- active_list %>%
   dplyr::mutate(
-    RelationshipToHoH = dplyr::if_else(is.na(RelationshipToHoH), 99, RelationshipToHoH),
+    RelationshipToHoH = dplyr::if_else(is.na(RelationshipToHoH), 99L, RelationshipToHoH),
     hoh = dplyr::if_else(stringr::str_detect(HouseholdID, stringr::fixed("s_")) |
-                    RelationshipToHoH == 1, 1, 0))
+                    RelationshipToHoH == 1, 1L, 0L))
 
 # what household ids exist if we only count those with a hoh?
 HHIDs_in_current_logic <- active_list %>%
@@ -256,7 +301,7 @@ Adjusted_HoHs <- HHIDs_with_bad_dq %>%
 hohs <- active_list %>%
   dplyr::left_join(Adjusted_HoHs,
             by = c("HouseholdID", "PersonalID", "EnrollmentID")) %>%
-  dplyr::mutate(RelationshipToHoH = dplyr::if_else(correctedhoh == 1, 1, RelationshipToHoH)) %>%
+  dplyr::mutate(RelationshipToHoH = dplyr::if_else(correctedhoh == 1, 1L, RelationshipToHoH)) %>%
   dplyr::select(PersonalID, HouseholdID, correctedhoh)
 
 
@@ -268,7 +313,7 @@ active_list <- active_list %>%
   dplyr::ungroup()
 
 # COVID-19 ----------------------------------------------------------------
-
+browser()
 get_res_prior <- Enrollment %>%
   dplyr::select(PersonalID, EntryDate, ExitDate, LivingSituation) %>%
   dplyr::group_by(PersonalID) %>%
@@ -277,14 +322,14 @@ get_res_prior <- Enrollment %>%
 
 covid_clients <- covid19 %>%
   dplyr::mutate(
-    C19AssessmentDate = lubridate::ymd(C19AssessmentDate),
-    C19ContactWithConfirmedDate = lubridate::ymd(C19ContactWithConfirmedDate),
-    C19ContactWithIllDate = lubridate::ymd(C19ContactWithIllDate),
-    C19TestDate = lubridate::ymd(C19TestDate),
-    C19InvestigationDate = lubridate::ymd(C19InvestigationDate)
+    C19AssessmentDate = C19AssessmentDate,
+    C19ContactWithConfirmedDate = C19ContactWithConfirmedDate,
+    C19ContactWithIllDate = C19ContactWithIllDate,
+    C19TestDate = C19TestDate,
+    C19InvestigationDate = C19InvestigationDate
   ) %>%
-  dplyr::filter(lubridate::ymd(C19AssessmentDate) >= lubridate::ymd("20200401") &
-           lubridate::ymd(C19AssessmentDate) <= lubridate::today()) %>%
+  dplyr::filter(C19AssessmentDate >= lubridate::ymd("20200401") &
+           C19AssessmentDate <= lubridate::today()) %>%
   dplyr::left_join(get_res_prior, by = "PersonalID") %>%
   dplyr::mutate(LivingSituationDescr = living_situation(LivingSituation)) %>%
   dplyr::as_tibble() %>%
@@ -293,18 +338,18 @@ covid_clients <- covid19 %>%
       (
         Tested == 1 &
           TestResults == "Positive" &
-          lubridate::ymd(C19TestDate) > lubridate::today() - lubridate::days(14) &
+          C19TestDate > lubridate::today() - lubridate::days(14) &
           !is.na(C19TestDate)
       ) |
         # if tested positive in the past 14 days ^^
         (
           C19UnderInvestigation == 1 &
-            lubridate::ymd(C19InvestigationDate) > lubridate::today() - lubridate::days(14)
+            C19InvestigationDate > lubridate::today() - lubridate::days(14)
         ) |
         (
           C19ContactWithConfirmed == 1 &
             (
-              lubridate::ymd(C19ContactWithConfirmedDate) >
+              C19ContactWithConfirmedDate >
                 lubridate::today() - lubridate::days(14) |
                 is.na(C19ContactWithConfirmedDate)
               # contact with definite COVID-19 in the past 14 days ^^
@@ -313,7 +358,7 @@ covid_clients <- covid19 %>%
         (
           C19ContactWithIll == 1 &
             (
-              lubridate::ymd(C19ContactWithIllDate) >
+              C19ContactWithIllDate >
                 lubridate::today() - lubridate::days(14) |
                 is.na(C19ContactWithIllDate)
             )
@@ -415,7 +460,7 @@ additional_data <- active_list %>%
     PHTrack = dplyr::if_else(
       !is.na(PHTrack) &
         !is.na(ExpectedPHDate) &
-        lubridate::ymd(ExpectedPHDate) >= lubridate::today(), PHTrack, NULL)
+        ExpectedPHDate >= lubridate::today(), PHTrack, NULL)
   ) %>%
   dplyr::ungroup() %>%
   dplyr::select(-AgeAtEntry)
@@ -465,7 +510,7 @@ active_list <- county %>%
 scores_staging <- Scores %>%
   dplyr::filter(ScoreDate > lubridate::today() - lubridate::years(1)) %>%
   dplyr::group_by(PersonalID) %>%
-  dplyr::arrange(dplyr::desc(lubridate::ymd(ScoreDate))) %>%
+  dplyr::arrange(dplyr::desc(ScoreDate)) %>%
   dplyr::slice(1L) %>%
   dplyr::ungroup() %>%
   dplyr::select(-ScoreDate)
@@ -486,20 +531,20 @@ agedIntoChronicity <- active_list %>%
                    "EnrollmentID",
                    "HouseholdID")) %>%
   dplyr::mutate(
-    DaysHomelessInProject = difftime(lubridate::ymd(ExitAdjust),
-                                     lubridate::ymd(EntryDate),
+    DaysHomelessInProject = difftime(ExitAdjust,
+                                     EntryDate,
                                      units = "days"),
-    DaysHomelessBeforeEntry = difftime(lubridate::ymd(EntryDate),
+    DaysHomelessBeforeEntry = difftime(EntryDate,
                                        dplyr::if_else(
-                                         is.na(lubridate::ymd(DateToStreetESSH)),
-                                         lubridate::ymd(EntryDate),
-                                         lubridate::ymd(DateToStreetESSH)
+                                         is.na(DateToStreetESSH),
+                                         EntryDate,
+                                         DateToStreetESSH
                                        ),
                                        units = "days"),
     ChronicStatus = dplyr::if_else(
       ProjectType %in% c(1, 8) &
         ChronicStatus == "Not Chronic" &
-        lubridate::ymd(DateToStreetESSH) + lubridate::days(365) > lubridate::ymd(EntryDate) &
+        DateToStreetESSH + lubridate::days(365) > EntryDate &
         !is.na(DateToStreetESSH) &
         DaysHomelessBeforeEntry + DaysHomelessInProject >= 365,
       "Aged In",
@@ -515,7 +560,7 @@ nearly_chronic <- agedIntoChronicity %>%
     ChronicStatus = dplyr::if_else(
       ChronicStatus == "Not Chronic" &
         ((
-          lubridate::ymd(DateToStreetESSH) + lubridate::days(365) <= lubridate::ymd(EntryDate) &
+          DateToStreetESSH + lubridate::days(365) <= EntryDate &
             !is.na(DateToStreetESSH)
         ) |
           (
@@ -590,7 +635,7 @@ who_has_referrals <- active_list %>%
                        ReferralOutcome == "Accepted" &
                        ReferToPTC %in% c(3, 9, 13)) %>%
               dplyr::group_by(PersonalID) %>%
-              dplyr::arrange(dplyr::desc(lubridate::ymd(ReferralDate))) %>%
+              dplyr::arrange(dplyr::desc(ReferralDate)) %>%
               dplyr::slice(1L) %>%
               dplyr::ungroup(),
             by = c("PersonalID")) %>%
