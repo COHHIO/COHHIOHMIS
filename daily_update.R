@@ -33,12 +33,12 @@ Rm_env <- covid19()
 Rm_env <- covid19_plots()
 Rm_env <- cohorts()
 Rm_env <- bed_unit_utilization()
-Rm_env <- active_list()
 Rm_env <- data_quality()
+Rm_env <- active_list()
 Rm_env$write_app_deps(objs = Rm_env$app_objs$RminorElevated, path = file.path("data", "db", "RminorElevated"), dep_nms = Rm_env$app_deps$RminorElevated)
 # Uses RminorElevated as the default
 Rm_env$dropbox_auth()
-Rm_env$deps_to_apps()
+Rm_env$deps_to_apps(dropbox = FALSE)
 
 
 

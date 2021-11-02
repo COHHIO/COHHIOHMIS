@@ -347,11 +347,12 @@ app_env <- R6::R6Class(
 #' @param ... \code{(character)} character vectors of files to write to disk
 #' @param folder \code{(character)} path to folder with files to transfer transfer
 #' @param dest_folder \code{(character)} folder to transfer too. This will be created inside the `HMIS Apps` folder if using Dropbox.
+#' @param dropbox \code{(logical)} **Default** Upload dependencies to Dropbox, `FALSE` to pass to the `data` folder in the sibling directory: `dest_folder`.
 #' @return
 
     deps_to_apps = function(..., folder = file.path("data","db","RminorElevated"), dest_folder = "RminorElevated", dropbox = TRUE) {
       if (!dropbox)
-        dest_folder = "../RminorElevated/data"
+        dest_folder = file.path("..",dest_folder,"data")
       .files <- rlang::dots_list(...)
       if (UU::is_legit(.files)) {
         if (is.character(.files[[1]]) && length(.files[[1]]) > 1)

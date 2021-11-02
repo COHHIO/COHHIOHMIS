@@ -156,6 +156,8 @@ Transfer all files in the data dependencies folder to the applications via dropb
 \item{\code{folder}}{\code{(character)} path to folder with files to transfer transfer}
 
 \item{\code{dest_folder}}{\code{(character)} folder to transfer too. This will be created inside the \verb{HMIS Apps} folder if using Dropbox.}
+
+\item{\code{dropbox}}{\code{(logical)} \strong{Default} Upload dependencies to Dropbox, \code{FALSE} to pass to the \code{data} folder in the sibling directory: \code{dest_folder}.}
 }
 \if{html}{\out{</div>}}
 }
