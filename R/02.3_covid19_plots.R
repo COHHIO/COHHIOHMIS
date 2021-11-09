@@ -4,7 +4,7 @@ covid19_plots <- function(priority, covid19status, app_env = get_app_env(e = rla
 
   # COVID Priority Plots -------------------------------------------------------
 
-  covid19_priority_plot <- c19_plot(priority, Priority)
+  covid19_priority_plot <- c19_plot(c19priority, C19Priority)
 
   # COVID19 Status Plots ----
   # Tue Nov 02 16:10:02 2021

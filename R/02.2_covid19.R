@@ -32,7 +32,7 @@ covid19 <- function(
     dplyr::arrange(dplyr::desc(EntryDate)) %>%
     dplyr::slice(1L)
 
-  priority <- covid19 %>%
+  c19priority <- covid19 %>%
     dplyr::left_join(get_res_prior, by = "PersonalID") %>%
     dplyr::filter(C19AssessmentDate >= lubridate::mdy("04012020") &
                     C19AssessmentDate <= lubridate::today()) |>
@@ -95,14 +95,14 @@ Priority = dplyr::case_when(
         # everyone else lands here ^
         # in the report, there will be a third level: "Not Assessed Recently"
       ),
-      Priority = factor(Priority, levels = c("No Known Risks or Exposure", "Has Health Risk(s)", "Needs Isolation/Quarantine"
-      )),
+      C19Priority = factor(Priority, levels = c("No Known Risks or Exposure", "Has Health Risk(s)", "Needs Isolation/Quarantine"
+      ), ordered = TRUE),
       YM = tsibble::yearmonth(C19AssessmentDate)
     )
 rm(get_res_prior)
 
 
-  covid19_status <- priority %>%
+  covid19_status <- c19priority %>%
     dplyr::mutate(
       COVID19Status = factor(dplyr::case_when(
         C19D_TestPos ~ "Positive",
