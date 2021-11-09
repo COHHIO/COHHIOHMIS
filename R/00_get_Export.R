@@ -220,7 +220,7 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   # Referrals ---------------------------------------------------------------
 
 
-  Referrals <- cl_api$`HUD Extras`$CE_Referrals_extras()
+  Referrals <- cl_api$`HUD Extras`$CE_Referrals_extras(col_types = list(ReferralConnectedProjectType = "c", DeniedByType = "c"))
   # TODO ReferralOutcome must be replaced by a Clarity element (or derived from multiple) for dq_internal_old_outstanding_referrals
 
 
