@@ -292,7 +292,7 @@ Adjusted_HoHs <- HHIDs_with_bad_dq %>%
   dplyr::group_by(HouseholdID) %>%
   dplyr::arrange(dplyr::desc(AgeAtEntry)) %>% # picking oldest hh member
   dplyr::slice(1L) %>%
-  dplyr::mutate(correctedhoh = 1) %>%
+  dplyr::mutate(correctedhoh = 1L) %>%
   dplyr::select(HouseholdID, PersonalID, EnrollmentID, correctedhoh) %>%
   dplyr::ungroup()
 
@@ -301,136 +301,44 @@ Adjusted_HoHs <- HHIDs_with_bad_dq %>%
 hohs <- active_list %>%
   dplyr::left_join(Adjusted_HoHs,
             by = c("HouseholdID", "PersonalID", "EnrollmentID")) %>%
-  dplyr::mutate(RelationshipToHoH = dplyr::if_else(correctedhoh == 1, 1L, RelationshipToHoH)) %>%
+  dplyr::mutate(RelationshipToHoH = dplyr::if_else(correctedhoh == 1L, 1L, RelationshipToHoH)) %>%
   dplyr::select(PersonalID, HouseholdID, correctedhoh)
 
 
 active_list <- active_list %>%
   dplyr::left_join(hohs, by = c("HouseholdID", "PersonalID")) %>%
   dplyr::group_by(HouseholdID) %>%
-  dplyr::mutate(correctedhoh = dplyr::if_else(is.na(correctedhoh), 0, 1),
+  dplyr::mutate(correctedhoh = dplyr::if_else(is.na(correctedhoh), 0L, 1L),
          HH_DQ_Issue = max(correctedhoh)) %>%
   dplyr::ungroup()
 
 # COVID-19 ----------------------------------------------------------------
-browser()
-get_res_prior <- Enrollment %>%
-  dplyr::select(PersonalID, EntryDate, ExitDate, LivingSituation) %>%
-  dplyr::group_by(PersonalID) %>%
-  dplyr::arrange(dplyr::desc(EntryDate)) %>%
-  dplyr::slice(1L)
 
-covid_clients <- covid19 %>%
-  dplyr::mutate(
-    C19AssessmentDate = C19AssessmentDate,
-    C19ContactWithConfirmedDate = C19ContactWithConfirmedDate,
-    C19ContactWithIllDate = C19ContactWithIllDate,
-    C19TestDate = C19TestDate,
-    C19InvestigationDate = C19InvestigationDate
-  ) %>%
-  dplyr::filter(C19AssessmentDate >= lubridate::ymd("20200401") &
-           C19AssessmentDate <= lubridate::today()) %>%
-  dplyr::left_join(get_res_prior, by = "PersonalID") %>%
-  dplyr::mutate(LivingSituationDescr = living_situation(LivingSituation)) %>%
-  dplyr::as_tibble() %>%
-  dplyr::mutate(
-    COVID19Priority = dplyr::case_when(
-      (
-        Tested == 1 &
-          TestResults == "Positive" &
-          C19TestDate > lubridate::today() - lubridate::days(14) &
-          !is.na(C19TestDate)
-      ) |
-        # if tested positive in the past 14 days ^^
-        (
-          C19UnderInvestigation == 1 &
-            C19InvestigationDate > lubridate::today() - lubridate::days(14)
-        ) |
-        (
-          C19ContactWithConfirmed == 1 &
-            (
-              C19ContactWithConfirmedDate >
-                lubridate::today() - lubridate::days(14) |
-                is.na(C19ContactWithConfirmedDate)
-              # contact with definite COVID-19 in the past 14 days ^^
-            )
-        ) |
-        (
-          C19ContactWithIll == 1 &
-            (
-              C19ContactWithIllDate >
-                lubridate::today() - lubridate::days(14) |
-                is.na(C19ContactWithIllDate)
-            )
-          # contact date with maybe COVID-19 was within the past 14 days ^^
-        ) |
-        (
-          LivingSituation %in% c(7, 25) &
-            EntryDate > lubridate::today() - lubridate::days(14) &
-            EntryDate <= lubridate::today()
-        ) |
-        # if the client came from jail or nursing home ^^
-        (
-          Symptom1BreathingDifficult +
-            Symptom1Cough +
-            Symptom2Chills +
-            Symptom2SoreThroat +
-            Symptom2Fever +
-            Symptom2Headache +
-            Symptom2LostTasteSmell +
-            Symptom2MusclePain +
-            Symptom2Congestion +
-            Symptom2Nausea +
-            Symptom2Diarrhea +
-            Symptom2Weak) > 0 ~ 1, # "Needs Isolation/Quarantine"
-      # if the client has any symptoms at all ^^
-      (
-        HRHistoryOfRespiratoryIllness +
-          HRChronicIllness +
-          HROver65 +
-          HRKidneyDisease +
-          HRImmunocompromised +
-          HRSmoke > 0
-      )  ~ 2, # "Has Health Risk(s)",
-      # if the client has any risks at all ^^
-      TRUE ~ 4 # "No Known Risks or Exposure"
-      # everyone else lands here ^
-      # in the report, there will be another level: "Not Assessed Recently"
-    )
-  ) %>%
-  dplyr::select(PersonalID, COVID19Priority)
+
 
 covid_hhs <- active_list %>%
-  dplyr::left_join(covid_clients, by = "PersonalID") %>%
+  dplyr::left_join(dplyr::select(c19priority, PersonalID, C19Priority), by = "PersonalID") %>%
   dplyr::mutate(
-    COVID19Priority = dplyr::if_else(
-      is.na(COVID19Priority),
-      3, # "Not Assessed Recently"
-      COVID19Priority
+    C19Priority = dplyr::if_else(
+      is.na(C19Priority),
+      "Not Assessed Recently", # "Not Assessed Recently"
+      as.character(C19Priority)
+    ),
+    C19Priority = factor(
+      C19Priority,
+      levels = c(
+        "No Known Risks or Exposure",
+        "Not Assessed Recently",
+        "Has Health Risk(s)",
+        "Needs Isolation/Quarantine"
+      ),
+      ordered = TRUE
     )
   ) %>%
   dplyr::group_by(HouseholdID) %>%
-  dplyr::mutate(COVID19Priority_hh = max(COVID19Priority)) %>%
+  dplyr::mutate(C19Priority = max(C19Priority)) %>%
   dplyr::ungroup() %>%
-  dplyr::select(PersonalID, HouseholdID, COVID19Priority_hh) %>%
-  dplyr::mutate(
-    COVID19Priority = dplyr::case_when(
-      COVID19Priority_hh == 1 ~ "Needs Isolation/Quarantine",
-      COVID19Priority_hh == 2 ~ "Has Health Risk(s)",
-      COVID19Priority_hh == 3 ~ "Not Assessed Recently",
-      COVID19Priority_hh == 4 ~ "No Known Risks or Exposure"
-    ),
-    COVID19Priority = factor(
-      COVID19Priority,
-      levels = c(
-        "Needs Isolation/Quarantine",
-        "Has Health Risk(s)",
-        "Not Assessed Recently",
-        "No Known Risks or Exposure"
-      )
-    )
-  ) %>%
-  dplyr::select(-COVID19Priority_hh)
+  dplyr::select(PersonalID, HouseholdID, C19Priority)
 
 # adding COVID19Priority to active list
 active_list <- active_list %>%
@@ -441,10 +349,10 @@ active_list <- active_list %>%
 # getting whatever data's needed from the Enrollment data frame, creating
 # columns that tell us something about each household and some that are about
 # each client
-additional_data <- active_list %>%
+active_list <- active_list %>%
   dplyr::left_join(
-    Enrollment %>%
       dplyr::select(
+        Enrollment_extra_Exit_HH_CL_AaE,
         PersonalID,
         HouseholdID,
         CountyServed,
@@ -456,30 +364,28 @@ additional_data <- active_list %>%
   dplyr::group_by(HouseholdID) %>%
   dplyr::mutate(
     CountyServed = dplyr::if_else(is.na(CountyServed), "MISSING County", CountyServed),
-    TAY = dplyr::if_else(max(AgeAtEntry) < 25 & max(AgeAtEntry) >= 16, 1, 0),
+    TAY = max(AgeAtEntry) < 25 & max(AgeAtEntry) >= 16,
     PHTrack = dplyr::if_else(
       !is.na(PHTrack) &
         !is.na(ExpectedPHDate) &
-        ExpectedPHDate >= lubridate::today(), PHTrack, NULL)
+        ExpectedPHDate >= lubridate::today(), PHTrack, NA_character_)
   ) %>%
   dplyr::ungroup() %>%
   dplyr::select(-AgeAtEntry)
 
-# saving these new columns back to the active list
-active_list <- additional_data
 
 
 
 # County Guessing ---------------------------------------------------------
 
 # replacing non-Unsheltered-Provider missings with County of the provider
-county <- active_list %>%
+active_list <- active_list %>%
   dplyr::left_join(Project %>%
               dplyr::select(ProjectName, ProjectCounty), by = "ProjectName") %>%
   dplyr::mutate(
-    CountyGuessed = dplyr::if_else(CountyServed == "MISSING County", 1, 0),
+    CountyGuessed = CountyServed == "MISSING County",
     CountyServed = dplyr::if_else(
-      CountyServed == "MISSING County" &
+      CountyGuessed &
         ProjectName != "Unsheltered Clients - OUTREACH",
       ProjectCounty,
       CountyServed
@@ -487,49 +393,45 @@ county <- active_list %>%
     ProjectCounty = NULL
   )
 
-# replacing missings for the Unsheltered Provider with the County of the
-# Default Provider of the person who entered the Enrollment (grrr!)
-active_list <- county %>%
-  dplyr::left_join(Enrollment %>%
-              dplyr::select(EnrollmentID, UserCreating), by = "EnrollmentID") %>%
-  dplyr::mutate(
-    UserID = as.numeric(gsub(pattern = '[^0-9\\.]', '', UserCreating, perl = TRUE))
-    ) %>%
-  dplyr::left_join(Users %>%
-              dplyr::select(UserID, UserCounty), by = "UserID") %>%
-  dplyr::mutate(CountyServed = dplyr::if_else(CountyServed == "MISSING County" &
-                                  ProjectName == "Unsheltered Clients - OUTREACH",
-                                UserCounty,
-                                CountyServed)) %>%
-  dplyr::select(-dplyr::starts_with("User"))
 
 # Add in Score ------------------------------------------------------------
 
 # taking the most recent score on the client, but this score cannot be over a
 # year old.
-scores_staging <- Scores %>%
-  dplyr::filter(ScoreDate > lubridate::today() - lubridate::years(1)) %>%
-  dplyr::group_by(PersonalID) %>%
-  dplyr::arrange(dplyr::desc(ScoreDate)) %>%
-  dplyr::slice(1L) %>%
-  dplyr::ungroup() %>%
-  dplyr::select(-ScoreDate)
 
-active_list <- active_list %>%
-  dplyr::left_join(scores_staging, by = "PersonalID")
+  active_list <- active_list %>%
+  dplyr::left_join(
+    Scores %>%
+      dplyr::filter(ScoreDate > lubridate::today() - lubridate::years(1)) %>%
+      dplyr::group_by(PersonalID) %>%
+      dplyr::arrange(dplyr::desc(ScoreDate)) %>%
+      dplyr::slice(1L) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-ScoreDate, -UniqueID),
+    by = "PersonalID"
+  )
 
 # Add Additional Chronic Statuses ---------------------------------------------
 
 # adds current days in ES or SH projects to days homeless prior to entry and if
 # it adds up to 365 or more, it marks the client as AgedIn
 agedIntoChronicity <- active_list %>%
-  dplyr::left_join(Enrollment %>%
-              dplyr::select(EnrollmentID, PersonalID, HouseholdID, LivingSituation,
-                     DateToStreetESSH, TimesHomelessPastThreeYears, ExitAdjust,
-                     MonthsHomelessPastThreeYears),
-            by = c("PersonalID",
-                   "EnrollmentID",
-                   "HouseholdID")) %>%
+  dplyr::left_join(
+    Enrollment_extra_Exit_HH_CL_AaE %>%
+      dplyr::select(
+        EnrollmentID,
+        PersonalID,
+        HouseholdID,
+        LivingSituation,
+        DateToStreetESSH,
+        TimesHomelessPastThreeYears,
+        ExitAdjust,
+        MonthsHomelessPastThreeYears
+      ),
+    by = c("PersonalID",
+           "EnrollmentID",
+           "HouseholdID")
+  ) %>%
   dplyr::mutate(
     DaysHomelessInProject = difftime(ExitAdjust,
                                      EntryDate,
@@ -580,31 +482,29 @@ nearly_chronic <- agedIntoChronicity %>%
 active_list <- active_list %>%
   dplyr::select(-ChronicStatus) %>%
   dplyr::left_join(
-    nearly_chronic %>%
-      dplyr::select("PersonalID",
-             "HouseholdID",
-             "EnrollmentID",
-             "ChronicStatus"),
+    dplyr::select(
+      nearly_chronic,
+      "PersonalID",
+      "HouseholdID",
+      "EnrollmentID",
+      "ChronicStatus"
+    ),
     by = c("PersonalID", "HouseholdID", "EnrollmentID")
   ) %>%
-  dplyr::mutate(
-    ChronicStatus = factor(
-      ChronicStatus,
-      levels = c(
-        "Chronic",
-        "Aged In",
-        "Nearly Chronic",
-        "Not Chronic"
-      )
-    )
-  )
+  dplyr::mutate(ChronicStatus = factor(
+    ChronicStatus,
+    levels = c("Chronic",
+               "Aged In",
+               "Nearly Chronic",
+               "Not Chronic")
+  ))
 
 # THIS IS WHERE WE'RE SUMMARISING BY HOUSEHOLD (after all the group_bys)
 
 active_list <- active_list %>%
   dplyr::mutate(
-    HoH_Adjust = dplyr::case_when(HH_DQ_Issue == 1 ~ correctedhoh,
-                           HH_DQ_Issue == 0 ~ hoh)
+    HoH_Adjust = dplyr::case_when(HH_DQ_Issue == 1L ~ correctedhoh,
+                           HH_DQ_Issue == 0L ~ hoh)
   ) %>%
   dplyr::filter(HoH_Adjust == 1) %>%
   dplyr::select(-correctedhoh, -RelationshipToHoH, -hoh, -HoH_Adjust)
@@ -623,27 +523,31 @@ active_list <- active_list %>%
 # referrals to a homeless project wouldn't mean anything on an Active List,
 # right?
 
-small_referrals <- Referrals %>%
-  dplyr::left_join(Project %>%
-              dplyr::select(ProjectName, "ReferToPTC" = ProjectType),
-            by = c("ReferredToProjectID" = "ProjectID"))
+browser()
 
 # isolates hhs with an Accepted Referral into a PSH or RRH project
-who_has_referrals <- active_list %>%
-  dplyr::left_join(small_referrals %>%
-              dplyr::filter(ReferralDate >= lubridate::today() - lubridate::days(14) &
-                       ReferralOutcome == "Accepted" &
-                       ReferToPTC %in% c(3, 9, 13)) %>%
+# TODO why is the ReferToProjectID entirely NA? Logic seems to be broken
+who_has_referrals <-
+  dplyr::left_join(active_list,
+                   Referrals |>
+                     dplyr::select(-UniqueID) |>
+                     dplyr::mutate(ReferralConnectedProjectType = stringr::str_remove(ReferralConnectedProjectType, "\\s\\(disability required\\)$"),
+                                   ReferralConnectedProjectType = dplyr::if_else(ReferralConnectedProjectType == "Homeless Prevention", "Homelessness Prevention", ReferralConnectedProjectType),
+                                   ReferralConnectedProjectType = hud.extract::hud_translations$`2.02.6 ProjectType`(ReferralConnectedProjectType)) |>
+              dplyr::filter(ReferredDate >= lubridate::today() - lubridate::days(14) &
+                       stringr::str_detect(ReferralResult, "accepted$") &
+                       ReferralConnectedProjectType %in% c(3, 9, 13)) %>%
               dplyr::group_by(PersonalID) %>%
-              dplyr::arrange(dplyr::desc(ReferralDate)) %>%
+              dplyr::arrange(dplyr::desc(ReferredDate)) %>%
               dplyr::slice(1L) %>%
               dplyr::ungroup(),
             by = c("PersonalID")) %>%
   dplyr::select(PersonalID,
          HouseholdID,
          EnrollmentID,
-         "ReferredToProvider" = "Referred-ToProvider",
-         ReferralDate)
+         ReferringProjectID,
+         ReferToProjectID,
+         ReferredDate)
 
 active_list <- active_list %>%
   dplyr::left_join(
@@ -742,7 +646,7 @@ active_list <- active_list %>%
           "No current Entry into RRH or PSH but",
           ReferredToProvider,
           "accepted this household's referral on",
-          ReferralDate
+          ReferredDate
         ),
       PTCStatus == "Currently Has No Entry into RRH or PSH" &
         is.na(ReferredToProvider) &
