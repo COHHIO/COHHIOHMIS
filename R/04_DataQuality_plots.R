@@ -44,11 +44,11 @@
                ProjectID != 1695) %>%
       select(all_of(vars_prep),
              ProviderCreating,
-             ReferralDate,
+             ReferredDate,
              ReferralOutcome,
              EnrollmentID) %>%
       filter(is.na(ReferralOutcome) &
-               ReferralDate < today() - days(14)) %>%
+               ReferredDate < today() - days(14)) %>%
       mutate(
         ProjectName = ProviderCreating,
         Issue = "Old Outstanding Referral",

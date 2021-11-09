@@ -156,11 +156,11 @@ if (is_sp()) {
                       ProjectID != 1695) %>%
       dplyr::select(dplyr::all_of(vars$prep),
                     ReferringProjectID,
-                    ReferralDate,
+                    ReferredDate,
                     ReferralOutcome,
                     EnrollmentID) %>%
       dplyr::filter(is.na(ReferralOutcome) &
-                      ReferralDate < lubridate::today() - lubridate::days(14)) %>%
+                      ReferredDate < lubridate::today() - lubridate::days(14)) %>%
       dplyr::mutate(
         ProjectName = ReferringProjectID,
         Issue = "Old Outstanding Referral",
