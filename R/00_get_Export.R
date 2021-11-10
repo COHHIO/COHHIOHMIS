@@ -220,7 +220,11 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   # Referrals ---------------------------------------------------------------
 
 
-  Referrals <- cl_api$`HUD Extras`$CE_Referrals_extras(col_types = list(ReferralConnectedProjectType = "c", DeniedByType = "c"))
+  Referrals <- cl_api$`HUD Extras`$CE_Referrals_extras(col_types = list(ReferralConnectedProjectType = "c", DeniedByType = "c")) |>
+    dplyr::rename_with(.cols = - dplyr::matches("(?:^PersonalID)|^(?:^UniqueID)"), rlang::as_function(~paste0("R_",.x))) |>
+    dplyr::mutate(R_ReferralConnectedProjectType = stringr::str_remove(R_ReferralConnectedProjectType, "\\s\\(disability required\\)$"),
+                  R_ReferralConnectedProjectType = dplyr::if_else(R_ReferralConnectedProjectType == "Homeless Prevention", "Homelessness Prevention", R_ReferralConnectedProjectType),
+                  R_ReferralConnectedProjectType = hud.extract::hud_translations$`2.02.6 ProjectType`(R_ReferralConnectedProjectType))
   # TODO ReferralOutcome must be replaced by a Clarity element (or derived from multiple) for dq_internal_old_outstanding_referrals
 
 
