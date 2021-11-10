@@ -3194,15 +3194,15 @@ dqu_aps <- function(Project, Referrals, data_APs = TRUE, app_env = get_app_env(e
     )
 
   aps_no_referrals <- Referrals %>%
-    dplyr::right_join(co_APs, by = c("ReferringProjectID" = "ProjectID")) %>%
+    dplyr::right_join(co_APs, by = c("R_ReferringProjectID" = "ProjectID")) %>%
     dplyr::filter(is.na(PersonalID)) %>%
-    dplyr::select(ReferringProjectID) %>%
+    dplyr::select(R_ReferringProjectID) %>%
     unique()
 
   aps_with_referrals <- Referrals %>%
-    dplyr::right_join(co_APs, by = c("ReferringProjectID" = "ProjectID")) %>%
+    dplyr::right_join(co_APs, by = c("R_ReferringProjectID" = "ProjectID")) %>%
     dplyr::filter(!is.na(PersonalID)) %>%
-    dplyr::select(ReferringProjectID) %>%
+    dplyr::select(R_ReferringProjectID) %>%
     unique()
 
   if (data_APs) {
