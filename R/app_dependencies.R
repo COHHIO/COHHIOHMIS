@@ -52,7 +52,6 @@ app_deps <- list(
   # to Rme
 
   RminorElevated = c(
-    "active_list",
     "aps_no_referrals",
     "Beds",
     "rm_dates",
@@ -88,6 +87,7 @@ app_deps <- list(
     # "pe_own_housing",
     "pe_validation_summary",
     "pe_scored_at_ph_entry",
+    "prioritization",
     "project_type",
     "qpr_income",
     "qpr_benefits",
