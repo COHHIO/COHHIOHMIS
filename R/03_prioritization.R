@@ -13,14 +13,17 @@
 # <https://www.gnu.org/licenses/>.
 prioritization <- function(
   co_clients_served,
-  co_currently_homeless,
   covid19,
+  c19priority,
   Disabilities,
   Enrollment_extra_Exit_HH_CL_AaE,
   HealthAndDV,
   IncomeBenefits,
   Project,
+  Referrals,
   Scores,
+  lh_project_types,
+  ph_project_types,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
   app_env = get_app_env(e = rlang::caller_env())
 ) {
