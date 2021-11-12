@@ -340,23 +340,24 @@ covid_hhs <- prioritization |>
       ordered = TRUE
     )
   ) |>
-  dplyr::group_by(HouseholdID) |>
-  dplyr::mutate(C19Priority = max(C19Priority)) |>
-  dplyr::ungroup() |>
+  dplyr::group_by(PersonalID, HouseholdID) |>
+  dplyr::summarise(C19Priority = max(C19Priority), .groups = "drop") |>
   dplyr::select(PersonalID, HouseholdID, C19Priority)
 
+
 # adding COVID19Priority to active list
-prioritization <- prioritization |>
-  dplyr::left_join(covid_hhs, by = c("PersonalID", "HouseholdID"))
+prioritization <- dplyr::left_join(prioritization, covid_hhs, by = c("PersonalID", "HouseholdID"))
+
 
 # Adding in TAY, County, PHTrack ----------------------
 
 # getting whatever data's needed from the Enrollment data frame, creating
 # columns that tell us something about each household and some that are about
 # each client
+
 prioritization <- prioritization |>
   dplyr::left_join(
-      dplyr::select(
+      dplyr::distinct(
         Enrollment_extra_Exit_HH_CL_AaE,
         PersonalID,
         HouseholdID,
