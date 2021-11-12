@@ -369,7 +369,6 @@ prioritization <- prioritization |>
   ) |>
   dplyr::group_by(HouseholdID) |>
   dplyr::mutate(
-    CountyServed = dplyr::if_else(is.na(CountyServed), "MISSING County", CountyServed),
     TAY = max(AgeAtEntry) < 25 & max(AgeAtEntry) >= 16,
     PHTrack = dplyr::if_else(
       !is.na(PHTrack) &
@@ -379,7 +378,30 @@ prioritization <- prioritization |>
   dplyr::ungroup() |>
   dplyr::select(-AgeAtEntry)
 
+# Find duplicated and select those with the latest ExpectedPHDate and non-missing CountyServed
+min_na <- function(...) {
+  x <- data.frame(...)
+  if (any(!purrr::map_lgl(x$ExpectedPHDate, is.na))) {
+    idx <- which.max(x$ExpectedPHDate)
+  } else {
+    idx <- which.min(apply(x, 1, rlang::as_function(~sum(is.na(.x)))))
+  }
+  x[idx,]
+}
+  prioritization_dupes <- janitor::get_dupes(prioritization, PersonalID)
+  prioritization_dupes <- prioritization_dupes |>
+    dplyr::group_by(PersonalID, HouseholdID) |>
+    dplyr::summarise(n_na = min_na(CountyServed,
+                                   PHTrack,
+                                   ExpectedPHDate)) |>
+    tidyr::unpack(cols = n_na)
 
+
+
+  # Remove the duplicated PersonalID
+  prioritization <- dplyr::filter(prioritization, !PersonalID %in% prioritization_dupes$PersonalID)
+  # Rebind with the appropriate rows
+  prioritization <- dplyr::bind_rows(prioritization, dplyr::select(prioritization_dupes, dplyr::all_of(UU::common_names(prioritization_dupes, prioritization))))
 
 
 # County Guessing ---------------------------------------------------------
@@ -389,14 +411,15 @@ prioritization <- prioritization |>
   dplyr::left_join(Project |>
               dplyr::select(ProjectName, ProjectCounty), by = "ProjectName") |>
   dplyr::mutate(
-    CountyGuessed = CountyServed == "MISSING County",
+    CountyGuessed = is.na(CountyServed),
     CountyServed = dplyr::if_else(
       CountyGuessed &
         ProjectName != "Unsheltered Clients - OUTREACH",
       ProjectCounty,
       CountyServed
     ),
-    ProjectCounty = NULL
+    ProjectCounty = NULL,
+    CountyServed = dplyr::if_else(is.na(CountyServed), "MISSING County", CountyServed)
   )
 
 
