@@ -14,7 +14,7 @@ bg_scripts <- list.files(file.path("inst", "src"), full.names = TRUE, pattern = 
   {\(x) {rlang::set_names(x, stringr::str_remove(basename(x), "\\.R$"))}}()
 
 run_bg <- function(file = bg_scripts[1]) {
-  rstudioapi::jobRunScript(file, importEnv = TRUE, workingDir = getwd())
+  rstudioapi::jobRunScript(file, importEnv = TRUE, workingDir = getwd(), "R_GlobalEnv")
 }
 
 
