@@ -86,8 +86,10 @@ data_quality <- function(check_fns = Rm_data::check_fns,
   app_env$gather_deps(ssvf_served_in_date_range)
 
   .total <- length(check_fns)
+
   .pid <- cli::cli_progress_bar(type = "iterator",
                         total = .total + 3)
+
   dqs <- purrr::map(rlang::set_names(check_fns), ~{
     i <- which(check_fns == .x)
     cli::cli_progress_update(id = .pid,,

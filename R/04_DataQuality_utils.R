@@ -932,31 +932,44 @@ dq_invalid_months_times_homeless <- function(served_in_date_range, vars, rm_date
       ProjectType != 12 &
         (RelationshipToHoH == 1 | AgeAtEntry > 17) &
         EntryDate >= rm_dates$hc$prior_living_situation_required &
-        TimesHomelessPastThreeYears == 1 &
         !is.na(DateToStreetESSH)
     ) %>%
     dplyr::mutate(
       MonthHomelessnessBegan = lubridate::floor_date(DateToStreetESSH, "month"),
       MonthEnteredProgram = lubridate::floor_date(EntryDate, "month"),
-      MonthDiff = lubridate::interval(MonthHomelessnessBegan, MonthEnteredProgram) %/% months(1) + 1,
-      MonthDiff = dplyr::if_else(MonthDiff >= 13, 13, MonthDiff),
-      DateMonthsMismatch = dplyr::if_else(MonthsHomelessPastThreeYears - MonthDiff != 100, 1, 0),
+      # Months is deprecated from dplyr, use new time_length
+      MonthDiff = lubridate::time_length(lubridate::interval(MonthHomelessnessBegan, MonthEnteredProgram), "months"),
+      MonthDiff = dplyr::case_when(MonthDiff >= 13 ~ 13,
+                                   # under a month is considered 101, less than a month
+                                   dplyr::between(MonthDiff, 0, 1) ~ 1,
+                                   # add 100 so it matches the 3.917.5 standards
+                                  TRUE  ~ MonthDiff) + 100,
+                                  # IF there's more than a month discrepancy, raise a warning. (Less than 1 month error could be simply due to difference in the way the person counts months, or the way Clarity computes it)
+      DateMonthsMismatch = abs(MonthsHomelessPastThreeYears - MonthDiff) > 1.1 | MonthsHomelessPastThreeYears == 99,
       Issue = dplyr::case_when(
         MonthDiff <= 0 ~
           "Homelessness Start Date Later Than Entry",
-        MonthsHomelessPastThreeYears < 100 ~
+        MonthsHomelessPastThreeYears < 100 & TimesHomelessPastThreeYears == 1 ~
           "Number of Months Homeless Can Be Determined",
-        DateMonthsMismatch == 1 ~
+        DateMonthsMismatch & TimesHomelessPastThreeYears == 1 ~
           "Invalid Homelessness Start Date/Number of Months Homeless"),
       Type = "Warning",
       Guidance = dplyr::case_when(
         MonthDiff <= 0 ~
-          "This client has an Approximate Date Homeless in their Entry that is after their Entry Date. The information in the Entry should reflect the client's situation at the point of Entry, so this date may have been incorrectly entered.",
-        MonthsHomelessPastThreeYears < 100 ~
-          "According to this client's entry, they experienced a single episode of homelessness in the three years prior to their entry and the approximate start date of their homelessness is known, but there was no response entered for the number of months they experienced homelessness prior to this entry. It should be possible to determine and enter the number of months homeless based on the Approximate Date Homeless and the Entry Date.",
-        DateMonthsMismatch == 1 ~
-          "According to this client's entry, they experienced a single episode of homelessness in the three years prior to their entry and the approximate start date of their homelessness is known, but the recorded number of months they experienced homelessness prior to this entry is inconsistent with the given dates. Please double-check this information for consistency and accuracy.")) %>%
-    dplyr::filter(!is.na(Guidance)) %>%
+          "This client has an Approximate Date Homeless in their Entry that is after
+          their Entry Date. The information in the Entry should reflect the
+          client's situation at the point of Entry, so this date may have been
+          incorrectly entered.",
+        MonthsHomelessPastThreeYears < 100 & TimesHomelessPastThreeYears == 1 ~
+          "According to this client's entry, they experienced a single episode of
+          homelessness in the three years prior to their entry and the approximate
+          start date of their homelessness is known, but there was no response
+          entered for the number of months they experienced homelessness prior to
+          this entry. It should be possible to determine and enter the number of
+          months homeless based on the Approximate Date Homeless and the Entry Date.",
+        DateMonthsMismatch == 1 & TimesHomelessPastThreeYears == 1 ~
+          "According to this client's entry, they experienced a single episode of homelessness in the three years prior to their entry and the approximate start date of their homelessness is known, but the recorded number of months they experienced homelessness prior to this entry is not equal to the number of months elapsed between the Approximate Date Homelessness Began and the Entry Date. Please double-check the Number of Months Homeless and the Approximate Date Homelessness Began for consistency and accuracy.")) |>
+    dplyr::filter(!is.na(Guidance)) |>
     dplyr::select(dplyr::all_of(vars$we_want))
   return(out)
 }
