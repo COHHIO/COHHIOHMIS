@@ -2,7 +2,7 @@
 #' @title Redact PII from Client HUD Export
 #' @description This redacts all PII (except DOB) from Client HUD Export
 #' @family Client functions
-#' @param Client \code{(tibble)} Client HUD Export
+#' @inheritParams data_quality_tables
 #' @return \code{(tibble)} Redacted Client HUD Export
 #' @export
 
@@ -54,7 +54,7 @@ Client_redact <- function(Client) {
 
 #' @title Add the UniqueID to the Client export
 #'
-#' @param Client \code{(data.frame)} Client HUD CSV Export item
+#' @inheritParams data_quality_tables
 #' @param Client_extras \code{(data.frame)} A custom look linking PersonalID & UniqueID
 #' @param app_env
 #'
@@ -178,7 +178,7 @@ Enrollment_add_Household = function(Enrollment, Project, rm_dates, app_env = get
 #' Add Veteran Coordinated Entry Date to Enrollments
 #'
 #' @param Enrollment that includes Exit Data. See `Enrollment_add_Exit`
-#' @param VeteranCE
+#' @param VeteranCE HUD Extra that includes Veteran Coordinated Entry data
 #'
 #' @return \code{(data.frame)} Enrollment with the following columns added `PHTrack`, `ExpectedPHDate`, `ExitAdjust`
 #' @export
@@ -197,10 +197,9 @@ Enrollment_add_VeteranCE = function(Enrollment, VeteranCE) {
     )
 }
 
-#' Add Client Location to Enrollment
+#' @title Add Client Location to Enrollment
 #'
-#' @param Enrollment
-#' @param EnrollmentCoc
+#' @inheritParams data_quality_tables
 #'
 #' @return \code{(data.frame)} Enrollment with `ClientLocation` column
 #' @export
@@ -213,7 +212,7 @@ Enrollment_add_ClientLocation = function(Enrollment, EnrollmentCoC) {
     by = "EnrollmentID")
 }
 
-#' Add AgeAtEntry to Enrollment
+#' @title Add AgeAtEntry to Enrollment
 #' @description AgeAtEntry is the time elapsed from the Date of Birth `DOB` to the `EntryDate`
 #' @param Enrollment
 #' @param Client
@@ -244,7 +243,7 @@ EnrollmentCoC_RemoveCoCCodes <- function(EnrollmentCoC, codes_to_remove = c("Def
 }
 
 
-#' Add the Corresponding Region for each Project by way of Geocode matching
+#' @title Add the Corresponding Region for each Project by way of Geocode matching
 #'
 #' @param provider_extras
 #' @param dirs
@@ -309,7 +308,7 @@ pe_add_regions <- function(provider_extras, Regions = clarity.looker::hud_load("
   out |> dplyr::filter(!is.na(ProjectRegion))
 }
 
-#' Add Access Points to Provider_extras
+#' @title Add Access Points to Provider_extras
 #' @description Create data.frame of Coordinated Entry Access Points with info about the Counties & Populations Served
 #' @param provider_extras \code{(data.frame)} provider_extras with Regions, see `pe_add_regions`
 #' @param dirs
@@ -368,7 +367,7 @@ pe_create_APs = function(provider_extras, ProjectCoC, dirs, app_env = get_app_en
 
 #' @title Add ProjectType (dbl) to provider_extras
 #'
-#' @param provider_extras
+#' @inheritParams pe_create_APS
 #' @return \code{(data.frame)}
 
 pe_add_ProjectType <- function(provider_extras) {
@@ -380,10 +379,10 @@ pe_add_ProjectType <- function(provider_extras) {
     dplyr::mutate(ProjectType = PT$Value[agrepl(stringr::str_remove(ProjectTypeCode, "\\s\\([\\w\\s]+\\)$"), PT$Text)], .after = "ProjectTypeCode")
 }
 
-#' Add GrantType column to provider_extras
+#' @title Add GrantType column to provider_extras
 #' @description GrantType indicates if the program is funded by one of HOPWA, PATH, SSVF, or RHY
 #'
-#' @param provider_extras
+#' @inheritParams pe_create_APS
 #'
 #' @return
 #' @export
