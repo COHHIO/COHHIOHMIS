@@ -7,7 +7,7 @@
 Client_redact(Client)
 }
 \arguments{
-\item{Client}{\code{(tibble)} Client HUD Export}
+\item{Client}{\code{(data.frame)} From the HUD CSV Export}
 }
 \value{
 \code{(tibble)} Redacted Client HUD Export

@@ -37,6 +37,8 @@ data_quality_tables(
 
 \item{Enrollment}{\code{(data.frame)} From the HUD CSV Export}
 
+\item{EnrollmentCoC}{\code{(data.frame)} From the HUD CSV Export}
+
 \item{Exit}{\code{(data.frame)} From the HUD CSV Export}
 
 \item{Client}{\code{(data.frame)} From the HUD CSV Export}

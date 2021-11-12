@@ -31,7 +31,7 @@ dq_services_on_non_hoh(
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
 }
 \description{
-Users should not checkbox all the household members when creating a Service Transaction. Only the Head of Household needs a Service Transaction. Delete any extraneous Service Transactions related to this project stay.
+Users should not checkbox all the Household members when creating a Service Transaction. Only the Head of Household needs a Service Transaction. Delete any extraneous Service Transactions related to this project stay.
 }
 \seealso{
 Other Clarity Checks: 

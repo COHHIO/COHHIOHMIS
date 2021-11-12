@@ -31,7 +31,7 @@ dq_check_disability_ssi(
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
 }
 \description{
-If a client is receiving SSI or SSDI for THEIR OWN disability, that disability should be indicated in the Disabilities data elements. If an adult is receiving SSI or SSDI benefits on behalf a minor child, then there is no action needed.
+If a Client is receiving SSI or SSDI for THEIR OWN disability, that disability should be indicated in the Disabling Conditions data elements. If an adult is receiving SSI or SSDI benefits on behalf a minor child, then there is no action needed.
 }
 \seealso{
 Other Clarity Checks: 

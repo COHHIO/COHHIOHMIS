@@ -9,7 +9,7 @@ Enrollment_add_VeteranCE(Enrollment, VeteranCE)
 \arguments{
 \item{Enrollment}{that includes Exit Data. See \code{Enrollment_add_Exit}}
 
-\item{VeteranCE}{}
+\item{VeteranCE}{HUD Extra that includes Veteran Coordinated Entry data}
 }
 \value{
 \code{(data.frame)} Enrollment with the following columns added \code{PHTrack}, \code{ExpectedPHDate}, \code{ExitAdjust}

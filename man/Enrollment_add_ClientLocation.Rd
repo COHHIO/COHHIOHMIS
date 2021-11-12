@@ -7,7 +7,9 @@
 Enrollment_add_ClientLocation(Enrollment, EnrollmentCoC)
 }
 \arguments{
-\item{EnrollmentCoc}{}
+\item{Enrollment}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{EnrollmentCoC}{\code{(data.frame)} From the HUD CSV Export}
 }
 \value{
 \code{(data.frame)} Enrollment with \code{ClientLocation} column

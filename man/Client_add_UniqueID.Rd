@@ -11,7 +11,7 @@ Client_add_UniqueID(
 )
 }
 \arguments{
-\item{Client}{\code{(data.frame)} Client HUD CSV Export item}
+\item{Client}{\code{(data.frame)} From the HUD CSV Export}
 
 \item{app_env}{}
 

@@ -10,6 +10,9 @@ An object of class \code{list} of length 5.
 \usage{
 sp2cl_translations
 }
+\value{
+\code{(numeric/character)} Whichever class is opposite the input vector
+}
 \description{
 Service Point / Clarity Field representation translations (numeric/character)
 }

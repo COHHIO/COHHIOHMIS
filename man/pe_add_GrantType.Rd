@@ -6,9 +6,6 @@
 \usage{
 pe_add_GrantType(provider_extras)
 }
-\arguments{
-\item{provider_extras}{}
-}
 \value{
 
 }
