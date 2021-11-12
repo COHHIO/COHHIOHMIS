@@ -44,3 +44,5 @@ pkg_commands.R
 Looker.ini
 
 profile.rds
+
+.deprecated/

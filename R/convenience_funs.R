@@ -1,8 +1,17 @@
-go_to_daily_update <- function() {
-  rstudioapi::navigateToFile("daily_update.R")
+go_to <- function(x, path = "R") {
+  if (file.exists(x))
+    f <- x
+  else
+    f <- list.files(path, pattern = x, full.names = TRUE)
+
+  if (UU::is_legit(f))
+    rstudioapi::navigateToFile(f)
+  else
+    rlang::abort(paste0("Can't find file ",x))
 }
-bg_scripts <- c("data", "export", "extras", "services") |>
-  {\(x) {file.path("inst", "src", paste0("update_",x, ".R")) |> rlang::set_names(x)}}()
+
+bg_scripts <- list.files(file.path("inst", "src"), full.names = TRUE, pattern = "R$") |>
+  {\(x) {rlang::set_names(x, stringr::str_remove(basename(x), "\\.R$"))}}()
 
 run_bg <- function(file = bg_scripts[1]) {
   rstudioapi::jobRunScript(file, importEnv = TRUE, workingDir = getwd())

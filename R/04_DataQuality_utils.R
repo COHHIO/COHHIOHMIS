@@ -8,14 +8,22 @@
 #' }
 #' @return \code{(logical)}
 is_clarity <- function() {
-  getOption("HMIS")$Clarity
+  x <- getOption("HMIS")
+  if (UU::is_legit(x))
+    x$Clarity
+  else
+    FALSE
 }
 
 #' @title Is this instance using ServicePoint
 #' @inherit is_clarity description return
 
 is_sp <- function() {
-  getOption("HMIS")$ServicePoint
+  x <- getOption("HMIS")
+  if (UU::is_legit(x))
+    x$ServicePoint
+  else
+    FALSE
 }
 
 #' @title This instance must be using ServicePoint, otherwise throw an error.
@@ -124,6 +132,7 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH
         "DOBDataQuality",
         "EnrollmentID",
         "EntryDate",
+        "EntryAdjust",
         "Ethnicity",
         "ExitAdjust",
         "ExitDate",
@@ -416,7 +425,7 @@ dq_gender <- function(served_in_date_range, guidance = NULL, vars = NULL, app_en
 dq_veteran <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  served_in_date_range %>%
+  out <- served_in_date_range %>%
     dplyr::mutate(
       Issue = dplyr::case_when(
         (AgeAtEntry >= 18 | is.na(AgeAtEntry)) &
@@ -436,9 +445,8 @@ dq_veteran <- function(served_in_date_range, guidance = NULL, vars = NULL, app_e
         ) ~ "Warning"
       ),
       Guidance = dplyr::case_when(
-        Issue == "Check Veteran Status for Accuracy" ~ "You have indicated the
-      household exited to a destination that only veterans are eligible for, but
-      the head of household appears to be not a veteran. Either the Veteran
+        Issue == "Check Veteran Status for Accuracy" ~ "You have
+      household exited to a destination that only veterans are eligible for, but the head of household does not have a Veteran status indicating they are a veteran. Either the Veteran
       Status is incorrect or the Destination is incorrect.",
       Issue == "Missing Veteran Status" ~ guidance$missing_pii,
       Issue == "Don't Know/Refused Veteran Status" ~ guidance$dkr_data)
@@ -911,7 +919,7 @@ dq_invalid_months_times_homeless <- function(served_in_date_range, vars, rm_date
 ) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  served_in_date_range %>%
+  out <- served_in_date_range %>%
     dplyr::select(
       dplyr::all_of(vars$prep),
       AgeAtEntry,
@@ -960,9 +968,10 @@ dq_invalid_months_times_homeless <- function(served_in_date_range, vars, rm_date
           this entry. It should be possible to determine and enter the number of
           months homeless based on the Approximate Date Homeless and the Entry Date.",
         DateMonthsMismatch == 1 & TimesHomelessPastThreeYears == 1 ~
-          "According to this client's entry, they experienced a single episode of homelessness in the three years prior to their entry and the approximate start date of their homelessness is known, but the recorded number of months they experienced homelessness prior to this entry is not equal to the number of months elapsed between the Approximate Date Homelessness Began and the Entry Date. Please double-check the Number of Months Homeless and the Approximate Date Homelessness Began for consistency and accuracy.")) %>%
-    dplyr::filter(!is.na(Guidance)) %>%
+          "According to this client's entry, they experienced a single episode of homelessness in the three years prior to their entry and the approximate start date of their homelessness is known, but the recorded number of months they experienced homelessness prior to this entry is not equal to the number of months elapsed between the Approximate Date Homelessness Began and the Entry Date. Please double-check the Number of Months Homeless and the Approximate Date Homelessness Began for consistency and accuracy.")) |>
+    dplyr::filter(!is.na(Guidance)) |>
     dplyr::select(dplyr::all_of(vars$we_want))
+  return(out)
 }
 
 #' @title Find Missing Living Situation
@@ -1075,7 +1084,7 @@ dq_detail_missing_disabilities <- function(served_in_date_range, Disabilities, v
 if (is_app_env(app_env))
 		app_env$set_parent(missing_fmls())
 
-  detail_missing_disabilities <- served_in_date_range %>%
+  missing_disabilities <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
                   RelationshipToHoH,
@@ -1084,9 +1093,7 @@ if (is_app_env(app_env))
                     is.na(DisablingCondition)) %>%
     dplyr::mutate(Issue = "Missing Disabling Condition",
                   Type = "Error",
-                  Guidance = guidance$missing_at_entry)
-
-  missing_disabilities <- detail_missing_disabilities %>%
+                  Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 
 
@@ -1113,7 +1120,7 @@ if (is_app_env(app_env))
 
   # Developmental & HIV/AIDS get automatically IndefiniteAndImpairs = 1 per FY2020
 
-  served_in_date_range %>%
+  conflicting_disabilities <- served_in_date_range %>%
     dplyr::select(dplyr::all_of(vars$prep),
                   EnrollmentID,
                   AgeAtEntry,
@@ -1132,6 +1139,8 @@ if (is_app_env(app_env))
       Guidance = "If the user answered 'Yes' to the 'Does the client have a disabling condition?', then there should be a disability subassessment that indicates the disability determination is Yes *and* the 'If yes,... long duration' question is Yes. Similarly if the user answered 'No', the client should not have any disability subassessments that indicate that they do have a Disabling Condition."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
+  out <- dplyr::bind_rows(missing_disabilities, conflicting_disabilities)
+  return(out)
 }
 
 #' @title Find Clients in Mahoning with 60 Days elapsed in Coordinated Entry
@@ -1489,7 +1498,7 @@ dq_sh_missing_project_stay <- function(served_in_date_range, vars, guidance = NU
 dq_missing_county_served <- function(served_in_date_range, mahoning_projects, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  served_in_date_range %>%
+  out <- served_in_date_range %>%
     dplyr::filter(is.na(CountyServed) & !ProjectID %in% c(mahoning_projects)) %>%
     dplyr::mutate(
       Issue = "Missing County Served",
@@ -1497,6 +1506,7 @@ dq_missing_county_served <- function(served_in_date_range, mahoning_projects, va
       Guidance = "County Served must be collected at Entry for all clients. County is very important so that the client is prioritized into the correct service areas for various housing solutions. This can be corrected through the Entry pencil."
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
+  return(out)
 }
 
 #' @title Find Missing County Prior
@@ -1507,7 +1517,7 @@ dq_missing_county_served <- function(served_in_date_range, mahoning_projects, va
 dq_missing_county_prior <- function(served_in_date_range, mahoning_projects, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  served_in_date_range %>%
+  out <- served_in_date_range %>%
     dplyr::filter(is.na(CountyPrior) & !ProjectID %in% c(mahoning_projects) &
                     (AgeAtEntry > 17 |
                        is.na(AgeAtEntry))) %>%
@@ -1515,6 +1525,7 @@ dq_missing_county_prior <- function(served_in_date_range, mahoning_projects, var
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
+  return(out)
 }
 
 # Check Eligibility, Project Type, Residence Prior ------------------------
@@ -1526,13 +1537,12 @@ dq_missing_county_prior <- function(served_in_date_range, mahoning_projects, var
 #' @param detail \code{(logical)} Whether to return eligibility detail
 #'
 #' @export
-dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, rm_dates, app_env = get_app_env(e = rlang::caller_env()), detail = FALSE) {
+dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, rm_dates, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   check_eligibility <- served_in_date_range %>%
     dplyr::select(
       dplyr::all_of(vars$prep),
-      ProjectID,
       AgeAtEntry,
       RelationshipToHoH,
       LivingSituation,
@@ -1582,43 +1592,19 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
         )
     )
 
-  if (detail) {
-    out <- check_eligibility %>%
-      dplyr::select(
-        PersonalID,
-        ProjectName,
-        ProjectType,
-        LivingSituation,
-        EntryDate,
-        ExitDate,
-        LengthOfStay,
-        LOSUnderThreshold,
-        PreviousStreetESSH
-      ) %>%
+
+    out <- check_eligibility |>
       dplyr::mutate(
-        ResidencePrior =
-          living_situation(LivingSituation),
-        LengthOfStay = dplyr::case_when(
-          LengthOfStay == 2 ~ "One week or more but less than one month",
-          LengthOfStay == 3 ~ "One month or more but less than 90 days",
-          LengthOfStay == 4 ~ "90 days or more but less than one year",
-          LengthOfStay == 5 ~ "One year or longer",
-          LengthOfStay == 8 ~ "Client doesn't know",
-          LengthOfStay == 9 ~ "Client refused",
-          LengthOfStay == 10 ~ "One night or less",
-          LengthOfStay == 11 ~ "Two to six nights",
-          LengthOfStay == 99 ~ "Data not collected"
-        )
-      )
-  } else {
-    out <- check_eligibility %>%
+        ResidencePrior = hud.extract::hud_translations$`3.12.1 Living Situation Option List`(LivingSituation),
+        LengthOfStay = hud.extract::hud_translations$`3.917.2 LengthOfStay`(LengthOfStay)
+      ) |>
       dplyr::mutate(
         Issue = "Check Eligibility",
         Type = "Warning",
         Guidance = "Your Residence Prior data suggests that this project is either serving ineligible households, the household was entered into the wrong project, or the Residence Prior data at Entry is incorrect. Please check the terms of your grant or speak with your CoC Team Coordinator if you are unsure of eligibility criteria for your project type."
       ) %>%
-      dplyr::select(dplyr::all_of(vars$we_want))
-  }
+      dplyr::select(dplyr::all_of(vars$we_want), PreviousStreetESSH, LengthOfStay, ResidencePrior)
+
   return(out)
 }
 
@@ -1663,7 +1649,7 @@ dq_services_rent_paid_no_move_in <- function(served_in_date_range, vars, app_env
 dq_missing_destination <- function(served_in_date_range,  mahoning_projects, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  served_in_date_range %>%
+  out <- served_in_date_range %>%
     dplyr::filter(!is.na(ExitDate) &
                     (is.na(Destination) | Destination %in% c(99, 30))) %>%
     dplyr::mutate(
@@ -1672,6 +1658,7 @@ dq_missing_destination <- function(served_in_date_range,  mahoning_projects, var
       Guidance = "It is widely understood that not every client will complete an exit interview, especially for high-volume emergency shelters. A few warnings for Missing Destination is no cause for concern, but if there is a large number, please contact your CoC Team Coordinator"
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
+  return(out)
 }
 
 #' @title Don't Know Refused Destination
@@ -1712,9 +1699,8 @@ dqu_project_small <- function(Project) {
 #' @title PATH: Missing Residence Prior Length of Stay
 #' @inherit data_quality_tables params return
 #' @family DQ: Path Checks
-#' @inheritParams dqu_project_small
 #' @export
-dq_path_missing_los_res_prior <- function(served_in_date_range, Project, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+dq_path_missing_los_res_prior <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   served_in_date_range %>%
@@ -1724,8 +1710,7 @@ dq_path_missing_los_res_prior <- function(served_in_date_range, Project, vars, g
       AgeAtEntry,
       ClientEnrolledInPATH,
       LengthOfStay
-    ) %>%
-    dplyr::left_join(dqu_project_small(Project), by = c("ProjectID", "ProjectName")) %>%
+    )  |>
     dplyr::filter(AgeAtEntry > 17 &
                     ClientEnrolledInPATH == 1 &
                     (is.na(LengthOfStay) | LengthOfStay == 99)) %>%
@@ -1741,21 +1726,19 @@ dq_path_missing_los_res_prior <- function(served_in_date_range, Project, vars, g
 #' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @inherit data_quality_tables params return
-#' @inheritParams dqu_project_small
 #' @export
-dq_path_no_status_at_exit <- function(served_in_date_range, vars, Project, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+dq_path_no_status_at_exit <- function(served_in_date_range, vars,  guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  force(Project)
-  served_in_date_range %>%
+
+  served_in_date_range |>
     dplyr::select(
       dplyr::all_of(vars$prep),
       AgeAtEntry,
       ClientEnrolledInPATH,
       DateOfPATHStatus,
       ReasonNotEnrolled
-    ) %>%
-    dplyr::left_join(dqu_project_small(Project), by = "ProjectName") %>%
+    ) |>
     dplyr::filter(!is.na(ExitDate) &
                     AgeAtEntry > 17 &
                     (
@@ -1763,7 +1746,7 @@ dq_path_no_status_at_exit <- function(served_in_date_range, vars, Project, guida
                         is.na(DateOfPATHStatus) |
                         (ClientEnrolledInPATH == 0 &
                            is.na(ReasonNotEnrolled))
-                    )) %>%
+                    )) |>
     dplyr::mutate(Issue = "PATH Status at Exit Missing or Incomplete",
                   Type = "Error",
                   Guidance = guidance$missing_at_exit) %>%
@@ -1777,23 +1760,21 @@ dq_path_no_status_at_exit <- function(served_in_date_range, vars, Project, guida
 #' @family DQ: Path Checks
 #' @family Clarity Checks
 #' @inherit data_quality_tables params return
-#' @inheritParams dqu_project_small
 #' @details Status Determination at Exit &adult, PATH-Enrolled is not null & Date of Status is null -> error
 #' @export
 
-dq_path_status_determination <- function(served_in_date_range, Project, vars, app_env = get_app_env(e = rlang::caller_env())) {
+dq_path_status_determination <- function(served_in_date_range, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  served_in_date_range %>%
+  served_in_date_range |>
     dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
                   ClientEnrolledInPATH,
-                  DateOfPATHStatus) %>%
-    dplyr::left_join(dqu_project_small(Project), by = "ProjectName") %>%
+                  DateOfPATHStatus) |>
     dplyr::filter(AgeAtEntry > 17 &
                     !is.na(ClientEnrolledInPATH) &
                     is.na(DateOfPATHStatus)
-    ) %>%
+    )  |>
     dplyr::mutate(Issue = "Missing Date of PATH Status",
                   Type = "Error",
                   Guidance = "Users must indicate the PATH Status Date for any adult enrolled in PATH.") %>%
@@ -1807,26 +1788,25 @@ dq_path_status_determination <- function(served_in_date_range, Project, vars, ap
 #' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @inherit data_quality_tables params return
-#' @inheritParams dqu_project_small
 #' @details PATH Enrolled at Exit & adult & PATH Enrolled null or DNC -> error
 #' @export
-dq_path_enrolled_missing <- function(served_in_date_range, Project, vars, app_env = get_app_env(e = rlang::caller_env())) {
+dq_path_enrolled_missing <- function(served_in_date_range, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep), AgeAtEntry, ClientEnrolledInPATH) %>%
-    dplyr::left_join(dqu_project_small(Project), by = "ProjectName") %>%
+  out <- served_in_date_range |>
+    dplyr::select(dplyr::all_of(vars$prep), AgeAtEntry, ClientEnrolledInPATH) |>
     dplyr::filter(!is.na(ExitDate) &
                     AgeAtEntry > 17 &
                     (ClientEnrolledInPATH == 99 |
                        is.na(ClientEnrolledInPATH))
-    ) %>%
+    ) |>
     dplyr::mutate(
       Issue = "Missing PATH Enrollment at Exit",
       Type = "Error",
       Guidance = guidance$path_enrolled_missing
-    ) %>%
+    ) |>
     dplyr::select(dplyr::all_of(vars$we_want))
+  return(out)
 }
 
 
@@ -1836,22 +1816,20 @@ dq_path_enrolled_missing <- function(served_in_date_range, Project, vars, app_en
 #' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @inherit data_quality_tables params return
-#' @inheritParams dqu_project_small
 #' @details adult & PATH Enrolled = No & Reason is null -> error
 #' @export
-dq_path_reason_missing <- function(served_in_date_range, Project, vars, app_env = get_app_env(e = rlang::caller_env())) {
+dq_path_reason_missing <- function(served_in_date_range, vars, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
-  served_in_date_range %>%
+  served_in_date_range |>
     dplyr::select(
       dplyr::all_of(vars$prep),
       AgeAtEntry,
       ClientEnrolledInPATH,
       ReasonNotEnrolled,
       ProjectType
-    ) %>%
-    dplyr::left_join(dqu_project_small(Project), by = "ProjectName") %>%
+    ) |>
     dplyr::filter(AgeAtEntry > 17 &
                     ClientEnrolledInPATH == 0 &
                     is.na(ReasonNotEnrolled)) %>%
@@ -1869,10 +1847,9 @@ dq_path_reason_missing <- function(served_in_date_range, Project, vars, app_env 
 #' @family Clarity Checks
 #' @family DQ: Path Checks
 #' @inherit data_quality_tables params return
-#' @inheritParams dqu_project_small
 #' @details adult & Connection w/ SOAR is null or DNC -> error
 #' @export
-dq_path_SOAR_missing_at_exit <- function(served_in_date_range, Project, IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+dq_path_SOAR_missing_at_exit <- function(served_in_date_range, IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
@@ -1887,8 +1864,7 @@ dq_path_SOAR_missing_at_exit <- function(served_in_date_range, Project, IncomeBe
     dplyr::select(dplyr::all_of(vars$prep),
                   EnrollmentID,
                   AgeAtEntry,
-                  ClientEnrolledInPATH) %>%
-    dplyr::left_join(dqu_project_small(Project), by = "ProjectName") %>%
+                  ClientEnrolledInPATH) |>
     dplyr::left_join(smallIncomeSOAR, by = c("PersonalID", "EnrollmentID")) %>%
     dplyr::filter(AgeAtEntry > 17 &
                     DataCollectionStage == 3 &
@@ -1905,7 +1881,6 @@ dq_path_SOAR_missing_at_exit <- function(served_in_date_range, Project, IncomeBe
 #' @family DQ: Path Checks
 #' @description  Every adult or Head of Household must have a Living Situation contact record. If you see a record there but there is no Date of Contact, saving the Date of Contact will correct this issue. This is a high priority DQ issue.
 #' @inherit data_quality_tables params return
-#' @inheritParams dqu_project_small
 #' @param Contacts \code{(data.frame)} From the HUD CSV Export
 #' @details client is adult/hoh and has no contact record in the EE -> error
 #' @export
@@ -1951,7 +1926,6 @@ dq_missing_path_contact <- function(served_in_date_range, Contacts, rm_dates, va
 #' @family DQ: Path Checks
 #' @description Every adult or head of household should have a Living Situation contact record where the Contact Date matches the Entry Date. This would represent the initial contact made with the client.
 #' @inherit data_quality_tables params return
-#' @inheritParams dqu_project_small
 #' @param Contacts \code{(data.frame)} From the HUD CSV Export
 #' @details client is adult/hoh, has a contact record, and the first record in the EE does not equal the Entry Date ->  error
 #' @export
@@ -2125,7 +2099,7 @@ dq_ph_without_spdats <- function(served_in_date_range, Funder, rm_dates, vars, a
                     ExpectedPHDate < lubridate::today()) %>%
     dplyr::anti_join(ees_with_spdats, by = "EnrollmentID") %>%
     dplyr::filter(
-      ProjectType %in% c(1, 4, 8) &
+      ProjectType %in% c(1, 4, 8, 14) &
         VeteranStatus != 1 &
         RelationshipToHoH == 1 &
         EntryDate < lubridate::today() - lubridate::days(8) &
@@ -2326,11 +2300,144 @@ dq_missing_income <- function(served_in_date_range, IncomeBenefits, vars, guidan
                   Type = "Error",
                   Guidance = guidance$missing_at_exit) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
-  dplyr::bind_rows(missing_income_entry, missing_income_exit)
-
+ out <- dplyr::bind_rows(missing_income_entry, missing_income_exit) |>
+   dplyr::distinct(PersonalID, .keep_all = TRUE)
+   return(out)
 }
 
 # Overlapping Enrollment/Move In Dates ------------------------------------
+
+
+
+#' @title Find Overlapping Project Stays on the Same Day
+#' @family Clarity Checks
+#' @family DQ: Overlapping Enrollment/Move-In Dates
+#' @inherit dq_overlaps params return description
+#' @export
+overlaps_same_day <- function(served_in_date_range, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+
+  out <- served_in_date_range %>%
+    dplyr::filter((ProjectType == 13 & MoveInDateAdjust == ExitDate) |
+                    ProjectType != 13) %>%
+    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
+    dplyr::mutate(
+      EntryAdjust = dplyr::case_when(
+        #for PSH and RRH, EntryAdjust = MoveInDate
+        ProjectType %in% c(1, 2, 8, 12) |
+          ProjectName == "Unsheltered Clients - OUTREACH" ~ EntryDate,
+        ProjectType %in% c(3, 9, 13) &
+          !is.na(MoveInDateAdjust) ~ MoveInDateAdjust,
+        ProjectType %in% c(3, 9, 13) &
+          is.na(MoveInDateAdjust) ~ EntryDate
+      ),
+      LiterallyInProject = dplyr::case_when(
+        ProjectType %in% c(3, 9) ~ lubridate::interval(MoveInDateAdjust, ExitAdjust),
+        ProjectType %in% c(1, 2, 4, 8, 12) ~ lubridate::interval(EntryAdjust, ExitAdjust)
+      ),
+      Issue = "Overlapping Project Stays",
+      Type = "High Priority",
+      Guidance = guidance$project_stays
+    ) %>%
+    dplyr::filter((!is.na(LiterallyInProject) & ProjectType != 13) |
+                    ProjectType == 13) %>%
+    janitor::get_dupes(PersonalID) %>%
+    dplyr::group_by(PersonalID) %>%
+    dplyr::arrange(PersonalID, EntryAdjust) %>%
+    dplyr::mutate(
+      PreviousEntryAdjust = dplyr::lag(EntryAdjust),
+      PreviousExitAdjust = dplyr::lag(ExitAdjust),
+      PreviousProject = dplyr::lag(ProjectName)
+    ) %>%
+    dplyr::filter(ExitDate > PreviousEntryAdjust &
+                    ExitDate < PreviousExitAdjust) %>%
+    dplyr::ungroup()
+
+  out <- dplyr::select(out, dplyr::all_of(c(vars$we_want, "PreviousProject")))
+  return(out)
+}
+
+#' @title Find Overlapping Project Stays for RRH
+#' @family Clarity Checks
+#' @family Unsheltered Checks
+#' @family ServicePoint Checks
+#' @family DQ: Overlapping Enrollment/Move-In Dates
+#' @inherit dq_overlaps params return description
+#' @export
+overlaps_rrh <- function(served_in_date_range, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  out <- served_in_date_range %>%
+    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
+    dplyr::mutate(
+      ExitAdjust = ExitAdjust - lubridate::days(1),
+      # bc a client can exit&enter same day
+      InProject = lubridate::interval(EntryDate, ExitAdjust),
+      Issue = "Overlapping Project Stays",
+      Type = "High Priority",
+      Guidance = guidance$project_stays
+    ) %>%
+    dplyr::filter(ProjectType == 13) |>
+    janitor::get_dupes(PersonalID) %>%
+    dplyr::group_by(PersonalID) %>%
+    dplyr::arrange(PersonalID, EntryDate) %>%
+    dplyr::mutate(
+      PreviousEntry = dplyr::lag(EntryDate),
+      PreviousExit = dplyr::lag(ExitAdjust),
+      PreviousProject = dplyr::lag(ProjectName)
+    ) %>%
+    dplyr::filter(!is.na(PreviousEntry)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      PreviousStay = lubridate::interval(PreviousEntry, PreviousExit),
+      Overlap = lubridate::int_overlaps(InProject, PreviousStay)
+    ) %>%
+    dplyr::filter(Overlap == TRUE)
+
+  out <- dplyr::select(out, dplyr::all_of(c(vars$we_want, "PreviousProject")))
+    return(out)
+}
+
+#' @title Find Overlapping Project Stays for PSH
+#' @family Clarity Checks
+#' @family DQ: Overlapping Enrollment/Move-In Dates
+#' @inherit dq_overlaps params return description
+#' @export
+overlaps_psh <- function(served_in_date_range, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+
+  out <- served_in_date_range %>%
+    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
+    dplyr::mutate(
+      ExitAdjust = ExitAdjust - lubridate::days(1),
+      # bc a client can exit&enter same day
+      InProject = lubridate::interval(EntryDate, ExitAdjust),
+      Issue = "Overlapping Project Stays",
+      Type = "High Priority",
+      Guidance = guidance$project_stay
+    ) %>%
+    dplyr::filter(ProjectType == 3) |>
+    janitor::get_dupes(PersonalID) %>%
+    dplyr::group_by(PersonalID) %>%
+    dplyr::arrange(PersonalID, EntryDate) %>%
+    dplyr::mutate(
+      PreviousEntry = dplyr::lag(EntryDate),
+      PreviousExit = dplyr::lag(ExitAdjust),
+      PreviousProject = dplyr::lag(ProjectName)
+    ) %>%
+    dplyr::filter(!is.na(PreviousEntry)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      PreviousStay = lubridate::interval(PreviousEntry, PreviousExit),
+      Overlap = lubridate::int_overlaps(InProject, PreviousStay)
+    ) %>%
+    dplyr::filter(Overlap == TRUE)
+
+  out <- dplyr::select(out, dplyr::all_of(c(vars$we_want, "PreviousProject")))
+  return(out)
+}
 
 #' @title Find Overlapping Project Stays
 #' @family Clarity Checks
@@ -2381,145 +2488,24 @@ dq_overlaps <- function(served_in_date_range, Users, vars, guidance, app_env = g
     dplyr::mutate(
       PreviousStay = lubridate::interval(PreviousEntryAdjust, PreviousExitAdjust),
       Overlap = lubridate::int_overlaps(LiterallyInProject, PreviousStay)
-    ) %>%
-    dplyr::filter(Overlap == TRUE) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
+    )  %>%
+    dplyr::filter(Overlap == TRUE) |>
+    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
 
+
+  psh <- overlaps_psh()
+  rrh <- overlaps_rrh()
+  same_day <- overlaps_same_day()
+
+  out <- dplyr::bind_rows(psh, rrh, same_day, dq_overlaps)
   if (unsh && must_sp()) {
-    dq_overlaps <- dq_overlaps %>%
-      dplyr::filter(ProjectName == "Unsheltered Clients - OUTREACH") %>%
-      dplyr::left_join(Users, by = "UserCreating") %>%
-      dplyr::select(PersonalID,
-                    DefaultProvider,
-                    EntryDate,
-                    ExitDate,
-                    PreviousProject)
+    # TODO This needs an intermediate look to link the UserID in Users to the UserCreating alias in Clarity if Clarity users want to use it.
+    out <- out  |>
+      dplyr::filter(ProjectName == "Unsheltered Clients - OUTREACH")
   }
-  dq_overlaps
+
+  return(out)
 }
-
-#' @title Find Overlapping Project Stays on the Same Day
-#' @family Clarity Checks
-#' @family DQ: Overlapping Enrollment/Move-In Dates
-#' @inherit dq_overlaps params return description
-#' @export
-dq_overlaps_same_day <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
-  if (is_app_env(app_env))
-    app_env$set_parent(missing_fmls())
-
-  served_in_date_range %>%
-    dplyr::filter((ProjectType == 13 & MoveInDateAdjust == ExitDate) |
-                    ProjectType != 13) %>%
-    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
-    dplyr::mutate(
-      EntryAdjust = dplyr::case_when(
-        #for PSH and RRH, EntryAdjust = MoveInDate
-        ProjectType %in% c(1, 2, 8, 12) |
-          ProjectName == "Unsheltered Clients - OUTREACH" ~ EntryDate,
-        ProjectType %in% c(3, 9, 13) &
-          !is.na(MoveInDateAdjust) ~ MoveInDateAdjust,
-        ProjectType %in% c(3, 9, 13) &
-          is.na(MoveInDateAdjust) ~ EntryDate
-      ),
-      LiterallyInProject = dplyr::case_when(
-        ProjectType %in% c(3, 9) ~ lubridate::interval(MoveInDateAdjust, ExitAdjust),
-        ProjectType %in% c(1, 2, 4, 8, 12) ~ lubridate::interval(EntryAdjust, ExitAdjust)
-      ),
-      Issue = "Overlapping Project Stays",
-      Type = "High Priority",
-      Guidance = guidance$project_stays
-    ) %>%
-    dplyr::filter((!is.na(LiterallyInProject) & ProjectType != 13) |
-                    ProjectType == 13) %>%
-    janitor::get_dupes(PersonalID) %>%
-    dplyr::group_by(PersonalID) %>%
-    dplyr::arrange(PersonalID, EntryAdjust) %>%
-    dplyr::mutate(
-      PreviousEntryAdjust = dplyr::lag(EntryAdjust),
-      PreviousExitAdjust = dplyr::lag(ExitAdjust),
-      PreviousProject = dplyr::lag(ProjectName)
-    ) %>%
-    dplyr::filter(ExitDate > PreviousEntryAdjust &
-                    ExitDate < PreviousExitAdjust) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
-}
-
-#' @title Find Overlapping Project Stays for RRH
-#' @family Clarity Checks
-#' @family DQ: Overlapping Enrollment/Move-In Dates
-#' @inherit dq_overlaps params return description
-#' @export
-dq_overlaps_rrh <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
-  if (is_app_env(app_env))
-    app_env$set_parent(missing_fmls())
-  served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
-    dplyr::mutate(
-      ExitAdjust = ExitAdjust - lubridate::days(1),
-      # bc a client can exit&enter same day
-      InProject = lubridate::interval(EntryDate, ExitAdjust),
-      Issue = "Overlapping Project Stays",
-      Type = "High Priority",
-      Guidance = guidance$project_stays
-    ) %>%
-    dplyr::filter(ProjectType == 13) |>
-    janitor::get_dupes(PersonalID) %>%
-    dplyr::group_by(PersonalID) %>%
-    dplyr::arrange(PersonalID, EntryDate) %>%
-    dplyr::mutate(
-      PreviousEntry = dplyr::lag(EntryDate),
-      PreviousExit = dplyr::lag(ExitAdjust),
-      PreviousProject = dplyr::lag(ProjectName)
-    ) %>%
-    dplyr::filter(!is.na(PreviousEntry)) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(
-      PreviousStay = lubridate::interval(PreviousEntry, PreviousExit),
-      Overlap = lubridate::int_overlaps(InProject, PreviousStay)
-    ) %>%
-    dplyr::filter(Overlap == TRUE) %>%
-    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
-}
-
-#' @title Find Overlapping Project Stays for PSH
-#' @family Clarity Checks
-#' @family DQ: Overlapping Enrollment/Move-In Dates
-#' @inherit dq_overlaps params return description
-#' @export
-dq_overlaps_psh <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
-  if (is_app_env(app_env))
-    app_env$set_parent(missing_fmls())
-
-  served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
-    dplyr::mutate(
-      ExitAdjust = ExitAdjust - lubridate::days(1),
-      # bc a client can exit&enter same day
-      InProject = lubridate::interval(EntryDate, ExitAdjust),
-      Issue = "Overlapping Project Stays",
-      Type = "High Priority",
-      Guidance = guidance$project_stay
-    ) %>%
-    dplyr::filter(ProjectType == 3) |>
-    janitor::get_dupes(PersonalID) %>%
-    dplyr::group_by(PersonalID) %>%
-    dplyr::arrange(PersonalID, EntryDate) %>%
-    dplyr::mutate(
-      PreviousEntry = dplyr::lag(EntryDate),
-      PreviousExit = dplyr::lag(ExitAdjust),
-      PreviousProject = dplyr::lag(ProjectName)
-    ) %>%
-    dplyr::filter(!is.na(PreviousEntry)) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(
-      PreviousStay = lubridate::interval(PreviousEntry, PreviousExit),
-      Overlap = lubridate::int_overlaps(InProject, PreviousStay)
-    ) %>%
-    dplyr::filter(Overlap == TRUE) %>%
-    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
-}
-
 # Missing Health Ins ------------------------------------------------------
 #' @title Find Missing Health Insurance at Entry
 #' @family Clarity Checks
@@ -2687,8 +2673,9 @@ dq_missing_ncbs <- function(served_in_date_range, IncomeBenefits, vars, guidance
                   Type = "Error",
                   Guidance = guidance$missing_at_exit) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
-  dplyr::bind_rows(missing_ncbs_exit, missing_ncbs_entry)
-
+  out <- dplyr::bind_rows(missing_ncbs_exit, missing_ncbs_entry) |>
+    dplyr::distinct(PersonalID, .keep_all = TRUE)
+  return(out)
 }
 
 #' @title Find Conflicting or Unlikely Non-Cash Benefits (NCBS) at Entry/Exit
@@ -2950,6 +2937,7 @@ ssvf_served_in_date_range <- function(Enrollment_extra_Exit_HH_CL_AaE, served_in
         c(
           "AddressDataQuality",
           "EnrollmentID",
+          "EntryAdjust",
           "EntryDate",
           "ExitDate",
           "HouseholdID",
@@ -2961,6 +2949,7 @@ ssvf_served_in_date_range <- function(Enrollment_extra_Exit_HH_CL_AaE, served_in
           "MoveInDateAdjust",
           "PercentAMI",
           "PersonalID",
+          "ProjectID",
           "ProjectName",
           "ProjectType",
           "RelationshipToHoH",
@@ -3202,7 +3191,7 @@ dq_ssvf_missing_address <-
 
 # AP No Recent Referrals --------------------------------------------------
 
-dqu_aps <- function(Project, Referrals, data = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
+dqu_aps <- function(Project, Referrals, data_APs = TRUE, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
@@ -3218,73 +3207,37 @@ dqu_aps <- function(Project, Referrals, data = FALSE, app_env = get_app_env(e = 
     )
 
   aps_no_referrals <- Referrals %>%
-    dplyr::right_join(co_APs, by = c("ReferringProjectID" = "ProjectID")) %>%
+    dplyr::right_join(co_APs, by = c("R_ReferringProjectID" = "ProjectID")) %>%
     dplyr::filter(is.na(PersonalID)) %>%
-    dplyr::select(ReferringProjectID) %>%
+    dplyr::select(R_ReferringProjectID) %>%
     unique()
 
   aps_with_referrals <- Referrals %>%
-    dplyr::right_join(co_APs, by = c("ReferringProjectID" = "ProjectID")) %>%
+    dplyr::right_join(co_APs, by = c("R_ReferringProjectID" = "ProjectID")) %>%
     dplyr::filter(!is.na(PersonalID)) %>%
-    dplyr::select(ReferringProjectID) %>%
+    dplyr::select(R_ReferringProjectID) %>%
     unique()
 
-  if (!data)
-    return(aps_no_referrals)
+  if (data_APs) {
+    out <- tibble::tibble(
+      category = c("No Referrals", "Has Created Referrals"),
+      count = c(nrow(aps_no_referrals), nrow(aps_with_referrals)),
+      providertype = rep("Access Points"),
+      total = rep(c(
+        nrow(aps_no_referrals) + nrow(aps_with_referrals)
+      )),
+      stringsAsFactors = FALSE
+    ) %>%
+      dplyr::mutate(percent = count / total,
+                    prettypercent = scales::percent(count / total))
+  } else {
+    out <- aps_no_referrals
+  }
 
-  data_APs <- dplyr::data.frame(
-    category = c("No Referrals", "Has Created Referrals"),
-    count = c(nrow(aps_no_referrals), nrow(aps_with_referrals)),
-    providertype = rep("Access Points"),
-    total = rep(c(
-      nrow(aps_no_referrals) + nrow(aps_with_referrals)
-    )),
-    stringsAsFactors = FALSE
-  ) %>%
-    dplyr::mutate(percent = count / total,
-                  prettypercent = scales::percent(count / total))
-  data_APs
-
+  return(out)
 }
 
 
-#' @title Make a Clarity Profile link using the UniqueID and PersonalID
-#' @description If used in a \link[DT]{datatable}, set `escape = FALSE`
-#' @param pid \code{(character/data.frame)} Either the `PersonalID` column, or the \code{data.frame} with it.
-#' @param uid \code{(character)} The `UniqueID` column, unnecessary to specific if \code{data.frame} supplied to PersonalID
-#' @param chr \code{(logical)} Whether to output a character or a `shiny.tag` if `FALSE`. **Default** TRUE
-#'
-#' @return \code{(character/data.frame/shiny.tag)} If `PersonalID` is a character vector (IE nested in a mutate), and `chr = TRUE` a character vector, if `chr = FALSE` a `shiny.tag`. If `PersonalID` is a `data.frame` a `data.frame` with the `UniqueID` column replaced with the link to the profile and the `UniqueID` as the text
-#' @export
-#'
-#' @examples
-#' data.frame(a = letters, b = seq_along(letters)) |> dplyr::rowwise() |>  dplyr::mutate(a = make_profile_link(a, b)) |> DT::datatable(escape = FALSE)
-
-make_profile_link <- function(pid, uid, chr) {
-  href <- httr::parse_url(getOption("HMIS")$Clarity_URL)
-  href$path <- c("client",pid, "profile")
-  out <- htmltools::tags$a(href = httr::build_url(href), uid, target = "_blank")
-  if (chr)
-    out <- as.character(out)
-}
-
-
-
-#' @title Make UniqueID into a Clarity client profile link
-#' @param x \code{(data.frame)} must have `PersonalID` & `UniqueID` columns.
-#'
-#' @return \code{(data.frame)} With `UniqueID` as a profile link and PersonalID removed.
-#' @export
-#'
-#' @examples
-#' data.frame(a = letters, b = seq_along(letters)) |> make_profile_link() |>
-#' DT::datatable(escape = FALSE)
-make_profile_link_df <- function(x) {
-  x |>
-    dplyr::rowwise() |>
-    dplyr::mutate(UniqueID = make_profile_link(PersonalID, UniqueID, chr = TRUE)) |>
-    dplyr::select( - PersonalID)
-}
 
 read_roxygen <- function(file = file.path("R","04_DataQuality_utils.R"), tag = "family") {
   readLines(file) |>

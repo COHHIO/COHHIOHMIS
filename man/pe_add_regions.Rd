@@ -4,7 +4,11 @@
 \alias{pe_add_regions}
 \title{Add the Corresponding Region for each Project by way of Geocode matching}
 \usage{
-pe_add_regions(provider_extras, dirs)
+pe_add_regions(
+  provider_extras,
+  Regions = clarity.looker::hud_load("Regions", dirs$public),
+  dirs
+)
 }
 \arguments{
 \item{dirs}{}

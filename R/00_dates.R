@@ -78,7 +78,7 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
   rm_dates$calc$two_yrs_prior_end <-
     lubridate::floor_date(Sys.Date(), "month") - lubridate::days(1)
   rm_dates$calc$two_yrs_prior_start <-
-    lubridate::floor_date(rm_dates$calc$two_yrs_prior_end, "month") - lubridate::years(2) + lubridate::dmonths(1)
+    lubridate::as_date(lubridate::floor_date(rm_dates$calc$two_yrs_prior_end, "month") - lubridate::years(2) + lubridate::dmonths(1))
 
   rm_dates$calc$two_yrs_prior_range <- lubridate::interval(rm_dates$calc$two_yrs_prior_start,
                                                            rm_dates$calc$two_yrs_prior_end)

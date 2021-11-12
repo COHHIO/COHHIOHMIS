@@ -44,8 +44,8 @@ load_export <- function(
   # Veteran Client_extras ----
   VeteranCE <- cl_api$`HUD Extras`$Client_extras()
 
-  Client <- Client_add_UniqueID(Client, VeteranCE)
-  UU::join_check(cl_api$Client(), Client)
+  Client <- Client_add_UniqueID(Client, cl_api$`HUD Extras`$Client_UniqueID_extras())
+
 
   # Disabilities ------------------------------------------------------------
 
@@ -68,10 +68,11 @@ load_export <- function(
   # Project_extras -----------------------------------------------------------------
   # provider_extras
   # Thu Aug 12 14:23:50 2021
+  Regions <- clarity.looker::hud_load("Regions", dirs$public)
 
   provider_extras <- cl_api$`HUD Extras`$Project_extras()
   provider_extras <- pe_add_ProjectType(provider_extras) |>
-    pe_add_regions(dirs = dirs) |>
+    pe_add_regions(Regions, dirs = dirs) |>
     pe_add_GrantType()
 
   # Rminor: Coordinated Entry Access Points [CEAP]
@@ -113,7 +114,7 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
     # Add Households
     Enrollment_add_Household(Project) |>
     # Add Veteran Coordinated Entry
-    Enrollment_add_VeteranCE(VeteranCE) |>
+    Enrollment_add_VeteranCE(VeteranCE = VeteranCE) |>
     # Add Client Location from EnrollmentCoC
     Enrollment_add_ClientLocation(EnrollmentCoC) |>
     # Add Client AgeAtEntry
@@ -219,7 +220,11 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   # Referrals ---------------------------------------------------------------
 
 
-  Referrals <- cl_api$`HUD Extras`$CE_Referrals_extras()
+  Referrals <- cl_api$`HUD Extras`$CE_Referrals_extras(col_types = list(ReferralConnectedProjectType = "c", DeniedByType = "c")) |>
+    dplyr::rename_with(.cols = - dplyr::matches("(?:^PersonalID)|^(?:^UniqueID)"), rlang::as_function(~paste0("R_",.x))) |>
+    dplyr::mutate(R_ReferralConnectedProjectType = stringr::str_remove(R_ReferralConnectedProjectType, "\\s\\(disability required\\)$"),
+                  R_ReferralConnectedProjectType = dplyr::if_else(R_ReferralConnectedProjectType == "Homeless Prevention", "Homelessness Prevention", R_ReferralConnectedProjectType),
+                  R_ReferralConnectedProjectType = hud.extract::hud_translations$`2.02.6 ProjectType`(R_ReferralConnectedProjectType))
   # TODO ReferralOutcome must be replaced by a Clarity element (or derived from multiple) for dq_internal_old_outstanding_referrals
 
 

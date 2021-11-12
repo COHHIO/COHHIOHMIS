@@ -25,21 +25,24 @@ qpr_enrollment_small <- function(Enrollment_extra_Exit_HH_CL_AaE, app_env = get_
     app_env$set_parent(missing_fmls())
   Enrollment_extra_Exit_HH_CL_AaE |>
     dplyr::select(
-      EnrollmentID,
-      PersonalID,
-      HouseholdID,
-      ProjectID,
-      RelationshipToHoH,
-      CountyServed,
-      EntryDate,
-      MoveInDate,
-      ExitDate,
-      EntryAdjust,
-      MoveInDateAdjust,
-      ExitAdjust,
-      LivingSituation,
-      Destination,
-      DateCreated
+      dplyr::all_of(c(
+        "CountyServed",
+        "DateCreated",
+        "Destination",
+        "EnrollmentID",
+        "EntryAdjust",
+        "EntryDate",
+        "ExitAdjust",
+        "ExitDate",
+        "HouseholdID",
+        "LivingSituation",
+        "MoveInDate",
+        "MoveInDateAdjust",
+        "PersonalID",
+        "ProjectID",
+        "RelationshipToHoH",
+        "UniqueID"
+      ))
     )
 }
 
@@ -66,7 +69,8 @@ qpr_validation <- function(project_small, enrollment_small, app_env = get_app_en
       ExitDate,
       LivingSituation,
       Destination,
-      DateCreated
+      DateCreated,
+      UniqueID
     ) |>
     dplyr::filter(!is.na(EntryDate))
 }

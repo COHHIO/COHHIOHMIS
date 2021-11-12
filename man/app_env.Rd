@@ -9,18 +9,9 @@ Save dependencies for future functions in an environment and put app dependencie
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{\code{(list)}}}{with all app dependencies as objects}
+\item{\code{app_objs}}{\code{(list)} with all app dependencies as objects}
 
-\item{\code{\code{(list)}}}{with all app dependencies as character vectors}
-}
-\if{html}{\out{</div>}}
-}
-\section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{\code{(list)}}}{with all app dependencies as objects}
-
-\item{\code{\code{(list)}}}{with all app dependencies as character vectors}
+\item{\code{app_deps}}{\code{(list)} with all app dependencies as character vectors}
 }
 \if{html}{\out{</div>}}
 }
@@ -31,7 +22,7 @@ Save dependencies for future functions in an environment and put app dependencie
 \item \href{#method-gather_deps}{\code{app_env$gather_deps()}}
 \item \href{#method-set_parent}{\code{app_env$set_parent()}}
 \item \href{#method-write_app_deps}{\code{app_env$write_app_deps()}}
-\item \href{#method-dropbox_upload}{\code{app_env$dropbox_upload()}}
+\item \href{#method-deps_to_apps}{\code{app_env$deps_to_apps()}}
 \item \href{#method-dropbox_auth}{\code{app_env$dropbox_auth()}}
 \item \href{#method-new}{\code{app_env$new()}}
 \item \href{#method-clone}{\code{app_env$clone()}}
@@ -49,9 +40,11 @@ Pass all dependencies saved from previous functions to an environment for use
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{...}}{\code{(character)} names of objects to share with \code{env}. \strong{Default} load all previously stored objects.}
+
 \item{\code{env}}{\code{(environment)} to pass dependencies to. \strong{Default} the calling environment}
 
-\item{\code{nms}}{\code{(character)} of the names of the dependencies to load into the \code{env}. \strong{Default} load all previously stored objects.}
+\item{\code{as_list}}{\code{(logical)} \code{TRUE} return the named objects as a list. \code{FALSE} saves them directly to the environment}
 }
 \if{html}{\out{</div>}}
 }
@@ -64,7 +57,7 @@ Gather the objects passed to \code{app_env}s internal environment to be passed t
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{app_env$gather_deps(
   ...,
-  app_deps = FALSE,
+  app_deps = TRUE,
   env = rlang::caller_env(),
   .args = names(rlang::fn_fmls(rlang::call_fn(rlang::call_standardise(match.call(call =
     sys.call(1))))))
@@ -74,17 +67,25 @@ Gather the objects passed to \code{app_env}s internal environment to be passed t
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{...}}{\code{(objects)} Dependencies for subsequent functions, passed as objects and not character vector of names. Use \code{"everything"} to capture all objects from the parent environment.}
+\item{\code{...}}{\code{(objects)} Dependencies for subsequent functions, passed as named objects or a character of the object name. If no name is provided, the name of the object will be retained. Use \code{"everything"} to capture all objects from the parent environment.}
 
-\item{\code{app_deps}}{\code{(named list)} with items for each app that contain character vectors of the objects each app depends on to be saved.}
+\item{\code{app_deps}}{\code{(logical/character)} \strong{Default: \code{TRUE}} to save all app dependencies specified at initialization of the \code{app_env} object. Otherwise, a character vector of app dependencies to save.}
+
+\item{\code{env}}{\code{(env)} The environment from which objects should be saved. \strong{Default: the calling environment}}
+
+\item{\code{.args}}{I don't remember why this is here but it has to be for the function to work properly.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{(environment)} The \code{app_env} object with the saved objects in the internal environment.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-set_parent"></a>}}
 \if{latex}{\out{\hypertarget{method-set_parent}{}}}
 \subsection{Method \code{set_parent()}}{
+Set the given environment to inherit from the internal 'global' environment
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{app_env$set_parent(vars_to_remove = NULL, env = rlang:::caller_env())}\if{html}{\out{</div>}}
 }
@@ -106,9 +107,10 @@ Gather the objects passed to \code{app_env}s internal environment to be passed t
 Write app dependencies to disk
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{app_env$write_app_deps(
+  ...,
   objs,
-  deps,
   path = file.path("data", "db", "RminorElevated"),
+  dep_nms = NULL,
   overwrite = TRUE
 )}\if{html}{\out{</div>}}
 }
@@ -116,35 +118,71 @@ Write app dependencies to disk
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{deps}}{\code{(character)} with names of app dependencies.}
+\item{\code{...}}{\code{(objects)} objects to write to disk. Files will named after the object name.}
+
+\item{\code{objs}}{\code{(list)} of objects to write to disk, overrides \code{...}.}
 
 \item{\code{path}}{\code{(character)} of directory to write app dependencies to}
 
-\item{\code{overwrite}}{\code{(logical)} Whether to overwrite existing files.}
+\item{\code{dep_nms}}{\code{(character)} with names of app dependencies. \emph{Optional}}
+
+\item{\code{overwrite}}{\code{(logical)} Whether to overwrite existing files. \strong{Default:\code{TRUE}}}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+\code{(character)} vector of the files written
+}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-dropbox_upload"></a>}}
-\if{latex}{\out{\hypertarget{method-dropbox_upload}{}}}
-\subsection{Method \code{dropbox_upload()}}{
+\if{html}{\out{<a id="method-deps_to_apps"></a>}}
+\if{latex}{\out{\hypertarget{method-deps_to_apps}{}}}
+\subsection{Method \code{deps_to_apps()}}{
+Transfer all files in the data dependencies folder to the applications via dropbox or \code{file.copy}. If using dropbox, requires an authorized token to dropbox. See \code{dropbox_auth}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$dropbox_upload(
+\if{html}{\out{<div class="r">}}\preformatted{app_env$deps_to_apps(
+  ...,
   folder = file.path("data", "db", "RminorElevated"),
-  db_folder = "RminorElevated"
+  dest_folder = "RminorElevated",
+  dropbox = TRUE
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{\code{(character)} character vectors of files to write to disk}
+
+\item{\code{folder}}{\code{(character)} path to folder with files to transfer transfer}
+
+\item{\code{dest_folder}}{\code{(character)} folder to transfer too. This will be created inside the \verb{HMIS Apps} folder if using Dropbox.}
+
+\item{\code{dropbox}}{\code{(logical)} \strong{Default} Upload dependencies to Dropbox, \code{FALSE} to pass to the \code{data} folder in the sibling directory: \code{dest_folder}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-dropbox_auth"></a>}}
 \if{latex}{\out{\hypertarget{method-dropbox_auth}{}}}
 \subsection{Method \code{dropbox_auth()}}{
+Authorize Dropbox
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$dropbox_auth(db_auth_token = "~/R/auth_tokens/db_token.rds")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{app_env$dropbox_auth(
+  db_auth_token = file.path("~", "R", "auth_tokens", "db_token.rds")
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{db_auth_token}}{\code{(character)} path to the Dropbox authorization token. See \link[rdrop2]{drop_auth}}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
@@ -158,7 +196,7 @@ Instantiate with default app dependencies to be collected (if they exist) each t
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{app_deps}}{\code{(named list)} with items for each app that contain character vectors of the objects each app depends on to be saved.}
+\item{\code{app_deps}}{\code{(list)} with each app and it's dependencies as a character vector. See \code{app_deps} for formatting.}
 }
 \if{html}{\out{</div>}}
 }

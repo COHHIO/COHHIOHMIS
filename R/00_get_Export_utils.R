@@ -58,22 +58,21 @@ Client_redact <- function(Client) {
 #' @param Client_extras \code{(data.frame)} A custom look linking PersonalID & UniqueID
 #' @param app_env
 #'
-#' @return
+#' @return \code{(data.frame)} with UniqueID column
 #' @export
-#'
-#' @examples
-Client_add_UniqueID <- function(Client, Client_extras, app_env = get_app_env(e = rlang::caller_env())) {
+
+Client_add_UniqueID <- function(Client, Client_UniqueIDs, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  out <- dplyr::left_join(Client, dplyr::distinct(dplyr::select(Client_extras, PersonalID, UniqueID), PersonalID, UniqueID), by = "PersonalID")
+  out <- dplyr::left_join(Client, dplyr::distinct(Client_UniqueIDs, PersonalID, UniqueID), by = "PersonalID")
   UU::join_check(Client, out)
   out
 }
 
-#' Add Exit data to Enrollments
+#' @title Add Exit data to Enrollments
 #'
-#' @param Enrollment
-#' @param Exit
+#' @param Enrollment \code{(data.frame)} HUD CSV Export Item
+#' @param Exit \code{(data.frame)} HUD CSV Export Item
 #'
 #' @return \code{(data.frame)} Enrollments with `ExitDate`, `Destination`, `OtherDestination` and derived column `ExitAdjust`
 #' @export
@@ -96,8 +95,7 @@ Enrollment_add_Exit <- function(Enrollment, Exit) {
 #' Add Household Information to Enrollment from Project
 #'
 #' @param Enrollment with Exit data. See `Enrollment_add_Exit`
-#' @param Project
-#' @param hc From `dates`
+#' @inheritParams data_quality_tables
 #' @inheritParams R6classes
 #' @return \code{(data.frame)} of Enrollment with Household Columns `MoveInDateAdjust` appended
 #' @export
@@ -224,7 +222,7 @@ Enrollment_add_ClientLocation = function(Enrollment, EnrollmentCoC) {
 #' @export
 
 Enrollment_add_AgeAtEntry_UniqueID <- function(Enrollment, Client) {
-  dplyr::left_join(Enrollment, dplyr::select(Client, UniqueID, PersonalID, DOB) |> dplyr::distinct(PersonalID, .keep_all = TRUE), by = c("PersonalID", "UniqueID")) |>
+  dplyr::left_join(Enrollment, dplyr::select(Client, UniqueID, PersonalID, DOB) |> dplyr::distinct(PersonalID, .keep_all = TRUE), by = c("PersonalID")) |>
     dplyr::mutate(AgeAtEntry = age_years(DOB, EntryDate)) |>
     dplyr::select(-DOB)
 }
@@ -254,7 +252,7 @@ EnrollmentCoC_RemoveCoCCodes <- function(EnrollmentCoC, codes_to_remove = c("Def
 #' @return \code{(data.frame)} provider_extras with Regions column
 #' @export
 
-pe_add_regions <- function(provider_extras, dirs) {
+pe_add_regions <- function(provider_extras, Regions = clarity.looker::hud_load("Regions", dirs$public), dirs) {
   # geocodes is created by `hud.extract` using the hud_geocodes.R functions
   geocodes <- clarity.looker::hud_load("geocodes", dirs$public)
   # This should map a county to every geocode
@@ -290,8 +288,6 @@ pe_add_regions <- function(provider_extras, dirs) {
     out <- out |>
       dplyr::left_join(geocodes, by = c(Geocode = "GeographicCode"))
   }
-
-  Regions <- clarity.looker::hud_load("Regions", dirs$public)
 
   out <- out |>
     dplyr::left_join(Regions |> dplyr::select(- RegionName), by = "County") |>

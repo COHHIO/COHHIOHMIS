@@ -44,11 +44,11 @@
                ProjectID != 1695) %>%
       select(all_of(vars_prep),
              ProviderCreating,
-             ReferralDate,
+             ReferredDate,
              ReferralOutcome,
              EnrollmentID) %>%
       filter(is.na(ReferralOutcome) &
-               ReferralDate < today() - days(14)) %>%
+               ReferredDate < today() - days(14)) %>%
       mutate(
         ProjectName = ProviderCreating,
         Issue = "Old Outstanding Referral",
@@ -279,11 +279,10 @@
       dplyr::group_by(ProjectName, ProjectID) %>%
       dplyr::summarise(Households = dplyr::n()) %>%
       dplyr::ungroup() %>%
-      dplyr::arrange(dplyr::desc(Households))
+      dplyr::arrange(dplyr::desc(Households)) |>
+      dplyr::mutate(hover = paste0(ProjectName, ":", ProjectID))
 
-    dq_data_eligibility_plot$hover <-
-      with(dq_data_eligibility_plot,
-           paste0(ProjectName, ":", ProjectID))
+
 
     dq_plot_eligibility <-
       ggplot2::ggplot(

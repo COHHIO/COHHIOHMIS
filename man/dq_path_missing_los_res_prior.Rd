@@ -6,7 +6,6 @@
 \usage{
 dq_path_missing_los_res_prior(
   served_in_date_range,
-  Project,
   vars,
   guidance,
   app_env = get_app_env(e = rlang::caller_env())
@@ -14,8 +13,6 @@ dq_path_missing_los_res_prior(
 }
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
-
-\item{Project}{\code{(data.frame)} of Project with additional features added in \code{load_export}}
 
 \item{vars}{\code{(named list)}
 \itemize{

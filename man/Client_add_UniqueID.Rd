@@ -6,19 +6,19 @@
 \usage{
 Client_add_UniqueID(
   Client,
-  Client_extras,
+  Client_UniqueIDs,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }
 \arguments{
 \item{Client}{\code{(data.frame)} Client HUD CSV Export item}
 
-\item{Client_extras}{\code{(data.frame)} A custom look linking PersonalID & UniqueID}
-
 \item{app_env}{}
+
+\item{Client_extras}{\code{(data.frame)} A custom look linking PersonalID & UniqueID}
 }
 \value{
-
+\code{(data.frame)} with UniqueID column
 }
 \description{
 Add the UniqueID to the Client export

@@ -1,4 +1,4 @@
-# Must set GGMAP_GOOGLE_API_KEY in .Renviron (should not be needed until 2022), see ?ggmap::register_google for details.
+# Must set GGMAP_GOOGLE_API_KEY in .Renviron (should not be neeqded until 2022), see ?ggmap::register_google for details.
 # Set this option to bypass errors in ggmap
 # options(ggmap = list(google = list(second_limit = 50L,
 #                                    day_limit = 2500)))
@@ -16,23 +16,29 @@
 devtools::load_all()
 # must set directories if using a directory structure differing from the default in clarity.looker:
 dirs <- clarity.looker::dirs
+guidance <- guidance
 # Use the HUD CSV from the UI until the Looker API is fixed
 dirs$export <- "data"
 cl_api$.__enclos_env__$self$dirs <- dirs
-run_bg(bg_scripts["extras"])
+Rm_env$gather_deps(guidance)
+Rm_env$gather_deps(dirs)
+run_bg(bg_scripts["extras_dq"])
 # Try services
 # rstudioapi::jobRunScript(file.path("inst","src","Services_test.R"), importEnv = TRUE, workingDir = getwd())
 
-Rm_env$gather_deps(guidance)
-Rm_env$gather_deps(dirs)
 Rm_env <- dates()
 Rm_env <- load_export()
 Rm_env <- client_counts()
+Rm_env <- covid19()
+Rm_env <- covid19_plots()
 Rm_env <- cohorts()
+Rm_env <- prioritization()
+Rm_env <- bed_unit_utilization()
 Rm_env <- data_quality()
-Rm_env$write_app_deps(Rm_env$app_objs$RminorElevated, Rm_env$app_deps$RminorElevated, file.path("data", "db", "RminorElevated"))
+Rm_env$write_app_deps(objs = Rm_env$app_objs$RminorElevated, path = file.path("data", "db", "RminorElevated"), dep_nms = Rm_env$app_deps$RminorElevated)
 # Uses RminorElevated as the default
-Rm_env$dropbox_upload()
+Rm_env$dropbox_auth()
+Rm_env$deps_to_apps(dropbox = FALSE)
 
 
 
