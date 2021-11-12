@@ -36,10 +36,7 @@ co_currently_homeless <- co_clients_served |>
   dplyr::filter((is.na(ExitDate) |
             ExitDate > lubridate::today()) &
            (ProjectType %in% c(4, lh_project_types) |
-              (
-                ProjectType %in% c(ph_project_types) &
-                  is.na(MoveInDateAdjust)
-              ))) |>
+              ProjectType %in% c(ph_project_types))) |>
   dplyr::select(
     PersonalID,
     UniqueID,
