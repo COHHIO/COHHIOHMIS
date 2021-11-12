@@ -250,14 +250,19 @@ prioritization <- co_currently_homeless |>
 
 # correcting for bad hh data (while also flagging it) ---------------------
 
+
 # what household ids exist in the data?
 ALL_HHIDs <- prioritization |> dplyr::select(HouseholdID) |> unique()
-
+.singles <- prioritization |>
+  dplyr::group_by(HouseholdID) |>
+  dplyr::summarise(N = dplyr::n(), .groups = "drop") |>
+  dplyr::filter(N == 1) |>
+  dplyr::pull(HouseholdID)
 # marking who is a hoh (accounts for singles not marked as hohs in the data)
 prioritization <- prioritization |>
   dplyr::mutate(
     RelationshipToHoH = dplyr::if_else(is.na(RelationshipToHoH), 99L, RelationshipToHoH),
-    hoh = dplyr::if_else(stringr::str_detect(HouseholdID, stringr::fixed("s_")) |
+    hoh = dplyr::if_else(HouseholdID %in% .singles |
                     RelationshipToHoH == 1, 1L, 0L))
 
 # what household ids exist if we only count those with a hoh?
@@ -285,7 +290,7 @@ HHIDs_with_bad_dq <- rbind(HHIDs_with_bad_dq, mult_hohs)
 HHIDs_with_bad_dq <-
   dplyr::left_join(HHIDs_with_bad_dq, prioritization, by = "HouseholdID")
 
-rm(ALL_HHIDs, HHIDs_in_current_logic, mult_hohs)
+rm(ALL_HHIDs, HHIDs_in_current_logic, mult_hohs, .singles)
 
 # assigning hoh status to the oldest person in the hh
 Adjusted_HoHs <- HHIDs_with_bad_dq |>
