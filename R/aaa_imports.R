@@ -1,8 +1,8 @@
 #' @title Reimports from other packages
 #' @name Reimports
 #' @description Functions imported from other packages
-#' @importFrom rlang `%||%`
-#' @importFrom dplyr `%>%`
+#' @importFrom rlang "%||%" "%|%"
+#' @importFrom dplyr "%>%"
 #' @importFrom clarity.looker dirs
 NULL
 
@@ -18,6 +18,7 @@ NULL
 #' @param IncomeBenefits \code{(data.frame)} From the HUD CSV Export
 #' @param Project \code{(data.frame)} From the HUD CSV Export
 #' @param Enrollment \code{(data.frame)} From the HUD CSV Export
+#' @param EnrollmentCoC \code{(data.frame)} From the HUD CSV Export
 #' @param Exit \code{(data.frame)} From the HUD CSV Export
 #' @param Client \code{(data.frame)} From the HUD CSV Export
 #' @param mahoning_projects \code{(named numeric)} Vector of ProjectIDs associated with projects operating in Mahoning. Created in `load_export`.
