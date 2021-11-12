@@ -1,7 +1,6 @@
 #' @include app_dependencies.R
-if (Sys.info()["nodename"] %in% c("LAPTOP-O2IG5O1H", "DESKTOP-2SK9RKR") && file.exists("Rm_data.Rproj")) {
+if (file.exists("Rm_data.Rproj") && interactive()) {
   if (!exists("cl_api")) {
-
     devtools::load_all("../clarity.looker")
     .GlobalEnv$cl_api <- clarity.looker::clarity_api$new(file.path("inst","auth","Looker.ini"))
   }
