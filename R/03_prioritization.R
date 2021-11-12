@@ -131,7 +131,7 @@ extended_disability <- co_currently_homeless |>
   dplyr::ungroup() |>
   dplyr::distinct() |>
   dplyr::left_join(
-    dplyr::select(Enrollment,
+    dplyr::select(Enrollment_extra_Exit_HH_CL_AaE,
                   EnrollmentID,
                   DisablingCondition),
                    by = c("EnrollmentID")) |>
