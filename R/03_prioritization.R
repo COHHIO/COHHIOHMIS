@@ -541,7 +541,7 @@ prioritization <- prioritization |>
 # Add Referral Status -----------------------------------------------------
 
 # thinking maybe it makes the most sense to only look at referrals that have
-# been accepted for the purposes of the Active List. Because who cares if
+# been accepted for the purposes of Prioritization. Because who cares if
 # there's an open referral on a client who needs housing? That doesn't mean
 # anything because we haven't really assigned a meaning to that. But an
 # accepted referral does supposedly mean something, and it would add context
@@ -576,7 +576,7 @@ prioritization <- dplyr::left_join(
     prioritization,
     Situation = dplyr::case_when(
       PTCStatus == "Has Entry into RRH or PSH" ~ dplyr::if_else(
-        R_ReferralConnectedProjectType %in% c(lh_project_types, 4),
+        R_ReferralConnectedPTC %in% c(lh_project_types, 4),
         paste("Has Entry into",
               R_ReferralConnectedProjectName),
         PTCStatus
