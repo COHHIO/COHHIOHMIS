@@ -577,6 +577,8 @@ referral_result_expr <- rlang::exprs(
   ),
   housed2 = !is.na(R_ReferralConnectedMoveInDate),
   housed3 = R_ExitHoused == "Housed",
+  is_last = R_IsLastReferral == "Yes",
+  is_active = R_ActiveInProject == "Yes",
   accepted1 = R_IsLastReferral == "Yes",
   accepted2 = stringr::str_detect(R_ReferralResult, "accepted$"),
   coq = R_ReferralCurrentlyOnQueue == "Yes"
