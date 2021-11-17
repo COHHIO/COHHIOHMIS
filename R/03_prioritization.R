@@ -419,7 +419,8 @@ prioritization <- prioritization |>
 # replacing non-Unsheltered-Provider missings with County of the provider
 prioritization <- prioritization |>
   dplyr::left_join(Project |>
-              dplyr::select(ProjectName, ProjectCounty), by = "ProjectName") |>
+                     dplyr::filter(!OperatingEndDate < Sys.Date() | is.na(OperatingEndDate)) |>
+                     dplyr::select(ProjectName, ProjectCounty), by = "ProjectName") |>
   dplyr::mutate(
     CountyGuessed = is.na(CountyServed),
     CountyServed = dplyr::if_else(
