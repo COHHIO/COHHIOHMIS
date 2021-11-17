@@ -397,21 +397,13 @@ prioritization <- prioritization |>
   dplyr::select(-AgeAtEntry)
 
 # Find duplicated and select those with the latest ExpectedPHDate and non-missing CountyServed
-min_na <- function(...) {
-  x <- data.frame(...)
-  if (any(!purrr::map_lgl(x$ExpectedPHDate, is.na))) {
-    idx <- which.max(x$ExpectedPHDate)
-  } else {
-    idx <- which.min(apply(x, 1, rlang::as_function(~sum(is.na(.x)))))
-  }
-  x[idx,]
-}
+
   prioritization_dupes <- janitor::get_dupes(prioritization, PersonalID)
   prioritization_dupes <- prioritization_dupes |>
     dplyr::group_by(PersonalID, HouseholdID) |>
     dplyr::summarise(n_na = min_na(CountyServed,
                                    PHTrack,
-                                   ExpectedPHDate)) |>
+                                   ExpectedPHDate), .groups = "keep") |>
     tidyr::unpack(cols = n_na)
 
 
