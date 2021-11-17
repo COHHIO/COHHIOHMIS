@@ -11,6 +11,24 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
+
+#' @title Create the prioritization list
+#'
+#' @param co_clients_served \code{(data.frame)} See `cohorts`
+#' @param covid19 \code{(data.frame)} See `covid19`
+#' @param c19priority \code{(data.frame)} See `covid19`
+#' @param Disabilities \code{(data.frame)} See `covid19`
+#' @param Enrollment_extra_Exit_HH_CL_AaE \code{(data.frame)} See `load_export`
+#' @param Referrals \code{(data.frame)} See `load_export`
+#' @param Scores \code{(data.frame)} See `load_export`
+#' @param lh_project_types \code{(integer)} See `cohorts`
+#' @param ph_project_types \code{(integer)} See `cohorts`
+#' @seealso load_export, covid19, cohorts
+#' @inheritParams R6Classes
+#' @inheritParams data_quality_tables
+#' @export
+#'
+#' @include 03_prioritization_utils.R
 prioritization <- function(
   co_clients_served,
   covid19,
