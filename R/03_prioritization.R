@@ -588,11 +588,19 @@ referral_result_summarize <- purrr::map(referral_result_expr, ~rlang::expr(any(!
 
 
 
+Referrals <- Referrals |>
+  filter_dupe_soft(!!referral_result_expr$is_last,
+                   !!referral_result_expr$is_active,
+                   !is.na(R_ReferralResult),
+                   !!referral_result_expr$housed3 & !!referral_result_expr$accepted2,
+              key = PersonalID)
+
+
 Referrals_summary <- Referrals |>
   dplyr::group_by(PersonalID) |>
   # calculate the last touch point
   dplyr::mutate(max_time = max(R_ExitUpdatedTime, na.rm = TRUE),
-                max_time_greatest = max_time > (R_ReferredDate %|% R_ReferralAcceptedDate %|% R_LastEnrollmentDate))
+                max_time_greatest = max_time > (R_ReferredDate %|% R_ReferralAcceptedDate))
 
 # Get housed
 .housed <- Referrals_summary |>
