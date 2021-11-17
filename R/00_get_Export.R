@@ -16,6 +16,15 @@
 # IT REPLACES THE NAMES AND SSNS WITH DATA QUALITY SIGNIFIERS!
 # IT CAN BE RUN ON A CLEAN CLIENT.CSV FILE OR ONE THAT'S BEEN OVERWRITTEN.
 
+#' @title Load the HUD CSV Export and perform joins with extras
+#'
+#' @inheritParams R6Classes
+#' @param error \code{(logical)} if date checks fail, Whether to error or send a pushbullet message.
+#'
+#' @return
+#' @export
+#'
+#' @examples
 load_export <- function(
   clarity_api = get_clarity_api(e = rlang::caller_env()),
   app_env = get_app_env(e = rlang::caller_env()),

@@ -2,7 +2,7 @@
 
 #' @title COVID-19 Data Objects
 #'
-#' @inherit R6classes params
+#' @inherit R6Classes params
 #' @include 02.2_covid19_utils.R
 #' @export
 
