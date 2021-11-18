@@ -6,9 +6,6 @@
 \usage{
 pe_add_GrantType(provider_extras)
 }
-\arguments{
-\item{provider_extras}{\code{(data.frame)} provider_extras with Regions, see \code{pe_add_regions}}
-}
 \value{
 
 }

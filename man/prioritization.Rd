@@ -44,6 +44,8 @@ prioritization(
 
 \item{ph_project_types}{\code{(integer)} See \code{cohorts}}
 
+\item{clarity_api}{\code{(clarity_api)} R6 Object containing the connection to the Clarity Looker instance.}
+
 \item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \description{

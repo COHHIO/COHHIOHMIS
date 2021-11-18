@@ -33,10 +33,6 @@ data_quality_tables(
 
 \item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 
-\item{HealthAndDV}{\code{(data.frame)} From the HUD CSV Export}
-
-\item{Disabilities}{\code{(data.frame)} From the HUD CSV Export}
-
 \item{Project}{\code{(data.frame)} From the HUD CSV Export}
 
 \item{Enrollment}{\code{(data.frame)} From the HUD CSV Export}
