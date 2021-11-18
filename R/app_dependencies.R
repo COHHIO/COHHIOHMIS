@@ -249,13 +249,12 @@ app_env <- R6::R6Class(
           }
         }()
 
+
+      rlang::env_bind(self$.__enclos_env__, !!!.work_deps)
       cli::cli({
         cli::cli_h2("Internal")
         cli::cli_alert_success(paste0("dependencies saved: ", paste0(.new_wdeps, collapse = ", ")))
       })
-
-
-      rlang::env_bind(self$.__enclos_env__, !!!.work_deps)
       if (!isFALSE(app_deps)) {
         if (isTRUE(app_deps))
           app_deps <- self$app_deps
@@ -267,9 +266,13 @@ app_env <- R6::R6Class(
           if (UU::is_legit(.deps)) {
             # Add Client_filter for all dependencies to ensure test clients are removed from reporting
             # .deps <- purrr::map_if(.deps, is.data.frame, Client_filter)
-            .new_objs <- try({self$app_objs[[.y]] <<- purrr::list_modify(self$app_objs[[.y]],!!!.deps)}, silent = TRUE)
-            if (!UU::is_legit(.new_objs))
-              self$app_objs[[.y]][names(self$app_objs[[.y]]) %in% names(.deps)] <<- .deps[names(.deps) %in% names(self$app_objs[[.y]])]
+
+            .new_objs <- try({self$app_objs[[.y]] <<- purrr::list_modify(,!!!.deps)}, silent = TRUE)
+            if (!UU::is_legit(.new_objs)) {
+              for (nm in names(.deps)) {
+                self$app_objs[[.y]][[nm]] <<- .deps[[nm]]
+              }
+            }
 
             cli::cli({
               cli::col_blue(cli::cli_h2(.y))
