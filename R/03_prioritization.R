@@ -563,9 +563,6 @@ prioritization <- prioritization |>
 # referrals to a homeless project wouldn't mean anything on an Active List,
 # right?
 
-
-
-browser()
 # Create a summary of last referrals & whether they were accepted
 referral_result_expr <- rlang::exprs(
   housed1 = R_RemovedFromQueueSubreason %in% c(
@@ -584,7 +581,7 @@ referral_result_expr <- rlang::exprs(
   coq = R_ReferralCurrentlyOnQueue == "Yes"
 
 )
-referral_result_summarize <- purrr::map(referral_result_expr, ~rlang::expr(any(!!.x, na.rm = TRUE)))
+referral_result_summarize <- purrr::map(referral_result_expr, ~rlang::expr(isTRUE(any(!!.x, na.rm = TRUE))))
 
 
 
@@ -593,24 +590,22 @@ Referrals <- Referrals |>
                    !!referral_result_expr$is_active,
                    !is.na(R_ReferralResult),
                    !!referral_result_expr$housed3 & !!referral_result_expr$accepted2,
-              key = PersonalID)
+              key = PersonalID) |>
+  dplyr::arrange(dplyr::desc(R_ReferredEnrollmentID)) |>
+  dplyr::distinct(dplyr::across(-R_ReferredEnrollmentID), .keep_all = TRUE)
 
 
-Referrals_summary <- Referrals |>
-  dplyr::group_by(PersonalID) |>
-  # calculate the last touch point
-  dplyr::mutate(max_time = max(R_ExitUpdatedTime, na.rm = TRUE),
-                max_time_greatest = max_time > (R_ReferredDate %|% R_ReferralAcceptedDate))
+# Referrals_summary <- Referrals |>
+#   dplyr::group_by(PersonalID) |>
+#   # calculate the last touch point
+#   dplyr::mutate(max_time = max(R_ExitUpdatedTime, na.rm = TRUE),
+#                 max_time_greatest = max_time > (R_ReferredDate %|% R_ReferralAcceptedDate))
 
 # Get housed
-.housed <- Referrals_summary |>
-  # Filter for all the clients with a last touchpoint
-  dplyr::filter((R_ExitUpdatedTime == max_time & max_time_greatest)) |>
+.housed <- Referrals |>
   dplyr::group_by(PersonalID) |>
   # summarise specific statuses: accepted, housed or currently on queue
-  dplyr::summarise(accepted = !!referral_result_summarize$accepted1 && !!referral_result_summarize$accepted2,
-                   housed = !!referral_result_summarize$housed1 || !!referral_result_summarize$housed2 || referral_result_summarize$housed3,
-                   coq = !!referral_result_summarize$coq,
+  dplyr::summarise(housed = !!referral_result_summarize$housed1 || !!referral_result_summarize$housed2 || !!referral_result_summarize$housed3,
                    .groups = "drop") |>
   dplyr::filter(housed) |>
   dplyr::select(PersonalID) |>
@@ -623,24 +618,20 @@ likely_housed <- .housed |>
   dplyr::filter(!housed) |>
   dplyr::select(PersonalID)
 
-#TODO Add these folks to prioritization to follow-up with
 
-# Get all the completed referrals/not housed to be bound to prioritization
-Referrals_completed <- Referrals_summary |>
-  dplyr::filter(accepted & !housed) |>
-  dplyr::select(1:3) |>
-  {\(x) {left_join(x, Referrals, by = UU::common_names(Referrals, x))}}() |>
-  dplyr::filter((!!referral_result_expr$accepted1 & !!referral_result_expr$accepted2) | !(!!referral_result_expr$coq))
-#TODO The type of the last program in which they're active is more important. Successful referrals isn't the best way to go about this
-# Get open Referrals that remain
-Referrals_summary <- Referrals_summary |>
-  dplyr::filter(!PersonalID %in% Referrals_completed$PersonalID)
-
-# Bind completed referrals (eventually)
-# TODO Need to set more complex statuses or include necessary columns to discern a client's status
-prioritization <- dplyr::filter(prioritization, !PersonalID %in% Referrals_completed$PersonalID) |>
-  dplyr::bind_rows(Referrals_completed)
-
+prioritization <- prioritization |>
+  dplyr::mutate(housed = PersonalID %in% .housed$PersonalID,
+                likely_housed = PersonalID %in% likely_housed$PersonalID) |>
+  dplyr::left_join(
+    dplyr::select(Referrals,
+                  PersonalID,
+                  R_ReferralConnectedPTC,
+                  R_ReferralConnectedProjectName,
+                  R_ReferredProjectName,
+                  R_ReferredDate,
+                  R_ReferralCurrentlyOnQueue,
+                  R_ReferralConnectedMoveInDate),
+    by = "PersonalID")
 
 
   # Referral Situation ----
@@ -648,8 +639,10 @@ prioritization <- dplyr::filter(prioritization, !PersonalID %in% Referrals_compl
   prioritization <- dplyr::mutate(
     prioritization,
     Situation = dplyr::case_when(
+      likely_housed ~ "Is Likely Housed: please follow-up with the client to ensure they are housed.",
+      housed ~ "Is Housed",
       PTCStatus == "Has Entry into RRH or PSH" ~ dplyr::if_else(
-        R_ReferralConnectedPTC %in% c(lh_project_types, 4),
+        R_ReferralConnectedPTC %in% c(ph_project_types, 4),
         paste("Has Entry into",
               R_ReferralConnectedProjectName),
         PTCStatus
@@ -668,12 +661,16 @@ prioritization <- dplyr::filter(prioritization, !PersonalID %in% Referrals_compl
                                 PHTrack,
                                 "by",
                                 ExpectedPHDate),
+      !(!!referral_result_expr$coq) ~ "Is not in Access Point Community Queue, please add to CQ.",
       PTCStatus == "Currently Has No Entry into RRH or PSH" &
         is.na(R_ReferralConnectedProjectName) &
         is.na(PHTrack) ~
-        "No Entry or accepted Referral into PSH/RRH, and no current Permanent Housing Track"
-    )
-  )
+        "No Entry or accepted Referral into PSH/RRH, and no current Permanent Housing Track",
+
+    ),
+    ExpectedPHDate = dplyr::if_else(is.na(ExpectedPHDate), R_ReferralConnectedMoveInDate, ExpectedPHDate)
+  ) |>
+  dplyr::select(-housed, -likely_housed, - dplyr::starts_with("R_"))
 
 
 # Fleeing DV --------------------------------------------------------------
