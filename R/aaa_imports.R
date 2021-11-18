@@ -33,7 +33,5 @@ NULL
 #' @param rm_dates \code{(named list)} with all dates specified or calculated in `dates`
 #' @inherit R6Classes params
 #' @return \code{(data.frame)} `vars$we_want` and `Issue` (Issue Name), `Type` (Error or Warning), and `Guidance` (How to correct the issue)
-data_quality_tables <- function(served_in_date_range, IncomeBenefits, mahoning_projects, guidance, vars, rm_dates, app_env) {
-
-}
+NULL
 
