@@ -7,7 +7,6 @@ filter_dupe_soft <- function(.data, ..., key) {
   clients <- dplyr::pull(x, !!.key) |> unique()
   .exprs <- rlang::enexprs(...)
   to_add <- list()
-  browser()
   for (ex in .exprs) {
     new <- dplyr::filter(x, !!ex)
 
@@ -37,10 +36,10 @@ filter_dupe_soft <- function(.data, ..., key) {
     }
   }
   to_add <- dplyr::bind_rows(to_add)
-  out <- dplyr::filter(out, !PersonalID %in% to_add$PersonalID) |>
-    dplyr::bind_rows(to_add)
-  if (anyDuplicated(out[[.key]])) {
+  out <- dplyr::filter(out, !PersonalID %in% c(to_add$PersonalID, x$PersonalID)) |>
+    dplyr::bind_rows(to_add, x)
 
+  if (anyDuplicated(out[[.key]])) {
     rlang::warn("Duplicates still exist.")
   }
   out
