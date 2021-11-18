@@ -96,7 +96,7 @@ Enrollment_add_Exit <- function(Enrollment, Exit) {
 #'
 #' @param Enrollment with Exit data. See `Enrollment_add_Exit`
 #' @inheritParams data_quality_tables
-#' @inheritParams R6classes
+#' @inheritParams R6Classes
 #' @return \code{(data.frame)} of Enrollment with Household Columns `MoveInDateAdjust` appended
 #' @export
 
@@ -367,7 +367,7 @@ pe_create_APs = function(provider_extras, ProjectCoC, dirs, app_env = get_app_en
 
 #' @title Add ProjectType (dbl) to provider_extras
 #'
-#' @inheritParams pe_create_APS
+#' @inheritParams pe_create_APs
 #' @return \code{(data.frame)}
 
 pe_add_ProjectType <- function(provider_extras) {
@@ -382,7 +382,7 @@ pe_add_ProjectType <- function(provider_extras) {
 #' @title Add GrantType column to provider_extras
 #' @description GrantType indicates if the program is funded by one of HOPWA, PATH, SSVF, or RHY
 #'
-#' @inheritParams pe_create_APS
+#' @inheritParams pe_create_APs
 #'
 #' @return
 #' @export
