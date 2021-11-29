@@ -175,13 +175,12 @@ cohorts <- function(
 
   # Destinations Groups (FY2020) --------------------------------------------
 
-  perm_destinations <- c(3, 10, 11, 19:23, 26, 28, 31, 33, 34, 36)
-
-  temp_destinations <-  c(1, 2, 12, 13, 14, 16, 18, 27, 32, 35)
-
-  institutional_destinations <- c(4:7, 15, 25, 27, 29)
-
-  other_destinations <- c(8, 9, 17, 24, 30, 37, 99)
+  destinations = list(
+    perm = c(3, 10, 11, 19:23, 26, 28, 31, 33, 34, 36),
+    temp = c(1, 2, 12, 13, 14, 16, 18, 27, 32, 35),
+    institutional = c(4:7, 15, 25, 27, 29),
+    other = c(8, 9, 17, 24, 30, 37, 99)
+  )
 
   # Project Groupings -------------------------------------------------------
   #TODO
@@ -193,18 +192,14 @@ cohorts <- function(
 
   # Project Type Groupings --------------------------------------------------
 
-  lh_project_types <- c(1, 2, 8)
-
-  ph_project_types <- c(3, 9, 13)
-
-  lh_at_entry_project_types <- c(1, 2, 3, 4, 8, 9, 13)
-
-  lh_ph_hp_project_types <- c(1, 2, 3, 4, 8, 9, 12, 13)
-
-  coc_funded_project_types <- c(2, 3, 13)
-
-  project_types_w_beds <- c(1, 2, 3, 8, 9)
-
+  project_types = list(
+    lh = c(1, 2, 8),
+    ph = c(3, 9, 13),
+    lh_at_entry = c(1, 2, 3, 4, 8, 9, 13),
+    lh_ph_hp = c(1, 2, 3, 4, 8, 9, 12, 13),
+    coc_funded = c(2, 3, 13),
+    w_beds = c(1, 2, 3, 8, 9)
+  )
 
 
   app_env$gather_deps("everything")
