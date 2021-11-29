@@ -21,8 +21,7 @@
 #' @param Enrollment_extra_Exit_HH_CL_AaE \code{(data.frame)} See `load_export`
 #' @param Referrals \code{(data.frame)} See `load_export`
 #' @param Scores \code{(data.frame)} See `load_export`
-#' @param lh_project_types \code{(integer)} See `cohorts`
-#' @param ph_project_types \code{(integer)} See `cohorts`
+#' @param project_types \code{(list)} See `cohorts`
 #' @seealso load_export, covid19, cohorts
 #' @inheritParams R6Classes
 #' @inheritParams data_quality_tables

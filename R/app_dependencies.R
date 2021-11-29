@@ -88,6 +88,7 @@ app_deps <- list(
     "pe_validation_summary",
     "pe_scored_at_ph_entry",
     "prioritization",
+    "prioritization_colors",
     "project_type",
     "qpr_income",
     "qpr_benefits",
