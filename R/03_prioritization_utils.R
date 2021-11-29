@@ -45,6 +45,12 @@ filter_dupe_soft <- function(.data, ..., key) {
   out
 }
 
+filter_dupe_last_EnrollmentID <- function(Referrals) {
+  x <- janitor::get_dupes(Referrals, PersonalID)
+  x <- dplyr::group_by(x, PersonalID)
+  dplyr::filter(x, as.numeric(R_ReferredEnrollmentID) == max(as.numeric(R_ReferredEnrollmentID)) | is.na(R_ReferredEnrollmentID))
+}
+
 
 min_na <- function(...) {
   x <- data.frame(...)
