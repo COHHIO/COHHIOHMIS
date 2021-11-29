@@ -48,10 +48,10 @@ QPR_EEs <- function(
              RelationshipToHoH == 1) %>%
     dplyr::mutate(
       DestinationGroup = dplyr::case_when(
-        Destination %in% c(temp_destinations) ~ "Temporary",
-        Destination %in% c(perm_destinations) ~ "Permanent",
-        Destination %in% c(institutional_destinations) ~ "Institutional",
-        Destination %in% c(other_destinations) ~ "Other",
+        Destination %in% c(destinations$temp) ~ "Temporary",
+        Destination %in% c(destinations$perm) ~ "Permanent",
+        Destination %in% c(destinations$institutional) ~ "Institutional",
+        Destination %in% c(destinations$other) ~ "Other",
         is.na(Destination) ~ "Still in Program"
       ),
       DaysinProject = difftime(ExitAdjust, EntryDate, units = "days")

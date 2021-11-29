@@ -22,8 +22,7 @@ prioritization <- function(
   Project,
   Referrals,
   Scores,
-  lh_project_types,
-  ph_project_types,
+  project_types,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
   app_env = get_app_env(e = rlang::caller_env())
 ) {
@@ -35,8 +34,8 @@ if (is_app_env(app_env))
 co_currently_homeless <- co_clients_served |>
   dplyr::filter((is.na(ExitDate) |
             ExitDate > lubridate::today()) &
-           (ProjectType %in% c(4, lh_project_types) |
-              ProjectType %in% c(ph_project_types))) |>
+           (ProjectType %in% c(4, project_types$lh) |
+              ProjectType %in% c(project_types$ph))) |>
   dplyr::select(
     PersonalID,
     UniqueID,
@@ -220,8 +219,8 @@ prioritization <- co_currently_homeless |>
 
   # label all program as either literally homeless or a housing program
   dplyr::mutate(PTCStatus = dplyr::case_when(
-    ProjectType %in% c(lh_project_types, 4) ~ "LH",
-    ProjectType %in% c(ph_project_types) ~ "PH"
+    ProjectType %in% c(project_types$lh, 4) ~ "LH",
+    ProjectType %in% c(project_types$ph) ~ "PH"
   ),
   PTCStatus = factor(
     PTCStatus,
