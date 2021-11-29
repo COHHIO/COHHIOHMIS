@@ -36,7 +36,7 @@ filter_dupe_soft <- function(.data, ..., key) {
     }
   }
   to_add <- dplyr::bind_rows(to_add)
-  out <- dplyr::filter(out, !PersonalID %in% c(to_add$PersonalID, x$PersonalID)) |>
+  out <- dplyr::filter(out, !(!!.key %in% c(to_add[[.key]], x[[.key]]))) |>
     dplyr::bind_rows(to_add, x)
 
   if (anyDuplicated(out[[.key]])) {
