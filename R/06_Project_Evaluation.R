@@ -766,11 +766,11 @@ pe_exits_to_ph <- pe_hohs_served %>%
     DestinationGroup = dplyr::case_when(
       is.na(Destination) | lubridate::ymd(ExitAdjust) > lubridate::ymd(rm_dates$hc$project_eval_end) ~
         "Still in Program at Report End Date",
-      Destination %in% c(temp_destinations) ~ "Temporary",
-      Destination %in% c(perm_destinations) ~ "Permanent",
-      Destination %in% c(institutional_destinations) ~ "Institutional",
+      Destination %in% c(destinations$temp) ~ "Temporary",
+      Destination %in% c(destinations$perm) ~ "Permanent",
+      Destination %in% c(destinations$institutional) ~ "Institutional",
       Destination == 24 ~ "Deceased (not counted)",
-      Destination %in% c(other_destinations) ~ "Other"
+      Destination %in% c(destinations$other) ~ "Other"
     ),
     ExitsToPHDQ = dplyr::case_when(
       General_DQ == 1 ~ 1,

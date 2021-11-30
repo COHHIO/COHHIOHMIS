@@ -44,7 +44,7 @@ bed_unit_utilization <- function(
 
 small_project <- Project |>
   HMIS::operating_between(rm_dates$calc$two_yrs_prior_start, rm_dates$calc$two_yrs_prior_end) |>
-  dplyr::filter(ProjectType %in% project_types_w_beds &
+  dplyr::filter(ProjectType %in% project_types$w_beds &
            is.na(GrantType) &
            HMISParticipatingProject == 1) |>
   dplyr::select(ProjectID,
@@ -215,7 +215,7 @@ rm(BedCapacity, BedNights)
 HHUtilizers <- Utilizers %>%
   dplyr::mutate(
     EntryAdjust = dplyr::case_when(
-      ProjectType %in% c(lh_project_types) ~ EntryDate,
+      ProjectType %in% c(project_types$lh) ~ EntryDate,
       ProjectType %in% c(3, 9) ~ MoveInDateAdjust
     ),
     ExitAdjust = dplyr::if_else(
@@ -241,7 +241,7 @@ HHUtilizers <- Utilizers %>%
             MoveInDateAdjust >= EntryDate &
             MoveInDateAdjust <= ExitAdjust
         ) |
-          ProjectType %in% lh_project_types
+          ProjectType %in% project_types$lh
       )
   ) %>%
   dplyr::select(-EntryDate,-MoveInDateAdjust,-HouseholdID,-RelationshipToHoH)
@@ -298,7 +298,7 @@ rm(UnitCapacity, HHNights, Utilizers)
 
 
 small_project <- Project %>%
-  dplyr::filter(ProjectType %in% c(project_types_w_beds) &
+  dplyr::filter(ProjectType %in% c(project_types$w_beds) &
            OperatingStartDate <= lubridate::today() &
            (is.na(OperatingEndDate) | OperatingEndDate >= lubridate::today()) &
            is.na(Project$GrantType)) %>%
@@ -369,7 +369,7 @@ utilization <-
             by = c("ProjectID", "ProjectName"))  |>
   dplyr::left_join(Households,
             by = c("ProjectID", "ProjectName")) %>%
-  dplyr::filter(ProjectType %in% c(project_types_w_beds)) %>%
+  dplyr::filter(ProjectType %in% c(project_types$w_beds)) %>%
   dplyr::mutate(BedUtilization = scales::percent(Clients/BedCount, accuracy = 1),
          UnitUtilization = scales::percent(Households/UnitCount, accuracy = 1))
 
