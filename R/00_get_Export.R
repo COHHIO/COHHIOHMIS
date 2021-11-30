@@ -179,7 +179,7 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
 
 
 
-  doses <- cl_api$`HUD Extras`$Client_Doses_extras()
+  #doses <- cl_api$`HUD Extras`$Client_Doses_extras()
 
 
   # Users ----
