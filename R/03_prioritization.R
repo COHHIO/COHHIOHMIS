@@ -640,6 +640,7 @@ prioritization <- prioritization |>
     `Not referred` = "#ff6e2d",
     `No Entry` = "#ff2516"
   )
+  browser()
   # Referral Situation ----
   # Tue Nov 09 12:49:51 2021
   prioritization <- dplyr::mutate(
