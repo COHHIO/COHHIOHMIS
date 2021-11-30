@@ -12,51 +12,80 @@
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
 
-Veterans <- function(
-             clarity_api,
-             app_env,
-             e = rlang::caller_env()
-            ) {
+vets <- function(Client,
+                 clarity_api,
+                 app_env,
+                 e = rlang::caller_env()
+
+) {
 if (missing(clarity_api))
   clarity_api <- get_clarity_api(e = e)
 if (missing(app_env))
   app_env <- get_app_env(e = e)
-
+Rm_env$set_parent(missing_fmls())
 
 # getting all the veterans
 Veterans <- Client %>%
   dplyr::filter(VeteranStatus == 1) %>%
-  dplyr::select(PersonalID, AmIndAKNative, Asian, BlackAfAmerican, NativeHIOtherPacific,
-         White, RaceNone, Ethnicity, Gender)
+  dplyr::select(PersonalID, dplyr::all_of(c(col_cats$Client$gender, col_cats$Client$race)))
 
 # getting all the EE data of all the veterans
 VeteranHHs <- Veterans %>%
-  dplyr::left_join(Enrollment, by = "PersonalID") %>%
-  dplyr::select(PersonalID, ProjectID, EnrollmentID, EntryDate, HouseholdID,
-         RelationshipToHoH, LivingSituation, LengthOfStay, LOSUnderThreshold,
-         PreviousStreetESSH, DateToStreetESSH, TimesHomelessPastThreeYears,
-         MonthsHomelessPastThreeYears, DisablingCondition, DateOfEngagement,
-         MoveInDate, VAMCStation, CountyServed, CountyPrior, ExitDate,
-         Destination, OtherDestination, ExitAdjust, AgeAtEntry)
+  dplyr::left_join(Enrollment_extra_Client_Exit_HH_CL_AaE, by = c("PersonalID")) %>%
+  dplyr::select(
+    PersonalID,
+    UniqueID,
+    ProjectID,
+    EnrollmentID,
+    EntryDate,
+    HouseholdID,
+    RelationshipToHoH,
+    LivingSituation,
+    LengthOfStay,
+    LOSUnderThreshold,
+    PreviousStreetESSH,
+    DateToStreetESSH,
+    TimesHomelessPastThreeYears,
+    MonthsHomelessPastThreeYears,
+    DisablingCondition,
+    DateOfEngagement,
+    MoveInDate,
+    VAMCStation,
+    CountyServed,
+    CountyPrior,
+    ExitDate,
+    Destination,
+    OtherDestination,
+    ExitAdjust,
+    AgeAtEntry
+  )
 
 # adding in all the provider data
 VeteranHHs <- Project %>%
-  dplyr::select(ProjectID, OrganizationName, OperatingStartDate, OperatingEndDate,
-         ProjectType, GrantType, ProjectName, ProjectRegion) %>%
+  dplyr::select(
+    ProjectID,
+    OrganizationName,
+    OperatingStartDate,
+    OperatingEndDate,
+    ProjectType,
+    GrantType,
+    ProjectName,
+    ProjectRegion
+  ) %>%
   dplyr::right_join(VeteranHHs, by = "ProjectID")
 
 VeteranHHs <- VeteranHHs %>%
-  dplyr::left_join(VeteranCE, by = c("PersonalID", "EnrollmentID"))
+  dplyr::left_join(VeteranCE, by = c("PersonalID", "EnrollmentID", "UniqueID"))
 
 CurrentVeterans <- VeteranHHs %>%
   dplyr::filter((ProjectType %in% c(1, 2, 4, 8, 12) & (
-    lubridate::ymd(EntryDate) <= lubridate::today() &
-      (is.na(ExitDate) | lubridate::ymd(ExitDate) > lubridate::today())
+    EntryDate <= Sys.Date() &
+      (is.na(ExitDate) | ExitDate > Sys.Date())
   )) |
     (ProjectType %in% c(3, 9, 13) & (
-      lubridate::ymd(MoveInDate) <= lubridate::today() &
+      MoveInDate <= Sys.Date() &
         (is.na(ExitDate) |
-           lubridate::ymd(ExitDate) > lubridate::today())
+           ExitDate > Sys.Date())
     )))
 
 CurrentVeteranCounts <- CurrentVeterans %>%
@@ -73,10 +102,10 @@ VeteranEngagement <- CurrentVeterans %>%
   dplyr::mutate(
     EngagementStatus = dplyr::case_when(
       !is.na(PHTrack) & PHTrack != "None" &
-        lubridate::ymd(ExpectedPHDate) >= lubridate::today() ~ "Has Current Housing Plan",
+        ExpectedPHDate >= Sys.Date() ~ "Has Current Housing Plan",
       is.na(PHTrack) | PHTrack == "None" |
         (!is.na(PHTrack) & (
-          lubridate::ymd(ExpectedPHDate) < lubridate::today() |
+          ExpectedPHDate < Sys.Date() |
             is.na(ExpectedPHDate)
         )) ~ "No Current Housing Plan"
     ),
@@ -153,7 +182,7 @@ current_tay_hohs <- tay %>%
   dplyr::mutate(HasPlan = dplyr::if_else(
     !is.na(PHTrack) & PHTrack != "None" &
       !is.na(ExpectedPHDate) &
-      lubridate::ymd(ExpectedPHDate) >= lubridate::today(),
+      ExpectedPHDate >= Sys.Date(),
     1,
     0
   )) %>%
