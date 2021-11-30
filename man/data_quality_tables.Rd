@@ -3,21 +3,24 @@
 \name{data_quality_tables}
 \alias{data_quality_tables}
 \title{Data Quality Tables Roxygen Template}
-\usage{
-data_quality_tables(
-  served_in_date_range,
-  IncomeBenefits,
-  mahoning_projects,
-  guidance,
-  vars,
-  rm_dates,
-  app_env
-)
-}
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
 
 \item{IncomeBenefits}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{HealthAndDV}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{Disabilities}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{Project}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{Enrollment}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{EnrollmentCoC}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{Exit}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{Client}{\code{(data.frame)} From the HUD CSV Export}
 
 \item{mahoning_projects}{\code{(named numeric)} Vector of ProjectIDs associated with projects operating in Mahoning. Created in \code{load_export}.}
 
@@ -30,18 +33,6 @@ data_quality_tables(
 }}
 
 \item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
-
-\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
-
-\item{Project}{\code{(data.frame)} From the HUD CSV Export}
-
-\item{Enrollment}{\code{(data.frame)} From the HUD CSV Export}
-
-\item{EnrollmentCoC}{\code{(data.frame)} From the HUD CSV Export}
-
-\item{Exit}{\code{(data.frame)} From the HUD CSV Export}
-
-\item{Client}{\code{(data.frame)} From the HUD CSV Export}
 }
 \value{
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)

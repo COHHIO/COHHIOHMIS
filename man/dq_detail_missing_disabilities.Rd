@@ -15,6 +15,8 @@ dq_detail_missing_disabilities(
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
 
+\item{Disabilities}{\code{(data.frame)} From the HUD CSV Export}
+
 \item{vars}{\code{(named list)}
 \itemize{
 \item{\code{prep}}{ Column names for Prep}
@@ -22,8 +24,6 @@ dq_detail_missing_disabilities(
 }}
 
 \item{guidance}{\code{(list)} See \code{guidance}}
-
-\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \value{
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
