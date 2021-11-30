@@ -12,460 +12,451 @@
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
 
-veterans_active <- function(ServiceAreas,
-                            co_clients_served,
-                            Enrollment_extra_Client_Exit_HH_CL_AaE,
-                            Contacts,
-                            Project,
-                            VeteranCE,
-                            project_types,
-                            bos_counties,
-                            clarity_api,
-                            app_env,
-                            e = rlang::caller_env()
-
+vet_active <- function(
+  clarity_api,
+  app_env,
+  e = rlang::caller_env()
 ) {
-if (missing(clarity_api))
-  clarity_api <- get_clarity_api(e = e)
-if (missing(app_env))
-  app_env <- get_app_env(e = e)
+  if (missing(clarity_api))
+    clarity_api <- Rm_data::get_clarity_api(e = e)
+  if (missing(app_env))
+    app_env <- Rm_data::get_app_env(e = e)
 
 
-# Get all veterans and associated hh members ------------------------------
+  # Get all veterans and associated hh members ------------------------------
 
-responsible_providers <- ServiceAreas %>%
-  select(County, SSVFServiceArea)
+  responsible_providers <- ServiceAreas %>%
+    dplyr::select(County, SSVFServiceArea)
 
-vet_ees <- co_clients_served %>%
-  filter(ProjectType %in% c(project_types$lh_at_entry)) %>%
-  mutate(VeteranStatus = if_else(VeteranStatus == 1, 1, 0)) %>%
-  group_by(HouseholdID) %>% # pulling in all Veterans & non-veteran hh members
-  summarise(VetCount = sum(VeteranStatus)) %>%
-  ungroup() %>%
-  filter(VetCount > 0) %>%
-  left_join(Enrollment_extra_Client_Exit_HH_CL_AaE, by = "HouseholdID") %>%
-  left_join(co_clients_served[c("PersonalID", "VeteranStatus")], by = "PersonalID") %>%
-  left_join(Project[c("ProjectID", "ProjectCounty")], by = "ProjectID") %>%
-  left_join(VeteranCE,
-            by = c("PersonalID", "EnrollmentID", "ExpectedPHDate", "PHTrack")) %>%
+  vet_ees <- co_clients_served %>%
+    dplyr::filter(ProjectType %in% c(lh_at_entry_project_types)) %>%
+    dplyr::mutate(VeteranStatus = dplyr::if_else(VeteranStatus == 1, 1, 0)) %>%
+    dplyr::group_by(HouseholdID) %>% # pulling in all Veterans & non-veteran hh members
+    dplyr::summarise(VetCount = sum(VeteranStatus, na.rm = TRUE), .groups = "drop") %>%
+    dplyr::filter(VetCount > 0) %>%
+    dplyr::left_join(Enrollment, by = "HouseholdID") %>%
+    dplyr::left_join(co_clients_served[c("PersonalID", "VeteranStatus")], by = "PersonalID") %>%
+    dplyr::left_join(Project[c("ProjectID", "ProjectCounty")], by = "ProjectID") %>%
+    dplyr::left_join(VeteranCE,
+                     by = c("PersonalID", "EnrollmentID", "ExpectedPHDate", "PHTrack")) %>%
 
-  mutate(
-    County = if_else(is.na(CountyServed), ProjectCounty, CountyServed)
-  ) %>%
-  filter((County %in% c(bos_counties) |
-            County == "Mahoning")) %>%
-  select(
-    HouseholdID,
-    EnrollmentID,
-    PersonalID,
-    HOMESID,
-    ProjectID,
-    ProjectType,
-    ProjectName,
-    ProjectCounty,
-    DateVeteranIdentified,
-    EntryDate,
-    EntryAdjust,
-    MoveInDateAdjust,
-    ExitDate,
-    ExitAdjust,
-    RelationshipToHoH,
-    LivingSituation,
-    ListStatus,
-    VAEligible,
-    SSVFIneligible,
-    LengthOfStay,
-    LOSUnderThreshold,
-    PreviousStreetESSH,
-    DateToStreetESSH,
-    TimesHomelessPastThreeYears,
-    MonthsHomelessPastThreeYears,
-    DisablingCondition,
-    AnnualPercentAMI,
-    VAMCStation,
-    UserCreating,
-    County,
-    PHTrack,
-    ExpectedPHDate,
-    Destination,
-    OtherDestination,
-    ClientLocation,
-    AgeAtEntry,
-    VeteranStatus
-  )
-
-# Currently in PSH/RRH ----------------------------------------------------
-
-# RRH PSH stays with no Exit but a valid Move-In Date
-
-currently_housed_in_psh_rrh <- vet_ees %>%
-  HMIS::stayed_between(start = Sys.Date(), end = Sys.Date()) |>
-  filter(ProjectType %in% project_types$ph &
-           VeteranStatus == 1) %>%
-  pull(PersonalID)
-
-# Declined  ---------------------------------------------------------------
-
-most_recent_offer <- Offers %>%
-  filter(!is.na(AcceptDeclineDate) &
-           !is.na(OfferAccepted) &
-           !is.na(PHTypeOffered)) %>%
-  group_by(PersonalID) %>%
-  slice_max(OfferDate) %>% # same date
-  slice_max(OfferAccepted) %>% # both rejected/accepted
-  slice(1) %>% # pick 1, doesn't matter if those ^ are the same
-  ungroup() %>%
-  unique()
-
-declined <- vet_ees %>%
-  left_join(most_recent_offer, by = "PersonalID") %>%
-  filter(OfferAccepted == "No" &
-           OfferDate >= Sys.Date() - lubridate::days(14) &
-           VeteranStatus == 1) %>%
-  unique()
-
-# Notes -------------------------------------------------------------------
-browser()
-# TODO Notes is Location Details. Do any filters need to be applied?
-small_CLS <- Contacts %>%
-  filter(RecordType == "CLS") %>%
-  mutate(Notes = stringr::str_remove_all(Notes, "<"),
-         Notes = stringr::str_remove_all(Notes, ">")) %>% # in case there's html in the notes
-  tidyr::unite("Notes", ContactDate, Notes, sep = ": ") %>%
-  select(PersonalID, Notes) %>%
-  group_by(PersonalID) %>%
-  arrange(desc(Notes)) %>%
-  summarise(Notes = list(Notes)) %>%
-  ungroup() %>%
-  mutate(
-    Notes = as.character(Notes),
-    Notes = if_else(str_starts(Notes, "c"),
-                    str_replace_all(Notes, "\", \"", "<br>"),
-                    Notes),
-    Notes = gsub("c\\(\"", "", Notes),
-    Notes = gsub("\"\\)", "", Notes)
-  )
-
-# Entry Exits -------------------------------------------------------------
-
-small_ees <- vet_ees %>%
-  filter(!PersonalID %in% currently_housed_in_psh_rrh &
-           VeteranStatus == 1 &
-           (is.na(ExitDate) |
-              (
-                !Destination %in% c(destinations$perm) &
-                  ExitDate >= today() - days(90)
-              ))) %>%
-  select(
-    PersonalID,
-    EnrollmentID,
-    ProjectID,
-    ProjectType,
-    ProjectName,
-    EntryDate,
-    MoveInDateAdjust,
-    ExitDate,
-    Destination
-  ) %>%
-  unique() %>%
-  group_by(PersonalID) %>%
-  arrange(desc(EntryDate)) %>%
-  mutate(
-    EntryDate = format.Date(EntryDate, "%m-%d-%Y"),
-    MoveInDateAdjust = format.Date(MoveInDateAdjust, "%m-%d-%Y"),
-    ExitDate = format.Date(ExitDate, "%m-%d-%Y"),
-    Entries = paste(
-      "Entered",
+    dplyr::mutate(
+      County = dplyr::if_else(is.na(CountyServed), ProjectCounty, CountyServed)
+    ) %>%
+    dplyr::filter((County %in% c(bos_counties) |
+                     County == "Mahoning") &
+                    !ProjectID %in% c(1282)) %>% # i don't remember why i'm excluding this?
+    dplyr::select(
+      HouseholdID,
+      EnrollmentID,
+      PersonalID,
+      HOMESID,
+      ProjectID,
+      ProjectType,
       ProjectName,
-      "on",
+      ProjectCounty,
+      DateVeteranIdentified,
       EntryDate,
-      case_when(
-        is.na(MoveInDateAdjust) & is.na(ExitDate) ~  if_else(
-          ProjectType %in% c(project_types$lh), "to present", "awaiting housing"),
-        !is.na(MoveInDateAdjust) & !is.na(ExitDate) ~
-          paste(
-            "Moved In on",
-            MoveInDateAdjust,
-            "and Exited on",
-            ExitDate,
-            "to",
-            living_situation(Destination)
-          ),
-        !is.na(MoveInDateAdjust) & is.na(ExitDate) ~ # should never happen but eh
-          paste("Moved In on",
-                MoveInDateAdjust,
-                "and is current"),
-        is.na(MoveInDateAdjust) & !is.na(ExitDate) ~
-          paste("Exited on", ExitDate,
-                "to", living_situation(Destination))
-      )
+      EntryAdjust,
+      MoveInDateAdjust,
+      ExitDate,
+      ExitAdjust,
+      RelationshipToHoH,
+      LivingSituation,
+      ListStatus,
+      VAEligible,
+      SSVFIneligible,
+      LengthOfStay,
+      LOSUnderThreshold,
+      PreviousStreetESSH,
+      DateToStreetESSH,
+      TimesHomelessPastThreeYears,
+      MonthsHomelessPastThreeYears,
+      DisablingCondition,
+      AnnualPercentAMI,
+      VAMCStation,
+      UserCreating,
+      County,
+      PHTrack,
+      ExpectedPHDate,
+      Destination,
+      OtherDestination,
+      ClientLocation,
+      AgeAtEntry,
+      VeteranStatus
     )
-  ) %>%
-  summarise(Entries = list(Entries)) %>%
-  ungroup() %>%
-  mutate(
-    Entries = as.character(Entries),
-    Entries = if_else(str_starts(Entries, "c"),
-                      str_replace_all(Entries, "\", \"", "<br>"),
-                      Entries),
-    Entries = gsub("c\\(\"", "", Entries),
-    Entries = gsub("\"\\)", "", Entries)
-  )
 
-# Active List -------------------------------------------------------------
+  # Currently in PSH/RRH ----------------------------------------------------
 
-# stayers & people who exited in the past 90 days to a temp destination
+  # RRH PSH stays with no Exit but a valid Move-In Date
 
-vet_active <- vet_ees %>%
-  filter(!PersonalID %in% c(currently_housed_in_psh_rrh) &
-           (is.na(ExitDate) |
-              (
-                !Destination %in% c(destinations$perm) &
-                  ymd(ExitDate) >= today() - days(90)
-              )))
+  currently_housed_in_psh_rrh <- vet_ees %>%
+    dplyr::filter(HMIS::stayed_between(., start = format(lubridate::today(), "%m%d%Y"),
+                                       end = format(lubridate::today(), "%m%d%Y")) &
+                    ProjectType %in% c(ph_project_types) &
+                    VeteranStatus == 1) %>%
+    dplyr::pull(PersonalID)
 
-hh_size <- vet_active %>%
-  select(HouseholdID, PersonalID) %>%
-  unique() %>%
-  count(HouseholdID)
+  # Declined  ---------------------------------------------------------------
 
-veteran_active_list_enrollments <- vet_active %>%
-  filter(VeteranStatus == 1) %>%
-  left_join(hh_size, by = "HouseholdID") %>%
-  rename("HouseholdSize" = n) %>%
-  mutate(EnrollType = case_when(
-    ProjectType %in% project_types$lh ~ 1,
-    ProjectType %in% project_types$ph ~ 2,
-    TRUE ~ 3
-  )) %>%
-  group_by(PersonalID, EnrollType) %>%
-  arrange(desc(EntryDate)) %>%
-  slice(1L) %>%
-  ungroup()
+  most_recent_offer <- Offers %>%
+    dplyr::filter(!is.na(AcceptDeclineDate) &
+                    !is.na(OfferAccepted) &
+                    !is.na(PHTypeOffered)) %>%
+    dplyr::group_by(PersonalID) %>%
+    dplyr::slice_max(lubridate::ymd(OfferDate)) %>% # same date
+    dplyr::slice_max(OfferAccepted) %>% # both rejected/accepted
+    dplyr::slice(1) %>% # pick 1, doesn't matter if those ^ are the same
+    dplyr::ungroup() %>%
+    unique()
 
-non_hoh_vets <- veteran_active_list_enrollments %>%
-  filter(RelationshipToHoH != 1) %>%
-  select(PersonalID, HouseholdID, RelationshipToHoH)
+  declined <- vet_ees %>%
+    dplyr::left_join(most_recent_offer, by = "PersonalID") %>%
+    dplyr::filter(OfferAccepted == "No" &
+                    lubridate::ymd(OfferDate) >= lubridate::today() - lubridate::days(14) &
+                    VeteranStatus == 1) %>%
+    unique()
 
-hoh_chronicity <- non_hoh_vets %>%
-  setNames(paste0("V_", names(.))) %>%
-  inner_join(vet_ees %>%
-               filter(RelationshipToHoH == 1 &
-                        HouseholdID %in% non_hoh_vets$HouseholdID) %>%
-               distinct() %>%
-               chronic_determination() %>%
-               rename(HoHChronicStatus = ChronicStatus),
-             by = c("V_HouseholdID" = "HouseholdID")) %>%
-  select(V_PersonalID, HoHChronicStatus) %>%
-  rename(PersonalID = V_PersonalID) %>%
-  arrange(HoHChronicStatus) %>%
-  group_by(PersonalID) %>%
-  slice(1L) %>%
-  ungroup()
+  # Notes -------------------------------------------------------------------
+  browser()
+  small_CLS <- Contacts %>%
+    dplyr::filter(RecordType == "CLS") %>%
+    dplyr::mutate(Notes = stringr::str_remove_all(Notes, "<"),
+                  Notes = stringr::str_remove_all(Notes, ">")) %>% # in case there's html in the notes
+    tidyr::unite("Notes", ContactDate, Notes, sep = ": ") %>%
+    dplyr::select(PersonalID, Notes) %>%
+    dplyr::group_by(PersonalID) %>%
+    dplyr::arrange(dplyr::desc(Notes)) %>%
+    dplyr::summarise(Notes = list(Notes)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      Notes = as.character(Notes),
+      Notes = dplyr::if_else(stringr::str_starts(Notes, "c"),
+                             stringr::str_replace_all(Notes, "\", \"", "<br>"),
+                             Notes),
+      Notes = gsub("c\\(\"", "", Notes),
+      Notes = gsub("\"\\)", "", Notes)
+    )
 
-enrollments_to_use <- veteran_active_list_enrollments %>%
-  mutate(ProjectName = if_else(ProjectName == "Unsheltered Clients - OUTREACH",
-                               paste("Unsheltered in", County, "County"),
-                               ProjectName),
-         TimeInProject = if_else(
-           is.na(ExitDate),
-           paste("Since", format(ymd(EntryDate), "%m-%d-%Y")),
-           paste(
-             format(ymd(EntryDate), "%m-%d-%Y"),
-             "to",
-             format(ymd(ExitDate), "%m-%d-%Y")
-           )
-         )) %>%
-  select(PersonalID, ProjectName, TimeInProject, ProjectType, EntryDate)
+  # Entry Exits -------------------------------------------------------------
 
-combined <- enrollments_to_use %>%
-  filter(ProjectType %in% project_types$lh) %>%
-  setNames(c("PersonalID", paste0("LH_", names(.)[2:ncol(.)]))) %>%
-  mutate(transitional_housing_entry =
-           case_when(LH_ProjectType == 2 &
-                       grepl("Since", LH_TimeInProject) ~ LH_EntryDate)) %>%
-  full_join(enrollments_to_use %>%
-              filter(ProjectType %in% project_types$ph) %>%
-              setNames(c("PersonalID", paste0("PH_", names(.)[2:ncol(.)]))),
-            by = "PersonalID") %>%
-  full_join(enrollments_to_use %>%
-              filter(!ProjectType %in% project_types$lh &
-                       !ProjectType %in% project_types$ph) %>%
-              setNames(c("PersonalID", paste0("O_", names(.)[2:ncol(.)]))),
-            by = "PersonalID") %>%
-  select(!contains(c("ProjectType", "EntryDate")))
+  small_ees <- vet_ees %>%
+    dplyr::filter(!PersonalID %in% c(currently_housed_in_psh_rrh) &
+                    VeteranStatus == 1 &
+                    (is.na(ExitDate) |
+                       (
+                         !Destination %in% c(perm_destinations) &
+                           lubridate::ymd(ExitDate) >= lubridate::today() - lubridate::days(90)
+                       ))) %>%
+    dplyr::select(
+      PersonalID,
+      EnrollmentID,
+      ProjectID,
+      ProjectType,
+      ProjectName,
+      EntryDate,
+      MoveInDateAdjust,
+      ExitDate,
+      Destination
+    ) %>%
+    unique() %>%
+    dplyr::group_by(PersonalID) %>%
+    dplyr::arrange(dplyr::desc(EntryDate)) %>%
+    dplyr::mutate(
+      EntryDate = format.Date(EntryDate, "%m-%d-%Y"),
+      MoveInDateAdjust = format.Date(MoveInDateAdjust, "%m-%d-%Y"),
+      ExitDate = format.Date(ExitDate, "%m-%d-%Y"),
+      Entries = paste(
+        "Entered",
+        ProjectName,
+        "on",
+        EntryDate,
+        dplyr::case_when(
+          is.na(MoveInDateAdjust) & is.na(ExitDate) ~  dplyr::if_else(
+            ProjectType %in% c(lh_project_types), "to present", "awaiting housing"),
+          !is.na(MoveInDateAdjust) & !is.na(ExitDate) ~
+            paste(
+              "Moved In on",
+              MoveInDateAdjust,
+              "and Exited on",
+              ExitDate,
+              "to",
+              Rm_data::living_situation(Destination)
+            ),
+          !is.na(MoveInDateAdjust) & is.na(ExitDate) ~ # should never happen but eh
+            paste("Moved In on",
+                  MoveInDateAdjust,
+                  "and is current"),
+          is.na(MoveInDateAdjust) & !is.na(ExitDate) ~
+            paste("Exited on", ExitDate,
+                  "to", Rm_data::living_situation(Destination))
+        )
+      )
+    ) %>%
+    dplyr::summarise(Entries = list(Entries)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      Entries = as.character(Entries),
+      Entries = dplyr::if_else(stringr::str_starts(Entries, "c"),
+                               stringr::str_replace_all(Entries, "\", \"", "<br>"),
+                               Entries),
+      Entries = gsub("c\\(\"", "", Entries),
+      Entries = gsub("\"\\)", "", Entries)
+    )
 
-veteran_active_list <- veteran_active_list_enrollments %>%
-  select(PersonalID, DateVeteranIdentified, VAEligible,
-         SSVFIneligible, PHTrack, ExpectedPHDate,
-         County, HOMESID, ListStatus, EntryDate,
-         AgeAtEntry, DisablingCondition,
-         DateToStreetESSH, TimesHomelessPastThreeYears,
-         MonthsHomelessPastThreeYears, ExitAdjust, ProjectType) %>%
-  group_by(PersonalID, County) %>%
-  arrange(desc(EntryDate)) %>%
-  slice(1L) %>%
-  ungroup() %>%
-  chronic_determination() %>%
-  long_term_homeless_determination() %>%
-  mutate(ActiveDate = case_when(
-    is.na(DateVeteranIdentified) ~ EntryDate,
-    ymd(DateVeteranIdentified) < ymd(EntryDate) ~ DateVeteranIdentified,
-    TRUE ~ EntryDate
-  )) %>%
-  select(-c(DateToStreetESSH, TimesHomelessPastThreeYears,
-            MonthsHomelessPastThreeYears, ExitAdjust, ProjectType)) %>%
-  left_join(combined, by = "PersonalID") %>%
-  left_join(most_recent_offer, by = "PersonalID") %>%
-  left_join(small_CLS, by = "PersonalID") %>%
-  left_join(hoh_chronicity, by = "PersonalID") %>%
-  mutate(
-    ChronicStatus = if_else(!is.na(HoHChronicStatus) &
-                              HoHChronicStatus < ChronicStatus,
-                            HoHChronicStatus, ChronicStatus),
-    ActiveDateDisplay = paste0(ActiveDate,
-                               "<br>(",
-                               difftime(today(), ymd(ActiveDate)),
-                               " days)"),
-    DaysActive = difftime(today(), ymd(ActiveDate)),
-    Eligibility =
-      if_else(
-        is.na(VAEligible) & is.na(SSVFIneligible),
-        "Unknown",
+  # Active List -------------------------------------------------------------
+
+  # stayers & people who exited in the past 90 days to a temp destination
+
+  vet_active <- vet_ees %>%
+    dplyr::filter(!PersonalID %in% c(currently_housed_in_psh_rrh) &
+                    (is.na(ExitDate) |
+                       (
+                         !Destination %in% c(perm_destinations) &
+                           lubridate::ymd(ExitDate) >= lubridate::today() - lubridate::days(90)
+                       )))
+
+  hh_size <- vet_active %>%
+    dplyr::select(HouseholdID, PersonalID) %>%
+    unique() %>%
+    dplyr::count(HouseholdID)
+
+  veteran_active_list_enrollments <- vet_active %>%
+    dplyr::filter(VeteranStatus == 1) %>%
+    dplyr::left_join(hh_size, by = "HouseholdID") %>%
+    dplyr::rename("HouseholdSize" = n) %>%
+    dplyr::mutate(EnrollType = dplyr::case_when(
+      ProjectType %in% lh_project_types ~ 1,
+      ProjectType %in% ph_project_types ~ 2,
+      TRUE ~ 3
+    )) %>%
+    dplyr::group_by(PersonalID, EnrollType) %>%
+    dplyr::arrange(dplyr::desc(EntryDate)) %>%
+    dplyr::slice(1L) %>%
+    dplyr::ungroup()
+
+  non_hoh_vets <- veteran_active_list_enrollments %>%
+    dplyr::filter(RelationshipToHoH != 1) %>%
+    dplyr::select(PersonalID, HouseholdID, RelationshipToHoH)
+
+  hoh_chronicity <- non_hoh_vets %>%
+    stats::setNames(paste0("V_", names(.))) %>%
+    dplyr::inner_join(vet_ees %>%
+                        dplyr::filter(RelationshipToHoH == 1 &
+                                        HouseholdID %in% non_hoh_vets$HouseholdID) %>%
+                        dplyr::distinct() %>%
+                        Rm_data::chronic_determination() %>%
+                        dplyr::rename(HoHChronicStatus = ChronicStatus),
+                      by = c("V_HouseholdID" = "HouseholdID")) %>%
+    dplyr::select(V_PersonalID, HoHChronicStatus) %>%
+    dplyr::rename(PersonalID = V_PersonalID) %>%
+    dplyr::arrange(HoHChronicStatus) %>%
+    dplyr::group_by(PersonalID) %>%
+    dplyr::slice(1L) %>%
+    dplyr::ungroup()
+
+  enrollments_to_use <- veteran_active_list_enrollments %>%
+    dplyr::mutate(ProjectName = dplyr::if_else(ProjectName == "Unsheltered Clients - OUTREACH",
+                                               paste("Unsheltered in", County, "County"),
+                                               ProjectName),
+                  TimeInProject = dplyr::if_else(
+                    is.na(ExitDate),
+                    paste("Since", format(lubridate::ymd(EntryDate), "%m-%d-%Y")),
+                    paste(
+                      format(lubridate::ymd(EntryDate), "%m-%d-%Y"),
+                      "to",
+                      format(lubridate::ymd(ExitDate), "%m-%d-%Y")
+                    )
+                  )) %>%
+    dplyr::select(PersonalID, ProjectName, TimeInProject, ProjectType, EntryDate)
+
+  combined <- enrollments_to_use %>%
+    dplyr::filter(ProjectType %in% lh_project_types) %>%
+    stats::setNames(c("PersonalID", paste0("LH_", names(.)[2:ncol(.)]))) %>%
+    dplyr::mutate(transitional_housing_entry =
+                    dplyr::case_when(LH_ProjectType == 2 &
+                                       grepl("Since", LH_TimeInProject) ~ LH_EntryDate)) %>%
+    dplyr::full_join(enrollments_to_use %>%
+                       dplyr::filter(ProjectType %in% ph_project_types) %>%
+                       stats::setNames(c("PersonalID", paste0("PH_", names(.)[2:ncol(.)]))),
+                     by = "PersonalID") %>%
+    dplyr::full_join(enrollments_to_use %>%
+                       dplyr::filter(!ProjectType %in% lh_project_types &
+                                       !ProjectType %in% ph_project_types) %>%
+                       stats::setNames(c("PersonalID", paste0("O_", names(.)[2:ncol(.)]))),
+                     by = "PersonalID") %>%
+    dplyr::select(!dplyr::contains(c("ProjectType", "EntryDate")))
+
+  veteran_active_list <- veteran_active_list_enrollments %>%
+    dplyr::select(PersonalID, DateVeteranIdentified, VAEligible,
+                  SSVFIneligible, PHTrack, ExpectedPHDate,
+                  County, HOMESID, ListStatus, EntryDate,
+                  AgeAtEntry, DisablingCondition,
+                  DateToStreetESSH, TimesHomelessPastThreeYears,
+                  MonthsHomelessPastThreeYears, ExitAdjust, ProjectType) %>%
+    dplyr::group_by(PersonalID, County) %>%
+    dplyr::arrange(dplyr::desc(EntryDate)) %>%
+    dplyr::slice(1L) %>%
+    dplyr::ungroup() %>%
+    Rm_data::chronic_determination() %>%
+    Rm_data::long_term_homeless_determination() %>%
+    dplyr::mutate(ActiveDate = dplyr::case_when(
+      is.na(DateVeteranIdentified) ~ EntryDate,
+      lubridate::ymd(DateVeteranIdentified) < lubridate::ymd(EntryDate) ~ DateVeteranIdentified,
+      TRUE ~ EntryDate
+    )) %>%
+    dplyr::select(-c(DateToStreetESSH, TimesHomelessPastThreeYears,
+                     MonthsHomelessPastThreeYears, ExitAdjust, ProjectType)) %>%
+    dplyr::left_join(combined, by = "PersonalID") %>%
+    dplyr::left_join(most_recent_offer, by = "PersonalID") %>%
+    dplyr::left_join(small_CLS, by = "PersonalID") %>%
+    dplyr::left_join(hoh_chronicity, by = "PersonalID") %>%
+    dplyr::mutate(
+      ChronicStatus = dplyr::if_else(!is.na(HoHChronicStatus) &
+                                       HoHChronicStatus < ChronicStatus,
+                                     HoHChronicStatus, ChronicStatus),
+      ActiveDateDisplay = paste0(ActiveDate,
+                                 "<br>(",
+                                 difftime(lubridate::today(), lubridate::ymd(ActiveDate)),
+                                 " days)"),
+      DaysActive = difftime(lubridate::today(), lubridate::ymd(ActiveDate)),
+      Eligibility =
+        dplyr::if_else(
+          is.na(VAEligible) & is.na(SSVFIneligible),
+          "Unknown",
+          paste(
+            "VA Eligibility:",
+            VAEligible,
+            "<br><br>SSVF Eligibility:",
+            SSVFIneligible
+          )
+        ),
+      ActiveDate = format(ActiveDate, "%m-%d-%Y"),
+      MostRecentOffer = dplyr::if_else(
+        is.na(AcceptDeclineDate),
+        "None",
         paste(
-          "VA Eligibility:",
-          VAEligible,
-          "<br><br>SSVF Eligibility:",
-          SSVFIneligible
+          "Offer of",
+          PHTypeOffered,
+          "on",
+          format(OfferDate, "%m-%d-%Y"),
+          "was",
+          dplyr::if_else(OfferAccepted == "Yes", "accepted", "declined"),
+          "on",
+          format(AcceptDeclineDate, "%m-%d-%Y")
         )
       ),
-    ActiveDate = format(ActiveDate, "%m-%d-%Y"),
-    MostRecentOffer = if_else(
-      is.na(AcceptDeclineDate),
-      "None",
-      paste(
-        "Offer of",
-        PHTypeOffered,
-        "on",
-        format(OfferDate, "%m-%d-%Y"),
-        "was",
-        if_else(OfferAccepted == "Yes", "accepted", "declined"),
-        "on",
-        format(AcceptDeclineDate, "%m-%d-%Y")
+      HousingPlan =
+        dplyr::if_else(
+          is.na(PHTrack) & is.na(ExpectedPHDate),
+          paste("No Housing Track<br><br>Notes:",
+                Notes),
+          paste(PHTrack,
+                "by",
+                dplyr::if_else(
+                  is.na(ExpectedPHDate),
+                  "unknown date",
+                  format(ExpectedPHDate, "%m-%d-%Y")
+                ),
+                "<br><br>Notes:<br>",
+                Notes)
+        ),
+      ListStatus = dplyr::case_when(
+        stringr::str_detect(LH_TimeInProject, "Since") ~ "Active - ES/TH",
+        ListStatus == "Inactive (Uknown/Missing)" ~ "Inactive (Unknown/Missing)",
+        TRUE ~ ListStatus
       )
-    ),
-    HousingPlan =
-      if_else(
-        is.na(PHTrack) & is.na(ExpectedPHDate),
-        paste("No Housing Track<br><br>Notes:",
-              Notes),
-        paste(PHTrack,
-              "by",
-              if_else(
-                is.na(ExpectedPHDate),
-                "unknown date",
-                format(ExpectedPHDate, "%m-%d-%Y")
-              ),
-              "<br><br>Notes:<br>",
-              Notes)
-      ),
-    ListStatus = case_when(
-      str_detect(LH_TimeInProject, "Since") ~ "Active - ES/TH",
-      ListStatus == "Inactive (Uknown/Missing)" ~ "Inactive (Unknown/Missing)",
-      TRUE ~ ListStatus
-    )
-  ) %>%
-  left_join(responsible_providers, by = "County") %>%
-  unique()
+    ) %>%
+    dplyr::left_join(responsible_providers, by = "County") %>%
+    unique()
 
-# Currently Homeless Vets -------------------------------------------------
+  # Currently Homeless Vets -------------------------------------------------
 
-# same as Active List except it only includes stayers and leaves out households
-# that have exited to a temporary destination. Not sure we'll need this actually
-# because we can just make it a widget on the report, to exclude those.
+  # same as Active List except it only includes stayers and leaves out households
+  # that have exited to a temporary destination. Not sure we'll need this actually
+  # because we can just make it a widget on the report, to exclude those.
 
 
-# Veterans Missing Veteran Assessment -------------------------------------
+  # Veterans Missing Veteran Assessment -------------------------------------
 
 
 
-# Chronic ---------------------------------------------------------
+  # Chronic ---------------------------------------------------------
 
-# thinking of moving the code I already wrote for this in the Active List
-# up to cohorts.R so I can get this easily from there instead of having to
-# copy that code to here
+  # thinking of moving the code I already wrote for this in the Active List
+  # up to cohorts.R so I can get this easily from there instead of having to
+  # copy that code to here
 
-# actually maybe not because the chronic code in the active_list.R looks at
-# an entire household's chronic status and then marks otherwise-non-chronic
-# clients as chronic if they're in a household, but this report only looks at
-# veterans. BUT maybe it shouldn't. Like it would make more sense to calculate
-# chronicity the same from one report to the other and take into account a
-# veteran's household's chronic status as well.
+  # actually maybe not because the chronic code in the active_list.R looks at
+  # an entire household's chronic status and then marks otherwise-non-chronic
+  # clients as chronic if they're in a household, but this report only looks at
+  # veterans. BUT maybe it shouldn't. Like it would make more sense to calculate
+  # chronicity the same from one report to the other and take into account a
+  # veteran's household's chronic status as well.
 
-# ON THE OTHER HAND, it's very specific to the way the Active List is written
-# because that script is untangling household data quality issues first and THEN
-# calculating it, but I'm not planning to untangle household dq issues in this
-# report. Maybe I should untangle household dq issues in cohorts too. AAaaa
+  # ON THE OTHER HAND, it's very specific to the way the Active List is written
+  # because that script is untangling household data quality issues first and THEN
+  # calculating it, but I'm not planning to untangle household dq issues in this
+  # report. Maybe I should untangle household dq issues in cohorts too. AAaaa
 
-# I think it will be best to move the chronic code to cohorts, and the Returns
-# code can go there too.
+  # I think it will be best to move the chronic code to cohorts, and the Returns
+  # code can go there too.
 
-# Offers ------------------------------------------------------------------
+  # Offers ------------------------------------------------------------------
 
-# checking to be sure I'm not using "Most Recent Offer ..." data anywhere
-# since I should be able to just use the subs in Rm/Rme and eliminate those
-# redundant data elements once this is all done.
+  # checking to be sure I'm not using "Most Recent Offer ..." data anywhere
+  # since I should be able to just use the subs in Rm/Rme and eliminate those
+  # redundant data elements once this is all done.
 
-# Exited to PH ------------------------------------------------------------
+  # Exited to PH ------------------------------------------------------------
 
-permanently_housed_vets <- vet_ees %>%
-  filter(VeteranStatus == 1 &
-           Destination %in% c(destinations$perm) &
-           ymd(ExitDate) >= today() - days(90)) %>%
-  mutate(EntryAdj = if_else(
-    !is.na(DateVeteranIdentified) & DateVeteranIdentified < EntryDate,
-    DateVeteranIdentified, EntryDate),
-    time_to_house = difftime(floor_date(ExitDate, unit = "day"),
-                             floor_date(EntryAdj, unit = "day"),
-                             units = "days")) %>%
-  select(
-    PersonalID,
-    EntryAdj,
-    ExitDate,
-    County,
-    time_to_house
-  ) %>%
-  unique()
+  permanently_housed_vets <- vet_ees %>%
+    dplyr::filter(VeteranStatus == 1 &
+                    Destination %in% c(perm_destinations) &
+                    lubridate::ymd(ExitDate) >= lubridate::today() - lubridate::days(90)) %>%
+    dplyr::mutate(EntryAdj = dplyr::if_else(
+      !is.na(DateVeteranIdentified) & DateVeteranIdentified < EntryDate,
+      DateVeteranIdentified, EntryDate),
+      time_to_house = difftime(lubridate::floor_date(ExitDate, unit = "day"),
+                               lubridate::floor_date(EntryAdj, unit = "day"),
+                               units = "days")) %>%
+    dplyr::select(
+      PersonalID,
+      EntryAdj,
+      ExitDate,
+      County,
+      time_to_house
+    ) %>%
+    unique()
 
-# Entered in Past 90 Days -------------------------------------------------
+  # Entered in Past 90 Days -------------------------------------------------
 
-entered_past_90_vets <- vet_ees %>%
-  filter((ProjectType %in% c(project_types$lh) |
-            (ProjectType %in% c(project_types$ph) &
-               is.na(MoveInDateAdjust))) &
-           (entered_between(., format(today() - days(90), "%m%d%Y"),
-                            format(today(), "%m%d%Y")) |
-              DateVeteranIdentified >= today() - days(90)))  %>%
-  select(
-    PersonalID, County
-  ) %>%
-  unique() %>%
-  mutate(housed_in_last_90 = if_else(
-    PersonalID %in% permanently_housed_vets$PersonalID, 1, 0
-  ))
+  entered_past_90_vets <- vet_ees %>%
+    dplyr::filter((ProjectType %in% c(lh_project_types) |
+                     (ProjectType %in% c(ph_project_types) &
+                        is.na(MoveInDateAdjust))) &
+                    (HMIS::entered_between(., format(lubridate::today() - lubridate::days(90), "%m%d%Y"),
+                                           format(lubridate::today(), "%m%d%Y")) |
+                       DateVeteranIdentified >= lubridate::today() - lubridate::days(90)))  %>%
+    dplyr::select(
+      PersonalID, County
+    ) %>%
+    unique() %>%
+    dplyr::mutate(housed_in_last_90 = dplyr::if_else(
+      PersonalID %in% permanently_housed_vets$PersonalID, 1, 0
+    ))
 
-# New GPD ----------------------------------------------------
+  # New GPD ----------------------------------------------------
 
-new_gpd_vets <- vet_ees %>%
-  filter(VeteranStatus == 1 &
-           entered_between(., format(today() - days(90), "%m%d%Y"),
-                           format(today(), "%m%d%Y")) &
-           grepl("GPD", ProjectName)) %>%
-  select(
-    PersonalID, County
-  ) %>%
-  unique()
-app_env$gather_deps()
-app_env
+  new_gpd_vets <- vet_ees %>%
+    dplyr::filter(VeteranStatus == 1 &
+                    HMIS::entered_between(., format(lubridate::today() - lubridate::days(90), "%m%d%Y"),
+                                          format(lubridate::today(), "%m%d%Y")) &
+                    grepl("GPD", ProjectName)) %>%
+    dplyr::select(
+      PersonalID, County
+    ) %>%
+    unique()
+  app_env$gather_deps()
+  app_env
 }
-
