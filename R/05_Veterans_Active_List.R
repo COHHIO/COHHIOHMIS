@@ -120,12 +120,13 @@ most_recent_offer <- Offers %>%
 declined <- vet_ees %>%
   left_join(most_recent_offer, by = "PersonalID") %>%
   filter(OfferAccepted == "No" &
-           OfferDate >= Sys.Date() - days(14) &
+           OfferDate >= Sys.Date() - lubridate::days(14) &
            VeteranStatus == 1) %>%
   unique()
 
 # Notes -------------------------------------------------------------------
-
+browser()
+# TODO Notes is Location Details. Do any filters need to be applied?
 small_CLS <- Contacts %>%
   filter(RecordType == "CLS") %>%
   mutate(Notes = stringr::str_remove_all(Notes, "<"),
@@ -148,12 +149,12 @@ small_CLS <- Contacts %>%
 # Entry Exits -------------------------------------------------------------
 
 small_ees <- vet_ees %>%
-  filter(!PersonalID %in% c(currently_housed_in_psh_rrh) &
+  filter(!PersonalID %in% currently_housed_in_psh_rrh &
            VeteranStatus == 1 &
            (is.na(ExitDate) |
               (
                 !Destination %in% c(destinations$perm) &
-                  ymd(ExitDate) >= today() - days(90)
+                  ExitDate >= today() - days(90)
               ))) %>%
   select(
     PersonalID,
