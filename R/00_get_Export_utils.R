@@ -305,7 +305,7 @@ pe_add_regions <- function(provider_extras, Regions = clarity.looker::hud_load("
 
   # Special cases
   #  St. Vincent de Paul of Dayton serves region 13
-  out[out$Geocode == 391361, "ProjectRegion"] <- 13
+  out[out$Geocode %in% c("391361", "391362"), "ProjectRegion"] <- 13
 
   # Missing Regions
   # missing_region <- out |>
