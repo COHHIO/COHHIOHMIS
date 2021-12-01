@@ -36,127 +36,113 @@ vet_active <- function(
 
   responsible_providers <- ServiceAreas |>
     dplyr::select(County, SSVFServiceArea)
+  .vet_ees_cols <- c("HouseholdID",
+                     "EnrollmentID",
+                     "PersonalID",
+                     "HOMESID",
+                     "ProjectID",
+                     "ProjectType",
+                     "ProjectName",
+                     "ProjectCounty",
+                     "DateVeteranIdentified",
+                     "EntryDate",
+                     "EntryAdjust",
+                     "MoveInDateAdjust",
+                     "ExitDate",
+                     "ExitAdjust",
+                     "RelationshipToHoH",
+                     "LivingSituation",
+                     "ListStatus",
+                     "VAEligible",
+                     "SSVFIneligible",
+                     "LengthOfStay",
+                     "LOSUnderThreshold",
+                     "PreviousStreetESSH",
+                     "DateToStreetESSH",
+                     "TimesHomelessPastThreeYears",
+                     "MonthsHomelessPastThreeYears",
+                     "DisablingCondition",
+                     "AnnualPercentAMI",
+                     "VAMCStation",
+                     "UserCreating",
+                     "County",
+                     "PHTrack",
+                     "ExpectedPHDate",
+                     "Destination",
+                     "OtherDestination",
+                     "ClientLocation",
+                     "AgeAtEntry",
+                     "VeteranStatus")
 
-  vet_ees <- co_clients_served %>%
-    dplyr::filter(ProjectType %in% c(lh_at_entry_project_types)) %>%
-    dplyr::mutate(VeteranStatus = dplyr::if_else(VeteranStatus == 1, 1, 0)) %>%
-    dplyr::group_by(HouseholdID) %>% # pulling in all Veterans & non-veteran hh members
-    dplyr::summarise(VetCount = sum(VeteranStatus, na.rm = TRUE), .groups = "drop") %>%
-    dplyr::filter(VetCount > 0) %>%
-    dplyr::left_join(Enrollment, by = "HouseholdID") %>%
-    dplyr::left_join(co_clients_served[c("PersonalID", "VeteranStatus")], by = "PersonalID") %>%
-    dplyr::left_join(Project[c("ProjectID", "ProjectCounty")], by = "ProjectID") %>%
+  vet_ees <- co_clients_served |>
+    dplyr::filter(ProjectType %in% c(project_types$lh_at_entry)) |>
+    dplyr::mutate(VeteranStatus = dplyr::if_else(VeteranStatus == 1, 1, 0)) |>
+    dplyr::group_by(HouseholdID) |> # pulling in all Veterans & non-veteran hh members
+    dplyr::summarise(VetCount = sum(VeteranStatus, na.rm = TRUE),
+                     .groups = "drop") |>
+    dplyr::filter(VetCount > 0) |>
+    dplyr::left_join(dplyr::select(Enrollment_extra_Client_Exit_HH_CL_AaE, dplyr::any_of(c(
+      .vet_ees_cols, "CountyServed"
+    ))),
+    by = "HouseholdID") |>
+    dplyr::left_join(Project[c("ProjectID", "ProjectCounty")], by = "ProjectID") |>
     dplyr::left_join(VeteranCE,
-                     by = c("PersonalID", "EnrollmentID", "ExpectedPHDate", "PHTrack")) %>%
+                     by = c("PersonalID", "EnrollmentID", "ExpectedPHDate", "PHTrack")) |>
 
-    dplyr::mutate(
-      County = dplyr::if_else(is.na(CountyServed), ProjectCounty, CountyServed)
-    ) %>%
+    dplyr::mutate(County = dplyr::if_else(is.na(CountyServed), ProjectCounty, CountyServed)) |>
     dplyr::filter((County %in% c(bos_counties) |
-                     County == "Mahoning") &
-                    !ProjectID %in% c(1282)) %>% # i don't remember why i'm excluding this?
-    dplyr::select(
-      HouseholdID,
-      EnrollmentID,
-      PersonalID,
-      HOMESID,
-      ProjectID,
-      ProjectType,
-      ProjectName,
-      ProjectCounty,
-      DateVeteranIdentified,
-      EntryDate,
-      EntryAdjust,
-      MoveInDateAdjust,
-      ExitDate,
-      ExitAdjust,
-      RelationshipToHoH,
-      LivingSituation,
-      ListStatus,
-      VAEligible,
-      SSVFIneligible,
-      LengthOfStay,
-      LOSUnderThreshold,
-      PreviousStreetESSH,
-      DateToStreetESSH,
-      TimesHomelessPastThreeYears,
-      MonthsHomelessPastThreeYears,
-      DisablingCondition,
-      AnnualPercentAMI,
-      VAMCStation,
-      UserCreating,
-      County,
-      PHTrack,
-      ExpectedPHDate,
-      Destination,
-      OtherDestination,
-      ClientLocation,
-      AgeAtEntry,
-      VeteranStatus
-    )
+                     County == "Mahoning")) |>
+    dplyr::select(dplyr::all_of(.vet_ees_cols))
 
   # Currently in PSH/RRH ----------------------------------------------------
 
   # RRH PSH stays with no Exit but a valid Move-In Date
 
-  currently_housed_in_psh_rrh <- vet_ees %>%
-    dplyr::filter(HMIS::stayed_between(., start = format(lubridate::today(), "%m%d%Y"),
-                                       end = format(lubridate::today(), "%m%d%Y")) &
-                    ProjectType %in% c(ph_project_types) &
-                    VeteranStatus == 1) %>%
+  currently_housed_in_psh_rrh <- vet_ees |>
+    HMIS::stayed_between(start = Sys.Date(),
+                         end = Sys.Date()) |>
+    dplyr::filter(ProjectType %in% project_types$ph &
+                    VeteranStatus == 1) |>
     dplyr::pull(PersonalID)
 
   # Declined  ---------------------------------------------------------------
-
-  most_recent_offer <- Offers %>%
+  most_recent_offer <- Offers |>
     dplyr::filter(!is.na(AcceptDeclineDate) &
                     !is.na(OfferAccepted) &
-                    !is.na(PHTypeOffered)) %>%
-    dplyr::group_by(PersonalID) %>%
-    dplyr::slice_max(lubridate::ymd(OfferDate)) %>% # same date
-    dplyr::slice_max(OfferAccepted) %>% # both rejected/accepted
-    dplyr::slice(1) %>% # pick 1, doesn't matter if those ^ are the same
-    dplyr::ungroup() %>%
+                    !is.na(PHTypeOffered)) |>
+    dplyr::group_by(PersonalID) |>
+    dplyr::slice_max(OfferDate) |> # same date
+    dplyr::slice_max(OfferAccepted) |> # both rejected/accepted
+    dplyr::slice(1) |> # pick 1, doesn't matter if those ^ are the same
+    dplyr::ungroup() |>
     unique()
 
-  declined <- vet_ees %>%
-    dplyr::left_join(most_recent_offer, by = "PersonalID") %>%
+  declined <- vet_ees |>
+    dplyr::left_join(most_recent_offer, by = "PersonalID") |>
     dplyr::filter(OfferAccepted == "No" &
-                    lubridate::ymd(OfferDate) >= lubridate::today() - lubridate::days(14) &
-                    VeteranStatus == 1) %>%
+                    OfferDate >= lubridate::today() - lubridate::days(14) &
+                    VeteranStatus == 1) |>
     unique()
 
   # Notes -------------------------------------------------------------------
-  browser()
-  small_CLS <- Contacts %>%
-    dplyr::filter(RecordType == "CLS") %>%
-    dplyr::mutate(Notes = stringr::str_remove_all(Notes, "<"),
-                  Notes = stringr::str_remove_all(Notes, ">")) %>% # in case there's html in the notes
-    tidyr::unite("Notes", ContactDate, Notes, sep = ": ") %>%
-    dplyr::select(PersonalID, Notes) %>%
-    dplyr::group_by(PersonalID) %>%
-    dplyr::arrange(dplyr::desc(Notes)) %>%
-    dplyr::summarise(Notes = list(Notes)) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(
-      Notes = as.character(Notes),
-      Notes = dplyr::if_else(stringr::str_starts(Notes, "c"),
-                             stringr::str_replace_all(Notes, "\", \"", "<br>"),
-                             Notes),
-      Notes = gsub("c\\(\"", "", Notes),
-      Notes = gsub("\"\\)", "", Notes)
-    )
+  small_CLS <- Contacts |>
+    dplyr::mutate("Notes" = paste0(ContactDate, " - CLS: ", CurrentLivingSituation,"\n","Detail: ", LocationDetails)) |>
+    dplyr::group_by(PersonalID) |>
+    dplyr::arrange(dplyr::desc(ContactDate)) |>
+    dplyr::select(PersonalID, Notes) |>
+    dplyr::summarise(Notes = paste0(Notes, collapse = "\n"), .groups = "drop")
+
 
   # Entry Exits -------------------------------------------------------------
 
-  small_ees <- vet_ees %>%
+  small_ees <- vet_ees |>
     dplyr::filter(!PersonalID %in% c(currently_housed_in_psh_rrh) &
                     VeteranStatus == 1 &
                     (is.na(ExitDate) |
                        (
-                         !Destination %in% c(perm_destinations) &
-                           lubridate::ymd(ExitDate) >= lubridate::today() - lubridate::days(90)
-                       ))) %>%
+                         !Destination %in% c(destinations$perm) &
+                           ExitDate >= lubridate::today() - lubridate::days(90)
+                       ))) |>
     dplyr::select(
       PersonalID,
       EnrollmentID,
