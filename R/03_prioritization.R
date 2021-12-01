@@ -648,7 +648,7 @@ prioritization <- prioritization |>
       housed ~ "Housed",
       likely_housed ~ "Likely housed: please follow-up with the client to ensure they are housed.",
       PTCStatus == "Has Entry into RRH or PSH" ~ dplyr::if_else(
-        R_ReferralConnectedPTC %in% c(project_types$ph, 4) &
+        R_ReferralConnectedPTC %in% c(project_types$lh, 4) &
           !!prioritization_expr$phdate_flag,
         paste("Has Entry into",
               R_ReferralConnectedProjectName),
