@@ -189,7 +189,27 @@ cohorts <- function(
   # fake_projects <- c(1027, 1849, 1028, 1033, 1032, 1029, 1931, 1030, 1031, 1317)
 
 
-
+# Client Column Categories ----
+# Tue Nov 30 11:46:53 2021
+  col_cats = list(Client = list(
+    gender = c(
+      "Female",
+      "Male",
+      "NoSingleGender",
+      "Transgender",
+      "Questioning",
+      "GenderNone"
+    ),
+    race = c(
+      "AmIndAKNative",
+      "Asian",
+      "BlackAfAmerican",
+      "NativeHIPacific",
+      "White",
+      "RaceNone",
+      "Ethnicity"
+    )
+  ))
   # Project Type Groupings --------------------------------------------------
 
   project_types = list(
