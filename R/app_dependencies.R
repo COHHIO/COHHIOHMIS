@@ -98,7 +98,6 @@ app_deps <- list(
     "qpr_spdats_county",
     "Referrals",
     "Regions",
-    "responsible_providers",
     "Scores",
     "summary_pe_final_scoring",
     "unsheltered_by_month",
@@ -109,12 +108,7 @@ app_deps <- list(
     "vaccine_status",
     # QPR_client_counts
     "validation",
-    # Veterans
-    "veteran_active_list",
-    "permanently_housed_vets",
-    "entered_past_90_vets",
-    "new_gpd_vets"
-
+    "veteran_active_list"
   )
 )
 missing_args <-

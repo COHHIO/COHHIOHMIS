@@ -419,53 +419,57 @@ vet_active <- function(
 
   # Exited to PH ------------------------------------------------------------
 
-  permanently_housed_vets <- vet_ees %>%
+  permanently_housed_vets <- vet_ees |>
     dplyr::filter(VeteranStatus == 1 &
-                    Destination %in% c(perm_destinations) &
-                    lubridate::ymd(ExitDate) >= lubridate::today() - lubridate::days(90)) %>%
+                    Destination %in% c(destinations$perm) &
+                    ExitDate >= lubridate::today() - lubridate::days(90)) |>
     dplyr::mutate(EntryAdj = dplyr::if_else(
       !is.na(DateVeteranIdentified) & DateVeteranIdentified < EntryDate,
       DateVeteranIdentified, EntryDate),
       time_to_house = difftime(lubridate::floor_date(ExitDate, unit = "day"),
                                lubridate::floor_date(EntryAdj, unit = "day"),
-                               units = "days")) %>%
+                               units = "days")) |>
     dplyr::select(
       PersonalID,
       EntryAdj,
       ExitDate,
       County,
       time_to_house
-    ) %>%
+    ) |>
     unique()
 
   # Entered in Past 90 Days -------------------------------------------------
 
-  entered_past_90_vets <- vet_ees %>%
-    dplyr::filter((ProjectType %in% c(lh_project_types) |
-                     (ProjectType %in% c(ph_project_types) &
-                        is.na(MoveInDateAdjust))) &
-                    (HMIS::entered_between(., format(lubridate::today() - lubridate::days(90), "%m%d%Y"),
-                                           format(lubridate::today(), "%m%d%Y")) |
-                       DateVeteranIdentified >= lubridate::today() - lubridate::days(90)))  %>%
+  entered_past_90_vets <- vet_ees |>
+      {\(x) {
+        dplyr::filter(x, (ProjectType %in% c(project_types$lh) |
+                         (ProjectType %in% c(project_types$ph) &
+                            is.na(MoveInDateAdjust))) &
+                        (HMIS::entered_between(x, start = lubridate::today() - lubridate::days(90),
+                                               end = lubridate::today(), lgl = TRUE) |
+                           DateVeteranIdentified >= lubridate::today() - lubridate::days(90)))
+      }}() |>
     dplyr::select(
       PersonalID, County
-    ) %>%
-    unique() %>%
+    ) |>
+    unique() |>
     dplyr::mutate(housed_in_last_90 = dplyr::if_else(
       PersonalID %in% permanently_housed_vets$PersonalID, 1, 0
     ))
 
   # New GPD ----------------------------------------------------
 
-  new_gpd_vets <- vet_ees %>%
+  new_gpd_vets <- vet_ees |>
+      HMIS::entered_between(lubridate::today() - lubridate::days(90),
+                            end = Sys.Date()) |>
     dplyr::filter(VeteranStatus == 1 &
-                    HMIS::entered_between(., format(lubridate::today() - lubridate::days(90), "%m%d%Y"),
-                                          format(lubridate::today(), "%m%d%Y")) &
-                    grepl("GPD", ProjectName)) %>%
+                    stringr::str_detect(ProjectName, "GPD")) |>
     dplyr::select(
       PersonalID, County
-    ) %>%
+    ) |>
     unique()
-  app_env$gather_deps()
+    browser()
+
+    app_env$gather_deps(veteran_active_list)
   app_env
 }
