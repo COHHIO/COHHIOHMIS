@@ -468,7 +468,6 @@ vet_active <- function(
       PersonalID, County
     ) |>
     unique()
-    browser()
 
     app_env$gather_deps(veteran_active_list)
   app_env
