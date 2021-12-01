@@ -25,13 +25,13 @@ if (missing(app_env))
 Rm_env$set_parent(missing_fmls())
 
 # getting all the veterans
-Veterans <- Client %>%
-  dplyr::filter(VeteranStatus == 1) %>%
+Veterans <- Client |>
+  dplyr::filter(VeteranStatus == 1) |>
   dplyr::select(PersonalID, dplyr::all_of(c(col_cats$Client$gender, col_cats$Client$race)))
 
 # getting all the EE data of all the veterans
-VeteranHHs <- Veterans %>%
-  dplyr::left_join(Enrollment_extra_Client_Exit_HH_CL_AaE, by = c("PersonalID")) %>%
+VeteranHHs <- Veterans |>
+  dplyr::left_join(Enrollment_extra_Client_Exit_HH_CL_AaE, by = c("PersonalID")) |>
   dplyr::select(
     PersonalID,
     UniqueID,
@@ -61,7 +61,8 @@ VeteranHHs <- Veterans %>%
   )
 
 # adding in all the provider data
-VeteranHHs <- Project %>%
+VeteranHHs <- Project |>
+  Project_rm_zz() |>
   dplyr::select(
     ProjectID,
     OrganizationName,
@@ -71,13 +72,13 @@ VeteranHHs <- Project %>%
     GrantType,
     ProjectName,
     ProjectRegion
-  ) %>%
+  ) |>
   dplyr::right_join(VeteranHHs, by = "ProjectID")
 
-VeteranHHs <- VeteranHHs %>%
+VeteranHHs <- VeteranHHs |>
   dplyr::left_join(VeteranCE, by = c("PersonalID", "EnrollmentID", "UniqueID"))
 
-CurrentVeterans <- VeteranHHs %>%
+CurrentVeterans <- VeteranHHs |>
   dplyr::filter((ProjectType %in% c(1, 2, 4, 8, 12) & (
     EntryDate <= Sys.Date() &
       (is.na(ExitDate) | ExitDate > Sys.Date())
@@ -86,19 +87,18 @@ CurrentVeterans <- VeteranHHs %>%
       MoveInDate <= Sys.Date() &
         (is.na(ExitDate) |
            ExitDate > Sys.Date())
-    )))
-
-CurrentVeteranCounts <- CurrentVeterans %>%
-  dplyr::filter(ProjectType %in% c(1, 2, 4, 8)) %>%
+    ))) |>
   dplyr::mutate(ProjectRegion = dplyr::if_else(is.na(ProjectRegion),
-                                 "Balance of State",
-                                 ProjectRegion)) %>%
-  dplyr::group_by(ProjectName, ProjectRegion) %>%
-  dplyr::summarise(Veterans = dplyr::n()) %>%
-  dplyr::ungroup()
+                                               -1, # must be numeric - Projects with NA regions are those outside of the Balance of State
+                                               ProjectRegion))
 
-VeteranEngagement <- CurrentVeterans %>%
-  dplyr::filter(ProjectType %in% c(1, 2, 4, 8)) %>%
+CurrentVeteranCounts <- CurrentVeterans |>
+  dplyr::filter(ProjectType %in% c(1, 2, 4, 8)) |>
+  dplyr::group_by(ProjectName, ProjectRegion) |>
+  dplyr::summarise(Veterans = dplyr::n(), .groups = "drop")
+
+VeteranEngagement <- CurrentVeterans |>
+  dplyr::filter(ProjectType %in% c(1, 2, 4, 8)) |>
   dplyr::mutate(
     EngagementStatus = dplyr::case_when(
       !is.na(PHTrack) & PHTrack != "None" &
@@ -108,25 +108,28 @@ VeteranEngagement <- CurrentVeterans %>%
           ExpectedPHDate < Sys.Date() |
             is.na(ExpectedPHDate)
         )) ~ "No Current Housing Plan"
-    ),
-    ProjectRegion = dplyr::if_else(is.na(ProjectRegion),
-                            "Balance of State",
-                            ProjectRegion)
-  ) %>%
-  dplyr::select(ProjectName, ProjectType, ProjectRegion, PersonalID, PHTrack,
-         ExpectedPHDate, EngagementStatus)
+    )
+  ) |>
+  dplyr::select(
+    ProjectName,
+    ProjectType,
+    ProjectRegion,
+    PersonalID,
+    PHTrack,
+    ExpectedPHDate,
+    EngagementStatus
+  )
 
-veteran_current_in_project <- VeteranEngagement %>%
-  dplyr::group_by(ProjectName, ProjectType, ProjectRegion, EngagementStatus) %>%
-  dplyr::summarise(CurrentVeteranCount = dplyr::n()) %>%
-  dplyr::ungroup() %>%
-  tidyr::spread(key = EngagementStatus, value = CurrentVeteranCount) %>%
+veteran_current_in_project <- VeteranEngagement |>
+  dplyr::group_by(ProjectName, ProjectType, ProjectRegion, EngagementStatus) |>
+  dplyr::summarise(CurrentVeteranCount = dplyr::n(), .groups = "drop") |>
+  tidyr::pivot_wider(names_from = EngagementStatus, values_from = CurrentVeteranCount) |>
   dplyr::rename(HasCurrentHousingPlan = `Has Current Housing Plan`,
-         NoCurrentHousingPlan = `No Current Housing Plan`)
+                NoCurrentHousingPlan = `No Current Housing Plan`)
 
 veteran_current_in_project[is.na(veteran_current_in_project)] <- 0
 
-veteran_current_in_project <- veteran_current_in_project %>%
+veteran_current_in_project <- veteran_current_in_project |>
   dplyr::mutate(
     Summary =
       dplyr::case_when(
@@ -151,44 +154,41 @@ veteran_current_in_project <- veteran_current_in_project %>%
           paste(HasCurrentHousingPlan,
                 "of these veterans have current Housing Plans")
       )
-  ) %>%
-  dplyr::left_join(CurrentVeteranCounts, by = c("ProjectName", "ProjectRegion")) %>%
+  ) |>
+  dplyr::left_join(CurrentVeteranCounts, by = c("ProjectName", "ProjectRegion")) |>
   dplyr::ungroup()
 
-current_tay_hohs <- tay %>%
+current_tay_hohs <- tay |>
   dplyr::filter(RelationshipToHoH == 1 &
            is.na(ExitDate) &
-           ProjectType %in% c(1, 2, 4, 8)) %>%
-  dplyr::group_by(ProjectName, ProjectType) %>%
-  dplyr::summarise(TAYHHs = sum(TAY)) %>%
-  dplyr::ungroup() %>%
-  dplyr::left_join(tay, by = c("ProjectName", "ProjectType")) %>%
-  dplyr::filter(RelationshipToHoH == 1 &
-           is.na(ExitDate) &
-           ProjectType %in% c(1, 2, 4, 8)) %>%
+           ProjectType %in% c(1, 2, 4, 8))  |>
+  {\(x) {
+    dplyr::group_by(x, ProjectName, ProjectType) |>
+      dplyr::summarise(TAYHHs = sum(TAY, na.rm = TRUE), .groups = "drop") |>
+      dplyr::left_join(x, by = c("ProjectName", "ProjectType"))
+    }}() |>
   dplyr::select(PersonalID,
          EnrollmentID,
          ProjectName,
          ProjectType,
-         TAYHHs) %>%
+         TAYHHs) |>
   dplyr::left_join(
-    VeteranCE %>%
+    VeteranCE |>
       dplyr::select(PersonalID,
              EnrollmentID,
              PHTrack,
              ExpectedPHDate),
     by = c("PersonalID", "EnrollmentID")
-  ) %>%
+  ) |>
   dplyr::mutate(HasPlan = dplyr::if_else(
     !is.na(PHTrack) & PHTrack != "None" &
       !is.na(ExpectedPHDate) &
       ExpectedPHDate >= Sys.Date(),
     1,
     0
-  )) %>%
-  dplyr::group_by(ProjectName, ProjectType, TAYHHs, HasPlan) %>%
-  dplyr::summarise(HasPlan = sum(HasPlan)) %>%
-  dplyr::ungroup() %>%
+  )) |>
+  dplyr::group_by(ProjectName, ProjectType, TAYHHs, HasPlan) |>
+  dplyr::summarise(HasPlan = sum(HasPlan, na.rm = TRUE), .groups = "drop")  |>
   dplyr::mutate(
     Summary =
       dplyr::case_when(
@@ -219,8 +219,5 @@ current_tay_hohs <- tay %>%
       )
   )
 
-rm(Veterans, CurrentVeterans, VeteranEngagement, VeteranHHs, CurrentVeteranCounts)
-
-app_env$gather_deps()
-app_env
+  app_env$gather_deps(veteran_current_in_project, current_tay_hohs)
 }
