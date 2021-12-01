@@ -242,6 +242,15 @@ EnrollmentCoC_RemoveCoCCodes <- function(EnrollmentCoC, codes_to_remove = c("Def
     out <- EnrollmentCoC
 }
 
+#' @title Filter Projects that have been retired (`zz`'d)
+#'
+#' @inheritParams data_quality_tables
+#'
+#' @return
+#' @export
+Project_rm_zz <- function(Project) {
+  dplyr::filter(Project, stringr::str_detect(ProjectName, "^zz", negate = TRUE))
+}
 
 #' @title Add the Corresponding Region for each Project by way of Geocode matching
 #'

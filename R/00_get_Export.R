@@ -99,7 +99,7 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   dplyr::select(ProjectID) |>
   {\(x) {
     dplyr::left_join(x, dplyr::select(Project, ProjectID, ProjectTypeCode, ProjectName), by = "ProjectID") |>
-      dplyr::filter(stringr::str_detect(ProjectName, "^zz", negate = TRUE)) |>
+      Project_rm_zz() |>
       dplyr::distinct(ProjectID, .keep_all = TRUE) |>
       {\(y) {rlang::set_names(y$ProjectID, dplyr::pull(y, ProjectTypeCode))}}()
   }}()
@@ -169,12 +169,8 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
 
   # Offers -----------------------------------------------------------------
 
-  # TODO Used in Veterans Active List
-  # Offers <- cl_api$`HUD Extras`$Client_Offer_extras()
-  # Offers <-
-  #   readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 7) %>%
-  #   dplyr::mutate(AcceptDeclineDate = lubridate::ymd(as.Date(AcceptDeclineDate, origin = "1899-12-30")),
-  #                 OfferDate = lubridate::ymd(as.Date(OfferDate, origin = "1899-12-30")))
+  Offers <- cl_api$`HUD Extras`$Client_Offer_extras()
+
 
 
 
