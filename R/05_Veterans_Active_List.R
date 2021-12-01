@@ -13,6 +13,15 @@
 # <https://www.gnu.org/licenses/>.
 
 vet_active <- function(
+  ServiceAreas,
+  co_clients_served,
+  project_types,
+  Enrollment,
+  Project,
+  VeteranCE,
+  Contacts,
+  Offers,
+  bos_counties,
   clarity_api,
   app_env,
   e = rlang::caller_env()
@@ -21,11 +30,11 @@ vet_active <- function(
     clarity_api <- Rm_data::get_clarity_api(e = e)
   if (missing(app_env))
     app_env <- Rm_data::get_app_env(e = e)
-
+  app_env$set_parent(missing_fmls())
 
   # Get all veterans and associated hh members ------------------------------
 
-  responsible_providers <- ServiceAreas %>%
+  responsible_providers <- ServiceAreas |>
     dplyr::select(County, SSVFServiceArea)
 
   vet_ees <- co_clients_served %>%
