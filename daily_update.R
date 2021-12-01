@@ -22,7 +22,7 @@ dirs$export <- "data"
 cl_api$.__enclos_env__$self$dirs <- dirs
 Rm_env$gather_deps(guidance)
 Rm_env$gather_deps(dirs)
-run_bg(bg_scripts["extras_dq"])
+run_bg(bg_scripts["update_extras"])
 # Try services
 # rstudioapi::jobRunScript(file.path("inst","src","Services_test.R"), importEnv = TRUE, workingDir = getwd())
 
@@ -32,6 +32,8 @@ Rm_env <- client_counts()
 Rm_env <- covid19()
 Rm_env <- covid19_plots()
 Rm_env <- cohorts()
+Rm_env <- vets()
+Rm_env <- vet_active()
 Rm_env <- prioritization()
 Rm_env <- bed_unit_utilization()
 Rm_env <- data_quality()
