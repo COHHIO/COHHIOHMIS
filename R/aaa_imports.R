@@ -37,3 +37,4 @@ data_quality_tables <- function(served_in_date_range, IncomeBenefits, mahoning_p
 
 }
 
+is_dev = basename(getwd()) == "Rm_data"
