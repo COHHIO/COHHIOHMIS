@@ -227,6 +227,7 @@ co_currently_homeless <- co_currently_homeless |>
     "RelationshipToHoH",
     "VeteranStatus",
     "EntryDate",
+    "MoveInDateAdjust",
     "AgeAtEntry",
     "DisablingCondition",
     "HouseholdSize",
@@ -550,7 +551,8 @@ prioritization <- prioritization |>
     HoH_Adjust = dplyr::case_when(HH_DQ_Issue == 1L ~ correctedhoh,
                            HH_DQ_Issue == 0L ~ hoh)
   ) |>
-  dplyr::filter(HoH_Adjust == 1) |>
+  dplyr::filter(HoH_Adjust == 1 &
+                is.na(MoveInDateAdjust)) |>
   dplyr::select(-correctedhoh, -RelationshipToHoH, -hoh, -HoH_Adjust)
 
 # Add Referral Status -----------------------------------------------------
