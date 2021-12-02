@@ -11,7 +11,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
-#' @include app_dependencies.R 04_DataQuality_utils.R
+#' @include app_dependencies.R 04_DataQuality_utils.R 04_DataQuality_doses.R
 
 dependencies$DataQuality <-
   c(
@@ -37,7 +37,7 @@ dependencies$DataQuality <-
     "Users"
   )
 
-check_fns <- stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!dose)(?!\\_vaccine)(?!\\_referrals)(?!\\_services)(?!\\_spdats)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
+check_fns <- stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!\\_referrals)(?!\\_services)(?!\\_spdats)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
 
 data_quality <- function(check_fns = Rm_data::check_fns,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
