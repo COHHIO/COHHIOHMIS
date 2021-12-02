@@ -634,7 +634,7 @@ prioritization <- prioritization |>
                   R_ReferralConnectedPTC,
                   R_ReferralConnectedProjectName,
                   R_ReferredProjectName,
-                  R_ReferredDate,
+                  R_ReferralAcceptedDate,
                   R_ReferralCurrentlyOnQueue,
                   R_ReferralConnectedMoveInDate),
     by = "PersonalID")
@@ -655,18 +655,9 @@ prioritization <- prioritization |>
     Situation = dplyr::case_when(
       housed ~ "Housed",
       likely_housed ~ "Likely housed: please follow-up with the client to ensure they are housed.",
-      PTCStatus == "Has Entry into RRH or PSH" ~ dplyr::if_else(
-        R_ReferralConnectedPTC %in% c(project_types$lh, 4) &
-          !!prioritization_expr$phdate_flag,
-        paste("Has Entry into",
-              R_ReferralConnectedProjectName),
-        PTCStatus
-      ),
-      PTCStatus == "Has Entry into RRH or PSH" ~ dplyr::if_else(
-          is.na(MoveInDateAdjust),
-        paste("Has Entry into RRH or PSH but has not moved in."),
-        PTCStatus
-      ),
+      PTCStatus == "Has Entry into RRH or PSH" & R_ReferralConnectedPTC %in% c(project_types$lh, 4) ~ paste("Has Entry into RRH/PSH:",
+                                                                                                            R_ReferralConnectedProjectName),
+      PTCStatus == "Has Entry into RRH or PSH" & is.na(MoveInDateAdjust) ~ "Has Entry into RRH/PSH but has not moved in.",
       PTCStatus == "Currently Has No Entry into RRH or PSH" &
         is.na(R_ReferralConnectedProjectName) &
         !is.na(PHTrack) &
