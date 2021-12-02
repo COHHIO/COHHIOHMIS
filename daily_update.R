@@ -22,7 +22,7 @@ dirs$export <- "data"
 cl_api$.__enclos_env__$self$dirs <- dirs
 Rm_env$gather_deps(guidance)
 Rm_env$gather_deps(dirs)
-run_bg(bg_scripts["extras_dq"])
+run_bg(bg_scripts["update_extras"])
 # Try services
 # rstudioapi::jobRunScript(file.path("inst","src","Services_test.R"), importEnv = TRUE, workingDir = getwd())
 
