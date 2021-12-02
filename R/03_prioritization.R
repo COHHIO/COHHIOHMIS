@@ -18,7 +18,7 @@
 #' @param covid19 \code{(data.frame)} See `covid19`
 #' @param c19priority \code{(data.frame)} See `covid19`
 #' @param Disabilities \code{(data.frame)} See `covid19`
-#' @param Enrollment_extra_Exit_HH_CL_AaE \code{(data.frame)} See `load_export`
+#' @param Enrollment_extra_Client_Exit_HH_CL_AaE \code{(data.frame)} See `load_export`
 #' @param Referrals \code{(data.frame)} See `load_export`
 #' @param Scores \code{(data.frame)} See `load_export`
 #' @param project_types \code{(list)} See `cohorts`
@@ -33,7 +33,7 @@ prioritization <- function(
   covid19,
   c19priority,
   Disabilities,
-  Enrollment_extra_Exit_HH_CL_AaE,
+  Enrollment_extra_Client_Exit_HH_CL_AaE,
   HealthAndDV,
   IncomeBenefits,
   Project,
@@ -147,7 +147,7 @@ extended_disability <- co_currently_homeless |>
   dplyr::ungroup() |>
   dplyr::distinct() |>
   dplyr::left_join(
-    dplyr::select(Enrollment_extra_Exit_HH_CL_AaE,
+    dplyr::select(Enrollment_extra_Client_Exit_HH_CL_AaE,
                   EnrollmentID,
                   DisablingCondition),
                    by = c("EnrollmentID")) |>
@@ -374,7 +374,7 @@ prioritization <- dplyr::left_join(prioritization, covid_hhs, by = c("PersonalID
 prioritization <- prioritization |>
   dplyr::left_join(
       dplyr::distinct(
-        Enrollment_extra_Exit_HH_CL_AaE,
+        Enrollment_extra_Client_Exit_HH_CL_AaE,
         PersonalID,
         HouseholdID,
         CountyServed,
@@ -455,7 +455,7 @@ prioritization <- prioritization |>
 # it adds up to 365 or more, it marks the client as AgedIn
 agedIntoChronicity <- prioritization |>
   dplyr::left_join(
-    Enrollment_extra_Exit_HH_CL_AaE |>
+    Enrollment_extra_Client_Exit_HH_CL_AaE |>
       dplyr::select(
         EnrollmentID,
         PersonalID,
