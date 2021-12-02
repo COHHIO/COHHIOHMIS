@@ -662,6 +662,11 @@ prioritization <- prioritization |>
               R_ReferralConnectedProjectName),
         PTCStatus
       ),
+      PTCStatus == "Has Entry into RRH or PSH" ~ dplyr::if_else(
+          is.na(MoveInDateAdjust),
+        paste("Has Entry into RRH or PSH but has not moved in."),
+        PTCStatus
+      ),
       PTCStatus == "Currently Has No Entry into RRH or PSH" &
         is.na(R_ReferralConnectedProjectName) &
         !is.na(PHTrack) &
