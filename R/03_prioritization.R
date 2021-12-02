@@ -680,7 +680,7 @@ prioritization <- prioritization |>
           "No current Entry into RRH or PSH but",
           R_ReferredProjectName,
           "accepted this household's referral on",
-          R_ReferredDate
+          R_ReferralAcceptedDate
         ),
       !(!!prioritization_expr$coq) ~ "Not referred to Community Queue, please add to CQ.",
       PTCStatus == "Currently Has No Entry into RRH or PSH" &
