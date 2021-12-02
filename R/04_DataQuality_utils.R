@@ -93,7 +93,7 @@ projects_current_hmis <- function (Project,
 #' @title Create the data.frame of Clients to Check `served_in_date_range`
 #'
 #' @param projects_current_hmis \code{(data.frame)} of Providers to check. See `projects_current_hmis`
-#' @param Enrollment_extra_Exit_HH_CL_AaE \code{(data.frame)} Enrollment with all additions from `load_export`
+#' @param Enrollment_extra_Client_Exit_HH_CL_AaE \code{(data.frame)} Enrollment with all additions from `load_export`
 #' @param Client \code{(data.frame)} Client with all additions from `load_export`
 #' @param Project \code{(data.frame)} Project with extras including Regions and GrantType see `Pe_add_regions` & `Pe_add_GrantType`.
 #' @param Inventory \code{(data.frame)} Inventory
@@ -104,13 +104,13 @@ projects_current_hmis <- function (Project,
 #' @return \code{(data.frame)}
 
 
-served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Exit_HH_CL_AaE = NULL, Client = NULL, Project = NULL, Inventory = NULL, HealthAndDV = NULL, vars, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Client_Exit_HH_CL_AaE = NULL, Client = NULL, Project = NULL, Inventory = NULL, HealthAndDV = NULL, vars, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$set_parent(missing_fmls())
-  Enrollment_extra_Exit_HH_CL_AaE  |>
+  Enrollment_extra_Client_Exit_HH_CL_AaE  |>
     HMIS::served_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End)  |>
     dplyr::left_join(Client  |>
-                       dplyr::select(- dplyr::all_of(stringr::str_subset(UU::common_names(Enrollment_extra_Exit_HH_CL_AaE, Client), "PersonalID", negate = TRUE))), by = "PersonalID") |>
+                       dplyr::select(- dplyr::all_of(stringr::str_subset(UU::common_names(Enrollment_extra_Client_Exit_HH_CL_AaE, Client), "PersonalID", negate = TRUE))), by = "PersonalID") |>
     dplyr::select(
       dplyr::all_of(
       c(
@@ -2928,11 +2928,11 @@ dq_referrals_on_hh_members_ssvf <- function(served_in_date_range, vars, guidance
 #' @inherit served_in_date_range params return
 #' @export
 
-ssvf_served_in_date_range <- function(Enrollment_extra_Exit_HH_CL_AaE, served_in_date_range, Client, app_env = get_app_env(e = rlang::caller_env())) {
+ssvf_served_in_date_range <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, served_in_date_range, Client, app_env = get_app_env(e = rlang::caller_env())) {
     if (is_app_env(app_env))
       app_env$set_parent(missing_fmls())
 
-  Enrollment_extra_Exit_HH_CL_AaE %>%
+  Enrollment_extra_Client_Exit_HH_CL_AaE %>%
       dplyr::select(dplyr::all_of(
         c(
           "AddressDataQuality",

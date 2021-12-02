@@ -9,7 +9,7 @@ prioritization(
   covid19,
   c19priority,
   Disabilities,
-  Enrollment_extra_Exit_HH_CL_AaE,
+  Enrollment_extra_Client_Exit_HH_CL_AaE,
   HealthAndDV,
   IncomeBenefits,
   Project,
@@ -29,7 +29,7 @@ prioritization(
 
 \item{Disabilities}{\code{(data.frame)} See \code{covid19}}
 
-\item{Enrollment_extra_Exit_HH_CL_AaE}{\code{(data.frame)} See \code{load_export}}
+\item{Enrollment_extra_Client_Exit_HH_CL_AaE}{\code{(data.frame)} See \code{load_export}}
 
 \item{HealthAndDV}{\code{(data.frame)} From the HUD CSV Export}
 

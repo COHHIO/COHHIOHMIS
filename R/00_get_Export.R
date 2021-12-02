@@ -117,7 +117,7 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   # getting EE-related data, joining both to En
   Enrollment_extras <- cl_api$`HUD Extras`$Enrollment_extras()
   Enrollment <- cl_api$Enrollment()
-  Enrollment_extra_Exit_HH_CL_AaE <- dplyr::left_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
+  Enrollment_extra_Client_Exit_HH_CL_AaE <- dplyr::left_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
     # Add Exit
     Enrollment_add_Exit(cl_api$Exit()) |>
     # Add Households
@@ -127,9 +127,19 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
     # Add Client Location from EnrollmentCoC
     Enrollment_add_ClientLocation(EnrollmentCoC) |>
     # Add Client AgeAtEntry
-    Enrollment_add_AgeAtEntry_UniqueID(Client)
+    Enrollment_add_AgeAtEntry_UniqueID(Client) |>
+    dplyr::left_join(dplyr::select(Client,-dplyr::all_of(
+      c(
+        "DateCreated",
+        "DateUpdated",
+        "UserID",
+        "DateDeleted",
+        "ExportID"
+      )
+    )),
+    by = c("PersonalID", "UniqueID"))
 
-  UU::join_check(Enrollment, Enrollment_extra_Exit_HH_CL_AaE)
+  UU::join_check(Enrollment, Enrollment_extra_Client_Exit_HH_CL_AaE)
 
 
   # Funder ------------------------------------------------------------------
@@ -197,7 +207,7 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   #                              which()]
   # Services <- cl_api$Services()
   # raw_services <- cl_api$`HUD Extras`$Services_extras() |>
-  #   dplyr::left_join(Enrollment_extra_Exit_HH_CL_AaE[c("EnrollmentID",
+  #   dplyr::left_join(Enrollment_extra_Client_Exit_HH_CL_AaE[c("EnrollmentID",
   #                                 "PersonalID",
   #                                 "ProjectName",
   #                                 "EntryDate",
