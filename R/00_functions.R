@@ -82,9 +82,15 @@ stop_with_instructions <- function(..., error = FALSE) {
     "Please contact hmisapps@cohhio.org for help!"
   )
   if (error)
-    stop(.msg, call. = FALSE)
-  else
-    RPushbullet::pbPost(title = "COHHIO Error", body = .msg)
+    stop(.msg)
+  else {
+    warning(.msg)
+    # authfile <- ifelse(is_dev, file.path("inst", "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"), file.path(system.file(package = "Rm_data"), "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"))
+    # token <- gargle::token_fetch(scopes = "https://www.googleapis.com/auth/gmail.compose", gargle::credentials_service_account(scopes = "https://www.googleapis.com/auth/gmail.compose", path = authfile))
+    # gmailr::gm_auth_configure()
+    # gmailr::gm_auth(token = token)
+  }
+
 }
 
 # increment ----

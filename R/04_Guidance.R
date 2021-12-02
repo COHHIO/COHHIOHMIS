@@ -12,7 +12,8 @@
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
 f <- ifelse(is_dev, "inst/src/guidance.R", file.path(system.file(package = "Rm_data"), "src", "guidance.R"))
-if (curl::has_internet() && is_dev) {
+guidance <- source(f)$value
+if (curl::has_internet() && is_dev && difftime(Sys.time(), attr(guidance, "last_update") %||% Sys.time()) > lubridate::days(7)) {
   googlesheets4::gs4_auth(path = "inst/auth/rminor@rminor-333915.iam.gserviceaccount.com.json")
   dq_id <- "15HsbSGmsscGtUIZnBDSVPaU4Zsotp7Dj79mXpPAu_lw"
   dq_nms <- googlesheets4::sheet_names(dq_id)
@@ -20,9 +21,8 @@ if (curl::has_internet() && is_dev) {
   guidance <- purrr::map(rlang::set_names(dq_guidance$`Guidance list`$name), ~{
     dq_guidance$`Guidance list`$guidance[dq_guidance$`Guidance list`$name == .x]
   })
+  attr(guidance, "last_update") <- Sys.time()
   dump("guidance", f)
-} else {
-  guidance <- source(f)$value
 }
 
 
