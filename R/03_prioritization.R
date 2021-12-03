@@ -568,7 +568,7 @@ prioritization <- prioritization |>
 # right?
 
 # Create a summary of last referrals & whether they were accepted
-prioritization_expr <- rlang::exprs(
+referrals_expr <- rlang::exprs(
   housed1 = R_RemovedFromQueueSubreason %in% c(
     "Housed with Community Inventory",
     "Housed with Community Inventory - Not with CE",
@@ -582,17 +582,16 @@ prioritization_expr <- rlang::exprs(
   is_active = R_ActiveInProject == "Yes",
   accepted1 = R_IsLastReferral == "Yes",
   accepted2 = stringr::str_detect(R_ReferralResult, "accepted$"),
-  coq = R_ReferralCurrentlyOnQueue == "Yes",
-  phdate_flag = any(is.na(ExpectedPHDate) | Sys.Date() < ExpectedPHDate, na.rm = TRUE)
+  coq = R_ReferralCurrentlyOnQueue == "Yes"
 )
-referral_result_summarize <- purrr::map(prioritization_expr, ~rlang::expr(isTRUE(any(!!.x, na.rm = TRUE))))
+referral_result_summarize <- purrr::map(referrals_expr, ~rlang::expr(isTRUE(any(!!.x, na.rm = TRUE))))
 
 
 Referrals <- Referrals |>
-  filter_dupe_soft(!!prioritization_expr$is_last,
-                   !!prioritization_expr$is_active,
+  filter_dupe_soft(!!referrals_expr$is_last,
+                   !!referrals_expr$is_active,
                    !is.na(R_ReferralResult),
-                   !!prioritization_expr$housed3 & !!prioritization_expr$accepted2,
+                   !!referrals_expr$housed3 & !!referrals_expr$accepted2,
               key = PersonalID) |>
   filter_dupe_last_EnrollmentID() |>
   dplyr::arrange(dplyr::desc(R_ReferredEnrollmentID)) |>
