@@ -329,14 +329,14 @@ hohs <- prioritization |>
   dplyr::mutate(RelationshipToHoH = dplyr::if_else(correctedhoh == 1L, 1L, RelationshipToHoH)) |>
   dplyr::select(PersonalID, HouseholdID, correctedhoh)
 
-browser()
+
 prioritization <- prioritization |>
   dplyr::left_join(hohs, by = c("HouseholdID", "PersonalID")) |>
   dplyr::group_by(HouseholdID) |>
   dplyr::mutate(correctedhoh = dplyr::if_else(is.na(correctedhoh), 0L, 1L),
          HH_DQ_Issue = as.logical(max(correctedhoh))) |>
   dplyr::ungroup() |>
-  dplyr::filter(correctedhoh == 1)
+  dplyr::filter(correctedhoh == 1 | RelationshipToHoH == 1)
 
 # COVID-19 ----------------------------------------------------------------
 
