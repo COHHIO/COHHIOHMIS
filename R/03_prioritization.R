@@ -662,16 +662,10 @@ prioritization <- prioritization |>
       housed ~ "Housed",
       likely_housed ~ "Likely housed: please follow-up with the client to ensure they are housed.",
       !!sit_expr$ptc_has_entry & !!sit_expr$moved_in ~ "Housed",
-       !!sit_expr$ptc_has_entry & R_ReferralConnectedPTC %in% c(project_types$lh, 4) ~ paste("Has Entry into RRH/PSH:",
-                                                                                                            R_ReferralConnectedProjectName),
-      !!sit_expr$ptc_has_entry & !(!!sit_expr$moved_in) ~ "Has Entry into RRH/PSH but has not moved in.",
-       !!sit_expr$ptc_no_entry &
-         !(!!sit_expr$referredproject) &
+       !!sit_expr$ptc_has_entry & !(!!sit_expr$moved_in) ~ paste("Entered RRH/PSH but has not moved in:",
+                                                                                                            R_ReferralConnectedProjectName %|% ProjectName),
         !!sit_expr$ph_track &
-        !!sit_expr$phdate_flag ~ paste("Permanent Housing Track:",
-                                PHTrack,
-                                "by",
-                                ExpectedPHDate),
+        !!sit_expr$ph_date ~ paste("Permanent Housing Track. Track:", PHTrack,"Expected Move-in:", ExpectedPHDate),
       !!sit_expr$ptc_no_entry &
         !!sit_expr$referredproject ~
         paste(
@@ -680,11 +674,12 @@ prioritization <- prioritization |>
           "accepted this household's referral on",
           R_ReferralAcceptedDate
         ),
-      !(!!referrals_expr$coq) ~ "Not referred to Community Queue, please add to CQ.",
+      !(!!referrals_expr$coq) | is.na(R_ReferralCurrentlyOnQueue) ~ "Not referred to Community Queue, please add to CQ.",
       !!sit_expr$ptc_no_entry &
         !(!!sit_expr$referredproject) &
         !(!!sit_expr$ph_track) ~
         "No Entry or accepted Referral into PSH/RRH, and no current Permanent Housing Track",
+      TRUE ~ "No Entry or accepted Referral into PSH/RRH, and no current Permanent Housing Track"
     ),
     Situation_col = factor(stringr::str_extract(Situation, paste0("(?:",names(prioritization_colors),")") |> paste0(collapse = "|")), names(prioritization_colors)),
     ExpectedPHDate = dplyr::if_else(is.na(ExpectedPHDate), R_ReferralConnectedMoveInDate, ExpectedPHDate)
