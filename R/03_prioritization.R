@@ -162,29 +162,25 @@ extended_disability <- co_currently_homeless |>
   dplyr::select(EnrollmentID, any_disability)
 
 # adding household aggregations into the full client list
-last_enrollment <- dplyr::select(
-  Enrollment_extra_Client_Exit_HH_CL_AaE,
-  EnrollmentID,
-  PersonalID,
-  HouseholdID,
-  LivingSituation,
-  DateToStreetESSH,
-  TimesHomelessPastThreeYears,
-  ExitAdjust,
-  MoveInDateAdjust,
-  MonthsHomelessPastThreeYears,
-  DisablingCondition
-) |>
-  dplyr::mutate(LastEnrollmentID = as.character(max(as.numeric(EnrollmentID)))) |>
-  dplyr::filter(EnrollmentID == LastEnrollmentID) |>
-  dplyr::select(- LastEnrollmentID)
 
 co_currently_homeless <- co_currently_homeless |>
   dplyr::left_join(income_data,
                    by = c("PersonalID", "EnrollmentID")) |>
   dplyr::left_join(extended_disability, by = "EnrollmentID") |>
   dplyr::left_join(
-    last_enrollment,
+    dplyr::select(
+      Enrollment_extra_Client_Exit_HH_CL_AaE,
+      EnrollmentID,
+      PersonalID,
+      HouseholdID,
+      LivingSituation,
+      DateToStreetESSH,
+      TimesHomelessPastThreeYears,
+      ExitAdjust,
+      MoveInDateAdjust,
+      MonthsHomelessPastThreeYears,
+      DisablingCondition
+    ),
     by = c("PersonalID",
            "EnrollmentID",
            "HouseholdID")
