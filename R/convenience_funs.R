@@ -13,8 +13,13 @@ go_to <- function(x, path = "R") {
 bg_scripts <- list.files(file.path("inst", "src"), full.names = TRUE, pattern = "R$") |>
   {\(x) {rlang::set_names(x, stringr::str_remove(basename(x), "\\.R$"))}}()
 
-run_bg <- function(file = bg_scripts[1]) {
-  rstudioapi::jobRunScript(file, importEnv = TRUE, workingDir = getwd(), "R_GlobalEnv")
+run_bg <- function(path = bg_scripts[1],
+                   name = rlang::expr(basename(path)),
+                   workingDir = getwd(),
+                   importEnv = TRUE,
+                   exportEnv = "R_GlobalEnv") {
+  name <- rlang::eval_bare(name)
+  rstudioapi::jobRunScript(path.expand(path), importEnv = importEnv, workingDir = workingDir, exportEnv = exportEnv, name = name)
 }
 
 
