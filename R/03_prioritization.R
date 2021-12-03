@@ -645,6 +645,14 @@ prioritization <- prioritization |>
     `No Entry` = "#ff2516"
   )
 
+  sit_expr = rlang::exprs(
+    phdate_flag = any(is.na(ExpectedPHDate) | Sys.Date() < ExpectedPHDate, na.rm = TRUE),
+    ptc_has_entry = PTCStatus == "Has Entry into RRH or PSH",
+    ptc_no_entry = PTCStatus == "Currently Has No Entry into RRH or PSH",
+    moved_in = any(!is.na(MoveInDateAdjust)),
+    referredproject = any(!is.na(R_ReferralConnectedProjectName)),
+    ph_track = any(!is.na(R_ReferralConnectedProjectName))
+  )
   # Referral Situation ----
   # Tue Nov 09 12:49:51 2021
   prioritization <- dplyr::mutate(
@@ -652,28 +660,29 @@ prioritization <- prioritization |>
     Situation = dplyr::case_when(
       housed ~ "Housed",
       likely_housed ~ "Likely housed: please follow-up with the client to ensure they are housed.",
-      PTCStatus == "Has Entry into RRH or PSH" & R_ReferralConnectedPTC %in% c(project_types$lh, 4) ~ paste("Has Entry into RRH/PSH:",
+      !!sit_expr$ptc_has_entry & !!sit_expr$moved_in ~ "Housed",
+       !!sit_expr$ptc_has_entry & R_ReferralConnectedPTC %in% c(project_types$lh, 4) ~ paste("Has Entry into RRH/PSH:",
                                                                                                             R_ReferralConnectedProjectName),
-      PTCStatus == "Has Entry into RRH or PSH" & is.na(MoveInDateAdjust) ~ "Has Entry into RRH/PSH but has not moved in.",
-      PTCStatus == "Currently Has No Entry into RRH or PSH" &
-        is.na(R_ReferralConnectedProjectName) &
-        !is.na(PHTrack) &
-        !!prioritization_expr$phdate_flag ~ paste("Permanent Housing Track:",
+      !!sit_expr$ptc_has_entry & !(!!sit_expr$moved_in) ~ "Has Entry into RRH/PSH but has not moved in.",
+       !!sit_expr$ptc_no_entry &
+         !(!!sit_expr$referredproject) &
+        !!sit_expr$ph_track &
+        !!sit_expr$phdate_flag ~ paste("Permanent Housing Track:",
                                 PHTrack,
                                 "by",
                                 ExpectedPHDate),
-      PTCStatus == "Currently Has No Entry into RRH or PSH" &
-        !is.na(R_ReferralConnectedProjectName) ~
+      !!sit_expr$ptc_no_entry &
+        !!sit_expr$referredproject ~
         paste(
           "No current Entry into RRH or PSH but",
           R_ReferredProjectName,
           "accepted this household's referral on",
           R_ReferralAcceptedDate
         ),
-      !(!!prioritization_expr$coq) ~ "Not referred to Community Queue, please add to CQ.",
-      PTCStatus == "Currently Has No Entry into RRH or PSH" &
-        is.na(R_ReferralConnectedProjectName) &
-        is.na(PHTrack) ~
+      !(!!referrals_expr$coq) ~ "Not referred to Community Queue, please add to CQ.",
+      !!sit_expr$ptc_no_entry &
+        !(!!sit_expr$referredproject) &
+        !(!!sit_expr$ph_track) ~
         "No Entry or accepted Referral into PSH/RRH, and no current Permanent Housing Track",
     ),
     Situation_col = factor(stringr::str_extract(Situation, paste0("(?:",names(prioritization_colors),")") |> paste0(collapse = "|")), names(prioritization_colors)),
