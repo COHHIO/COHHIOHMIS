@@ -210,7 +210,8 @@ co_currently_homeless <- co_currently_homeless |>
     ),
     IncomeInHH = dplyr::if_else(IncomeInHH == 100, 1L, IncomeInHH),
     DisabilityInHH = max(dplyr::if_else(any_disability == 1, 1, 0)),
-    ChronicStatus = dplyr::if_else(max(SinglyChronic) == 1, "Chronic", "Not Chronic")
+    ChronicStatus = dplyr::if_else(max(SinglyChronic) == 1, "Chronic", "Not Chronic"),
+    MoveInDateAdjust = valid_max(MovedInDateAdjust)
   ) |>
   dplyr::ungroup() |>
   dplyr::select(

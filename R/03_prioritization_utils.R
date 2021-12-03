@@ -61,3 +61,15 @@ min_na <- function(...) {
   }
   x[idx,]
 }
+
+valid_max = function(var) {
+  out <- na.omit(var)
+  if (UU::is_legit(out)) {
+    out2 <- max(out)
+    if (!is.infinite(out2))
+      out <- out2
+  } else {
+    out <- var
+  }
+  out
+}
