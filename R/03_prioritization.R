@@ -638,20 +638,21 @@ prioritization <- prioritization |>
 
   prioritization_colors <- c(`Housed` = "#45d63e",
     `Likely housed` = "#8ce37c",
-    `Permanent Housing Track` = "#b9edac",
-    `Has Entry into` = "#caf1c0",
+    `Entered RRH` = "#b9edac",
+    `Permanent Housing Track`= "#caf1c0",
     `No current Entry` = "#fd8d3c",
     `Not referred` = "#ff6e2d",
     `No Entry` = "#ff2516"
   )
 
   sit_expr = rlang::exprs(
-    phdate_flag = any(is.na(ExpectedPHDate) | Sys.Date() < ExpectedPHDate, na.rm = TRUE),
+    ph_date = !is.na(ExpectedPHDate) & Sys.Date() > ExpectedPHDate,
     ptc_has_entry = PTCStatus == "Has Entry into RRH or PSH",
     ptc_no_entry = PTCStatus == "Currently Has No Entry into RRH or PSH",
-    moved_in = any(!is.na(MoveInDateAdjust)),
-    referredproject = any(!is.na(R_ReferralConnectedProjectName)),
-    ph_track = any(!is.na(R_ReferralConnectedProjectName))
+    is_lh = (R_ReferralConnectedPTC %|% ProjectType) %in% c(project_types$lh, 4, 11),
+    moved_in = !is.na(MoveInDateAdjust),
+    referredproject = !is.na(R_ReferralConnectedProjectName),
+    ph_track = !is.na(PHTrack) & PHTrack != "None"
   )
   # Referral Situation ----
   # Tue Nov 09 12:49:51 2021
