@@ -160,11 +160,9 @@ Enrollment_add_Household = function(Enrollment, Project, rm_dates, app_env = get
     dplyr::left_join(HHEntry, by = "HouseholdID") %>%
     dplyr::mutate(
       # Puts EntryDate as MoveInDate for projects that don't use a MoveInDate
-      MoveInDateAdjust = dplyr::if_else(
-        !is.na(HHMoveIn) & HHMoveIn <= ExitAdjust,
-        dplyr::if_else(EntryDate <= HHMoveIn,
-                       HHMoveIn, EntryDate),
-        NA_real_),
+      MoveInDateAdjust = dplyr::case_when(
+        !is.na(HHMoveIn) & HHMoveIn <= ExitAdjust & EntryDate <= HHMoveIn ~ HHMoveIn,
+        TRUE ~ NA_real_),
       EntryAdjust = dplyr::case_when(
         ProjectType %in% c(1, 2, 4, 8, 12) ~ EntryDate,
         ProjectType %in% c(3, 9, 13) &
