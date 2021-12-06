@@ -636,17 +636,22 @@ prioritization <- prioritization |>
                   R_ReferralConnectedMoveInDate),
     by = "PersonalID")
 
-  prioritization_colors <- c(`Housed` = "#45d63e",
-    `Likely housed` = "#8ce37c",
-    `Entered RRH` = "#b9edac",
-    `Permanent Housing Track`= "#caf1c0",
-    `No current Entry` = "#fd8d3c",
-    `Not referred` = "#ff6e2d",
-    `No Entry` = "#ff2516"
-  )
+prioritization_colors <- c(
+  "Housed",
+  "Likely housed",
+  "Entered RRH",
+  "Permanent Housing Track",
+  "Follow-up needed",
+  "No current Entry",
+  "Not referred",
+  "No Entry"
+) |>
+  {\(x) {rlang::set_names(grDevices::colorRampPalette(c("#45d63e", "#ff2516"), space = "Lab")(length(x)), x)}}()
 
   sit_expr = rlang::exprs(
-    ph_date = !is.na(ExpectedPHDate) & Sys.Date() > ExpectedPHDate,
+    ph_date = !is.na(ExpectedPHDate),
+    ph_date_pre = Sys.Date() < ExpectedPHDate,
+    ph_date_post = Sys.Date() > ExpectedPHDate,
     ptc_has_entry = PTCStatus == "Has Entry into RRH or PSH",
     ptc_no_entry = PTCStatus == "Currently Has No Entry into RRH or PSH",
     is_lh = (R_ReferralConnectedPTC %|% ProjectType) %in% c(project_types$lh, 4, 11),
@@ -656,6 +661,7 @@ prioritization <- prioritization |>
   )
   # Referral Situation ----
   # Tue Nov 09 12:49:51 2021
+
   prioritization <- dplyr::mutate(
     prioritization,
     Situation = dplyr::case_when(
@@ -665,7 +671,12 @@ prioritization <- prioritization |>
        !!sit_expr$ptc_has_entry & !(!!sit_expr$moved_in) ~ paste("Entered RRH/PSH but has not moved in:",
                                                                                                             R_ReferralConnectedProjectName %|% ProjectName),
         !!sit_expr$ph_track &
-        !!sit_expr$ph_date ~ paste("Permanent Housing Track. Track:", PHTrack,"Expected Move-in:", ExpectedPHDate),
+        !!sit_expr$ph_date &
+        !!sit_expr$ph_date_pre ~ paste("Permanent Housing Track. Track:", PHTrack,"Expected Move-in:", ExpectedPHDate),
+      !!sit_expr$ph_track &
+        !!sit_expr$ph_date &
+        !!sit_expr$ph_date_post &
+        !(!!sit_expr$moved_in) ~ paste("Follow-up needed on PH Track, client is not yet moved in:", PHTrack,"Expected Move-in:", ExpectedPHDate),
       !!sit_expr$ptc_no_entry &
         !!sit_expr$referredproject ~
         paste(
@@ -674,7 +685,7 @@ prioritization <- prioritization |>
           "accepted this household's referral on",
           R_ReferralAcceptedDate
         ),
-      !(!!referrals_expr$coq) | is.na(R_ReferralCurrentlyOnQueue) ~ "Not referred to Community Queue, please add to CQ.",
+      !(!!referrals_expr$coq) | is.na(R_ReferralCurrentlyOnQueue) ~ "Not referred to Community Queue, may need referral to CQ.",
       !!sit_expr$ptc_no_entry &
         !(!!sit_expr$referredproject) &
         !(!!sit_expr$ph_track) ~
