@@ -33,12 +33,13 @@ dq_vax <- function(served_in_date_range, mahoning_projects = NULL, Doses = NULL,
 
   served_in_date_range <- served_in_date_range |>
     HMIS::served_between(rm_dates$hc$bos_start_vaccine_data, lubridate::today()) %>%
+    dplyr::filter(!!dose_exp$not_mp) |>
     dplyr::left_join(Doses,
                      by = c("PersonalID", "UniqueID"))
 
   out <- list()
   out$missing_vax_exited <- dplyr::filter(
-    served_in_date_range,!!dose_exp$not_mp &
+    served_in_date_range,
       !(!!dose_exp$na_ed) &
       !!dose_exp$ed_start &
       !!dose_exp$vax_consent &
@@ -52,7 +53,6 @@ dq_vax <- function(served_in_date_range, mahoning_projects = NULL, Doses = NULL,
     dplyr::select(dplyr::all_of(vars$we_want))
 
   out$missing_vax_current <- dplyr::filter(served_in_date_range,
-    !!dose_exp$not_mp &
       !!dose_exp$na_ed &
       !!dose_exp$ed_start &
       !!dose_exp$vax_consent &
