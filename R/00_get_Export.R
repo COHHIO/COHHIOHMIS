@@ -172,7 +172,7 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   # TODO Used in Veterans Active List
   # Offers <- cl_api$`HUD Extras`$Client_Offer_extras()
   # Offers <-
-  #   readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 7) %>%
+  #   readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 7) |>
   #   dplyr::mutate(AcceptDeclineDate = lubridate::ymd(as.Date(AcceptDeclineDate, origin = "1899-12-30")),
   #                 OfferDate = lubridate::ymd(as.Date(OfferDate, origin = "1899-12-30")))
 
@@ -189,42 +189,69 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   # Services ----------------------------------------------------------------
 
   # services_funds <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 9)
+
+  Services <- cl_api$Services()
+  Services_extras <- cl_api$`HUD Extras`$Services_extras()
+  Services_enroll_extras  <- dplyr::left_join(Services,
+                     Services_extras,
+                     by = UU::common_names(Services, Services_extras)) |>
+    dplyr::left_join(dplyr::select(Enrollment_extra_Client_Exit_HH_CL_AaE, dplyr::all_of(
+      c(
+        "EnrollmentID",
+        "PersonalID",
+        "ProjectName",
+        "EntryDate",
+        "ExitAdjust",
+        "ProjectID",
+        "ProjectName"
+      )
+    )),
+                     by = c("PersonalID", "EnrollmentID")) |>
+    unique() |>
+    dplyr::mutate(
+      ServiceEndAdjust = dplyr::if_else(
+        is.na(ServiceEndDate) |
+          ServiceEndDate > Sys.Date(),
+        Sys.Date(),
+        ServiceEndDate
+      ),
+      service_interval = lubridate::interval(start = ServiceStartDate, end = ServiceEndAdjust),
+      ee_interval = lubridate::interval(start = EntryDate, end = ExitAdjust),
+      intersect_tf = lubridate::int_overlaps(service_interval, ee_interval),
+      stray_service = is.na(intersect_tf) |
+        intersect_tf == FALSE
+    ) |>
+    dplyr::select(
+      UniqueID,
+      PersonalID,
+      ServiceID,
+      EnrollmentID,
+      ProjectName,
+      HouseholdID,
+      ServiceStartDate,
+      ServiceEndDate,
+      RecordType,
+      ServiceItemName,
+      FundName,
+      FundingSourceID,
+      ServiceAmount,
+      stray_service
+    )
+
+  stray_services <- Services_enroll_extras |>
+    dplyr::filter(stray_service) |>
+    dplyr::select(-stray_service)
+
+  Services_enroll_extras <- Services_enroll_extras |>
+    dplyr::filter(!stray_service) |>
+    dplyr::select(-stray_service)
+
   # TODO To get the Total RRH (Which should be 75% of all ESG funding spent on Services)
   # Rme - QPR - RRH Spending
   # Rm - QPR - RRH vs HP
   # Services_extras$ServiceAmount[Services_extras$FundName |>
   #                              stringr::str_detect("RRH") |>
   #                              which()]
-  # Services <- cl_api$Services()
-  # raw_services <- cl_api$`HUD Extras`$Services_extras() |>
-  #   dplyr::left_join(Enrollment_extra_Exit_HH_CL_AaE[c("EnrollmentID",
-  #                                 "PersonalID",
-  #                                 "ProjectName",
-  #                                 "EntryDate",
-  #                                 "ExitAdjust")],
-  #                    by = c("PersonalID", "EnrollmentID")) %>%
-  #   unique() %>%
-  #   dplyr::left_join(services_funds, by = "ServiceID") %>%
-  #   dplyr::mutate(
-  #     ServiceEndAdjust = dplyr::if_else(is.na(ServiceEndDate) | ServiceEndDate > Sys.Date(), Sys.Date(), ServiceEndDate),
-  #     service_interval = lubridate::interval(start = ServiceStartDate, end = ServiceEndAdjust),
-  #     ee_interval = lubridate::interval(start = EntryDate, end = ExitAdjust),
-  #     intersect_tf = lubridate::int_overlaps(service_interval, ee_interval),
-  #     stray_service = is.na(intersect_tf) | intersect_tf == FALSE | ServiceProvider != ProjectName
-  #   ) %>%
-  #   dplyr::select(PersonalID, ServiceID, EnrollmentID, ServiceProvider, ServiceHHID,
-  #                 ServiceStartDate, ServiceEndDate, Code, Description, ProviderCreating,
-  #                 Fund, Amount, stray_service)
-  #
-  # stray_services <- Services %>%
-  #   dplyr::filter(stray_service) %>%
-  #   dplyr::select(-stray_service)
-  #
-  # Services <- Services %>%
-  #   dplyr::filter(!stray_service) %>%
-  #   dplyr::select(-stray_service)
-  #
-  # rm(raw_services, services_funds)
 
   # Referrals ---------------------------------------------------------------
 
