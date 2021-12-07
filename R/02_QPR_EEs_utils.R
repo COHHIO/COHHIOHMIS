@@ -20,10 +20,10 @@ qpr_project_small <- function(Project, rm_dates, app_env = get_app_env(e = rlang
       FriendlyProjectName = ProjectName)
 }
 
-qpr_enrollment_small <- function(Enrollment_extra_Exit_HH_CL_AaE, app_env = get_app_env(e = rlang::caller_env())) {
+qpr_enrollment_small <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  Enrollment_extra_Exit_HH_CL_AaE |>
+  Enrollment_extra_Client_Exit_HH_CL_AaE |>
     dplyr::select(
       dplyr::all_of(c(
         "CountyServed",
