@@ -292,3 +292,85 @@ if (is_sp()) {
       )
   }
 }
+
+#' @title Find missing client locations
+#' @family ServicePoint Checks
+#' @inherit data_quality_tables params return
+#' @export
+dq_sp_missing_client_location <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+
+  served_in_date_range %>%
+    dplyr::filter(is.na(ClientLocation),
+                  RelationshipToHoH == 1) %>%
+    dplyr::mutate(Type = "High Priority",
+                  Issue = "Missing Client Location",
+                  Guidance = guidance$missing_client_loc) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+}
+
+#' @title Find Households with Too Many Head of Household
+#' @inherit data_quality_tables params return
+#' @family ServicePoint Checks
+#' @family DQ: Household Checks
+#' @export
+dq_sp_hh_too_many_hohs <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
+) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  served_in_date_range %>%
+    dplyr::filter(RelationshipToHoH == 1) %>%
+    dplyr::group_by(HouseholdID) %>%
+    dplyr::summarise(HoHsinHousehold = dplyr::n(),
+                     PersonalID = min(PersonalID)) %>%
+    dplyr::filter(HoHsinHousehold > 1) %>%
+    dplyr::ungroup() %>%
+    dplyr::left_join(served_in_date_range, by = c("PersonalID", "HouseholdID")) %>%
+    dplyr::mutate(Issue = "Too Many Heads of Household",
+                  Type = "High Priority",
+                  Guidance = guidance$hh_too_many_hoh) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+
+
+}
+
+#' @title Find Households with Missing Relationship to Head of Household
+#' @inherit data_quality_tables params return
+#' @family ServicePoint Checks
+#' @family DQ: Household Checks
+#' @export
+dq_sp_hh_missing_rel_to_hoh <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
+) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  hh_no_hoh <- dq_hh_no_hoh(served_in_date_range, vars, guidance, app_env = NULL)
+  served_in_date_range %>%
+    dplyr::filter(RelationshipToHoH == 99) %>%
+    dplyr::anti_join(hh_no_hoh["HouseholdID"], by = "HouseholdID") %>%
+    dplyr::mutate(Issue = "Missing Relationship to Head of Household",
+                  Type = "High Priority",
+                  Guidance = guidance$missing_rel_to_hoh) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+}
+
+#' @title Find Missing Length of Stay
+#' @inherit data_quality_tables params return
+#' @family ServicePoint Checks
+#' @family DQ: Missing Data at Entry
+#' @export
+dq_sp_missing_LoS <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  missing_LoS <- served_in_date_range %>%
+    dplyr::select(dplyr::all_of(vars$prep),
+                  AgeAtEntry,
+                  RelationshipToHoH,
+                  LengthOfStay) %>%
+    dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
+                    (is.na(LengthOfStay) | LengthOfStay == 99)) %>%
+    dplyr::mutate(Issue = "Missing Length of Stay",
+                  Type = "Error",
+                  Guidance = guidance$missing_los) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
+}
