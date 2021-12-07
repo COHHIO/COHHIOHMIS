@@ -82,9 +82,15 @@ stop_with_instructions <- function(..., error = FALSE) {
     "Please contact hmisapps@cohhio.org for help!"
   )
   if (error)
-    stop(.msg, call. = FALSE)
-  else
-    RPushbullet::pbPost(title = "COHHIO Error", body = .msg)
+    stop(.msg)
+  else {
+    warning(.msg)
+    # authfile <- ifelse(is_dev, file.path("inst", "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"), file.path(system.file(package = "Rm_data"), "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"))
+    # token <- gargle::token_fetch(scopes = "https://www.googleapis.com/auth/gmail.compose", gargle::credentials_service_account(scopes = "https://www.googleapis.com/auth/gmail.compose", path = authfile))
+    # gmailr::gm_auth_configure()
+    # gmailr::gm_auth(token = token)
+  }
+
 }
 
 # increment ----
@@ -411,6 +417,20 @@ enhanced_yes_no_translator <- function(ReferenceNo) {
   )
 }
 
+
+#' @title Unzip the HUD Export zip file from the download folder
+#'
+#' @param download_folder \code{(character)} path to folder where HUD Exports are downloaded
+#' @param dir \code{(character)} path of destination directory
+#' @export
+
+unzip_export <- function(download_folder = "~/../Downloads/", dir = "data") {
+  .files <- list.files(download_folder, pattern = "^hudx", full.names = TRUE)
+  .file_times <- do.call(c, purrr::map(.files, ~file.info(.x)$mtime))
+
+  archive::archive_extract(.files[which.max(.file_times)], dir = dir)
+  purrr::walk(.files, file.remove)
+}
 # this function translates the HUD .csv 1.7 and 1.8 lists
 # and returns yes, no, or unknown as appropriate
 translate_HUD_yes_no <- function(column_name){

@@ -48,6 +48,7 @@ Collate:
     '02_QPR_SPDATs.R'
     '02_QPR_client_counts.R'
     '03_Veterans.R'
+    '03_prioritization_utils.R'
     '03_prioritization.R'
     '04_DataQuality_doses.R'
     '04_Guidance.R'

@@ -2,7 +2,7 @@
 % Please edit documentation in R/00_get_Export.R
 \name{load_export}
 \alias{load_export}
-\title{Load the HUD CSV Export and perform joins with extras}
+\title{Load the HUD Export and join extras.}
 \usage{
 load_export(
   clarity_api = get_clarity_api(e = rlang::caller_env()),
@@ -15,11 +15,11 @@ load_export(
 
 \item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 
-\item{error}{\code{(logical)} if date checks fail, Whether to error or send a pushbullet message.}
+\item{error}{\code{(logical)} whether to error or send a message via pushbullet when data checks fail}
 }
 \value{
 
 }
 \description{
-Load the HUD CSV Export and perform joins with extras
+Load the HUD Export and join extras.
 }

@@ -74,7 +74,7 @@ Beds <- dplyr::inner_join(small_project, small_inventory, by = "ProjectID")
 
 # Creating Utilizers table ------------------------------------------------
 
-small_enrollment <- Enrollment_extra_Exit_HH_CL_AaE %>%
+small_enrollment <- Enrollment_extra_Client_Exit_HH_CL_AaE %>%
   dplyr::select(
     UniqueID,
     PersonalID,
@@ -350,14 +350,14 @@ providerids <- Capacity %>%
   dplyr::arrange(ProjectName)
 #here is where you could add a left join to the Regions object and add in Region
 
-Clients <- Enrollment_extra_Exit_HH_CL_AaE  |>
+Clients <- Enrollment_extra_Client_Exit_HH_CL_AaE  |>
   dplyr::left_join(providerids, by = c("ProjectID", "ProjectName")) %>%
   dplyr::filter(is.na(ExitDate)) %>%
   dplyr::group_by(ProjectID, ProjectName) %>%
   dplyr::summarise(Clients = dplyr::n_distinct(PersonalID),
                    .groups = "drop")
 
-Households <- Enrollment_extra_Exit_HH_CL_AaE |>
+Households <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
   dplyr::left_join(providerids, by = c("ProjectID", "ProjectName")) %>%
   dplyr::filter(is.na(ExitDate)) %>%
   dplyr::group_by(ProjectID, ProjectName) %>%

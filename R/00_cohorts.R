@@ -58,10 +58,6 @@ cohorts <- function(
   ))
 
 
-
-  Enrollment_extra_Client_Exit_HH_CL_AaE <- Enrollment_extra_Exit_HH_CL_AaE |>
-    dplyr::left_join(Client, by = c("PersonalID", "UniqueID"))
-
   # Transition Aged Youth
   tay <-  Enrollment_extra_Client_Exit_HH_CL_AaE |>
     dplyr::select(tidyselect::all_of(vars$we_want)) |>
