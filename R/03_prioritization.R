@@ -162,7 +162,7 @@ extended_disability <- co_currently_homeless |>
   dplyr::select(EnrollmentID, any_disability)
 
 # adding household aggregations into the full client list
-
+browser()
 co_currently_homeless <- co_currently_homeless |>
   dplyr::left_join(income_data,
                    by = c("PersonalID", "EnrollmentID")) |>

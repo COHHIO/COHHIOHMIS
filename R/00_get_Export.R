@@ -271,7 +271,7 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
                      !is.na(R_ReferralResult),
                      !!referrals_expr$housed3 & !!referrals_expr$accepted2,
                      key = PersonalID) |>
-    filter_dupe_last_EnrollmentID() |>
+    filter_dupe_last_EnrollmentID(key = PersonalID, R_ReferredEnrollmentID) |>
     dplyr::arrange(dplyr::desc(R_ReferredEnrollmentID)) |>
     dplyr::distinct(dplyr::across(-R_ReferredEnrollmentID), .keep_all = TRUE)
   # HUD CSV Specs -----------------------------------------------------------
