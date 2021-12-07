@@ -246,7 +246,34 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
                   R_ReferralConnectedPTC = hud.extract::hud_translations$`2.02.6 ProjectType`(R_ReferralConnectedPTC))
   # TODO ReferralOutcome must be replaced by a Clarity element (or derived from multiple) for dq_internal_old_outstanding_referrals
 
+  referrals_expr <- rlang::exprs(
+    housed1 = R_RemovedFromQueueSubreason %in% c(
+      "Housed with Community Inventory",
+      "Housed with Community Inventory - Not with CE",
+      "Permanently Living with Family/Friends",
+      "Return To Prior Residence",
+      "Rental By Client"
+    ),
+    housed2 = !is.na(R_ReferralConnectedMoveInDate),
+    housed3 = R_ExitHoused == "Housed",
+    is_last = R_IsLastReferral == "Yes",
+    is_active = R_ActiveInProject == "Yes",
+    accepted1 = R_IsLastReferral == "Yes",
+    accepted2 = stringr::str_detect(R_ReferralResult, "accepted$"),
+    coq = R_ReferralCurrentlyOnQueue == "Yes"
+  )
+  referral_result_summarize <- purrr::map(referrals_expr, ~rlang::expr(isTRUE(any(!!.x, na.rm = TRUE))))
 
+
+  Referrals <- Referrals |>
+    filter_dupe_soft(!!referrals_expr$is_last,
+                     !!referrals_expr$is_active,
+                     !is.na(R_ReferralResult),
+                     !!referrals_expr$housed3 & !!referrals_expr$accepted2,
+                     key = PersonalID) |>
+    filter_dupe_last_EnrollmentID() |>
+    dplyr::arrange(dplyr::desc(R_ReferredEnrollmentID)) |>
+    dplyr::distinct(dplyr::across(-R_ReferredEnrollmentID), .keep_all = TRUE)
   # HUD CSV Specs -----------------------------------------------------------
   #TODO hud.extract Data element coercion functions
   HUD_specs <- clarity.looker::hud_load("HUD_specs", dirs$public)

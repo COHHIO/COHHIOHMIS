@@ -403,3 +403,82 @@ provider_extras_helpers <- list(
   create_APs = pe_create_APs,
   add_GrantType = pe_add_GrantType
 )
+
+
+#' @title Filter duplicates without losing any values from `key`
+#'
+#' @param .data \code{(data.frame)} Data with duplicates
+#' @param ... \code{(expressions)} filter expressions with which to filter
+#' @param key \code{(name)} of the column key that will be grouped by and for which at least one observation will be preserved.
+#'
+#' @return \code{(data.frame)} without duplicates
+#' @export
+
+filter_dupe_soft <- function(.data, ..., key) {
+  .key <- rlang::enexpr(key)
+  out <- .data
+  x <- janitor::get_dupes(.data, !!.key) |>
+    dplyr::arrange(PersonalID)
+
+  clients <- dplyr::pull(x, !!.key) |> unique()
+  .exprs <- rlang::enquos(...)
+  to_add <- list()
+  for (ex in .exprs) {
+    new <- dplyr::filter(x, !!ex)
+
+    new_n <- dplyr::summarise(dplyr::group_by(new, !!.key), n = dplyr::n())
+    .to_merge <- dplyr::filter(new_n, n == 1) |> dplyr::pull(!!.key)
+
+    # if some were reduced but not to one
+    .reduced <- dplyr::left_join(new_n,
+                                 dplyr::summarise(dplyr::group_by(x, !!.key), n = dplyr::n()), by = rlang::expr_deparse(.key), suffix = c("_new", "_old")) |>
+      dplyr::filter(n_new < n_old & n_new > 1) |>
+      dplyr::pull(!!.key)
+
+    if (UU::is_legit(.to_merge)) {
+      # remove rows where key is reduced to one, bind the deduplicated rows
+      to_add <- append(to_add, list(dplyr::select(new, -dupe_count) |>
+                                      dplyr::filter(!!.key %in% .to_merge)))
+      # filter to_merge from dupes
+      x <- dplyr::filter(x, !((!!.key) %in% .to_merge))
+    }
+
+    if (UU::is_legit(.reduced)) {
+      # filter reduced from dupes
+      x <- dplyr::filter(x, !((!!.key) %in% .reduced ) # is not one that was reduced
+                         | (!!.key %in% .reduced & !!ex) # or matched the filter
+      )
+
+    }
+  }
+  to_add <- dplyr::bind_rows(to_add)
+  out <- dplyr::filter(out, !(!!.key %in% c(to_add[[.key]], x[[.key]]))) |>
+    dplyr::bind_rows(to_add, x)
+
+  if (anyDuplicated(out[[.key]])) {
+    rlang::warn("Duplicates still exist.")
+  }
+  out
+}
+
+
+
+#' @title Filter for the Last Enrollment ID
+#' @description The maximum EnrollmentID will always be the latest in Clarity. This function will find the last EnrollmentID per `key`
+#' @inheritParams filter_dupe_soft
+#' @param EnrollmentID \code{(name)} of EnrollmentID column that will be filtered for the maximum (latest)
+#'
+#' @return \code{(data.frame)} With only the latest Enrollment
+#' @export
+
+filter_dupe_last_EnrollmentID <- function(.data, key, EnrollmentID) {
+  .key <- rlang::enexpr(key)
+  .eid <- rlang::enexpr(EnrollmentID)
+  x <- janitor::get_dupes(.data, !!.key)
+  x <- dplyr::group_by(x, !!.key)
+  x <- dplyr::filter(x, as.numeric(!!.eid) == max(as.numeric(!!.eid)) | is.na(!!.eid))
+  dplyr::bind_rows(
+    dplyr::filter(.data, !(!!.key) %in% x[[.key]]),
+    x
+  )
+}
