@@ -6,7 +6,7 @@
 \usage{
 served_in_date_range(
   projects_current_hmis,
-  Enrollment_extra_Exit_HH_CL_AaE = NULL,
+  Enrollment_extra_Client_Exit_HH_CL_AaE = NULL,
   Client = NULL,
   Project = NULL,
   Inventory = NULL,
@@ -19,7 +19,7 @@ served_in_date_range(
 \arguments{
 \item{projects_current_hmis}{\code{(data.frame)} of Providers to check. See \code{projects_current_hmis}}
 
-\item{Enrollment_extra_Exit_HH_CL_AaE}{\code{(data.frame)} Enrollment with all additions from \code{load_export}}
+\item{Enrollment_extra_Client_Exit_HH_CL_AaE}{\code{(data.frame)} Enrollment with all additions from \code{load_export}}
 
 \item{Client}{\code{(data.frame)} Client with all additions from \code{load_export}}
 
