@@ -1041,7 +1041,7 @@ dq_mahoning_ce_60_days <- function(served_in_date_range, mahoning_projects, vars
     dplyr::mutate(
       Issue = "60 Days in Mahoning Coordinated Entry",
       Type = "Warning",
-      Guidance = "If this household is 'unreachable' as defined in the Mahoning County Coordinated Entry Policies and Procedures, they should be exited."
+      Guidance = guidance$mahoning_60
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
 }
