@@ -37,7 +37,7 @@ valid_max = function(x) {
 #' @export
 
 valid_movein_max = function(MoveInDateAdjust, EntryDate) {
-  if ((valid_max(MoveInDateAdjust)[1] > valid_max(EntryDate)[1]) %|% FALSE)
+  if ((valid_max(MoveInDateAdjust)[1] >= valid_max(EntryDate)[1]) %|% FALSE)
     out <- valid_max(MoveInDateAdjust)
   else
     out <- lubridate::NA_Date_
