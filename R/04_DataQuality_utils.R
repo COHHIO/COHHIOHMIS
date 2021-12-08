@@ -1506,12 +1506,14 @@ dq_path_no_status_at_exit <- function(served_in_date_range, vars,  guidance, app
   served_in_date_range |>
     dplyr::select(
       dplyr::all_of(vars$prep),
+      GrantType,
       AgeAtEntry,
       ClientEnrolledInPATH,
       DateOfPATHStatus,
       ReasonNotEnrolled
     ) |>
-    dplyr::filter(!is.na(ExitDate) &
+    dplyr::filter(GrantType == "PATH" &
+      !is.na(ExitDate) &
                     AgeAtEntry > 17 &
                     (
                       is.na(ClientEnrolledInPATH) |
@@ -1541,15 +1543,17 @@ dq_path_status_determination <- function(served_in_date_range, vars, app_env = g
   served_in_date_range |>
     dplyr::select(dplyr::all_of(vars$prep),
                   AgeAtEntry,
+                  GrantType,
                   ClientEnrolledInPATH,
                   DateOfPATHStatus) |>
-    dplyr::filter(AgeAtEntry > 17 &
+    dplyr::filter(GrantType == "PATH" &
+                    AgeAtEntry > 17 &
                     !is.na(ClientEnrolledInPATH) &
                     is.na(DateOfPATHStatus)
     )  |>
     dplyr::mutate(Issue = "Missing Date of PATH Status",
                   Type = "Error",
-                  Guidance = guidance$path_status) %>%
+                  Guidance = guidance$path_status) |>
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
@@ -1566,8 +1570,9 @@ dq_path_enrolled_missing <- function(served_in_date_range, vars, app_env = get_a
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   out <- served_in_date_range |>
-    dplyr::select(dplyr::all_of(vars$prep), AgeAtEntry, ClientEnrolledInPATH) |>
-    dplyr::filter(!is.na(ExitDate) &
+    dplyr::select(dplyr::all_of(vars$prep), AgeAtEntry, ClientEnrolledInPATH, GrantType) |>
+    dplyr::filter(GrantType == "PATH" &
+                    !is.na(ExitDate) &
                     AgeAtEntry > 17 &
                     (ClientEnrolledInPATH == 99 |
                        is.na(ClientEnrolledInPATH))
@@ -1600,16 +1605,18 @@ dq_path_reason_missing <- function(served_in_date_range, vars, app_env = get_app
       AgeAtEntry,
       ClientEnrolledInPATH,
       ReasonNotEnrolled,
-      ProjectType
+      ProjectType,
+      GrantType
     ) |>
-    dplyr::filter(AgeAtEntry > 17 &
+    dplyr::filter(GrantType == "PATH" &
+                    AgeAtEntry > 17 &
                     ClientEnrolledInPATH == 0 &
-                    is.na(ReasonNotEnrolled)) %>%
+                    is.na(ReasonNotEnrolled)) |>
     dplyr::mutate(
       Issue = "Missing Reason Not PATH Enrolled",
       Type = "Error",
       Guidance = guidance$path_reason_missing
-    ) %>%
+    ) |>
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
@@ -1625,25 +1632,27 @@ dq_path_SOAR_missing_at_exit <- function(served_in_date_range, IncomeBenefits, v
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
-  smallIncomeSOAR <- IncomeBenefits %>%
+  smallIncomeSOAR <- IncomeBenefits |>
     dplyr::select(PersonalID,
                   EnrollmentID,
                   ConnectionWithSOAR,
-                  DataCollectionStage) %>%
+                  DataCollectionStage) |>
     dplyr::filter(DataCollectionStage == 3)
 
-  served_in_date_range %>%
+  served_in_date_range |>
     dplyr::select(dplyr::all_of(vars$prep),
                   EnrollmentID,
                   AgeAtEntry,
-                  ClientEnrolledInPATH) |>
-    dplyr::left_join(smallIncomeSOAR, by = c("PersonalID", "EnrollmentID")) %>%
-    dplyr::filter(AgeAtEntry > 17 &
+                  ClientEnrolledInPATH,
+                  GrantType) |>
+    dplyr::left_join(smallIncomeSOAR, by = c("PersonalID", "EnrollmentID")) |>
+    dplyr::filter(GrantType == "PATH" &
+                    AgeAtEntry > 17 &
                     DataCollectionStage == 3 &
-                    is.na(ConnectionWithSOAR)) %>%
+                    is.na(ConnectionWithSOAR)) |>
     dplyr::mutate(Issue = "Missing Connection with SOAR at Exit",
                   Type = "Error",
-                  Guidance = guidance$missing_at_exit) %>%
+                  Guidance = guidance$missing_at_exit) |>
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
