@@ -194,7 +194,8 @@ cohorts <- function(
     lh_at_entry = c(1, 2, 3, 4, 8, 9, 13),
     lh_ph_hp = c(1, 2, 3, 4, 8, 9, 12, 13),
     coc_funded = c(2, 3, 13),
-    w_beds = c(1, 2, 3, 8, 9)
+    w_beds = c(1, 2, 3, 8, 9),
+    ap = c(14)
   )
 
 
