@@ -2095,22 +2095,23 @@ dq_missing_income <- function(served_in_date_range, IncomeBenefits, vars, guidan
 #' @family DQ: Overlapping Enrollment/Move-In Dates
 #' @inherit dq_overlaps params return description
 #' @export
-overlaps_same_day <- function(served_in_date_range, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
+overlaps_same_day <- function(served_in_date_range, project_types, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
-  out <- served_in_date_range %>%
+  out <- served_in_date_range |>
     dplyr::filter((ProjectType == 13 & MoveInDateAdjust == ExitDate) |
-                    ProjectType != 13) %>%
-    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
+                    ProjectType != 13) |>
+    dplyr::filter(ProjectType != project_types$ap) |>
+    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) |>
     dplyr::mutate(
       EntryAdjust = dplyr::case_when(
         #for PSH and RRH, EntryAdjust = MoveInDate
         ProjectType %in% c(1, 2, 8, 12) |
           ProjectName == "Unsheltered Clients - OUTREACH" ~ EntryDate,
-        ProjectType %in% c(3, 9, 13) &
+        ProjectType %in% project_types$ph &
           !is.na(MoveInDateAdjust) ~ MoveInDateAdjust,
-        ProjectType %in% c(3, 9, 13) &
+        ProjectType %in% project_types$ph &
           is.na(MoveInDateAdjust) ~ EntryDate
       ),
       LiterallyInProject = dplyr::case_when(
@@ -2146,11 +2147,11 @@ overlaps_same_day <- function(served_in_date_range, vars, guidance, unsh = FALSE
 #' @family DQ: Overlapping Enrollment/Move-In Dates
 #' @inherit dq_overlaps params return description
 #' @export
-overlaps_rrh <- function(served_in_date_range, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
+overlaps_rrh <- function(served_in_date_range, project_types, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  out <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
+  out <- served_in_date_range |>
+    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) |>
     dplyr::mutate(
       ExitAdjust = ExitAdjust - lubridate::days(1),
       # bc a client can exit&enter same day
@@ -2231,45 +2232,46 @@ overlaps_psh <- function(served_in_date_range, vars, guidance, unsh = FALSE, app
 dq_overlaps <- function(served_in_date_range, Users, vars, guidance, app_env = get_app_env(e = rlang::caller_env()), unsh = FALSE) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  dq_overlaps <- served_in_date_range %>%
-    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) %>%
+  dq_overlaps <- served_in_date_range |>
+    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) |>
+    dplyr::filter(ProjectType != project_types$ap) |>
     dplyr::mutate(
       EntryAdjust = dplyr::case_when(
         #for PSH and RRH, EntryAdjust = MoveInDate
         ProjectType %in% c(1, 2, 8, 12) |
           ProjectName == "Unsheltered Clients - OUTREACH" ~ EntryDate,
-        ProjectType %in% c(3, 9, 13) &
+        ProjectType %in% project_types$ph &
           !is.na(MoveInDateAdjust) ~ MoveInDateAdjust,
-        ProjectType %in% c(3, 9, 13) &
+        ProjectType %in% project_types$ph &
           is.na(MoveInDateAdjust) ~ EntryDate
       ),
       ExitAdjust = ExitAdjust - lubridate::days(1),
       # bc a client can exit&enter same day
       LiterallyInProject = dplyr::if_else(
-        ProjectType %in% c(3, 9, 13),
+        ProjectType %in% project_type$ph,
         lubridate::interval(MoveInDateAdjust, ExitAdjust),
         lubridate::interval(EntryAdjust, ExitAdjust)
       ),
       Issue = "Overlapping Project Stays",
       Type = "High Priority",
       Guidance = guidance$project_stays
-    ) %>%
+    ) |>
     dplyr::filter(!is.na(LiterallyInProject) &
                     lubridate::int_length(LiterallyInProject) > 0) |>
-    janitor::get_dupes(PersonalID) %>%
-    dplyr::group_by(PersonalID) %>%
-    dplyr::arrange(PersonalID, EntryAdjust) %>%
+    janitor::get_dupes(PersonalID) |>
+    dplyr::group_by(PersonalID) |>
+    dplyr::arrange(PersonalID, EntryAdjust) |>
     dplyr::mutate(
       PreviousEntryAdjust = dplyr::lag(EntryAdjust),
       PreviousExitAdjust = dplyr::lag(ExitAdjust),
       PreviousProject = dplyr::lag(ProjectName)
-    ) %>%
-    dplyr::filter(!is.na(PreviousEntryAdjust)) %>%
+    ) |>
+    dplyr::filter(!is.na(PreviousEntryAdjust)) |>
     dplyr::ungroup() |>
     dplyr::mutate(
       PreviousStay = lubridate::interval(PreviousEntryAdjust, PreviousExitAdjust),
       Overlap = lubridate::int_overlaps(LiterallyInProject, PreviousStay)
-    )  %>%
+    )  |>
     dplyr::filter(Overlap == TRUE) |>
     dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
 
