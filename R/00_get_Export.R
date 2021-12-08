@@ -92,7 +92,7 @@ load_export <- function(
 Project <- cl_api$Project()
 Project <- Project |>
   dplyr::select(-ProjectCommonName) |>
-  {\(x) {dplyr::left_join(x, provider_extras |> dplyr::select(- dplyr::matches("FundingSource")) |> dplyr::distinct(ProjectID, .keep_all = TRUE), by = UU::common_names(x, provider_extras))}}()
+  {\(x) {dplyr::left_join(x, provider_extras |> dplyr::select(- dplyr::matches("FundingSourceID")) |> dplyr::distinct(ProjectID, .keep_all = TRUE), by = UU::common_names(x, provider_extras))}}()
 UU::join_check(cl_api$Project(), Project)
 
 mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
