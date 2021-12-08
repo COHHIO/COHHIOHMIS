@@ -37,7 +37,7 @@ dependencies$DataQuality <-
     "Users"
   )
 
-check_fns <- stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!\\_services)(?!\\_spdats)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
+check_fns <- stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!\\_spdats)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
 
 data_quality <- function(check_fns = Rm_data::check_fns,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
