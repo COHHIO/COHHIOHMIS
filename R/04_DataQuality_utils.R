@@ -109,8 +109,6 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Client_
 		app_env$set_parent(missing_fmls())
   Enrollment_extra_Client_Exit_HH_CL_AaE  |>
     HMIS::served_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End)  |>
-    dplyr::left_join(Client  |>
-                       dplyr::select(- dplyr::all_of(stringr::str_subset(UU::common_names(Enrollment_extra_Client_Exit_HH_CL_AaE, Client), "PersonalID", negate = TRUE))), by = "PersonalID") |>
     dplyr::select(
       dplyr::all_of(
       c(
