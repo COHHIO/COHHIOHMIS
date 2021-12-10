@@ -1362,9 +1362,8 @@ dq_services_rent_paid_no_move_in <- function(served_in_date_range, Services_enro
                     ProjectType %in% c(3, 9, 13)) |>
     dplyr::inner_join(Services_enroll_extras |>
                         dplyr::filter(
-                          stringr::str_detect(ServiceItemName,  housing_regex)) |>
-                        dplyr::select(-PersonalID),
-                      by = "EnrollmentID") |>
+                          stringr::str_detect(ServiceItemName,  housing_regex)),
+                      by = UU::common_names(served_in_date_range, Services_enroll_extras)) |>
     dplyr::mutate(
       Issue = "Housing-adjacent Payment Made, No Move-In Date",
       Type = "Error",
