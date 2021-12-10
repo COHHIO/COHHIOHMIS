@@ -13,78 +13,89 @@
 # <https://www.gnu.org/licenses/>.
 
 
-#' @title Make a Clarity Profile link using the UniqueID and PersonalID
+#' @title Make a Clarity link using the `PersonalID` and `UniqueID/EnrollmentID`
 #' @description If used in a \link[DT]{datatable}, set `escape = FALSE`
-#' @param pid \code{(character/data.frame)} Either the `PersonalID` column, or the \code{data.frame} with it.
-#' @param uid \code{(character)} The `UniqueID` column, unnecessary to specific if \code{data.frame} supplied to PersonalID
+#' @param PersonalID \code{(character)} The `PersonalID` column
+#' @param ID \code{(character)} The `UniqueID/EnrollmentID` column
 #' @param chr \code{(logical)} Whether to output a character or a `shiny.tag` if `FALSE`. **Default** TRUE
 #'
-#' @return \code{(character/data.frame/shiny.tag)} If `PersonalID` is a character vector (IE nested in a mutate), and `chr = TRUE` a character vector, if `chr = FALSE` a `shiny.tag`. If `PersonalID` is a `data.frame` a `data.frame` with the `UniqueID` column replaced with the link to the profile and the `UniqueID` as the text
+#' @return \code{(character/shiny.tag)} If `PersonalID` is a character vector (IE nested in a mutate), and `chr = TRUE` a character vector, if `chr = FALSE` a `shiny.tag`. The `ID` column will be replaced with the link.
 #' @export
 #'
 #' @examples
-#' data.frame(a = letters, b = seq_along(letters)) |> dplyr::rowwise() |>  dplyr::mutate(a = make_profile_link(a, b)) |> DT::datatable(escape = FALSE)
+#' data.frame(a = letters, b = seq_along(letters)) |>  dplyr::mutate(a = make_link(a, b))
 
-make_profile_link <- function(pid, uid, chr = TRUE) {
+
+make_link <- function(PersonalID, ID, chr = TRUE) {
   href <- getOption("HMIS")$Clarity_URL
+  .type <- ifelse(any(stringr::str_detect(ID, "[A-F]"), na.rm = TRUE), "profile", "enroll")
+  sf_args <- switch(.type,
+         profile = list("<a href=\"%s/client/%s/profile\" target=\"_blank\">%s</a>", href, PersonalID, ID),
+         enroll = list("<a href=\"%s/clients/%s/program/%s/enroll\" target=\"_blank\">%s</a>", href, PersonalID, ID, ID))
   if (chr) {
-    sprintf("<a href=\"%s/client/%s/profile\" target=\"_blank\">%s</a>", href, pid, uid)
+    out <- do.call(sprintf, sf_args)
   } else {
     href <- httr::parse_url(href)
-    if (!identical(length(pid), length(eid))) {
-      l <- list(pid = pid, eid = eid)
+    if (!identical(length(PersonalID), length(ID))) {
+      l <- list(PersonalID = PersonalID, ID = ID)
       big <- which.max(purrr::map_int(l, length))
       i <- seq_along(l)
       small <- subset(i, subset = i != big)
       assign(names(l)[small], rep(l[[small]], length(l[[big]])))
     }
-    out <- purrr::map2(pid, uid, ~{
-      href$path <- c("client",.x, "profile")
+    out <- purrr::map2(PersonalID, ID, ~{
+      href$path <- switch(.type,
+                          profile = c("client",.x, "profile"),
+                          enroll = c("clients",.x, "program", .y, "enroll"))
       htmltools::tags$a(href = httr::build_url(href), .y, target = "_blank")
     })
   }
-
-}
-
-
-
-id_from_profile_link_df <- function(x) {
-  out <- x
-  if (!"PersonalID" %in% names(x))
-    out$PersonalID <- stringr::str_extract(x$UniqueID, "(?<=client\\/)\\d+")
-
-  out$UniqueID <- stringr::str_extract(x$UniqueID, "(?<=\\>)[:alnum:]+(?=\\<)")
   out
 }
-#' @title Make UniqueID into a Clarity client profile link
-#' @param x \code{(data.frame)} must have `PersonalID` & `UniqueID` columns.
-#'
-#' @return \code{(data.frame)} With `UniqueID` as a profile link and PersonalID removed.
+
+#' @title Make UniqueID or EnrollmentID into a Clarity hyperlink
+#' @param x \code{(data.frame)} The following columns are required for the specified link type:
+#' \itemize{
+#'   \item{\code{PersonalID & UniqueID}}{ for Profile link}
+#'   \item{\code{PersonalID & EnrollmentID}}{ for Enrollment link}
+#' }
+#' @param ID \code{(name)} unquoted of the column to unlink.
+#' @param unlink \code{(logical)} Whether to turn the link back into the respective columns from which it was made.
+#' @return \code{(data.frame)} With `UniqueID` or `EnrollmentID` as a link
+#' data.frame(a = letters, b = seq_along(letters)) |>  dplyr::mutate(a = make_link(a, b)) |> make_linked_df(a, unlink = TRUE)
 #' @export
-#'
-#' @examples
-#' data.frame(a = letters, b = seq_along(letters)) |> make_profile_link() |>
-#' DT::datatable(escape = FALSE)
-make_profile_link_df <- function(x) {
-  x |>
-    dplyr::mutate(UniqueID = make_profile_link(PersonalID, UniqueID)) |>
-    dplyr::select( - PersonalID)
+make_linked_df <- function(x, ID, unlink = FALSE) {
+  out <- x
+  ID <- rlang::enexpr(ID)
+  .col <- x[[ID]]
+
+  .type <- ifelse(any(stringr::str_detect(.col, ifelse(unlink, "profile", "[A-F0-9]{9}")), na.rm = TRUE), "profile", "enroll")
+
+  if (unlink) {
+    if (!"PersonalID" %in% names(x))
+      out$PersonalID <- stringr::str_extract(.col, "(?<=client\\/)\\d+")
+    if (!as.character(ID) %in% names(x) || any(stringr::str_detect(.col, "^\\<a")))
+      out[[ID]] <- stringr::str_extract(.col, switch(.type,
+                                                        profile = "(?<=\\>)[:alnum:]+(?=\\<)",
+                                                        enroll = "\\d+(?=\\/enroll)"))
+  } else {
+    out <- x |>
+      dplyr::mutate(!!ID := make_link(PersonalID, !!ID))
+  }
+
+  out
 }
+
+
 
 # stop_with_instructions ----
 # Wed Mar 24 16:38:01 2021
 #' @title Stop daily update with an informative error
 #' @description Throws an error in 00_daily_update.R with additional details
 #' @param ... Error Messages to print to the console
-#' @importFrom cli cli_alert_danger cli_alert_info col_red
 #' @export
 stop_with_instructions <- function(..., error = FALSE) {
-  .msg <- paste0(..., collapse = "\n")
-  cli::cli_alert_danger(cli::col_red(.msg))
-  #TODO Who to reference for help? This will display if the app crashes
-  cli::cli_alert_info(
-    "Please contact hmisapps@cohhio.org for help!"
-  )
+  .msg <- paste0(paste0(..., collapse = "\n"),"\nPlease contact hmisapps@cohhio.org for help!")
   if (error)
     stop(.msg)
   else {
