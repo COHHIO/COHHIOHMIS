@@ -1938,8 +1938,7 @@ dq_conflicting_income <- function(served_in_date_range, IncomeBenefits, vars, gu
            "EnrollmentID",
            "DataCollectionStage"))
 
-  income_subs <- served_in_date_range[c("EnrollmentID",
-                                        "AgeAtEntry",
+  income_subs <- served_in_date_range[c("AgeAtEntry",
                                         vars$prep)] |>
     dplyr::left_join(smallIncome, by = c("PersonalID", "EnrollmentID")) |>
     dplyr::mutate(
