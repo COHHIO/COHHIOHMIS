@@ -2100,86 +2100,66 @@ overlaps_same_day <- function(served_in_date_range, vars, guidance, unsh = FALSE
   return(out)
 }
 
-#' @title Find Overlapping Project Stays for RRH
+sum_enroll_overlap <- function(PersonalID, EnrollmentID, Stay) {
+  PersonalID <- unique(PersonalID)
+  .movein <- FALSE
+
+  x <- data.frame(EnrollmentID, Stay)
+  out <- character()
+
+  while (nrow(x) > 1) {
+    ol_eids <- NULL
+    .x <- x$Stay[1]
+    .y <- x$EnrollmentID[1]
+    x <- dplyr::filter(x, EnrollmentID != .y)
+    ol <- lubridate::int_overlaps(.x, x$Stay)
+
+    if (any(ol)) {
+      ol_eids <- x$EnrollmentID[ol]
+      # Create text hyperlinks
+      out <- paste0(out, purrr::when(length(out), . != 0 ~ "\n", character()), paste0(make_link(PersonalID, .y), " overlaps: ", paste0(make_link(PersonalID, ol_eids), collapse = ", ")))
+      x <- dplyr::filter(x, !EnrollmentID %in% ol_eids)
+    }
+  }
+  out
+}
+
+
+#' @title Find Overlapping Project Stays for Selected Project Types
+#' @param p_types \code{(numeric)} Project Types for which to check for overlaps between.
 #' @family Clarity Checks
 #' @family Unsheltered Checks
 #' @family ServicePoint Checks
 #' @family DQ: Overlapping Enrollment/Move-In Dates
 #' @inherit dq_overlaps params return description
 #' @export
-overlaps_rrh <- function(served_in_date_range, project_types, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
+moverlaps <- function(served_in_date_range, p_types = project_types$ph, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   out <- served_in_date_range |>
-    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) |>
-    dplyr::mutate(
-      ExitAdjust = ExitAdjust - lubridate::days(1),
-      # bc a client can exit&enter same day
-      InProject = lubridate::interval(EntryDate, ExitAdjust),
-      Issue = "Overlapping Project Stays",
-      Type = "High Priority",
-      Guidance = guidance$project_stays
-    ) |>
-    dplyr::filter(ProjectType == 13) |>
+    dplyr::filter(ProjectType %in% p_types) |>
+    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust, EnrollmentID) |>
     janitor::get_dupes(PersonalID) |>
+    dplyr::mutate(
+      Stay = lubridate::interval(EntryDate, ExitAdjust)
+    ) |>
     dplyr::group_by(PersonalID) |>
-    dplyr::arrange(PersonalID, EntryDate) |>
+    dplyr::arrange(EntryDate) |>
+    dplyr::summarise(Overlaps = sum_enroll_overlap(PersonalID, EnrollmentID, Stay), .groups = "drop") |>
+    dplyr::filter(purrr::map_int(Overlaps, length) != 0) |>
     dplyr::mutate(
-      PreviousEntry = dplyr::lag(EntryDate),
-      PreviousExit = dplyr::lag(ExitAdjust),
-      PreviousProject = dplyr::lag(ProjectName)
+      Issue = "Overlapping Project Stay",
+      Type = "High Priority",
+      Guidance = eval(parse(text = guidance$project_stays_eval))
     ) |>
-    dplyr::filter(!is.na(PreviousEntry)) |>
-    dplyr::ungroup() |>
-    dplyr::mutate(
-      PreviousStay = lubridate::interval(PreviousEntry, PreviousExit),
-      Overlap = lubridate::int_overlaps(InProject, PreviousStay)
-    ) |>
-    dplyr::filter(Overlap == TRUE)
+    make_linked_df(EnrollmentID, unlink = TRUE) |>
+    dplyr::left_join(
+      dplyr::select(served_in_date_range, EnrollmentID, ExitDate, EntryDate, ProjectID, MoveInDateAdjust)
+    , by = "EnrollmentID")
 
-  out <- dplyr::select(out, dplyr::all_of(c(vars$we_want, "PreviousProject")))
     return(out)
 }
 
-#' @title Find Overlapping Project Stays for PSH
-#' @family Clarity Checks
-#' @family DQ: Overlapping Enrollment/Move-In Dates
-#' @inherit dq_overlaps params return description
-#' @export
-overlaps_psh <- function(served_in_date_range, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
-  if (is_app_env(app_env))
-    app_env$set_parent(missing_fmls())
-
-  out <- served_in_date_range |>
-    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) |>
-    dplyr::mutate(
-      ExitAdjust = ExitAdjust - lubridate::days(1),
-      # bc a client can exit&enter same day
-      InProject = lubridate::interval(EntryDate, ExitAdjust),
-      Issue = "Overlapping Project Stays",
-      Type = "High Priority",
-      Guidance = guidance$project_stay
-    ) |>
-    dplyr::filter(ProjectType == 3) |>
-    janitor::get_dupes(PersonalID) |>
-    dplyr::group_by(PersonalID) |>
-    dplyr::arrange(PersonalID, EntryDate) |>
-    dplyr::mutate(
-      PreviousEntry = dplyr::lag(EntryDate),
-      PreviousExit = dplyr::lag(ExitAdjust),
-      PreviousProject = dplyr::lag(ProjectName)
-    ) |>
-    dplyr::filter(!is.na(PreviousEntry)) |>
-    dplyr::ungroup() |>
-    dplyr::mutate(
-      PreviousStay = lubridate::interval(PreviousEntry, PreviousExit),
-      Overlap = lubridate::int_overlaps(InProject, PreviousStay)
-    ) |>
-    dplyr::filter(Overlap == TRUE)
-
-  out <- dplyr::select(out, dplyr::all_of(c(vars$we_want, "PreviousProject")))
-  return(out)
-}
 
 #' @title Find Overlapping Project Stays
 #' @family Clarity Checks
@@ -2189,63 +2169,48 @@ overlaps_psh <- function(served_in_date_range, vars, guidance, unsh = FALSE, app
 #' @inherit data_quality_tables params return
 #' @export
 
-dq_overlaps <- function(served_in_date_range, Users, vars, guidance, app_env = get_app_env(e = rlang::caller_env()), unsh = FALSE) {
+dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  dq_overlaps <- served_in_date_range |>
-    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) |>
-    dplyr::filter(ProjectType != project_types$ap) |>
+  p_types <- project_types$lh_hp
+  hasmovein <- served_in_date_range |>
+    dplyr::group_by(PersonalID) |>
+    dplyr::summarize(movedin = any(!is.na(MoveInDateAdjust), na.rm = TRUE)) |>
+    dplyr::filter(movedin)
+  dq_movein_overlaps <- served_in_date_range |>
+    dplyr::filter(PersonalID %in% hasmovein$PersonalID) |>
+    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust, EnrollmentID) |>
+    dplyr::group_by(PersonalID) |>
+    dplyr::mutate(max_movein = valid_movein_max(MoveInDateAdjust, EntryDate),
+                  # The client should be exited by the day following move_in
+                  max_movein = dplyr::if_else(!is.na(max_movein), max_movein + lubridate::days(1), max_movein)) |>
+    dplyr::ungroup() |>
+    dplyr::filter(!is.na(max_movein) & max_movein < ExitAdjust & # keep all the literally homeless project enrollments to see if the move-in date is within the enrollment
+                    ProjectType %in% p_types) |>
     dplyr::mutate(
-      EntryAdjust = dplyr::case_when(
-        #for PSH and RRH, EntryAdjust = MoveInDate
-        ProjectType %in% c(1, 2, 8, 12) |
-          ProjectName == "Unsheltered Clients - OUTREACH" ~ EntryDate,
-        ProjectType %in% project_types$ph &
-          !is.na(MoveInDateAdjust) ~ MoveInDateAdjust,
-        ProjectType %in% project_types$ph &
-          is.na(MoveInDateAdjust) ~ EntryDate
-      ),
-      ExitAdjust = ExitAdjust - lubridate::days(1),
-      # bc a client can exit&enter same day
-      LiterallyInProject = dplyr::if_else(
-        ProjectType %in% project_type$ph,
-        lubridate::interval(MoveInDateAdjust, ExitAdjust),
-        lubridate::interval(EntryAdjust, ExitAdjust)
-      ),
-      Issue = "Overlapping Project Stays",
-      Type = "High Priority",
-      Guidance = guidance$project_stays
+      LiterallyInProject = lubridate::interval(max_movein, ExitAdjust)
     ) |>
-    dplyr::filter(!is.na(LiterallyInProject) &
-                    lubridate::int_length(LiterallyInProject) > 0) |>
+    dplyr::filter(!is.na(LiterallyInProject)) |>
     janitor::get_dupes(PersonalID) |>
     dplyr::group_by(PersonalID) |>
-    dplyr::arrange(PersonalID, EntryAdjust) |>
-    dplyr::mutate(
-      PreviousEntryAdjust = dplyr::lag(EntryAdjust),
-      PreviousExitAdjust = dplyr::lag(ExitAdjust),
-      PreviousProject = dplyr::lag(ProjectName)
+    dplyr::arrange(EntryDate) |>
+    dplyr::summarise(
+      Overlaps = sum_enroll_overlap(PersonalID, EnrollmentID, LiterallyInProject),
+      .groups = "drop"
     ) |>
-    dplyr::filter(!is.na(PreviousEntryAdjust)) |>
-    dplyr::ungroup() |>
-    dplyr::mutate(
-      PreviousStay = lubridate::interval(PreviousEntryAdjust, PreviousExitAdjust),
-      Overlap = lubridate::int_overlaps(LiterallyInProject, PreviousStay)
-    )  |>
-    dplyr::filter(Overlap == TRUE) |>
-    dplyr::select(dplyr::all_of(vars$we_want), PreviousProject)
+    dplyr::mutate(Issue = "Overlapping Project Stay & Move-In",
+                  Type = "High Priority",
+                  Guidance = eval(parse(text = guidance$project_stays_eval)))  |>
+    make_linked_df(EnrollmentID, unlink = TRUE) |>
+    dplyr::left_join(
+      dplyr::select(served_in_date_range, EnrollmentID, ExitDate, EntryDate, ProjectID),
+      by = "EnrollmentID")
 
 
-  psh <- overlaps_psh()
-  rrh <- overlaps_rrh()
-  same_day <- overlaps_same_day()
-
-  out <- dplyr::bind_rows(psh, rrh, same_day, dq_overlaps)
-  if (unsh && must_sp()) {
-    # TODO This needs an intermediate look to link the UserID in Users to the UserCreating alias in Clarity if Clarity users want to use it.
-    out <- out  |>
-      dplyr::filter(ProjectName == "Unsheltered Clients - OUTREACH")
-  }
+  psh <- overlaps(p_types = project_types$psh)
+  rrh <- overlaps(p_types = project_types$rrh)
+  lh <- overlaps(p_types = project_types$lh)
+  out <- dplyr::bind_rows(psh, rrh, lh, dq_movein_overlaps)
 
   return(out)
 }
