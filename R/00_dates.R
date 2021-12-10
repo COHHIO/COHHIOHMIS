@@ -88,7 +88,7 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
 
   if(rm_dates$meta_HUDCSV$Export_Start != rm_dates$hc$data_goes_back_to |
      rm_dates$meta_HUDCSV$Export_End != Sys.Date())
-    stop_with_instructions("The HUD CSV Export update process errored. Please rerun.\n", error = error)
+    stop_with_instructions("The HUD CSV Export is not up to date.\n", error = error)
 
 
   #  Check recency of Extras ----
