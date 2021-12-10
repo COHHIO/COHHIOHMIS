@@ -137,8 +137,11 @@ dq_main <- do.call(rbind, dqs) |>
                   ))
 cli::cli_progress_update(id = .pid,,
                          status = "Finish dq_main")
-if (is_clarity())
-  dq_main <- make_profile_link_df(dq_main)
+if (is_clarity()) {
+  dq_main <- make_linked_df(dq_main, UniqueID)
+  dq_main <- make_linked_df(dq_main, EnrollmentID)
+}
+
 
 # Controls what is shown in the CoC-wide DQ tab ---------------------------
 # for CoC-wide DQ tab
