@@ -11,18 +11,33 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
+
+#' @title Create the prioritization list
+#'
+#' @param co_clients_served \code{(data.frame)} See `cohorts`
+#' @param covid19 \code{(data.frame)} See `covid19`
+#' @param c19priority \code{(data.frame)} See `covid19`
+#' @param Disabilities \code{(data.frame)} See `covid19`
+#' @param Enrollment_extra_Client_Exit_HH_CL_AaE \code{(data.frame)} See `load_export`
+#' @param Referrals \code{(data.frame)} See `load_export`
+#' @param Scores \code{(data.frame)} See `load_export`
+#' @seealso load_export, covid19, cohorts
+#' @inheritParams R6Classes
+#' @inheritParams data_quality_tables
+#' @export
+#'
+#' @include 03_prioritization_utils.R
 prioritization <- function(
   co_clients_served,
   covid19,
   c19priority,
   Disabilities,
-  Enrollment_extra_Exit_HH_CL_AaE,
+  Enrollment_extra_Client_Exit_HH_CL_AaE,
   HealthAndDV,
   IncomeBenefits,
   Project,
   Referrals,
   Scores,
-  project_types,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
   app_env = get_app_env(e = rlang::caller_env())
 ) {
@@ -130,7 +145,7 @@ extended_disability <- co_currently_homeless |>
   dplyr::ungroup() |>
   dplyr::distinct() |>
   dplyr::left_join(
-    dplyr::select(Enrollment_extra_Exit_HH_CL_AaE,
+    dplyr::select(Enrollment_extra_Client_Exit_HH_CL_AaE,
                   EnrollmentID,
                   DisablingCondition),
                    by = c("EnrollmentID")) |>
@@ -145,13 +160,14 @@ extended_disability <- co_currently_homeless |>
   dplyr::select(EnrollmentID, any_disability)
 
 # adding household aggregations into the full client list
+
 co_currently_homeless <- co_currently_homeless |>
   dplyr::left_join(income_data,
                    by = c("PersonalID", "EnrollmentID")) |>
   dplyr::left_join(extended_disability, by = "EnrollmentID") |>
   dplyr::left_join(
     dplyr::select(
-      Enrollment_extra_Exit_HH_CL_AaE,
+      Enrollment_extra_Client_Exit_HH_CL_AaE,
       EnrollmentID,
       PersonalID,
       HouseholdID,
@@ -159,6 +175,7 @@ co_currently_homeless <- co_currently_homeless |>
       DateToStreetESSH,
       TimesHomelessPastThreeYears,
       ExitAdjust,
+      MoveInDateAdjust,
       MonthsHomelessPastThreeYears,
       DisablingCondition
     ),
@@ -191,7 +208,8 @@ co_currently_homeless <- co_currently_homeless |>
     ),
     IncomeInHH = dplyr::if_else(IncomeInHH == 100, 1L, IncomeInHH),
     DisabilityInHH = max(dplyr::if_else(any_disability == 1, 1, 0)),
-    ChronicStatus = dplyr::if_else(max(SinglyChronic) == 1, "Chronic", "Not Chronic")
+    ChronicStatus = dplyr::if_else(max(SinglyChronic) == 1, "Chronic", "Not Chronic"),
+    MoveInDateAdjust = valid_movein_max(MoveInDateAdjust, EntryDate)
   ) |>
   dplyr::ungroup() |>
   dplyr::select(
@@ -204,6 +222,7 @@ co_currently_homeless <- co_currently_homeless |>
     "RelationshipToHoH",
     "VeteranStatus",
     "EntryDate",
+    "MoveInDateAdjust",
     "AgeAtEntry",
     "DisablingCondition",
     "HouseholdSize",
@@ -314,7 +333,8 @@ prioritization <- prioritization |>
   dplyr::group_by(HouseholdID) |>
   dplyr::mutate(correctedhoh = dplyr::if_else(is.na(correctedhoh), 0L, 1L),
          HH_DQ_Issue = as.logical(max(correctedhoh))) |>
-  dplyr::ungroup()
+  dplyr::ungroup() |>
+  dplyr::filter(correctedhoh == 1 | RelationshipToHoH == 1)
 
 # COVID-19 ----------------------------------------------------------------
 
@@ -357,7 +377,7 @@ prioritization <- dplyr::left_join(prioritization, covid_hhs, by = c("PersonalID
 prioritization <- prioritization |>
   dplyr::left_join(
       dplyr::distinct(
-        Enrollment_extra_Exit_HH_CL_AaE,
+        Enrollment_extra_Client_Exit_HH_CL_AaE,
         PersonalID,
         HouseholdID,
         CountyServed,
@@ -378,21 +398,13 @@ prioritization <- prioritization |>
   dplyr::select(-AgeAtEntry)
 
 # Find duplicated and select those with the latest ExpectedPHDate and non-missing CountyServed
-min_na <- function(...) {
-  x <- data.frame(...)
-  if (any(!purrr::map_lgl(x$ExpectedPHDate, is.na))) {
-    idx <- which.max(x$ExpectedPHDate)
-  } else {
-    idx <- which.min(apply(x, 1, rlang::as_function(~sum(is.na(.x)))))
-  }
-  x[idx,]
-}
+
   prioritization_dupes <- janitor::get_dupes(prioritization, PersonalID)
   prioritization_dupes <- prioritization_dupes |>
     dplyr::group_by(PersonalID, HouseholdID) |>
     dplyr::summarise(n_na = min_na(CountyServed,
                                    PHTrack,
-                                   ExpectedPHDate)) |>
+                                   ExpectedPHDate), .groups = "keep") |>
     tidyr::unpack(cols = n_na)
 
 
@@ -408,7 +420,8 @@ min_na <- function(...) {
 # replacing non-Unsheltered-Provider missings with County of the provider
 prioritization <- prioritization |>
   dplyr::left_join(Project |>
-              dplyr::select(ProjectName, ProjectCounty), by = "ProjectName") |>
+                     dplyr::filter(!OperatingEndDate < Sys.Date() | is.na(OperatingEndDate)) |>
+                     dplyr::select(ProjectName, ProjectCounty), by = "ProjectName") |>
   dplyr::mutate(
     CountyGuessed = is.na(CountyServed),
     CountyServed = dplyr::if_else(
@@ -445,7 +458,7 @@ prioritization <- prioritization |>
 # it adds up to 365 or more, it marks the client as AgedIn
 agedIntoChronicity <- prioritization |>
   dplyr::left_join(
-    Enrollment_extra_Exit_HH_CL_AaE |>
+    Enrollment_extra_Client_Exit_HH_CL_AaE |>
       dplyr::select(
         EnrollmentID,
         PersonalID,
@@ -534,7 +547,8 @@ prioritization <- prioritization |>
     HoH_Adjust = dplyr::case_when(HH_DQ_Issue == 1L ~ correctedhoh,
                            HH_DQ_Issue == 0L ~ hoh)
   ) |>
-  dplyr::filter(HoH_Adjust == 1) |>
+  dplyr::filter(HoH_Adjust == 1 &
+                is.na(MoveInDateAdjust)) |>
   dplyr::select(-correctedhoh, -RelationshipToHoH, -hoh, -HoH_Adjust)
 
 # Add Referral Status -----------------------------------------------------
@@ -551,55 +565,109 @@ prioritization <- prioritization |>
 # referrals to a homeless project wouldn't mean anything on an Active List,
 # right?
 
+# Create a summary of last referrals & whether they were accepted
 
 
-# isolates hhs with an Accepted Referral into a PSH or RRH project in the past month
+
+# Referrals_summary <- Referrals |>
+#   dplyr::group_by(PersonalID) |>
+#   # calculate the last touch point
+#   dplyr::mutate(max_time = max(R_ExitUpdatedTime, na.rm = TRUE),
+#                 max_time_greatest = max_time > (R_ReferredDate %|% R_ReferralAcceptedDate))
+
+# Get housed
+.housed <- Referrals |>
+  dplyr::group_by(PersonalID) |>
+  # summarise specific statuses: accepted, housed or currently on queue
+  dplyr::summarise(housed = !!referral_result_summarize$housed1 || !!referral_result_summarize$housed2 || !!referral_result_summarize$housed3,
+                   .groups = "drop") |>
+  dplyr::filter(housed) |>
+  dplyr::select(PersonalID) |>
+  dplyr::left_join(dplyr::select(Referrals, PersonalID, R_ReferralConnectedMoveInDate, R_RemovedFromQueueSubreason, R_ExitHoused, R_ExitDestination), by = "PersonalID")
+
+# These folks are R_ExitHoused == "Not Housed" but should be housed soon.
+likely_housed <- .housed |>
+  dplyr::group_by(PersonalID) |>
+  dplyr::summarise(housed = !!referral_result_summarize$housed3) |>
+  dplyr::filter(!housed) |>
+  dplyr::select(PersonalID)
 
 
-prioritization <- dplyr::left_join(
-  prioritization,
-  Referrals,
-  by = c(
-    "PersonalID",
-    "UniqueID",
-    EnrollmentID = "R_ReferredEnrollmentID",
-    HouseholdID = "R_ReferredHouseholdID"
+prioritization <- prioritization |>
+  dplyr::mutate(housed = PersonalID %in% .housed$PersonalID,
+                likely_housed = PersonalID %in% likely_housed$PersonalID) |>
+  dplyr::left_join(
+    dplyr::select(Referrals,
+                  PersonalID,
+                  R_ReferralConnectedPTC,
+                  R_ReferralConnectedProjectName,
+                  R_ReferredProjectName,
+                  R_ReferralAcceptedDate,
+                  R_ReferralCurrentlyOnQueue,
+                  R_ReferralConnectedMoveInDate),
+    by = "PersonalID")
+
+prioritization_colors <- c(
+  "Housed",
+  "Likely housed",
+  "Entered RRH",
+  "Permanent Housing Track",
+  "Follow-up needed",
+  "No current Entry",
+  "Not referred",
+  "No Entry"
+) |>
+  {\(x) {rlang::set_names(grDevices::colorRampPalette(c("#45d63e", "#ff2516"), space = "Lab")(length(x)), x)}}()
+
+  sit_expr = rlang::exprs(
+    ph_date = !is.na(ExpectedPHDate),
+    ph_date_pre = Sys.Date() < ExpectedPHDate,
+    ph_date_post = Sys.Date() > ExpectedPHDate,
+    ptc_has_entry = PTCStatus == "Has Entry into RRH or PSH",
+    ptc_no_entry = PTCStatus == "Currently Has No Entry into RRH or PSH",
+    is_lh = (R_ReferralConnectedPTC %|% ProjectType) %in% c(project_types$lh, 4, 11),
+    moved_in = !is.na(MoveInDateAdjust),
+    referredproject = !is.na(R_ReferralConnectedProjectName),
+    ph_track = !is.na(PHTrack) & PHTrack != "None"
   )
-)
-
-
-
   # Referral Situation ----
   # Tue Nov 09 12:49:51 2021
+
   prioritization <- dplyr::mutate(
     prioritization,
     Situation = dplyr::case_when(
-      PTCStatus == "Has Entry into RRH or PSH" ~ dplyr::if_else(
-        R_ReferralConnectedPTC %in% c(lh_project_types, 4),
-        paste("Has Entry into",
-              R_ReferralConnectedProjectName),
-        PTCStatus
-      ),
-      PTCStatus == "Currently Has No Entry into RRH or PSH" &
-        !is.na(R_ReferralConnectedProjectName) ~
+      housed ~ "Housed",
+      likely_housed ~ "Likely housed: please follow-up with the client to ensure they are housed.",
+      !!sit_expr$ptc_has_entry & !!sit_expr$moved_in ~ "Housed",
+       !!sit_expr$ptc_has_entry & !(!!sit_expr$moved_in) ~ paste("Entered RRH/PSH but has not moved in:",
+                                                                                                            R_ReferralConnectedProjectName %|% ProjectName),
+        !!sit_expr$ph_track &
+        !!sit_expr$ph_date &
+        !!sit_expr$ph_date_pre ~ paste("Permanent Housing Track. Track:", PHTrack,"Expected Move-in:", ExpectedPHDate),
+      !!sit_expr$ph_track &
+        !!sit_expr$ph_date &
+        !!sit_expr$ph_date_post &
+        !(!!sit_expr$moved_in) ~ paste("Follow-up needed on PH Track, client is not yet moved in:", PHTrack,"Expected Move-in:", ExpectedPHDate),
+      !!sit_expr$ptc_no_entry &
+        !!sit_expr$referredproject ~
         paste(
           "No current Entry into RRH or PSH but",
           R_ReferredProjectName,
           "accepted this household's referral on",
-          R_ReferredDate
+          R_ReferralAcceptedDate
         ),
-      PTCStatus == "Currently Has No Entry into RRH or PSH" &
-        is.na(R_ReferralConnectedProjectName) &
-        !is.na(PHTrack) ~ paste("Permanent Housing Track:",
-                                PHTrack,
-                                "by",
-                                ExpectedPHDate),
-      PTCStatus == "Currently Has No Entry into RRH or PSH" &
-        is.na(R_ReferralConnectedProjectName) &
-        is.na(PHTrack) ~
-        "No Entry or accepted Referral into PSH/RRH, and no current Permanent Housing Track"
-    )
-  )
+      !(!!referrals_expr$coq) | is.na(R_ReferralCurrentlyOnQueue) ~ "Not referred to Community Queue, may need referral to CQ.",
+      !!sit_expr$ptc_no_entry &
+        !(!!sit_expr$referredproject) &
+        !(!!sit_expr$ph_track) ~
+        "No Entry or accepted Referral into PSH/RRH, and no current Permanent Housing Track",
+      TRUE ~ "No Entry or accepted Referral into PSH/RRH, and no current Permanent Housing Track"
+    ),
+    Situation_col = factor(stringr::str_extract(Situation, paste0("(?:",names(prioritization_colors),")") |> paste0(collapse = "|")), names(prioritization_colors)),
+    ExpectedPHDate = dplyr::if_else(is.na(ExpectedPHDate), R_ReferralConnectedMoveInDate, ExpectedPHDate)
+  ) |>
+  dplyr::select(-housed, -likely_housed, - dplyr::starts_with("R_")) |>
+  dplyr::filter(!Situation_col %in% c("Housed", "Likely housed"))
 
 
 # Fleeing DV --------------------------------------------------------------

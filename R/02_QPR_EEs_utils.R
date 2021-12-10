@@ -15,15 +15,13 @@ qpr_project_small <- function(Project, rm_dates, app_env = get_app_env(e = rlang
     HMIS::operating_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
     dplyr::filter(HMISParticipatingProject == 1 &
                     !is.na(ProjectRegion) &
-                    ProjectType %in% c(1:4, 8:9, 12:14)) |>
-    dplyr::mutate(
-      FriendlyProjectName = ProjectName)
+                    ProjectType %in% c(1:4, 8:9, 12:14))
 }
 
-qpr_enrollment_small <- function(Enrollment_extra_Exit_HH_CL_AaE, app_env = get_app_env(e = rlang::caller_env())) {
+qpr_enrollment_small <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  Enrollment_extra_Exit_HH_CL_AaE |>
+  Enrollment_extra_Client_Exit_HH_CL_AaE |>
     dplyr::select(
       dplyr::all_of(c(
         "CountyServed",

@@ -11,7 +11,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
-#' @include app_dependencies.R 04_DataQuality_utils.R
+#' @include app_dependencies.R 04_DataQuality_utils.R 04_DataQuality_doses.R
 
 dependencies$DataQuality <-
   c(
@@ -21,7 +21,7 @@ dependencies$DataQuality <-
     "Disabilities",
     "dose_counts",
     "doses",
-    "Enrollment",
+    "Enrollment_extra_Client_Exit_HH_CL_AaE",
     "Funder",
     "guidance",
     "HealthAndDV",
@@ -33,11 +33,11 @@ dependencies$DataQuality <-
     "Project",
     "Referrals",
     "Scores",
-    "Services",
+    "Services_enroll_extras",
     "Users"
   )
 
-check_fns <- stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!dose)(?!\\_vaccine)(?!\\_referrals)(?!\\_services)(?!\\_spdats)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
+check_fns <- stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!\\_spdats)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
 
 data_quality <- function(check_fns = Rm_data::check_fns,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
@@ -57,6 +57,7 @@ data_quality <- function(check_fns = Rm_data::check_fns,
 
   vars <- list()
   vars$prep <- c(
+    "EnrollmentID",
     "EntryAdjust",
     "EntryDate",
     "ExitDate",
@@ -88,7 +89,7 @@ data_quality <- function(check_fns = Rm_data::check_fns,
   .total <- length(check_fns)
 
   .pid <- cli::cli_progress_bar(type = "iterator",
-                        total = .total + 3)
+                        total = .total + 4)
 
   dqs <- purrr::map(rlang::set_names(check_fns), ~{
     i <- which(check_fns == .x)
@@ -99,7 +100,7 @@ data_quality <- function(check_fns = Rm_data::check_fns,
     arg_names <- arg_names[!purrr::map_lgl(rlang::fn_fmls(fn), is.logical)]
     arg_names <- arg_names[arg_names != c("app_env")]
 
-    .call <- rlang::call2(fn, !!!purrr::map(arg_names, ~rlang::expr(app_env$.__enclos_env__[[!!.x]])), app_env = NULL)
+    .call <- rlang::call2(fn, !!!purrr::map(arg_names, ~rlang::expr(app_env$dependencies[[!!.x]])), app_env = NULL)
 
     out <- rlang::eval_bare(.call)  |>
       dplyr::distinct(PersonalID, Issue, .keep_all = TRUE)
@@ -136,8 +137,11 @@ dq_main <- do.call(rbind, dqs) |>
                   ))
 cli::cli_progress_update(id = .pid,,
                          status = "Finish dq_main")
-if (is_clarity())
-  dq_main <- make_profile_link_df(dq_main)
+if (is_clarity()) {
+  dq_main <- make_linked_df(dq_main, UniqueID)
+  dq_main <- make_linked_df(dq_main, EnrollmentID)
+}
+
 
 # Controls what is shown in the CoC-wide DQ tab ---------------------------
 # for CoC-wide DQ tab
@@ -153,16 +157,19 @@ dq_main |>
 
   }}()
 
-
 cli::cli_progress_update(id = .pid,,
-                         status = "Addtl Data")
-
-eligibility_detail <- dq_check_eligibility()
+                         status = "Overlapping Project Stays")
 dq_overlaps <- dq_overlaps()
 
+cli::cli_progress_update(id = .pid,,
+                         status = "Eligibility Checks")
+
+eligibility_detail <- dq_check_eligibility()
+
+
 if (is_clarity()) {
-  eligibility_detail <- make_profile_link_df(eligibility_detail)
-  dq_overlaps <- make_profile_link_df(dq_overlaps)
+  eligibility_detail <- make_linked_df(eligibility_detail, UniqueID)
+  eligibility_detail <- make_linked_df(eligibility_detail, EnrollmentID)
 }
 
 # TODO See note in dq_overlaps

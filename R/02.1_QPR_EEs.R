@@ -15,6 +15,10 @@
 # this script uses the HMIS data to populate the QPR.
 
 QPR_EEs <- function(
+  Enrollment_extra_Client_Exit_HH_CL_AaE,
+  Services_enroll_extras,
+  enrollment_small,
+  project_small,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
   app_env = get_app_env(e = rlang::caller_env())
 ) {
@@ -31,6 +35,7 @@ QPR_EEs <- function(
            -SummaryMeasure, -Measure, -Operator) %>%
     dplyr::mutate(ProjectType = as.numeric(ProjectType)) %>%
     dplyr::filter(!is.na(Goal))
+
 
   # Building qpr_leavers ----------------------------------------------------
 
@@ -80,7 +85,7 @@ QPR_EEs <- function(
     dplyr::filter(HMIS::exited_between(., rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) &
              RelationshipToHoH == 1) %>%
     dplyr::left_join(smallMainstreamBenefits, by = "EnrollmentID") %>%
-    dplyr::select(ProjectName, FriendlyProjectName, PersonalID, HouseholdID, EntryDate,
+    dplyr::select(ProjectName, PersonalID, HouseholdID, EntryDate,
            EntryAdjust, MoveInDate, MoveInDateAdjust, ExitDate, ExitAdjust,
            InsuranceFromAnySource, BenefitsFromAnySource, DataCollectionStage,
            InformationDate, ProjectRegion, ProjectCounty, ProjectType) %>%
@@ -112,7 +117,7 @@ QPR_EEs <- function(
     dplyr::filter(HMIS::served_between(., rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) &
              RelationshipToHoH == 1) %>%
     dplyr::left_join(smallIncomeDiff, by = "EnrollmentID") %>%
-    dplyr::select(ProjectName, FriendlyProjectName, PersonalID, HouseholdID, EntryDate,
+    dplyr::select(ProjectName, PersonalID, HouseholdID, EntryDate,
            EntryAdjust, MoveInDate, MoveInDateAdjust, ExitDate, ExitAdjust,
            EntryIncome, RecentIncome, ProjectRegion, ProjectCounty, ProjectType) %>%
     dplyr::mutate(
@@ -121,8 +126,8 @@ QPR_EEs <- function(
     ) %>%
     dplyr::arrange(ProjectName, HouseholdID)
 
-  qpr_spending <- Services %>%
-    dplyr::left_join(Enrollment,
+  qpr_spending <- Services_enroll_extras %>%
+    dplyr::left_join(Enrollment_extra_Client_Exit_HH_CL_AaE,
               by = c("EnrollmentID", "PersonalID")) %>%
     dplyr::left_join(project_small, by = c("ProjectID", "ProjectType", "ProjectName")) %>%
     dplyr::select(

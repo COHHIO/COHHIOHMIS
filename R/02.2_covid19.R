@@ -26,7 +26,7 @@ covid19 <- function(
     ))
 
 
-  get_res_prior <- id_from_profile_link_df(validation) %>%
+  get_res_prior <- make_linked_df(validation, UniqueID, unlink = TRUE) %>%
     dplyr::select(PersonalID, EntryDate, ExitDate, LivingSituation) %>%
     dplyr::group_by(PersonalID) %>%
     dplyr::arrange(dplyr::desc(EntryDate)) %>%

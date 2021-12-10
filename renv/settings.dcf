@@ -4,8 +4,7 @@ ignored.packages: tidyverse, broom, dbplyr, dtplyr, forcats, gargle, uuid,
     rlist, XML, htmltools, later, cachem, bslib, fontawesome, stringi, shiny,
     lineprof, lobstr, pryr
 package.dependency.fields: Imports, Depends, LinkingTo
-r.version: 4.1.0
+r.version: >= 4.1.0
 snapshot.type: explicit
 use.cache: TRUE
-vcs.ignore.library: TRUE
-vcs.ignore.local: TRUE
+renv.config.user.profile: TRUE

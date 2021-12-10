@@ -18,7 +18,7 @@ Depends: R (>= 4.1.0)
 Imports: clarity.looker, cli, devtools, dplyr, feather, ggmap,
        ggplot2, glue, HMIS, htmltools, httr, hud.extract,
        janitor, lubridate, purrr, R6, rdrop2, readr, readxl,
-       rlang, RPushbullet, scales, slider, stats,
+       rlang, scales, slider, stats,
        stringr, tibble, tidyr, tidyselect, utils, UU
 Encoding: UTF-8
 LazyData: true
@@ -38,6 +38,7 @@ Collate:
     '00_functions.R'
     '00_get_Export.R'
     '00_get_Export_utils.R'
+    '00_lists.R'
     '01_Bed_Unit_Utilization_utils.R'
     '01_Bed_Unit_Utilization.R'
     '02.1_QPR_EEs.R'
@@ -48,11 +49,12 @@ Collate:
     '02_QPR_SPDATs.R'
     '02_QPR_client_counts.R'
     '03_Veterans.R'
+    '03_prioritization_utils.R'
     '03_prioritization.R'
+    '04_DataQuality_doses.R'
     '04_Guidance.R'
     '04_DataQuality_utils.R'
     '04_DataQuality.R'
-    '04_DataQuality_doses.R'
     '04_DataQuality_plots.R'
     '04_DataQuality_plots_utils.R'
     '04_DataQuality_utils_ServicePoint.R'
@@ -61,4 +63,3 @@ Collate:
     '07_SPMs.R'
     '09_covid.R'
     'convenience_funs.R'
-    'guidance.R'

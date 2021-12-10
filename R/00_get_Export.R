@@ -16,10 +16,10 @@
 # IT REPLACES THE NAMES AND SSNS WITH DATA QUALITY SIGNIFIERS!
 # IT CAN BE RUN ON A CLEAN CLIENT.CSV FILE OR ONE THAT'S BEEN OVERWRITTEN.
 
-#' @title Load the HUD CSV Export and perform joins with extras
+#' @title Load the HUD Export and join extras.
 #'
 #' @inheritParams R6Classes
-#' @param error \code{(logical)} if date checks fail, Whether to error or send a pushbullet message.
+#' @param error \code{(logical)} whether to error or send a message via pushbullet when data checks fail
 #'
 #' @return
 #' @export
@@ -92,7 +92,7 @@ load_export <- function(
 Project <- cl_api$Project()
 Project <- Project |>
   dplyr::select(-ProjectCommonName) |>
-  {\(x) {dplyr::left_join(x, provider_extras |> dplyr::select(- dplyr::matches("FundingSource")) |> dplyr::distinct(ProjectID, .keep_all = TRUE), by = UU::common_names(x, provider_extras))}}()
+  {\(x) {dplyr::left_join(x, provider_extras |> dplyr::select(- dplyr::matches("FundingSourceID")) |> dplyr::distinct(ProjectID, .keep_all = TRUE), by = UU::common_names(x, provider_extras))}}()
 UU::join_check(cl_api$Project(), Project)
 
 mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
@@ -117,7 +117,7 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   # getting EE-related data, joining both to En
   Enrollment_extras <- cl_api$`HUD Extras`$Enrollment_extras()
   Enrollment <- cl_api$Enrollment()
-  Enrollment_extra_Exit_HH_CL_AaE <- dplyr::left_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
+  Enrollment_extra_Client_Exit_HH_CL_AaE <- dplyr::left_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
     # Add Exit
     Enrollment_add_Exit(cl_api$Exit()) |>
     # Add Households
@@ -127,9 +127,19 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
     # Add Client Location from EnrollmentCoC
     Enrollment_add_ClientLocation(EnrollmentCoC) |>
     # Add Client AgeAtEntry
-    Enrollment_add_AgeAtEntry_UniqueID(Client)
+    Enrollment_add_AgeAtEntry_UniqueID(Client) |>
+    dplyr::left_join(dplyr::select(Client,-dplyr::all_of(
+      c(
+        "DateCreated",
+        "DateUpdated",
+        "UserID",
+        "DateDeleted",
+        "ExportID"
+      )
+    )),
+    by = c("PersonalID", "UniqueID"))
 
-  UU::join_check(Enrollment, Enrollment_extra_Exit_HH_CL_AaE)
+  UU::join_check(Enrollment, Enrollment_extra_Client_Exit_HH_CL_AaE)
 
 
   # Funder ------------------------------------------------------------------
@@ -174,8 +184,7 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
 
 
 
-
-  #doses <- cl_api$`HUD Extras`$Client_Doses_extras()
+  Doses <- cl_api$`HUD Extras`$Client_Doses_extras()
 
 
   # Users ----
@@ -185,42 +194,69 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   # Services ----------------------------------------------------------------
 
   # services_funds <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 9)
+
+  Services <- cl_api$Services()
+  Services_extras <- cl_api$`HUD Extras`$Services_extras()
+  Services_enroll_extras  <- dplyr::left_join(Services,
+                     Services_extras,
+                     by = UU::common_names(Services, Services_extras)) |>
+    dplyr::left_join(dplyr::select(Enrollment_extra_Client_Exit_HH_CL_AaE, dplyr::all_of(
+      c(
+        "EnrollmentID",
+        "PersonalID",
+        "ProjectName",
+        "EntryDate",
+        "ExitAdjust",
+        "ProjectID",
+        "ProjectName"
+      )
+    )),
+                     by = c("PersonalID", "EnrollmentID")) |>
+    unique() |>
+    dplyr::mutate(
+      ServiceEndAdjust = dplyr::if_else(
+        is.na(ServiceEndDate) |
+          ServiceEndDate > Sys.Date(),
+        Sys.Date(),
+        ServiceEndDate
+      ),
+      service_interval = lubridate::interval(start = ServiceStartDate, end = ServiceEndAdjust),
+      ee_interval = lubridate::interval(start = EntryDate, end = ExitAdjust),
+      intersect_tf = lubridate::int_overlaps(service_interval, ee_interval),
+      stray_service = is.na(intersect_tf) |
+        intersect_tf == FALSE
+    ) |>
+    dplyr::select(
+      UniqueID,
+      PersonalID,
+      ServiceID,
+      EnrollmentID,
+      ProjectName,
+      HouseholdID,
+      ServiceStartDate,
+      ServiceEndDate,
+      RecordType,
+      ServiceItemName,
+      FundName,
+      FundingSourceID,
+      ServiceAmount,
+      stray_service
+    )
+
+  stray_services <- Services_enroll_extras |>
+    dplyr::filter(stray_service) |>
+    dplyr::select(-stray_service)
+
+  Services_enroll_extras <- Services_enroll_extras |>
+    dplyr::filter(!stray_service) |>
+    dplyr::select(-stray_service)
+
   # TODO To get the Total RRH (Which should be 75% of all ESG funding spent on Services)
   # Rme - QPR - RRH Spending
   # Rm - QPR - RRH vs HP
   # Services_extras$ServiceAmount[Services_extras$FundName |>
   #                              stringr::str_detect("RRH") |>
   #                              which()]
-  # Services <- cl_api$Services()
-  # raw_services <- cl_api$`HUD Extras`$Services_extras() |>
-  #   dplyr::left_join(Enrollment_extra_Exit_HH_CL_AaE[c("EnrollmentID",
-  #                                 "PersonalID",
-  #                                 "ProjectName",
-  #                                 "EntryDate",
-  #                                 "ExitAdjust")],
-  #                    by = c("PersonalID", "EnrollmentID")) %>%
-  #   unique() %>%
-  #   dplyr::left_join(services_funds, by = "ServiceID") %>%
-  #   dplyr::mutate(
-  #     ServiceEndAdjust = dplyr::if_else(is.na(ServiceEndDate) | ServiceEndDate > Sys.Date(), Sys.Date(), ServiceEndDate),
-  #     service_interval = lubridate::interval(start = ServiceStartDate, end = ServiceEndAdjust),
-  #     ee_interval = lubridate::interval(start = EntryDate, end = ExitAdjust),
-  #     intersect_tf = lubridate::int_overlaps(service_interval, ee_interval),
-  #     stray_service = is.na(intersect_tf) | intersect_tf == FALSE | ServiceProvider != ProjectName
-  #   ) %>%
-  #   dplyr::select(PersonalID, ServiceID, EnrollmentID, ServiceProvider, ServiceHHID,
-  #                 ServiceStartDate, ServiceEndDate, Code, Description, ProviderCreating,
-  #                 Fund, Amount, stray_service)
-  #
-  # stray_services <- Services %>%
-  #   dplyr::filter(stray_service) %>%
-  #   dplyr::select(-stray_service)
-  #
-  # Services <- Services %>%
-  #   dplyr::filter(!stray_service) %>%
-  #   dplyr::select(-stray_service)
-  #
-  # rm(raw_services, services_funds)
 
   # Referrals ---------------------------------------------------------------
 
@@ -232,7 +268,34 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
                   R_ReferralConnectedPTC = hud.extract::hud_translations$`2.02.6 ProjectType`(R_ReferralConnectedPTC))
   # TODO ReferralOutcome must be replaced by a Clarity element (or derived from multiple) for dq_internal_old_outstanding_referrals
 
+  referrals_expr <- rlang::exprs(
+    housed1 = R_RemovedFromQueueSubreason %in% c(
+      "Housed with Community Inventory",
+      "Housed with Community Inventory - Not with CE",
+      "Permanently Living with Family/Friends",
+      "Return To Prior Residence",
+      "Rental By Client"
+    ),
+    housed2 = !is.na(R_ReferralConnectedMoveInDate),
+    housed3 = R_ExitHoused == "Housed",
+    is_last = R_IsLastReferral == "Yes",
+    is_active = R_ActiveInProject == "Yes",
+    accepted1 = R_IsLastReferral == "Yes",
+    accepted2 = stringr::str_detect(R_ReferralResult, "accepted$"),
+    coq = R_ReferralCurrentlyOnQueue == "Yes"
+  )
+  referral_result_summarize <- purrr::map(referrals_expr, ~rlang::expr(isTRUE(any(!!.x, na.rm = TRUE))))
 
+
+  Referrals <- Referrals |>
+    filter_dupe_soft(!!referrals_expr$is_last,
+                     !!referrals_expr$is_active,
+                     !is.na(R_ReferralResult),
+                     !!referrals_expr$housed3 & !!referrals_expr$accepted2,
+                     key = PersonalID) |>
+    filter_dupe_last_EnrollmentID(key = PersonalID, R_ReferredEnrollmentID) |>
+    dplyr::arrange(dplyr::desc(R_ReferredEnrollmentID)) |>
+    dplyr::distinct(dplyr::across(-R_ReferredEnrollmentID), .keep_all = TRUE)
   # HUD CSV Specs -----------------------------------------------------------
   #TODO hud.extract Data element coercion functions
   HUD_specs <- clarity.looker::hud_load("HUD_specs", dirs$public)

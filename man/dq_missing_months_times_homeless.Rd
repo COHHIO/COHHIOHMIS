@@ -24,8 +24,6 @@ dq_missing_months_times_homeless(
 \item{guidance}{\code{(list)} See \code{guidance}}
 
 \item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
-
-\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \value{
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
@@ -41,10 +39,10 @@ Other DQ: Missing Data at Entry:
 \code{\link{dq_dkr_months_times_homeless}()},
 \code{\link{dq_dkr_residence_prior}()},
 \code{\link{dq_invalid_months_times_homeless}()},
-\code{\link{dq_missing_LoS}()},
 \code{\link{dq_missing_approx_date_homeless}()},
 \code{\link{dq_missing_living_situation}()},
 \code{\link{dq_missing_previous_street_ESSH}()},
-\code{\link{dq_missing_residence_prior}()}
+\code{\link{dq_missing_residence_prior}()},
+\code{\link{dq_sp_missing_LoS}()}
 }
 \concept{DQ: Missing Data at Entry}

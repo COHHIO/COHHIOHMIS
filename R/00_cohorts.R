@@ -58,10 +58,6 @@ cohorts <- function(
   ))
 
 
-
-  Enrollment_extra_Client_Exit_HH_CL_AaE <- Enrollment_extra_Exit_HH_CL_AaE |>
-    dplyr::left_join(Client, by = c("PersonalID", "UniqueID"))
-
   # Transition Aged Youth
   tay <-  Enrollment_extra_Client_Exit_HH_CL_AaE |>
     dplyr::select(tidyselect::all_of(vars$we_want)) |>
@@ -172,54 +168,6 @@ cohorts <- function(
   bos_counties <- ServiceAreas |>
     dplyr::filter(CoC == "OH-507 Balance of State") |>
     dplyr::pull(County)
-
-  # Destinations Groups (FY2020) --------------------------------------------
-
-  destinations = list(
-    perm = c(3, 10, 11, 19:23, 26, 28, 31, 33, 34, 36),
-    temp = c(1, 2, 12, 13, 14, 16, 18, 27, 32, 35),
-    institutional = c(4:7, 15, 25, 27, 29),
-    other = c(8, 9, 17, 24, 30, 37, 99)
-  )
-
-  # Project Groupings -------------------------------------------------------
-  #TODO
-  # GPD_project_ids <- c(751, 776, 749, 1229, 127, 550)
-  #
-  # fake_projects <- c(1027, 1849, 1028, 1033, 1032, 1029, 1931, 1030, 1031, 1317)
-
-
-# Client Column Categories ----
-# Tue Nov 30 11:46:53 2021
-  col_cats = list(Client = list(
-    gender = c(
-      "Female",
-      "Male",
-      "NoSingleGender",
-      "Transgender",
-      "Questioning",
-      "GenderNone"
-    ),
-    race = c(
-      "AmIndAKNative",
-      "Asian",
-      "BlackAfAmerican",
-      "NativeHIPacific",
-      "White",
-      "RaceNone",
-      "Ethnicity"
-    )
-  ))
-  # Project Type Groupings --------------------------------------------------
-
-  project_types = list(
-    lh = c(1, 2, 8),
-    ph = c(3, 9, 13),
-    lh_at_entry = c(1, 2, 3, 4, 8, 9, 13),
-    lh_ph_hp = c(1, 2, 3, 4, 8, 9, 12, 13),
-    coc_funded = c(2, 3, 13),
-    w_beds = c(1, 2, 3, 8, 9)
-  )
 
 
   app_env$gather_deps("everything")

@@ -18,8 +18,6 @@ dq_duplicate_ees(
 \item{\code{prep}}{ Column names for Prep}
 \item{\code{we_want}}{ Column names for output}
 }}
-
-\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \value{
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
@@ -41,21 +39,16 @@ Other Clarity Checks:
 \code{\link{dq_dkr_months_times_homeless}()},
 \code{\link{dq_dkr_residence_prior}()},
 \code{\link{dq_dob}()},
-\code{\link{dq_dose_date_error}()},
 \code{\link{dq_ethnicity}()},
 \code{\link{dq_future_ees}()},
 \code{\link{dq_future_exits}()},
 \code{\link{dq_gender}()},
 \code{\link{dq_hh_children_only}()},
-\code{\link{dq_hh_missing_rel_to_hoh}()},
 \code{\link{dq_hh_no_hoh}()},
-\code{\link{dq_hh_too_many_hohs}()},
 \code{\link{dq_incorrect_path_contact_date}()},
 \code{\link{dq_invalid_months_times_homeless}()},
 \code{\link{dq_mahoning_ce_60_days}()},
-\code{\link{dq_missing_LoS}()},
 \code{\link{dq_missing_approx_date_homeless}()},
-\code{\link{dq_missing_client_location}()},
 \code{\link{dq_missing_county_prior}()},
 \code{\link{dq_missing_county_served}()},
 \code{\link{dq_missing_destination}()},
@@ -67,8 +60,6 @@ Other Clarity Checks:
 \code{\link{dq_missing_path_contact}()},
 \code{\link{dq_missing_previous_street_ESSH}()},
 \code{\link{dq_missing_residence_prior}()},
-\code{\link{dq_missing_vaccine_current}()},
-\code{\link{dq_missing_vaccine_exited}()},
 \code{\link{dq_name}()},
 \code{\link{dq_overlaps}()},
 \code{\link{dq_path_SOAR_missing_at_exit}()},
@@ -93,11 +84,11 @@ Other Clarity Checks:
 \code{\link{dq_th_check_exit_destination}()},
 \code{\link{dq_th_missing_project_stay}()},
 \code{\link{dq_th_stayers_bos}()},
+\code{\link{dq_vax}()},
 \code{\link{dq_veteran}()},
 \code{\link{dqu_project_small}()},
-\code{\link{overlaps_psh}()},
-\code{\link{overlaps_rrh}()},
-\code{\link{overlaps_same_day}()}
+\code{\link{overlaps_same_day}()},
+\code{\link{overlaps}()}
 
 Other DQ: EE Checks: 
 \code{\link{dq_conflicting_income}()},

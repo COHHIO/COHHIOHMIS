@@ -13,78 +13,99 @@
 # <https://www.gnu.org/licenses/>.
 
 
-#' @title Make a Clarity Profile link using the UniqueID and PersonalID
+#' @title Make a Clarity link using the `PersonalID` and `UniqueID/EnrollmentID`
 #' @description If used in a \link[DT]{datatable}, set `escape = FALSE`
-#' @param pid \code{(character/data.frame)} Either the `PersonalID` column, or the \code{data.frame} with it.
-#' @param uid \code{(character)} The `UniqueID` column, unnecessary to specific if \code{data.frame} supplied to PersonalID
+#' @param PersonalID \code{(character)} The `PersonalID` column
+#' @param ID \code{(character)} The `UniqueID/EnrollmentID` column
 #' @param chr \code{(logical)} Whether to output a character or a `shiny.tag` if `FALSE`. **Default** TRUE
 #'
-#' @return \code{(character/data.frame/shiny.tag)} If `PersonalID` is a character vector (IE nested in a mutate), and `chr = TRUE` a character vector, if `chr = FALSE` a `shiny.tag`. If `PersonalID` is a `data.frame` a `data.frame` with the `UniqueID` column replaced with the link to the profile and the `UniqueID` as the text
+#' @return \code{(character/shiny.tag)} If `PersonalID` is a character vector (IE nested in a mutate), and `chr = TRUE` a character vector, if `chr = FALSE` a `shiny.tag`. The `ID` column will be replaced with the link.
 #' @export
 #'
 #' @examples
-#' data.frame(a = letters, b = seq_along(letters)) |> dplyr::rowwise() |>  dplyr::mutate(a = make_profile_link(a, b)) |> DT::datatable(escape = FALSE)
+#' data.frame(a = letters, b = seq_along(letters)) |>  dplyr::mutate(a = make_link(a, b))
 
-make_profile_link <- function(pid, uid, chr = TRUE) {
+
+make_link <- function(PersonalID, ID, chr = TRUE) {
   href <- getOption("HMIS")$Clarity_URL
+  .type <- ifelse(any(stringr::str_detect(ID, "[A-F]"), na.rm = TRUE), "profile", "enroll")
+  sf_args <- switch(.type,
+         profile = list("<a href=\"%s/client/%s/profile\" target=\"_blank\">%s</a>", href, PersonalID, ID),
+         enroll = list("<a href=\"%s/clients/%s/program/%s/enroll\" target=\"_blank\">%s</a>", href, PersonalID, ID, ID))
   if (chr) {
-    sprintf("<a href=\"%s/client/%s/profile\" target=\"_blank\">%s</a>",href, pid, uid)
+    out <- do.call(sprintf, sf_args)
   } else {
     href <- httr::parse_url(href)
-    out <- purrr::map(pid, uid, ~{
-      href$path <- c("client",.x, "profile")
+    if (!identical(length(PersonalID), length(ID))) {
+      l <- list(PersonalID = PersonalID, ID = ID)
+      big <- which.max(purrr::map_int(l, length))
+      i <- seq_along(l)
+      small <- subset(i, subset = i != big)
+      assign(names(l)[small], rep(l[[small]], length(l[[big]])))
+    }
+    out <- purrr::map2(PersonalID, ID, ~{
+      href$path <- switch(.type,
+                          profile = c("client",.x, "profile"),
+                          enroll = c("clients",.x, "program", .y, "enroll"))
       htmltools::tags$a(href = httr::build_url(href), .y, target = "_blank")
     })
   }
-
-}
-
-ids_from_profile_link <- function(UniqueID, ID = "PersonalID") {
-  col_nm <- UU::match_letters(ID, p = "PersonalID", u = "UniqueID")
-
-}
-
-id_from_profile_link_df <- function(x) {
-  out <- x
-  if (!"PersonalID" %in% names(x))
-    out$PersonalID <- stringr::str_extract(x$UniqueID, "(?<=client\\/)\\d+")
-
-  out$UniqueID <- stringr::str_extract(x$UniqueID, "(?<=\\>)[:alnum:]+(?=\\<)")
   out
 }
-#' @title Make UniqueID into a Clarity client profile link
-#' @param x \code{(data.frame)} must have `PersonalID` & `UniqueID` columns.
-#'
-#' @return \code{(data.frame)} With `UniqueID` as a profile link and PersonalID removed.
+
+#' @title Make UniqueID or EnrollmentID into a Clarity hyperlink
+#' @param x \code{(data.frame)} The following columns are required for the specified link type:
+#' \itemize{
+#'   \item{\code{PersonalID & UniqueID}}{ for Profile link}
+#'   \item{\code{PersonalID & EnrollmentID}}{ for Enrollment link}
+#' }
+#' @param ID \code{(name)} unquoted of the column to unlink.
+#' @param unlink \code{(logical)} Whether to turn the link back into the respective columns from which it was made.
+#' @return \code{(data.frame)} With `UniqueID` or `EnrollmentID` as a link
+#' data.frame(a = letters, b = seq_along(letters)) |>  dplyr::mutate(a = make_link(a, b)) |> make_linked_df(a, unlink = TRUE)
 #' @export
-#'
-#' @examples
-#' data.frame(a = letters, b = seq_along(letters)) |> make_profile_link() |>
-#' DT::datatable(escape = FALSE)
-make_profile_link_df <- function(x) {
-  x |>
-    dplyr::mutate(UniqueID = make_profile_link(PersonalID, UniqueID)) |>
-    dplyr::select( - PersonalID)
+make_linked_df <- function(x, ID, unlink = FALSE) {
+  out <- x
+  ID <- rlang::enexpr(ID)
+  .col <- x[[ID]]
+
+  .type <- ifelse(any(stringr::str_detect(.col, ifelse(unlink, "profile", "[A-F0-9]{9}")), na.rm = TRUE), "profile", "enroll")
+
+  if (unlink) {
+    if (!"PersonalID" %in% names(x))
+      out$PersonalID <- stringr::str_extract(.col, "(?<=client\\/)\\d+")
+    if (!as.character(ID) %in% names(x) || any(stringr::str_detect(.col, "^\\<a")))
+      out[[ID]] <- stringr::str_extract(.col, switch(.type,
+                                                        profile = "(?<=\\>)[:alnum:]+(?=\\<)",
+                                                        enroll = "\\d+(?=\\/enroll)"))
+  } else {
+    out <- x |>
+      dplyr::mutate(!!ID := make_link(PersonalID, !!ID))
+  }
+
+  out
 }
+
+
 
 # stop_with_instructions ----
 # Wed Mar 24 16:38:01 2021
 #' @title Stop daily update with an informative error
 #' @description Throws an error in 00_daily_update.R with additional details
 #' @param ... Error Messages to print to the console
-#' @importFrom cli cli_alert_danger cli_alert_info col_red
 #' @export
 stop_with_instructions <- function(..., error = FALSE) {
-  .msg <- paste0(..., collapse = "\n")
-  cli::cli_alert_danger(cli::col_red(.msg))
-  #TODO Who to reference for help? This will display if the app crashes
-  cli::cli_alert_info(
-    "Please contact hmisapps@cohhio.org for help!"
-  )
+  .msg <- paste0(paste0(..., collapse = "\n"),"\nPlease contact hmisapps@cohhio.org for help!")
   if (error)
-    stop(.msg, call. = FALSE)
-  else
-    RPushbullet::pbPost(title = "COHHIO Error", body = .msg)
+    stop(.msg)
+  else {
+    warning(.msg)
+    # authfile <- ifelse(is_dev, file.path("inst", "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"), file.path(system.file(package = "Rm_data"), "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"))
+    # token <- gargle::token_fetch(scopes = "https://www.googleapis.com/auth/gmail.compose", gargle::credentials_service_account(scopes = "https://www.googleapis.com/auth/gmail.compose", path = authfile))
+    # gmailr::gm_auth_configure()
+    # gmailr::gm_auth(token = token)
+  }
+
 }
 
 # increment ----
@@ -273,20 +294,20 @@ living_situation <- function(ReferenceNo) {
     ReferenceNo == 99 ~ "Data not collected"
   )
 }
-
-project_type <- function(ReferenceNo){
-  dplyr::case_when(
-    ReferenceNo == 1 ~ "Emergency Shelter",
-    ReferenceNo == 2 ~ "Transitional Housing",
-    ReferenceNo == 3 ~ "Permanent Supportive Housing",
-    ReferenceNo == 4 ~ "Street Outreach",
-    ReferenceNo == 6 ~ "Services Only",
-    ReferenceNo == 8 ~ "Safe Haven",
-    ReferenceNo == 12 ~ "Prevention",
-    ReferenceNo == 13 ~ "Rapid Rehousing",
-    ReferenceNo == 14 ~ "Coordinated Entry"
-  )
-}
+# Deprecated, used hud.extract::hud_translations$`2.02.6 ProjectType` instead
+# project_type <- function(ReferenceNo){
+#   dplyr::case_when(
+#     ReferenceNo == 1 ~ "Emergency Shelter",
+#     ReferenceNo == 2 ~ "Transitional Housing",
+#     ReferenceNo == 3 ~ "Permanent Supportive Housing",
+#     ReferenceNo == 4 ~ "Street Outreach",
+#     ReferenceNo == 6 ~ "Services Only",
+#     ReferenceNo == 8 ~ "Safe Haven",
+#     ReferenceNo == 12 ~ "Prevention",
+#     ReferenceNo == 13 ~ "Rapid Rehousing",
+#     ReferenceNo == 14 ~ "Coordinated Entry"
+#   )
+# }
 
 
 #' @title replace "yes"/"no" character vector
@@ -411,6 +432,20 @@ enhanced_yes_no_translator <- function(ReferenceNo) {
   )
 }
 
+
+#' @title Unzip the HUD Export zip file from the download folder
+#'
+#' @param download_folder \code{(character)} path to folder where HUD Exports are downloaded
+#' @param dir \code{(character)} path of destination directory
+#' @export
+
+unzip_export <- function(download_folder = "~/../Downloads/", dir = "data") {
+  .files <- list.files(download_folder, pattern = "^hudx", full.names = TRUE)
+  .file_times <- do.call(c, purrr::map(.files, ~file.info(.x)$mtime))
+
+  archive::archive_extract(.files[which.max(.file_times)], dir = dir)
+  purrr::walk(.files, file.remove)
+}
 # this function translates the HUD .csv 1.7 and 1.8 lists
 # and returns yes, no, or unknown as appropriate
 translate_HUD_yes_no <- function(column_name){
