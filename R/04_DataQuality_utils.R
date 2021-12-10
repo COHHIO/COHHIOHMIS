@@ -2559,7 +2559,7 @@ dq_check_disability_ssi <- function(served_in_date_range, IncomeBenefits, vars, 
 #' @inherit data_quality_tables params return
 #' @export
 
-dq_services_on_non_hoh <- function(served_in_date_range, vars, rm_dates, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+dq_services_on_non_hoh <- function(served_in_date_range, Services, vars, rm_dates, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
@@ -2587,7 +2587,7 @@ dq_services_on_non_hoh <- function(served_in_date_range, vars, rm_dates, guidanc
 #' @inherit data_quality_tables params return
 #' @export
 
-dq_services_on_hh_members_ssvf <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+dq_services_on_hh_members_ssvf <- function(served_in_date_range, Services, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   served_in_date_range |>
