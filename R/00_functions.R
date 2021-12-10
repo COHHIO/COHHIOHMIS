@@ -28,10 +28,17 @@
 make_profile_link <- function(pid, uid, chr = TRUE) {
   href <- getOption("HMIS")$Clarity_URL
   if (chr) {
-    sprintf("<a href=\"%s/client/%s/profile\" target=\"_blank\">%s</a>",href, pid, uid)
+    sprintf("<a href=\"%s/client/%s/profile\" target=\"_blank\">%s</a>", href, pid, uid)
   } else {
     href <- httr::parse_url(href)
-    out <- purrr::map(pid, uid, ~{
+    if (!identical(length(pid), length(eid))) {
+      l <- list(pid = pid, eid = eid)
+      big <- which.max(purrr::map_int(l, length))
+      i <- seq_along(l)
+      small <- subset(i, subset = i != big)
+      assign(names(l)[small], rep(l[[small]], length(l[[big]])))
+    }
+    out <- purrr::map2(pid, uid, ~{
       href$path <- c("client",.x, "profile")
       htmltools::tags$a(href = httr::build_url(href), .y, target = "_blank")
     })
@@ -39,10 +46,7 @@ make_profile_link <- function(pid, uid, chr = TRUE) {
 
 }
 
-ids_from_profile_link <- function(UniqueID, ID = "PersonalID") {
-  col_nm <- UU::match_letters(ID, p = "PersonalID", u = "UniqueID")
 
-}
 
 id_from_profile_link_df <- function(x) {
   out <- x
