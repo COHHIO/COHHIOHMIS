@@ -22,7 +22,7 @@ app_deps <- list(
     "note_unit_utilization",
     "Organization",
     "pe_validation_summary",
-    "project_type",
+    "project_types",
     "qpr_benefits",
     "qpr_income",
     "qpr_leavers",
@@ -47,7 +47,7 @@ app_deps <- list(
     "utilization_unit",
     "validation",
     "veteran_current_in_project"
-  ),
+  ) |> rlang::set_names(),
 
   # to Rme
 
@@ -73,6 +73,7 @@ app_deps <- list(
     "dq_plot_warnings",
     "dq_providers",
     "enhanced_yes_no_translator",
+    "guidance",
     "HUD_specs",
     "living_situation",
     "Organization",
@@ -89,7 +90,7 @@ app_deps <- list(
     "pe_scored_at_ph_entry",
     "prioritization",
     "prioritization_colors",
-    "project_type",
+    "project_types",
     "qpr_income",
     "qpr_benefits",
     "qpr_leavers",
@@ -106,8 +107,8 @@ app_deps <- list(
     "Users",
     "utilization_clients",
     "utilization",
-    "vaccine_needs_second_dose",
-    "vaccine_status",
+    # "vaccine_needs_second_dose",
+    # "vaccine_status",
     # QPR_client_counts
     "validation",
     # Veterans
@@ -116,7 +117,7 @@ app_deps <- list(
     "entered_past_90_vets",
     "new_gpd_vets"
 
-  )
+  ) |> rlang::set_names()
 )
 missing_args <-
   function(calling_function = rlang::caller_fn(2),
@@ -177,6 +178,8 @@ fun_insert <-
 app_env <- R6::R6Class(
   "app_env",
   public = rlang::list2(
+    #' @field Dependency environment
+    dependencies = new.env(parent = .GlobalEnv),
     #' @description Pass all dependencies saved from previous functions to an environment for use
     #' @param ... \code{(character)} names of objects to share with `env`. **Default** load all previously stored objects.
     #' @param env \code{(environment)} to pass dependencies to. **Default** the calling environment
@@ -189,22 +192,22 @@ app_env <- R6::R6Class(
       # If called with no arguments
       if (!UU::is_legit(nms) && !UU::is_legit(names(.dots)))
         nms <- private$work_deps
-      .missing_nms <- !nms %in% ls(self$.__enclos_env__)
+      .missing_nms <- !nms %in% ls(self$dependencies)
       if (any(.missing_nms))
         rlang::abort(paste0(
           paste0(nms[.missing_nms], collapse = ", "),
           " not found in working environment. Has it been saved?"
         ))
       if (!as_list) {
-        rlang::env_bind(env, !!!rlang::env_get_list(self$.__enclos_env__, nms))
+        rlang::env_bind(env, !!!rlang::env_get_list(self$dependencies, nms))
       } else {
-        return(rlang::env_get_list(self$.__enclos_env__, nms))
+        return(rlang::env_get_list(self$dependencies, nms))
       }
 
     },
     #' @description Gather the objects passed to \code{app_env}s internal environment to be passed to subsequent functions. Save app dependencies into a list.
     #' @param ... \code{(objects)} Dependencies for subsequent functions, passed as named objects or a character of the object name. If no name is provided, the name of the object will be retained. Use \code{"everything"} to capture all objects from the parent environment.
-    #' @param app_deps \code{(logical/character)} **Default: `TRUE`** to save all app dependencies specified at initialization of the `app_env` object. Otherwise, a character vector of app dependencies to save.
+    #' @param app_deps \code{(logical/list)} **Default: `TRUE`** to save all app dependencies specified at initialization of the `app_env` object. Otherwise, a named list of the dependencies to save as a character vector with the list names corresponding to the apps for which to save the dependencies..
     #' @param env \code{(env)} The environment from which objects should be saved. **Default: the calling environment**
     #' @param .args I don't remember why this is here but it has to be for the function to work properly.
     #' @return \code{(environment)} The `app_env` object with the saved objects in the internal environment.
@@ -235,50 +238,40 @@ app_env <- R6::R6Class(
             pattern = paste0("(?:^", .args, "$)", collapse = "|")
           )
 
-        .work_deps <- rlang::env_get_list(env, stringr::str_subset(.all_objs, "(?:app_env)|(?:clarity_api)", negate = TRUE))
+        .dep_nms <- stringr::str_subset(.all_objs, "(?:app_env)|(?:clarity_api)", negate = TRUE)
+        .work_deps <- purrr::compact(rlang::env_get_list(env, .dep_nms, default = NULL))
       } else if (length(.work_deps) == 1 && is.character(.work_deps[[1]]) && any(.work_deps[[1]] %in% ls(env))) {
         # case when character vector of objects to gather is provided
-        .work_deps <- rlang::env_get_list(env, .work_deps[[1]])
-
+        .dep_nms <- .work_deps[[1]]
+        .work_deps <- purrr::compact(rlang::env_get_list(env, .dep_nms, default = NULL))
+        stopifnot(names(.work_deps) == .dep_nms)
+      } else {
+        .dep_nms <- names(.work_deps)
       }
-      .new_wdeps <- names(.work_deps)
-      private$work_deps <-
-        append(private$work_deps, .new_wdeps)  |>
-        {
-          \(x) {
-            x[!duplicated(x)]
-          }
-        }()
+
+      private$work_deps <- unique(c(private$work_deps, .dep_nms))
 
 
-      rlang::env_bind(self$.__enclos_env__, !!!.work_deps)
-      cli::cli({
-        cli::cli_h2("Internal")
-        cli::cli_alert_success(paste0("dependencies saved: ", paste0(.new_wdeps, collapse = ", ")))
-      })
-      if (!isFALSE(app_deps)) {
-        if (isTRUE(app_deps))
-          app_deps <- self$app_deps
+      rlang::env_bind(self$dependencies, !!!.work_deps)
 
-        purrr::iwalk(app_deps, ~ {
-          .deps <-
-            purrr::compact(rlang::env_get_list(env, .x, default = NULL))
 
-          if (UU::is_legit(.deps)) {
+
+
+      cli::cli_h2("Saved Dependencies")
+      cli::cli_alert_success(paste0("Global: ", paste0(.dep_nms, collapse = ", ")))
+
+
+      if (isTRUE(app_deps))
+        app_deps <- self$app_deps
+
+      if (is.list(app_deps)) {
+        purrr::imap(app_deps, ~ {
+          .work_deps <- purrr::compact(rlang::env_get_list(env, .x, default = NULL))
+          if (UU::is_legit(.work_deps)) {
             # Add Client_filter for all dependencies to ensure test clients are removed from reporting
-            # .deps <- purrr::map_if(.deps, is.data.frame, Client_filter)
+            rlang::env_bind(self$dependencies, !!!.work_deps)
 
-            .new_objs <- try({self$app_objs[[.y]] <<- purrr::list_modify(,!!!.deps)}, silent = TRUE)
-            if (!UU::is_legit(.new_objs)) {
-              for (nm in names(.deps)) {
-                self$app_objs[[.y]][[nm]] <<- .deps[[nm]]
-              }
-            }
-
-            cli::cli({
-              cli::col_blue(cli::cli_h2(.y))
-              cli::cli_alert_success(paste0(" dependencies saved: ", paste0(names(.deps), collapse = ", ")))
-            })
+            cli::cli_alert_success(paste0(.y, ": ", paste0(.x, collapse = ", ")))
           }
         })
       }
@@ -291,90 +284,94 @@ app_env <- R6::R6Class(
     set_parent = function(vars_to_remove = NULL, env = rlang:::caller_env()) {
       if (UU::is_legit(vars_to_remove))
         rm(list = vars_to_remove, envir = env)
-      parent.env(self$.__enclos_env__) <- .GlobalEnv
-      parent.env(env) <- self$.__enclos_env__
+      parent.env(self$dependencies) <- .GlobalEnv
+      parent.env(env) <- self$dependencies
     },
     #' @description Write app dependencies to disk
-    #' @param ... \code{(objects)} objects to write to disk. Files will named after the object name.
-    #' @param objs \code{(list)} of objects to write to disk, overrides `...`.
+    #' @param deps \code{(character)} with names of app dependencies to write.
     #' @param path \code{(character)} of directory to write app dependencies to
-    #' @param dep_nms \code{(character)} with names of app dependencies. *Optional*
     #' @param overwrite \code{(logical)} Whether to overwrite existing files. **Default:`TRUE`**
     #' @return \code{(character)} vector of the files written
-    write_app_deps = function (...,
-                               objs,
+    write_app_deps = function (deps,
                                path = file.path("data", "db", "RminorElevated"),
-                               dep_nms = NULL,
                                overwrite = TRUE)
     {
       # Dir check
       if (!dir.exists(path))
         UU::mkpath(path)
 
-      if (missing(objs))
-        objs <- rlang::dots_list(..., .named = TRUE)
+      saved_deps <- ls(self$dependencies, all.names = TRUE)
+      to_write <- intersect(deps, saved_deps)
+      .missing <- setdiff(deps, saved_deps)
+      if (UU::is_legit(.missing)) {
+        rlang::warn(paste0(
+          "The following objects are missing from the app dependencies environment and were not written to disk:\n",
+          paste0(.missing, collapse = ", ")))
 
-      .nms <- names(objs)
-      if (!is.null(dep_nms)) {
-        .missing <- setdiff(dep_nms, .nms)
-        if (UU::is_legit(.missing)) {
-          rlang::warn(paste0(
-            "The following objects are missing from the app dependencies environment and will not be written to disk:\n",
-            paste0(.missing, collapse = ", ")))
-
-        }
       }
 
 
 
-      out <- purrr::imap(objs, ~{
-          fp <- file.path(path, paste0(.y, UU::object_ext(.x)))
+      .pid <- cli::cli_progress_bar(status = "Writing: ", type = "iterator",
+                                    total = length(to_write))
+
+
+      out <- purrr::map_chr(to_write, ~{
+        o <- get0(.x, envir = self$dependencies, inherits = FALSE)
+          fp <- file.path(path, paste0(.x, UU::object_ext(o)))
         if (overwrite || !file.exists(fp)) {
-          if (UU::is_legit(names(.x)) && isTRUE(all(c("PersonalID", "UniqueID") %in% names(.x))) && is_clarity())
-            .x <- make_profile_link_df(.x)
-          rlang::exec(UU::object_fn(.x), .x, fp)
-          if (file.info(fp)$mtime > Sys.Date())
-            cli::cli_alert_success(fp, " saved.")
+          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "UniqueID") %in% names(o))) && is_clarity())
+            o <- make_linked_df(o, UniqueID)
+          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "EnrollmentID") %in% names(o))) && is_clarity())
+            o <- make_linked_df(o, EnrollmentID)
+          rlang::exec(UU::object_fn(o), o, fp)
+          stopifnot(file.info(fp)$mtime > Sys.Date())
         }
+        cli::cli_progress_update(id = .pid, status = .x)
         fp
       })
+      cli::cli_process_done(.pid)
+      .deps <- stringr::str_remove(basename(out), '\\.\\w{1,10}$')
+      cli::cli_alert_success(paste0("Dependencies written to {.path {unique(dirname(out))}}: {.emph {paste0(.deps, collapse = ', ')}}"))
 
-
-      purrr::flatten_chr(out)
     },
-    #' @field app_objs \code{(list)} with all app dependencies as objects
-    app_objs = list(),
     #' @field app_deps \code{(list)} with all app dependencies as character vectors
     app_deps = c(),
 
 #' @description Transfer all files in the data dependencies folder to the applications via dropbox or `file.copy`. If using dropbox, requires an authorized token to dropbox. See `dropbox_auth`.
-#' @param ... \code{(character)} character vectors of files to write to disk
+#' @param deps \code{(character/logical)} character vector of files to write to disk. Or `TRUE` **Default** to use the list of app dependencies matching the `dest_folder` name.
 #' @param folder \code{(character)} path to folder with files to transfer transfer
 #' @param dest_folder \code{(character)} folder to transfer too. This will be created inside the `HMIS Apps` folder if using Dropbox.
 #' @param dropbox \code{(logical)} **Default** Upload dependencies to Dropbox, `FALSE` to pass to the `data` folder in the sibling directory: `dest_folder`.
 #' @return
 
-    deps_to_apps = function(..., folder = file.path("data","db","RminorElevated"), dest_folder = "RminorElevated", dropbox = TRUE) {
+    deps_to_apps = function(deps = TRUE, folder = file.path("data","db","RminorElevated"), dest_folder = "RminorElevated", dropbox = TRUE) {
       if (!dropbox)
         dest_folder = file.path("..",dest_folder,"data")
-      .files <- rlang::dots_list(...)
-      if (UU::is_legit(.files)) {
-        if (is.character(.files[[1]]) && length(.files[[1]]) > 1)
-          .files <- .files[[1]]
-        files <- purrr::map_chr(.files, hud_filename, path = folder)
 
+      if (isTRUE(deps))
+        deps <- self$app_deps[[dest_folder]]
+      if (UU::is_legit(deps)) {
+        files <- purrr::flatten_chr(purrr::compact(purrr::map(deps, hud_filename, path = folder)))
       } else
         files <- list.files(folder, full.names = TRUE)
-      .pid <- cli::cli_progress_bar(status = "Transferring3: ", type = "iterator",
+      .pid <- cli::cli_progress_bar(status = "Transferring: ", type = "iterator",
                             total = length(files))
-      purrr::walk(files, ~{
+      out <- purrr::map_chr(files, ~{
         cli::cli_progress_update(id = .pid, status = basename(.x))
         if (dropbox) {
           rdrop2::drop_upload(.x, file.path(dest_folder))
         } else {
           file.copy(.x, file.path(dest_folder, basename(.x)), overwrite = TRUE)
         }
+        .x
       })
+      cli::cli_process_done(.pid)
+      cli::cli_alert_success(paste0("Transferred: {.emph {paste0(basename(out), collapse = ', ')}} to {.path {dest_folder}}"))
+      .missing <- setdiff(deps, stringr::str_remove(basename(out), "\\.\\w{1,10}$"))
+      if (UU::is_legit(.missing))
+        warning(.missing, " was not found in ", folder)
+
     },
 
 #' @description Authorize Dropbox
@@ -397,7 +394,6 @@ app_env <- R6::R6Class(
       if (missing(app_deps))
         app_deps <- Rm_data:::app_deps
       self$app_deps <- app_deps
-      self$app_objs <- purrr::map(app_deps, ~list())
     }
   ),
   private = list(#' @field Save a vector of the names of working dependencies that have been saved for future reference when \code{\$merge_deps_to_env} is called.
@@ -410,5 +406,16 @@ is_app_env <- function(x)
 
 dependencies <- list()
 
+reset_Rm_env <- function(app_env = get_app_env(e = rlang::caller_env())) {
+  deps <- purrr::compact(rlang::env_get_list(app_env$dependencies, ls(app_env$dependencies, all.names = TRUE), default = NULL))
+  rm("Rm_env", envir = .GlobalEnv)
+  devtools::load_all()
+  .GlobalEnv$Rm_env <- Rm_data::app_env$new()
+
+  rlang::env_bind(.GlobalEnv$Rm_env$dependencies, !!!deps)
+  deps <- ls(.GlobalEnv$Rm_env$dependencies, all.names = TRUE)
+  cli::cli_alert_success(paste0("Rm_env reset and deps re-added: {.emph {paste0(deps, collapse = ', ')}}"))
+  invisible(deps)
+}
 
 
