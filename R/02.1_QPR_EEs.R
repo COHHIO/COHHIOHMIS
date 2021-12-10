@@ -85,7 +85,7 @@ QPR_EEs <- function(
     dplyr::filter(HMIS::exited_between(., rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) &
              RelationshipToHoH == 1) %>%
     dplyr::left_join(smallMainstreamBenefits, by = "EnrollmentID") %>%
-    dplyr::select(ProjectName, FriendlyProjectName, PersonalID, HouseholdID, EntryDate,
+    dplyr::select(ProjectName, PersonalID, HouseholdID, EntryDate,
            EntryAdjust, MoveInDate, MoveInDateAdjust, ExitDate, ExitAdjust,
            InsuranceFromAnySource, BenefitsFromAnySource, DataCollectionStage,
            InformationDate, ProjectRegion, ProjectCounty, ProjectType) %>%
@@ -117,7 +117,7 @@ QPR_EEs <- function(
     dplyr::filter(HMIS::served_between(., rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) &
              RelationshipToHoH == 1) %>%
     dplyr::left_join(smallIncomeDiff, by = "EnrollmentID") %>%
-    dplyr::select(ProjectName, FriendlyProjectName, PersonalID, HouseholdID, EntryDate,
+    dplyr::select(ProjectName, PersonalID, HouseholdID, EntryDate,
            EntryAdjust, MoveInDate, MoveInDateAdjust, ExitDate, ExitAdjust,
            EntryIncome, RecentIncome, ProjectRegion, ProjectCounty, ProjectType) %>%
     dplyr::mutate(
