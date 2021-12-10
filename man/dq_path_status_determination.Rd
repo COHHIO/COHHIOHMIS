@@ -100,9 +100,8 @@ Other Clarity Checks:
 \code{\link{dq_vax}()},
 \code{\link{dq_veteran}()},
 \code{\link{dqu_project_small}()},
-\code{\link{overlaps_psh}()},
-\code{\link{overlaps_rrh}()},
-\code{\link{overlaps_same_day}()}
+\code{\link{overlaps_same_day}()},
+\code{\link{overlaps}()}
 }
 \concept{Clarity Checks}
 \concept{DQ: Path Checks}

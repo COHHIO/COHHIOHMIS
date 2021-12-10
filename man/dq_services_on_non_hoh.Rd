@@ -6,6 +6,7 @@
 \usage{
 dq_services_on_non_hoh(
   served_in_date_range,
+  Services,
   vars,
   rm_dates,
   guidance,
@@ -93,9 +94,8 @@ Other Clarity Checks:
 \code{\link{dq_vax}()},
 \code{\link{dq_veteran}()},
 \code{\link{dqu_project_small}()},
-\code{\link{overlaps_psh}()},
-\code{\link{overlaps_rrh}()},
-\code{\link{overlaps_same_day}()}
+\code{\link{overlaps_same_day}()},
+\code{\link{overlaps}()}
 
 Other DQ: Household Checks: 
 \code{\link{dq_hh_children_only}()},

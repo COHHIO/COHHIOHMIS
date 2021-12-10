@@ -6,11 +6,9 @@
 \usage{
 dq_overlaps(
   served_in_date_range,
-  Users,
   vars,
   guidance,
-  app_env = get_app_env(e = rlang::caller_env()),
-  unsh = FALSE
+  app_env = get_app_env(e = rlang::caller_env())
 )
 }
 \arguments{
@@ -92,21 +90,19 @@ Other Clarity Checks:
 \code{\link{dq_vax}()},
 \code{\link{dq_veteran}()},
 \code{\link{dqu_project_small}()},
-\code{\link{overlaps_psh}()},
-\code{\link{overlaps_rrh}()},
-\code{\link{overlaps_same_day}()}
+\code{\link{overlaps_same_day}()},
+\code{\link{overlaps}()}
 
 Other ServicePoint Checks: 
 \code{\link{dq_sp_hh_missing_rel_to_hoh}()},
 \code{\link{dq_sp_hh_too_many_hohs}()},
 \code{\link{dq_sp_missing_LoS}()},
 \code{\link{dq_sp_missing_client_location}()},
-\code{\link{overlaps_rrh}()}
+\code{\link{overlaps}()}
 
 Other DQ: Overlapping Enrollment/Move-In Dates: 
-\code{\link{overlaps_psh}()},
-\code{\link{overlaps_rrh}()},
-\code{\link{overlaps_same_day}()}
+\code{\link{overlaps_same_day}()},
+\code{\link{overlaps}()}
 }
 \concept{Clarity Checks}
 \concept{DQ: Overlapping Enrollment/Move-In Dates}

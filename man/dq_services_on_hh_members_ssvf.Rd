@@ -6,6 +6,7 @@
 \usage{
 dq_services_on_hh_members_ssvf(
   served_in_date_range,
+  Services,
   vars,
   guidance,
   app_env = get_app_env(e = rlang::caller_env())
@@ -26,7 +27,7 @@ dq_services_on_hh_members_ssvf(
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
 }
 \description{
-Find Services on Household Members in SSVF
+Users should not checkbox all the Household members when creating a Service Transaction. Only the Head of Household needs a Service Transaction. Delete any extraneous Service Transactions related to this project stay.
 }
 \seealso{
 Other Clarity Checks: 
@@ -90,9 +91,8 @@ Other Clarity Checks:
 \code{\link{dq_vax}()},
 \code{\link{dq_veteran}()},
 \code{\link{dqu_project_small}()},
-\code{\link{overlaps_psh}()},
-\code{\link{overlaps_rrh}()},
-\code{\link{overlaps_same_day}()}
+\code{\link{overlaps_same_day}()},
+\code{\link{overlaps}()}
 
 Other DQ: Household Checks: 
 \code{\link{dq_hh_children_only}()},

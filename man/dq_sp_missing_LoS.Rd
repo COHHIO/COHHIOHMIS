@@ -34,7 +34,7 @@ Other ServicePoint Checks:
 \code{\link{dq_sp_hh_missing_rel_to_hoh}()},
 \code{\link{dq_sp_hh_too_many_hohs}()},
 \code{\link{dq_sp_missing_client_location}()},
-\code{\link{overlaps_rrh}()}
+\code{\link{overlaps}()}
 
 Other DQ: Missing Data at Entry: 
 \code{\link{dq_detail_missing_disabilities}()},

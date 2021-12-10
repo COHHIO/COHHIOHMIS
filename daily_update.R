@@ -16,7 +16,6 @@
 devtools::load_all()
 # must set directories if using a directory structure differing from the default in clarity.looker:
 dirs <- clarity.looker::dirs
-guidance <- guidance
 # Use the HUD CSV from the UI until the Looker API is fixed
 dirs$export <- "data"
 cl_api$.__enclos_env__$self$dirs <- dirs
@@ -35,10 +34,13 @@ Rm_env <- covid19_plots()
 Rm_env <- prioritization()
 Rm_env <- bed_unit_utilization()
 Rm_env <- data_quality()
-Rm_env$write_app_deps(objs = Rm_env$app_objs$RminorElevated, path = file.path("data", "db", "RminorElevated"), dep_nms = Rm_env$app_deps$RminorElevated)
+Rm_env$write_app_deps(Rm_env$app_deps$RminorElevated,
+                      path = file.path("data", "db", "RminorElevated"))
 # Uses RminorElevated as the default
 Rm_env$dropbox_auth()
-Rm_env$deps_to_apps(dropbox = FALSE)
+Rm_env$deps_to_apps(c("dq_past_year",
+                      "dq_for_pe",
+                      "dq_main"), dropbox = FALSE)
 
 
 

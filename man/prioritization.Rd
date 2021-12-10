@@ -15,7 +15,6 @@ prioritization(
   Project,
   Referrals,
   Scores,
-  project_types,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
   app_env = get_app_env(e = rlang::caller_env())
 )
@@ -40,8 +39,6 @@ prioritization(
 \item{Referrals}{\code{(data.frame)} See \code{load_export}}
 
 \item{Scores}{\code{(data.frame)} See \code{load_export}}
-
-\item{project_types}{\code{(list)} See \code{cohorts}}
 
 \item{clarity_api}{\code{(clarity_api)} R6 Object containing the connection to the Clarity Looker instance.}
 

@@ -92,13 +92,11 @@ Other Clarity Checks:
 \code{\link{dq_vax}()},
 \code{\link{dq_veteran}()},
 \code{\link{dqu_project_small}()},
-\code{\link{overlaps_psh}()},
-\code{\link{overlaps_rrh}()}
+\code{\link{overlaps}()}
 
 Other DQ: Overlapping Enrollment/Move-In Dates: 
 \code{\link{dq_overlaps}()},
-\code{\link{overlaps_psh}()},
-\code{\link{overlaps_rrh}()}
+\code{\link{overlaps}()}
 }
 \concept{Clarity Checks}
 \concept{DQ: Overlapping Enrollment/Move-In Dates}

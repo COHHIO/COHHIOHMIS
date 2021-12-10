@@ -21,8 +21,6 @@ dq_sp_missing_client_location(
 }}
 
 \item{guidance}{\code{(list)} See \code{guidance}}
-
-\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \value{
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
@@ -36,6 +34,6 @@ Other ServicePoint Checks:
 \code{\link{dq_sp_hh_missing_rel_to_hoh}()},
 \code{\link{dq_sp_hh_too_many_hohs}()},
 \code{\link{dq_sp_missing_LoS}()},
-\code{\link{overlaps_rrh}()}
+\code{\link{overlaps}()}
 }
 \concept{ServicePoint Checks}

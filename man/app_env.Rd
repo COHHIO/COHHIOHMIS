@@ -9,9 +9,16 @@ Save dependencies for future functions in an environment and put app dependencie
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{app_objs}}{\code{(list)} with all app dependencies as objects}
+\item{\code{Dependency}}{environment}
 
 \item{\code{app_deps}}{\code{(list)} with all app dependencies as character vectors}
+}
+\if{html}{\out{</div>}}
+}
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{Dependency}}{environment}
 }
 \if{html}{\out{</div>}}
 }
@@ -69,7 +76,7 @@ Gather the objects passed to \code{app_env}s internal environment to be passed t
 \describe{
 \item{\code{...}}{\code{(objects)} Dependencies for subsequent functions, passed as named objects or a character of the object name. If no name is provided, the name of the object will be retained. Use \code{"everything"} to capture all objects from the parent environment.}
 
-\item{\code{app_deps}}{\code{(logical/character)} \strong{Default: \code{TRUE}} to save all app dependencies specified at initialization of the \code{app_env} object. Otherwise, a character vector of app dependencies to save.}
+\item{\code{app_deps}}{\code{(logical/list)} \strong{Default: \code{TRUE}} to save all app dependencies specified at initialization of the \code{app_env} object. Otherwise, a named list of the dependencies to save as a character vector with the list names corresponding to the apps for which to save the dependencies..}
 
 \item{\code{env}}{\code{(env)} The environment from which objects should be saved. \strong{Default: the calling environment}}
 
@@ -107,10 +114,8 @@ Set the given environment to inherit from the internal 'global' environment
 Write app dependencies to disk
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{app_env$write_app_deps(
-  ...,
-  objs,
+  deps,
   path = file.path("data", "db", "RminorElevated"),
-  dep_nms = NULL,
   overwrite = TRUE
 )}\if{html}{\out{</div>}}
 }
@@ -118,13 +123,9 @@ Write app dependencies to disk
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{...}}{\code{(objects)} objects to write to disk. Files will named after the object name.}
-
-\item{\code{objs}}{\code{(list)} of objects to write to disk, overrides \code{...}.}
+\item{\code{deps}}{\code{(character)} with names of app dependencies to write.}
 
 \item{\code{path}}{\code{(character)} of directory to write app dependencies to}
-
-\item{\code{dep_nms}}{\code{(character)} with names of app dependencies. \emph{Optional}}
 
 \item{\code{overwrite}}{\code{(logical)} Whether to overwrite existing files. \strong{Default:\code{TRUE}}}
 }
@@ -141,7 +142,7 @@ Write app dependencies to disk
 Transfer all files in the data dependencies folder to the applications via dropbox or \code{file.copy}. If using dropbox, requires an authorized token to dropbox. See \code{dropbox_auth}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{app_env$deps_to_apps(
-  ...,
+  deps = TRUE,
   folder = file.path("data", "db", "RminorElevated"),
   dest_folder = "RminorElevated",
   dropbox = TRUE
@@ -151,7 +152,7 @@ Transfer all files in the data dependencies folder to the applications via dropb
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{...}}{\code{(character)} character vectors of files to write to disk}
+\item{\code{deps}}{\code{(character/logical)} character vector of files to write to disk. Or \code{TRUE} \strong{Default} to use the list of app dependencies matching the \code{dest_folder} name.}
 
 \item{\code{folder}}{\code{(character)} path to folder with files to transfer transfer}
 
