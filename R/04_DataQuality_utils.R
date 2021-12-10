@@ -2055,7 +2055,7 @@ dq_missing_income <- function(served_in_date_range, IncomeBenefits, vars, guidan
 #' @family DQ: Overlapping Enrollment/Move-In Dates
 #' @inherit dq_overlaps params return description
 #' @export
-overlaps_same_day <- function(served_in_date_range, project_types, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
+overlaps_same_day <- function(served_in_date_range, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
@@ -2067,7 +2067,7 @@ overlaps_same_day <- function(served_in_date_range, project_types, vars, guidanc
     dplyr::mutate(
       EntryAdjust = dplyr::case_when(
         #for PSH and RRH, EntryAdjust = MoveInDate
-        ProjectType %in% c(1, 2, 8, 12) |
+        ProjectType %in% project_types$lh_hp |
           ProjectName == "Unsheltered Clients - OUTREACH" ~ EntryDate,
         ProjectType %in% project_types$ph &
           !is.na(MoveInDateAdjust) ~ MoveInDateAdjust,
@@ -2076,7 +2076,7 @@ overlaps_same_day <- function(served_in_date_range, project_types, vars, guidanc
       ),
       LiterallyInProject = dplyr::case_when(
         ProjectType %in% c(3, 9) ~ lubridate::interval(MoveInDateAdjust, ExitAdjust),
-        ProjectType %in% c(1, 2, 4, 8, 12) ~ lubridate::interval(EntryAdjust, ExitAdjust)
+        ProjectType %in% project_types$lh_hp_so ~ lubridate::interval(EntryAdjust, ExitAdjust)
       ),
       Issue = "Overlapping Project Stays",
       Type = "High Priority",
@@ -2988,7 +2988,7 @@ dqu_aps <- function(Project, Referrals, data_APs = TRUE, app_env = get_app_env(e
     app_env$set_parent(missing_fmls())
 
   co_APs <- Project |>
-    dplyr::filter(ProjectType == 14) |> # not incl Mah CE
+    dplyr::filter(ProjectType == project_types$ap) |> # not incl Mah CE
     dplyr::select(
       ProjectID,
       OperatingStartDate,
