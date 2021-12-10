@@ -2961,34 +2961,33 @@ dqu_aps <- function(Project, Referrals, data_APs = TRUE, app_env = get_app_env(e
       ProjectName,
       HMISParticipatingProject,
       ProjectCounty
-    )
+    ) |>
+    dplyr::distinct()
+  participating <- dplyr::filter(co_APs, as.logical(HMISParticipatingProject)) |>
+    unique() |>
+    dplyr::pull(ProjectID)
+  referring <- unique(Referrals$R_ReferringProjectID)
 
-  aps_no_referrals <- Referrals |>
-    dplyr::right_join(co_APs, by = c("R_ReferringProjectID" = "ProjectID")) |>
-    dplyr::filter(is.na(PersonalID)) |>
-    dplyr::select(R_ReferringProjectID) |>
-    unique()
+  aps_no_referrals <- setdiff(participating, referring)
+  aps_w_referrals <- intersect(participating, referring)
 
-  aps_with_referrals <- Referrals |>
-    dplyr::right_join(co_APs, by = c("R_ReferringProjectID" = "ProjectID")) |>
-    dplyr::filter(!is.na(PersonalID)) |>
-    dplyr::select(R_ReferringProjectID) |>
-    unique()
 
   if (data_APs) {
+    l <- c(no = length(aps_no_referrals), w = length(aps_w_referrals))
     out <- tibble::tibble(
       category = c("No Referrals", "Has Created Referrals"),
-      count = c(nrow(aps_no_referrals), nrow(aps_with_referrals)),
+      count = l,
       providertype = rep("Access Points"),
-      total = rep(c(
-        nrow(aps_no_referrals) + nrow(aps_with_referrals)
-      )),
+      total = rep(sum(l)),
       stringsAsFactors = FALSE
     ) |>
       dplyr::mutate(percent = count / total,
                     prettypercent = scales::percent(count / total))
   } else {
-    out <- aps_no_referrals
+    out <- co_APs |>
+      dplyr::filter(ProjectID %in% aps_no_referrals) |>
+      dplyr::select(ProjectID, ProjectName)
+
   }
 
   return(out)
