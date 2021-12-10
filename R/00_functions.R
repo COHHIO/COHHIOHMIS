@@ -54,33 +54,42 @@ make_link <- function(PersonalID, ID, chr = TRUE) {
 }
 
 #' @title Make UniqueID or EnrollmentID into a Clarity hyperlink
-#' @param x \code{(data.frame)} The following columns are required for the specified link type:
+#' @param .data \code{(data.frame)} The following columns are required for the specified link type:
 #' \itemize{
 #'   \item{\code{PersonalID & UniqueID}}{ for Profile link}
 #'   \item{\code{PersonalID & EnrollmentID}}{ for Enrollment link}
 #' }
 #' @param ID \code{(name)} unquoted of the column to unlink.
 #' @param unlink \code{(logical)} Whether to turn the link back into the respective columns from which it was made.
+#' @param new_ID \code{(name)} unquoted of the column to be created with the data from the linked column. (`PersonalID` will be recreated automatically if it doesn't exist).
+#' @inheritParams make_link
 #' @return \code{(data.frame)} With `UniqueID` or `EnrollmentID` as a link
 #' data.frame(a = letters, b = seq_along(letters)) |>  dplyr::mutate(a = make_link(a, b)) |> make_linked_df(a, unlink = TRUE)
 #' @export
-make_linked_df <- function(x, ID, unlink = FALSE) {
-  out <- x
+make_linked_df <- function(.data, ID, unlink = FALSE, new_ID, chr = TRUE) {
+  out <- .data
   ID <- rlang::enexpr(ID)
-  .col <- x[[ID]]
+  .col <- .data[[ID]]
+  if (is.null(.col))
+    rlang::abort(glue::glue("{as.character(ID)} not found in `.data`"), trace = rlang::trace_back())
 
   .type <- ifelse(any(stringr::str_detect(.col, ifelse(unlink, "profile", "[A-F0-9]{9}")), na.rm = TRUE), "profile", "enroll")
 
   if (unlink) {
-    if (!"PersonalID" %in% names(x))
+    # TODO handle shiny.tag
+    if (!any(stringr::str_detect(.col, "^\\<a"), na.rm = TRUE))
+      rlang::abort(glue::glue("{as.character(ID)} is not a link"))
+    if (!"PersonalID" %in% names(.data))
       out$PersonalID <- stringr::str_extract(.col, "(?<=client\\/)\\d+")
-    if (!as.character(ID) %in% names(x) || any(stringr::str_detect(.col, "^\\<a")))
+    if (!missing(new_ID))
+      ID <- rlang::enexpr(new_ID)
+    if (!as.character(ID) %in% names(.data))
       out[[ID]] <- stringr::str_extract(.col, switch(.type,
                                                         profile = "(?<=\\>)[:alnum:]+(?=\\<)",
                                                         enroll = "\\d+(?=\\/enroll)"))
   } else {
-    out <- x |>
-      dplyr::mutate(!!ID := make_link(PersonalID, !!ID))
+    out <- .data |>
+      dplyr::mutate(!!ID := make_link(PersonalID, !!ID, chr = chr))
   }
 
   out
