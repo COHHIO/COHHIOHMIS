@@ -100,7 +100,7 @@ data_quality <- function(check_fns = Rm_data::check_fns,
     arg_names <- arg_names[!purrr::map_lgl(rlang::fn_fmls(fn), is.logical)]
     arg_names <- arg_names[arg_names != c("app_env")]
 
-    .call <- rlang::call2(fn, !!!purrr::map(arg_names, ~rlang::expr(app_env$.__enclos_env__[[!!.x]])), app_env = NULL)
+    .call <- rlang::call2(fn, !!!purrr::map(arg_names, ~rlang::expr(app_env$dependencies[[!!.x]])), app_env = NULL)
 
     out <- rlang::eval_bare(.call)  |>
       dplyr::distinct(PersonalID, Issue, .keep_all = TRUE)
