@@ -410,44 +410,6 @@ dq_gender <- function(served_in_date_range, guidance = NULL, vars = NULL, app_en
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
-#' @title Data quality report on Veteran Status
-#' @family Clarity Checks
-#' @family DQ: Missing UDEs
-#' @describeIn data_quality_tables
-#' @inherit data_quality_tables params return
-
-dq_veteran <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
-  if (is_app_env(app_env))
-    app_env$set_parent(missing_fmls())
-  out <- served_in_date_range |>
-    dplyr::mutate(
-      Issue = dplyr::case_when(
-        (AgeAtEntry >= 18 | is.na(AgeAtEntry)) &
-          VeteranStatus == 99 ~ "Missing Veteran Status",
-        (AgeAtEntry >= 18 | is.na(AgeAtEntry)) &
-          VeteranStatus %in% c(8, 9) ~ "Don't Know/Refused Veteran Status",
-        (AgeAtEntry >= 18 | is.na(AgeAtEntry)) &
-          RelationshipToHoH == 1 &
-          VeteranStatus == 0 &
-          Destination %in% c(19, 28) ~ "Check Veteran Status for Accuracy"
-      ),
-      Type = dplyr::case_when(
-        Issue == "Missing Veteran Status" ~ "Error",
-        Issue %in% c(
-          "Don't Know/Refused Veteran Status",
-          "Check Veteran Status for Accuracy"
-        ) ~ "Warning"
-      ),
-      Guidance = dplyr::case_when(
-      Issue == "Check Veteran Status for Accuracy" ~ guidance$check_vet_status,
-      Issue == "Missing Veteran Status" ~ guidance$missing_pii,
-      Issue == "Don't Know/Refused Veteran Status" ~ guidance$dkr_data)
-    ) |>
-    dplyr::filter(!is.na(Issue)) |>
-    dplyr::select(dplyr::all_of(vars$we_want))
-}
-
-
 
 # Household Issues --------------------------------------------------------
 #' @title Find Households without adults
@@ -2770,6 +2732,54 @@ ssvf_served_in_date_range <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, se
         by = "PersonalID"
       )
   }
+
+#' @title Data quality report on Veteran Status
+#' @family Clarity Checks
+#' @family DQ: Missing UDEs
+#' @describeIn data_quality_tables
+#' @inherit data_quality_tables params return
+
+dq_veteran <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  adult = rlang::expr((AgeAtEntry >= 18 | is.na(AgeAtEntry)))
+  vet_expr <- rlang::exprs(
+    missing = !!adult &
+      VeteranStatus == 99,
+    dkr = !!adult &
+      VeteranStatus %in% c(8, 9),
+    check = !!adult &
+      RelationshipToHoH == 1 &
+      VeteranStatus == 0 &
+      Destination %in% c(19, 28),
+    .named = TRUE
+  )
+  out <- served_in_date_range |>
+    dplyr::group_by(PersonalID) |>
+    dplyr::mutate(AgeAtEntry = valid_max(AgeAtEntry)) |>
+    dplyr::ungroup() |>
+    dplyr::filter((!!vet_expr$missing) | (!!vet_expr$dkr) | (!!vet_expr$check)) |>
+    dplyr::mutate(
+      Issue = dplyr::case_when(
+        !!vet_expr$missing ~ "Missing Veteran Status",
+        !!vet_expr$dkr ~ "Don't Know/Refused Veteran Status",
+        !!vet_expr$check ~ "Check Veteran Status for Accuracy"
+      ),
+      Type = dplyr::case_when(
+        Issue == "Missing Veteran Status" ~ "Error",
+        Issue %in% c(
+          "Don't Know/Refused Veteran Status",
+          "Check Veteran Status for Accuracy"
+        ) ~ "Warning"
+      ),
+      Guidance = dplyr::case_when(
+        Issue == "Check Veteran Status for Accuracy" ~ guidance$check_vet_status,
+        Issue == "Missing Veteran Status" ~ guidance$missing_pii,
+        Issue == "Don't Know/Refused Veteran Status" ~ guidance$dkr_data)
+    ) |>
+    dplyr::select(dplyr::all_of(vars$we_want))
+}
+
 
 #' @title Check for missing Year Entered on clients who are Veterans
 #'
