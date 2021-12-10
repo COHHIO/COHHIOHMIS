@@ -57,6 +57,7 @@ data_quality <- function(check_fns = Rm_data::check_fns,
 
   vars <- list()
   vars$prep <- c(
+    "EnrollmentID",
     "EntryAdjust",
     "EntryDate",
     "ExitDate",
