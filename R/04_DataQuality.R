@@ -352,7 +352,7 @@ if (is_clarity()) {
 #          Guidance = guidance$missing_at_entry) %>%
 #   select(all_of(vars$we_want))
 
-dq_providers <- sort(projects_current_hmis$ProjectName)
+dq_providers <- rlang::set_names(projects_current_hmis$ProjectID, projects_current_hmis$ProjectName)[order(projects_current_hmis$ProjectName)]
 
 # APs without referrals ----
 # Mon Sep 20 16:31:46 2021

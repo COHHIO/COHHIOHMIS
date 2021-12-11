@@ -271,7 +271,7 @@ app_env <- R6::R6Class(
             # Add Client_filter for all dependencies to ensure test clients are removed from reporting
             rlang::env_bind(self$dependencies, !!!.work_deps)
 
-            cli::cli_alert_success(paste0(.y, ": ", paste0(.x, collapse = ", ")))
+            cli::cli_alert_success(paste0(.y, ": ", paste0(names(.work_deps), collapse = ", ")))
           }
         })
       }
