@@ -229,7 +229,7 @@ vet_active <- function(
                         dplyr::distinct() |>
                         chronic_determination() |>
                         dplyr::rename(HoHChronicStatus = ChronicStatus),
-                      by = c("HouseholdID"), suffix = c("", "V_")) |>
+                      by = c("HouseholdID"), suffix = c("", "_V")) |>
     dplyr::select(PersonalID, HoHChronicStatus) |>
     dplyr::arrange(HoHChronicStatus) |>
     dplyr::group_by(PersonalID) |>
@@ -253,18 +253,18 @@ vet_active <- function(
 
   combined <- enrollments_to_use |>
     dplyr::filter(ProjectType %in% project_types$lh) |>
-    dplyr::rename_with(.cols = - PersonalID, .fn = ~{paste0("LH_",.x)}) |>
+    dplyr::rename_with(.cols = - PersonalID, .fn = ~{paste0(.x,"_LH")}) |>
 
     dplyr::mutate(transitional_housing_entry =
-                    dplyr::case_when(LH_ProjectType == 2 &
-                                       grepl("Since", LH_TimeInProject) ~ LH_EntryDate)) |>
+                    dplyr::case_when(ProjectType_LH == 2 &
+                                       grepl("Since", TimeInProject_LH) ~ EntryDate_LH)) |>
     dplyr::full_join(enrollments_to_use |>
                        dplyr::filter(ProjectType %in% project_types$ph),
-                     by = "PersonalID", suffix = c("", "PH_")) |>
+                     by = "PersonalID", suffix = c("", "_PH")) |>
     dplyr::full_join(enrollments_to_use |>
                        dplyr::filter(!ProjectType %in% project_types$lh &
                                        !ProjectType %in% project_types$ph),
-                     by = "PersonalID", suffix = c("", "O_")) |>
+                     by = "PersonalID", suffix = c("", "_O")) |>
     dplyr::select(!dplyr::contains(c("ProjectType", "EntryDate")))
 
 
@@ -371,8 +371,9 @@ vet_active <- function(
             )
           ),
         ListStatus = dplyr::case_when(
-          stringr::str_detect(LH_TimeInProject, "Since") ~ "Active - ES/TH",
-          ListStatus == "Inactive (Uknown/Missing)" ~ "Inactive (Unknown/Missing)",
+          stringr::str_detect(TimeInProject_LH, "Since") ~ "Active - ES/TH",
+
+          is.na(ListStatus) ~ "No Status Set",
           TRUE ~ ListStatus
         )
       ) |>
