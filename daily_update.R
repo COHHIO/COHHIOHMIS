@@ -24,24 +24,24 @@ Rm_env$gather_deps(dirs)
 run_bg(bg_scripts["update_extras"])
 # Try services
 # rstudioapi::jobRunScript(file.path("inst","src","Services_test.R"), importEnv = TRUE, workingDir = getwd())
-
 Rm_env <- dates()
 Rm_env <- load_export()
 Rm_env <- cohorts()
 Rm_env <- client_counts()
 Rm_env <- covid19()
 Rm_env <- covid19_plots()
-Rm_env <- prioritization()
+Rm_env <- vets()
 Rm_env <- vet_active()
+Rm_env <- prioritization()
 Rm_env <- bed_unit_utilization()
 Rm_env <- data_quality()
+beepr::beep(sound = 3)
+
 Rm_env$write_app_deps(Rm_env$app_deps$RminorElevated,
                       path = file.path("data", "db", "RminorElevated"))
 # Uses RminorElevated as the default
 Rm_env$dropbox_auth()
-Rm_env$deps_to_apps(c("dq_past_year",
-                      "dq_for_pe",
-                      "dq_main"), dropbox = FALSE)
+Rm_env$deps_to_apps(dropbox = FALSE)
 
 
 

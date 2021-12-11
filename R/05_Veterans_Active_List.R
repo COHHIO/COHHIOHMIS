@@ -260,11 +260,13 @@ vet_active <- function(
                                        grepl("Since", TimeInProject_LH) ~ EntryDate_LH)) |>
     dplyr::full_join(enrollments_to_use |>
                        dplyr::filter(ProjectType %in% project_types$ph),
-                     by = "PersonalID", suffix = c("", "_PH")) |>
+                     by = "PersonalID") |>
+    dplyr::rename_with(.cols = c(- PersonalID, - tidyselect::ends_with("_LH")), .fn = ~{paste0(.x,"_PH")}) |>
     dplyr::full_join(enrollments_to_use |>
                        dplyr::filter(!ProjectType %in% project_types$lh &
-                                       !ProjectType %in% project_types$ph),
-                     by = "PersonalID", suffix = c("", "_O")) |>
+                                       !ProjectType %in% project_types$ph) |>
+                       dplyr::rename_with(.cols = - PersonalID, .fn = ~{paste0(.x,"_O")}),
+                     by = "PersonalID") |>
     dplyr::select(!dplyr::contains(c("ProjectType", "EntryDate")))
 
 
@@ -378,7 +380,29 @@ vet_active <- function(
         )
       ) |>
       dplyr::left_join(responsible_providers, by = "County") |>
-      unique()
+      unique() |>
+      dplyr::mutate(PH = dplyr::if_else(!is.na(ProjectName_PH) & !is.na(TimeInProject_PH), paste0(
+        "<span style='background-color:lavenderblush;'>",
+        ProjectName_PH,
+        ": ",
+        TimeInProject_PH,
+        "</span><br>"
+      ), "", ""),
+      LH = dplyr::if_else(!is.na(ProjectName_LH) & !is.na(TimeInProject_LH), paste0(
+        "<span style='background-color:lightgoldenrodyellow;'>",
+        ProjectName_LH,
+        ": ",
+        TimeInProject_LH,
+        "</span><br>"
+      ), "", ""),
+      O = dplyr::if_else(!is.na(ProjectName_O) & !is.na(TimeInProject_O), paste0(
+        "<span style='background-color:paleturquoise;'>",
+        ProjectName_O,
+        ": ",
+        TimeInProject_O,
+        "</span><br>"
+      ), "", ""),
+      Enrollments = paste0(PH, LH, O))
 
   # Currently Homeless Vets -------------------------------------------------
 
