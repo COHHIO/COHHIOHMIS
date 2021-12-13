@@ -125,10 +125,11 @@ vet_active <- function(
     unique()
 
   # Notes -------------------------------------------------------------------
+browser()
   small_CLS <- Contacts |>
-    dplyr::mutate("Notes" = paste0(ContactDate, " - CLS: ", CurrentLivingSituation,"\n","Detail: ", LocationDetails)) |>
     dplyr::group_by(PersonalID) |>
     dplyr::arrange(dplyr::desc(ContactDate)) |>
+    dplyr::mutate(Notes = paste0(dplyr::if_else(!is.na(ContactDate) & !is.na(CurrentLivingSituation), paste0(ContactDate, " - ", "CLS: ", stringr::str_remove(CurrentLivingSituation, "\\(.*\\)"), dplyr::if_else(!is.na(LocationDetails), paste0("\nDetails: ", LocationDetails), "")), NA_character_))) |>
     dplyr::select(PersonalID, Notes) |>
     dplyr::summarise(Notes = paste0(Notes, collapse = "\n"), .groups = "drop")
 
