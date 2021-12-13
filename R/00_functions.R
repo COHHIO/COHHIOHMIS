@@ -95,7 +95,9 @@ make_linked_df <- function(.data, ID, unlink = FALSE, new_ID, chr = TRUE) {
   out
 }
 
-
+glue_skip_NA <- function(.data, str_expr) {
+  glue::glue_data(na.omit(.data), str_expr)
+}
 
 # stop_with_instructions ----
 # Wed Mar 24 16:38:01 2021
