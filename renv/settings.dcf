@@ -2,7 +2,7 @@ ignored.packages: tidyverse, broom, dbplyr, dtplyr, forcats, gargle, uuid,
     googledrive, ids, googlesheets4, haven, modelr, reprex, selectr, rvest,
     sinew, jobs, timeR, sodium, filelock, keyring, shinyjs, datapasta, collapse,
     rlist, XML, htmltools, later, cachem, bslib, fontawesome, stringi, shiny,
-    lineprof, lobstr, pryr
+    lineprof, lobstr, pryr, beepr, audio
 package.dependency.fields: Imports, Depends, LinkingTo
 r.version: >= 4.1.0
 snapshot.type: explicit

@@ -2133,7 +2133,7 @@ sum_enroll_overlap <- function(PersonalID, EnrollmentID, Stay) {
 #' @family DQ: Overlapping Enrollment/Move-In Dates
 #' @inherit dq_overlaps params return description
 #' @export
-moverlaps <- function(served_in_date_range, p_types = project_types$ph, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
+overlaps <- function(served_in_date_range, p_types = project_types$ph, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   out <- served_in_date_range |>
@@ -2152,7 +2152,7 @@ moverlaps <- function(served_in_date_range, p_types = project_types$ph, vars, gu
       Type = "High Priority",
       Guidance = eval(parse(text = guidance$project_stays_eval))
     ) |>
-    make_linked_df(EnrollmentID, unlink = TRUE) |>
+    make_linked_df(Overlaps, unlink = TRUE, new_ID = EnrollmentID) |>
     dplyr::left_join(
       dplyr::select(served_in_date_range, EnrollmentID, ExitDate, EntryDate, ProjectID, MoveInDateAdjust)
     , by = "EnrollmentID")
@@ -2201,7 +2201,7 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
     dplyr::mutate(Issue = "Overlapping Project Stay & Move-In",
                   Type = "High Priority",
                   Guidance = eval(parse(text = guidance$project_stays_eval)))  |>
-    make_linked_df(EnrollmentID, unlink = TRUE) |>
+    make_linked_df(Overlaps, unlink = TRUE, new_ID = EnrollmentID) |>
     dplyr::left_join(
       dplyr::select(served_in_date_range, EnrollmentID, ExitDate, EntryDate, ProjectID),
       by = "EnrollmentID")
