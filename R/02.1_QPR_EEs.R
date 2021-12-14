@@ -89,7 +89,7 @@ QPR_EEs <- function(
            EntryAdjust, MoveInDate, MoveInDateAdjust, ExitDate, ExitAdjust,
            InsuranceFromAnySource, BenefitsFromAnySource, DataCollectionStage,
            InformationDate, ProjectRegion, ProjectCounty, ProjectType) %>%
-    dplyr::mutate(ProjectType = hud.extract::hud_translations$`2.02.6 ProjectType`(ProjectType)) %>%
+    dplyr::mutate(ProjectType = HMIS::hud_translations$`2.02.6 ProjectType`(ProjectType)) %>%
     dplyr::arrange(ProjectName, HouseholdID)
 
   incomeMostRecent <- IncomeBenefits %>%
@@ -122,7 +122,7 @@ QPR_EEs <- function(
            EntryIncome, RecentIncome, ProjectRegion, ProjectCounty, ProjectType) %>%
     dplyr::mutate(
       Difference = RecentIncome - EntryIncome,
-      ProjectType = hud.extract::hud_translations$`2.02.6 ProjectType`(ProjectType)
+      ProjectType = HMIS::hud_translations$`2.02.6 ProjectType`(ProjectType)
     ) %>%
     dplyr::arrange(ProjectName, HouseholdID)
 

@@ -701,8 +701,8 @@ prioritization <- prioritization |>
 # Clean the House ---------------------------------------------------------
 prioritization <- prioritization |>
   dplyr::mutate(
-    dplyr::across(dplyr::all_of(c("VeteranStatus", "DisabilityInHH")), hud.extract::hud_translations$`1.8 No_Yes_Reasons for Missing Data`),
-    IncomeFromAnySource = hud.extract::hud_translations$`1.8 No_Yes_Reasons for Missing Data`(IncomeInHH),
+    dplyr::across(dplyr::all_of(c("VeteranStatus", "DisabilityInHH")), HMIS::hud_translations$`1.8 No_Yes_Reasons for Missing Data`),
+    IncomeFromAnySource = HMIS::hud_translations$`1.8 No_Yes_Reasons for Missing Data`(IncomeInHH),
     TAY = dplyr::case_when(TAY == 1 ~ "Yes",
                     TAY == 0 ~ "No",
                     is.na(TAY) ~ "Unknown"),

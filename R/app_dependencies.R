@@ -74,8 +74,6 @@ app_deps <- list(
     "dq_providers",
     "enhanced_yes_no_translator",
     "guidance",
-    "HUD_specs",
-    "living_situation",
     "Organization",
     # "pe_increase_income",
     "pe_exits_to_ph",
@@ -320,9 +318,9 @@ app_env <- R6::R6Class(
           fp <- file.path(path, paste0(.x, UU::object_ext(o)))
         if (overwrite || !file.exists(fp)) {
           if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "UniqueID") %in% names(o))) && is_clarity())
-            o <- make_linked_df(o, UniqueID)
+            o <- clarity.looker::make_linked_df(o, UniqueID)
           if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "EnrollmentID") %in% names(o))) && is_clarity())
-            o <- make_linked_df(o, EnrollmentID)
+            o <- clarity.looker::make_linked_df(o, EnrollmentID)
           rlang::exec(UU::object_fn(o), o, fp)
           stopifnot(file.info(fp)$mtime > Sys.Date())
         }

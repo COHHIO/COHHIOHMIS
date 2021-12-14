@@ -138,8 +138,8 @@ dq_main <- do.call(rbind, dqs) |>
 cli::cli_progress_update(id = .pid,,
                          status = "Finish dq_main")
 if (is_clarity()) {
-  dq_main <- make_linked_df(dq_main, UniqueID)
-  dq_main <- make_linked_df(dq_main, EnrollmentID)
+  dq_main <- clarity.looker::make_linked_df(dq_main, UniqueID)
+  dq_main <- clarity.looker::make_linked_df(dq_main, EnrollmentID)
 }
 
 
@@ -168,8 +168,8 @@ eligibility_detail <- dq_check_eligibility()
 
 
 if (is_clarity()) {
-  eligibility_detail <- make_linked_df(eligibility_detail, UniqueID)
-  eligibility_detail <- make_linked_df(eligibility_detail, EnrollmentID)
+  eligibility_detail <- clarity.looker::make_linked_df(eligibility_detail, UniqueID)
+  eligibility_detail <- clarity.looker::make_linked_df(eligibility_detail, EnrollmentID)
 }
 
 # TODO See note in dq_overlaps

@@ -378,7 +378,7 @@ pe_create_APs = function(provider_extras, ProjectCoC, dirs, app_env = get_app_en
 #' @return \code{(data.frame)}
 
 pe_add_ProjectType <- function(provider_extras) {
-  PT <- hud.extract::hud_translations$`2.02.6 ProjectType`(table = TRUE) |>
+  PT <- HMIS::hud_translations$`2.02.6 ProjectType`(table = TRUE) |>
     tibble::add_row(Value = 12, Text = "Homeless Prevention")
   purrr::map_dbl(provider_extras$ProjectTypeCode, ~PT$Value[agrepl(stringr::str_remove(.x, "\\s\\([\\w\\s]+\\)$"), PT$Text)])
   provider_extras |>
@@ -394,7 +394,7 @@ pe_add_ProjectType <- function(provider_extras) {
 #' @return
 #' @export
 pe_add_GrantType = function(provider_extras) {
-  hash <- hud.extract::hud_translations$`2.06.1 FundingSource`(table = TRUE)
+  hash <- HMIS::hud_translations$`2.06.1 FundingSource`(table = TRUE)
 
   gt <- list(HOPWA = c(13:19), PATH = 21, SSVF = 33, RHY = 22:26)
   provider_extras |>

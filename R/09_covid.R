@@ -213,7 +213,7 @@ vaccine_needs_second_dose <- dose_counts %>%
           "on",
           ExitDate,
           "to",
-          living_situation(Destination),
+          HMIS::hud_translations$`3.12.1 Living Situation Option List`(Destination),
           "Contact info:",
           VaccineContactInfo
         )
