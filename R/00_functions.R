@@ -13,90 +13,36 @@
 # <https://www.gnu.org/licenses/>.
 
 
-#' @title Make a Clarity link using the `PersonalID` and `UniqueID/EnrollmentID`
-#' @description If used in a \link[DT]{datatable}, set `escape = FALSE`
-#' @param PersonalID \code{(character)} The `PersonalID` column
-#' @param ID \code{(character)} The `UniqueID/EnrollmentID` column
-#' @param chr \code{(logical)} Whether to output a character or a `shiny.tag` if `FALSE`. **Default** TRUE
+#' @title Does a vector/data.frame have no values?
 #'
-#' @return \code{(character/shiny.tag)} If `PersonalID` is a character vector (IE nested in a mutate), and `chr = TRUE` a character vector, if `chr = FALSE` a `shiny.tag`. The `ID` column will be replaced with the link.
+#' @param x \code{(data.frame/vector)}
+#'
+#' @return \code{(logical)}
 #' @export
-#'
-#' @examples
-#' data.frame(a = letters, b = seq_along(letters)) |>  dplyr::mutate(a = make_link(a, b))
 
-
-make_link <- function(PersonalID, ID, chr = TRUE) {
-  href <- getOption("HMIS")$Clarity_URL
-  .type <- ifelse(any(stringr::str_detect(ID, "[A-F]"), na.rm = TRUE), "profile", "enroll")
-  sf_args <- switch(.type,
-         profile = list("<a href=\"%s/client/%s/profile\" target=\"_blank\">%s</a>", href, PersonalID, ID),
-         enroll = list("<a href=\"%s/clients/%s/program/%s/enroll\" target=\"_blank\">%s</a>", href, PersonalID, ID, ID))
-  if (chr) {
-    out <- do.call(sprintf, sf_args)
-  } else {
-    href <- httr::parse_url(href)
-    if (!identical(length(PersonalID), length(ID))) {
-      l <- list(PersonalID = PersonalID, ID = ID)
-      big <- which.max(purrr::map_int(l, length))
-      i <- seq_along(l)
-      small <- subset(i, subset = i != big)
-      assign(names(l)[small], rep(l[[small]], length(l[[big]])))
-    }
-    out <- purrr::map2(PersonalID, ID, ~{
-      href$path <- switch(.type,
-                          profile = c("client",.x, "profile"),
-                          enroll = c("clients",.x, "program", .y, "enroll"))
-      htmltools::tags$a(href = httr::build_url(href), .y, target = "_blank")
-    })
-  }
-  out
+is_zero <- function(x) {
+  UseMethod("is_zero")
 }
 
-#' @title Make UniqueID or EnrollmentID into a Clarity hyperlink
-#' @param .data \code{(data.frame)} The following columns are required for the specified link type:
-#' \itemize{
-#'   \item{\code{PersonalID & UniqueID}}{ for Profile link}
-#'   \item{\code{PersonalID & EnrollmentID}}{ for Enrollment link}
-#' }
-#' @param ID \code{(name)} unquoted of the column to unlink.
-#' @param unlink \code{(logical)} Whether to turn the link back into the respective columns from which it was made.
-#' @param new_ID \code{(name)} unquoted of the column to be created with the data from the linked column. (`PersonalID` will be recreated automatically if it doesn't exist).
-#' @inheritParams make_link
-#' @return \code{(data.frame)} With `UniqueID` or `EnrollmentID` as a link
-#' data.frame(a = letters, b = seq_along(letters)) |>  dplyr::mutate(a = make_link(a, b)) |> make_linked_df(a, unlink = TRUE)
 #' @export
-make_linked_df <- function(.data, ID, unlink = FALSE, new_ID, chr = TRUE) {
-  out <- .data
-  ID <- rlang::enexpr(ID)
-  .col <- .data[[ID]]
-  if (is.null(.col))
-    rlang::abort(glue::glue("{as.character(ID)} not found in `.data`"), trace = rlang::trace_back())
-
-  .type <- ifelse(any(stringr::str_detect(.col, ifelse(unlink, "profile", "[A-F0-9]{9}")), na.rm = TRUE), "profile", "enroll")
-
-  if (unlink) {
-    # TODO handle shiny.tag
-    if (!any(stringr::str_detect(.col, "^\\<a"), na.rm = TRUE))
-      rlang::abort(glue::glue("{as.character(ID)} is not a link"))
-    if (!"PersonalID" %in% names(.data))
-      out$PersonalID <- stringr::str_extract(.col, "(?<=client\\/)\\d+")
-    if (!missing(new_ID))
-      ID <- rlang::enexpr(new_ID)
-    if (!as.character(ID) %in% names(.data))
-      out[[ID]] <- stringr::str_extract(.col, switch(.type,
-                                                        profile = "(?<=\\>)[:alnum:]+(?=\\<)",
-                                                        enroll = "\\d+(?=\\/enroll)"))
-  } else {
-    out <- .data |>
-      dplyr::mutate(!!ID := make_link(PersonalID, !!ID, chr = chr))
-  }
-
-  out
+is_zero.data.frame <- function(x) {
+  nrow(x) == 0
 }
 
-glue_skip_NA <- function(.data, str_expr) {
-  glue::glue_data(na.omit(.data), str_expr)
+#' @export
+is_zero.default <- function(x) {
+  length(x) == 0
+}
+
+glue_skip_NA <- function(..., str_expr, na = "omit") {
+  .data <- tibble::tibble(...)
+  if (!nchar(na))
+    is.na(.data) <- ""
+  .d <- na.omit(.data)
+  if (!is_zero(.d))
+    glue::glue_data(.d, str_expr)
+  else
+    ""
 }
 
 # stop_with_instructions ----
@@ -262,50 +208,50 @@ freeze_pe <- function(dir, overwrite = FALSE) {
 
 
 
-
-living_situation <- function(ReferenceNo) {
-  dplyr::case_when(
-    ReferenceNo == 1 ~ "Emergency shelter/ h/motel paid for by a third party/Host Home shelter",
-    ReferenceNo == 2 ~ "Transitional housing",
-    ReferenceNo == 3 ~ "Permanent housing (other than RRH) for formerly homeless persons",
-    ReferenceNo == 4 ~ "Psychiatric hospital/ other psychiatric facility",
-    ReferenceNo == 5 ~ "Substance abuse treatment facility or detox center",
-    ReferenceNo == 6 ~ "Hospital or other residential non-psychiatric medical facility",
-    ReferenceNo == 7 ~ "Jail/prison/juvenile detention",
-    ReferenceNo == 8 ~ "Client doesn't know",
-    ReferenceNo == 9 ~ "Client refused",
-    ReferenceNo == 32 ~ "Host Home (non-crisis)",
-    ReferenceNo == 13 ~ "Staying or living with friends, temporary tenure",
-    ReferenceNo == 36 ~ "Staying or living in a friend's room, apartment or house",
-    ReferenceNo == 18 ~ "Safe Haven",
-    ReferenceNo == 15 ~ "Foster care home of foster care group home",
-    ReferenceNo == 12 ~ "Staying or living with family, temporary tenure",
-    ReferenceNo == 25 ~ "Long-term care facility or nursing home",
-    ReferenceNo == 22 ~ "Staying or living with family, permanent tenure",
-    ReferenceNo == 35 ~ "Staying or living in a family member's room, apartment, or house",
-    ReferenceNo == 16 ~ "Place not meant for habitation",
-    ReferenceNo == 23 ~ "Staying or living with friends, permanent tenure",
-    ReferenceNo == 29 ~ "Residential project or halfway house with no homeless criteria",
-    ReferenceNo == 14 ~ "H/Motel paid for by household",
-    ReferenceNo == 26 ~ "Moved from one HOPWA funded project to HOPWA PH",
-    ReferenceNo == 27 ~ "Moved from HOPWA funded project to HOPWA TH",
-    ReferenceNo == 28 ~ "Rental by client, with GPD TIP housing subsidy",
-    ReferenceNo == 19 ~ "Rental by client, with VASH housing subsidy",
-    ReferenceNo == 31 ~ "Rental by client, with RRH or equivalent subsidy",
-    ReferenceNo == 33 ~ "Rental by client, with HCV voucher",
-    ReferenceNo == 34 ~ "Rental by client in a public housing unit",
-    ReferenceNo == 10 ~ "Rental by client, no ongoing housing subsidy",
-    ReferenceNo == 20 ~ "Rental by client, with other ongoing housing subsidy",
-    ReferenceNo == 21 ~ "Owned by client, with ongoing housing subsidy",
-    ReferenceNo == 11 ~ "Owned by client, no ongoing housing subsidy",
-    ReferenceNo == 30 ~ "No exit interview completed",
-    ReferenceNo == 17 ~ "Other",
-    ReferenceNo == 24 ~ "Deceased",
-    ReferenceNo == 37 ~ "Worker unable to determine",
-    ReferenceNo == 99 ~ "Data not collected"
-  )
-}
-# Deprecated, used hud.extract::hud_translations$`2.02.6 ProjectType` instead
+# Deprecated, use HMIS::hud_translations$`3.12.1 Living Situation Option List` instead
+# living_situation <- function(ReferenceNo) {
+#   dplyr::case_when(
+#     ReferenceNo == 1 ~ "Emergency shelter/ h/motel paid for by a third party/Host Home shelter",
+#     ReferenceNo == 2 ~ "Transitional housing",
+#     ReferenceNo == 3 ~ "Permanent housing (other than RRH) for formerly homeless persons",
+#     ReferenceNo == 4 ~ "Psychiatric hospital/ other psychiatric facility",
+#     ReferenceNo == 5 ~ "Substance abuse treatment facility or detox center",
+#     ReferenceNo == 6 ~ "Hospital or other residential non-psychiatric medical facility",
+#     ReferenceNo == 7 ~ "Jail/prison/juvenile detention",
+#     ReferenceNo == 8 ~ "Client doesn't know",
+#     ReferenceNo == 9 ~ "Client refused",
+#     ReferenceNo == 32 ~ "Host Home (non-crisis)",
+#     ReferenceNo == 13 ~ "Staying or living with friends, temporary tenure",
+#     ReferenceNo == 36 ~ "Staying or living in a friend's room, apartment or house",
+#     ReferenceNo == 18 ~ "Safe Haven",
+#     ReferenceNo == 15 ~ "Foster care home of foster care group home",
+#     ReferenceNo == 12 ~ "Staying or living with family, temporary tenure",
+#     ReferenceNo == 25 ~ "Long-term care facility or nursing home",
+#     ReferenceNo == 22 ~ "Staying or living with family, permanent tenure",
+#     ReferenceNo == 35 ~ "Staying or living in a family member's room, apartment, or house",
+#     ReferenceNo == 16 ~ "Place not meant for habitation",
+#     ReferenceNo == 23 ~ "Staying or living with friends, permanent tenure",
+#     ReferenceNo == 29 ~ "Residential project or halfway house with no homeless criteria",
+#     ReferenceNo == 14 ~ "H/Motel paid for by household",
+#     ReferenceNo == 26 ~ "Moved from one HOPWA funded project to HOPWA PH",
+#     ReferenceNo == 27 ~ "Moved from HOPWA funded project to HOPWA TH",
+#     ReferenceNo == 28 ~ "Rental by client, with GPD TIP housing subsidy",
+#     ReferenceNo == 19 ~ "Rental by client, with VASH housing subsidy",
+#     ReferenceNo == 31 ~ "Rental by client, with RRH or equivalent subsidy",
+#     ReferenceNo == 33 ~ "Rental by client, with HCV voucher",
+#     ReferenceNo == 34 ~ "Rental by client in a public housing unit",
+#     ReferenceNo == 10 ~ "Rental by client, no ongoing housing subsidy",
+#     ReferenceNo == 20 ~ "Rental by client, with other ongoing housing subsidy",
+#     ReferenceNo == 21 ~ "Owned by client, with ongoing housing subsidy",
+#     ReferenceNo == 11 ~ "Owned by client, no ongoing housing subsidy",
+#     ReferenceNo == 30 ~ "No exit interview completed",
+#     ReferenceNo == 17 ~ "Other",
+#     ReferenceNo == 24 ~ "Deceased",
+#     ReferenceNo == 37 ~ "Worker unable to determine",
+#     ReferenceNo == 99 ~ "Data not collected"
+#   )
+# }
+# Deprecated, use HMIS::hud_translations$`2.02.6 ProjectType` instead
 # project_type <- function(ReferenceNo){
 #   dplyr::case_when(
 #     ReferenceNo == 1 ~ "Emergency Shelter",
