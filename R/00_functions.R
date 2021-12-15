@@ -161,11 +161,7 @@ increment <- function(..., cenv = rlang::caller_env()) {
 
 age_years <- function(earlier, later)
 {
-  lubridate::as.duration(later - earlier) |>
-    as.character() |>
-    stringr::str_extract("\\d{1,3}\\.\\d{1,2}(?=\\syears\\))") |>
-    as.numeric() |>
-    round()
+  round(lubridate::as.duration(later - earlier) / lubridate::dyears(1))
 }
 
 #' @title Copy files to directory
