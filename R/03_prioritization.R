@@ -50,7 +50,7 @@ co_currently_homeless <- co_clients_served |>
   dplyr::filter((is.na(ExitDate) |
             ExitDate > lubridate::today()) &
            (ProjectType %in% c(4, project_types$lh) |
-              ProjectType %in% c(project_types$ph))) |>
+              ProjectType %in% project_types$ph)) |>
   dplyr::select(
     PersonalID,
     UniqueID,
@@ -209,7 +209,9 @@ co_currently_homeless <- co_currently_homeless |>
     IncomeInHH = dplyr::if_else(IncomeInHH == 100, 1L, IncomeInHH),
     DisabilityInHH = max(dplyr::if_else(any_disability == 1, 1, 0)),
     ChronicStatus = dplyr::if_else(max(SinglyChronic) == 1, "Chronic", "Not Chronic"),
-    MoveInDateAdjust = valid_movein_max(MoveInDateAdjust, EntryDate)
+    MaxMD = valid_max(MoveInDateAdjust),
+    MaxED = valid_max(EntryDate),
+    NewlyHomeless = EntryDate > MaxMD
   ) |>
   dplyr::ungroup() |>
   dplyr::select(
@@ -219,6 +221,9 @@ co_currently_homeless <- co_currently_homeless |>
     "ProjectType",
     "HouseholdID",
     "EnrollmentID",
+    "MaxED",
+    "MaxMD",
+    "NewlyHomeless",
     "RelationshipToHoH",
     "VeteranStatus",
     "EntryDate",
@@ -334,7 +339,7 @@ prioritization <- prioritization |>
   dplyr::mutate(correctedhoh = dplyr::if_else(is.na(correctedhoh), 0L, 1L),
          HH_DQ_Issue = as.logical(max(correctedhoh))) |>
   dplyr::ungroup() |>
-  dplyr::filter(correctedhoh == 1 | RelationshipToHoH == 1)
+  dplyr::filter(correctedhoh == 1 | RelationshipToHoH == 1 | NewlyHomeless)
 
 # COVID-19 ----------------------------------------------------------------
 
@@ -541,7 +546,6 @@ prioritization <- prioritization |>
   ))
 
 # THIS IS WHERE WE'RE SUMMARISING BY HOUSEHOLD (after all the group_bys)
-
 prioritization <- prioritization |>
   dplyr::mutate(
     HoH_Adjust = dplyr::case_when(HH_DQ_Issue == 1L ~ correctedhoh,
@@ -550,6 +554,7 @@ prioritization <- prioritization |>
   dplyr::filter(HoH_Adjust == 1 &
                 is.na(MoveInDateAdjust)) |>
   dplyr::select(-correctedhoh, -RelationshipToHoH, -hoh, -HoH_Adjust)
+
 
 # Add Referral Status -----------------------------------------------------
 
@@ -626,7 +631,7 @@ prioritization_colors <- c(
     ptc_has_entry = PTCStatus == "Has Entry into RRH or PSH",
     ptc_no_entry = PTCStatus == "Currently Has No Entry into RRH or PSH",
     is_lh = (R_ReferralConnectedPTC %|% ProjectType) %in% c(project_types$lh, 4, 11),
-    moved_in = !is.na(MoveInDateAdjust),
+    moved_in = !is.na(MoveInDateAdjust) & MoveInDateAdjust >= EntryDate,
     referredproject = !is.na(R_ReferralConnectedProjectName),
     ph_track = !is.na(PHTrack) & PHTrack != "None"
   )
