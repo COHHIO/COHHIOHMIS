@@ -1589,7 +1589,7 @@ dq_path_reason_missing <- function(served_in_date_range, vars, app_env = get_app
 #' @inherit data_quality_tables params return
 #' @details adult & Connection w/ SOAR is null or DNC -> error
 #' @export
-dq_path_SOAR_missing_at_exit <- function(served_in_date_range, IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
+dq_SOAR_missing_at_exit <- function(served_in_date_range, IncomeBenefits, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
@@ -1607,7 +1607,7 @@ dq_path_SOAR_missing_at_exit <- function(served_in_date_range, IncomeBenefits, v
                   ClientEnrolledInPATH,
                   GrantType) |>
     dplyr::left_join(smallIncomeSOAR, by = c("PersonalID", "EnrollmentID")) |>
-    dplyr::filter(GrantType == "PATH" &
+    dplyr::filter(GrantType %in% c("PATH", "SSVF") &
                     AgeAtEntry > 17 &
                     DataCollectionStage == 3 &
                     is.na(ConnectionWithSOAR)) |>
