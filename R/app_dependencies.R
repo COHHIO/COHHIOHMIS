@@ -342,7 +342,19 @@ app_env <- R6::R6Class(
     },
     #' @field app_deps \code{(list)} with all app dependencies as character vectors
     app_deps = c(),
-
+    #' @description Load backed up dependencies from path
+    #' @param path \code{(character)} path to folder with backed up dependencies
+    load_deps = function(path = file.path("data","backup")) {
+      .files <- UU::list.files2(path)
+      .pid <- cli::cli_progress_bar(status = "Reading: ", type = "iterator",
+                                    total = length(.files))
+      purrr::iwalk(.files, ~{
+        cli::cli_progress_update(id = .pid, status = .y)
+        self$dependencies[[.y]] <- clarity.looker::hud_load(.x)
+      })
+      cli::cli_process_done(.pid)
+      cli::cli_alert_success(paste0("Dependencies loaded from {.path {path}}: {.emph {paste0(names(.files), collapse = ', ')}}"))
+    },
 #' @description Transfer all files in the data dependencies folder to the applications via dropbox or `file.copy`. If using dropbox, requires an authorized token to dropbox. See `dropbox_auth`.
 #' @param deps \code{(character/logical)} character vector of files to write to disk. Or `TRUE` **Default** to use the list of app dependencies matching the `dest_folder` name.
 #' @param folder \code{(character)} path to folder with files to transfer transfer
