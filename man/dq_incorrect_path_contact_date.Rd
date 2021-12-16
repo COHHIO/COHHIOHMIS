@@ -36,6 +36,7 @@ client is adult/hoh, has a contact record, and the first record in the EE does n
 }
 \seealso{
 Other Clarity Checks: 
+\code{\link{dq_SOAR_missing_at_exit}()},
 \code{\link{dq_check_disability_ssi}()},
 \code{\link{dq_check_eligibility}()},
 \code{\link{dq_conflicting_hi_ee}()},
@@ -71,7 +72,6 @@ Other Clarity Checks:
 \code{\link{dq_missing_residence_prior}()},
 \code{\link{dq_name}()},
 \code{\link{dq_overlaps}()},
-\code{\link{dq_path_SOAR_missing_at_exit}()},
 \code{\link{dq_path_enrolled_missing}()},
 \code{\link{dq_path_no_status_at_exit}()},
 \code{\link{dq_path_reason_missing}()},
@@ -100,8 +100,8 @@ Other Clarity Checks:
 \code{\link{overlaps}()}
 
 Other DQ: Path Checks: 
+\code{\link{dq_SOAR_missing_at_exit}()},
 \code{\link{dq_missing_path_contact}()},
-\code{\link{dq_path_SOAR_missing_at_exit}()},
 \code{\link{dq_path_enrolled_missing}()},
 \code{\link{dq_path_missing_los_res_prior}()},
 \code{\link{dq_path_no_status_at_exit}()},

@@ -30,9 +30,9 @@ PATH: Missing Residence Prior Length of Stay
 }
 \seealso{
 Other DQ: Path Checks: 
+\code{\link{dq_SOAR_missing_at_exit}()},
 \code{\link{dq_incorrect_path_contact_date}()},
 \code{\link{dq_missing_path_contact}()},
-\code{\link{dq_path_SOAR_missing_at_exit}()},
 \code{\link{dq_path_enrolled_missing}()},
 \code{\link{dq_path_no_status_at_exit}()},
 \code{\link{dq_path_reason_missing}()},

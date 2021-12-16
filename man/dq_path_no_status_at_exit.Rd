@@ -33,6 +33,7 @@ Engagement at Exit & adult, PATH-enrolled, Date of Engagement is null -> error
 }
 \seealso{
 Other Clarity Checks: 
+\code{\link{dq_SOAR_missing_at_exit}()},
 \code{\link{dq_check_disability_ssi}()},
 \code{\link{dq_check_eligibility}()},
 \code{\link{dq_conflicting_hi_ee}()},
@@ -69,7 +70,6 @@ Other Clarity Checks:
 \code{\link{dq_missing_residence_prior}()},
 \code{\link{dq_name}()},
 \code{\link{dq_overlaps}()},
-\code{\link{dq_path_SOAR_missing_at_exit}()},
 \code{\link{dq_path_enrolled_missing}()},
 \code{\link{dq_path_reason_missing}()},
 \code{\link{dq_path_status_determination}()},
@@ -97,9 +97,9 @@ Other Clarity Checks:
 \code{\link{overlaps}()}
 
 Other DQ: Path Checks: 
+\code{\link{dq_SOAR_missing_at_exit}()},
 \code{\link{dq_incorrect_path_contact_date}()},
 \code{\link{dq_missing_path_contact}()},
-\code{\link{dq_path_SOAR_missing_at_exit}()},
 \code{\link{dq_path_enrolled_missing}()},
 \code{\link{dq_path_missing_los_res_prior}()},
 \code{\link{dq_path_reason_missing}()},

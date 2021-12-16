@@ -17,7 +17,7 @@ License: AGPL-3
 Depends: R (>= 4.1.0)
 Imports: clarity.looker, cli, devtools, dplyr, feather, ggmap,
        ggplot2, glue, HMIS, htmltools, httr, hud.extract,
-       janitor, lubridate, purrr, R6, rdrop2, readr, readxl,
+       janitor, lubridate, magick, purrr, R6, rdrop2, readr, readxl,
        rlang, scales, slider, stats,
        stringr, tibble, tidyr, tidyselect, utils, UU
 Encoding: UTF-8
@@ -26,8 +26,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1.9001
 URL: https://github.com/COHHIO/Rm_data
 BugReports: https://github.com/COHHIO/Rm_data/issues
-Remotes: COHHIO/hud.extract, COHHIO/clarity.looker,
-       COHHIO/lookr, COHHIO/HMIS, yogat3ch/UU
+Remotes: COHHIO/hud.extract, COHHIO/clarity.looker, COHHIO/HMIS, yogat3ch/UU
 Collate: 
     'aaa_imports.R'
     'app_dependencies.R'
@@ -55,8 +54,8 @@ Collate:
     '04_Guidance.R'
     '04_DataQuality_utils.R'
     '04_DataQuality.R'
-    '04_DataQuality_plots.R'
-    '04_DataQuality_plots_utils.R'
+    '04_DataQuality_summary_utils.R'
+    '04_DataQuality_summary.R'
     '04_DataQuality_utils_ServicePoint.R'
     '05_Veterans_Active_List.R'
     '06_Project_Evaluation.R'
