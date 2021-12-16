@@ -361,12 +361,12 @@ app_env <- R6::R6Class(
 #' @param dropbox \code{(logical)} **Default** Upload dependencies to Dropbox, `FALSE` to pass to the `data` folder in the sibling directory: `dest_folder`.
 #' @return
 
-    deps_to_apps = function(deps = TRUE, folder = file.path("data","db","RminorElevated"), dest_folder = "RminorElevated", dropbox = TRUE) {
+    deps_to_destination = function(deps = TRUE, folder = file.path("data","db","RminorElevated"), dest_folder = file.path("..","RminorElevated","data"), dropbox = TRUE) {
       if (!dropbox)
-        dest_folder = file.path("..",dest_folder,"data")
+        dest_app = stringr::str_subset(stringr::str_split(dest_folder, "\\/")[[1]], paste0("(?:", names(self$app_deps), ")") |> paste0(collapse = "|"))
 
       if (isTRUE(deps))
-        deps <- self$app_deps[[dest_folder]]
+        deps <- self$app_deps[[dest_app]]
       if (UU::is_legit(deps)) {
         files <- purrr::flatten_chr(purrr::compact(purrr::map(deps, hud_filename, path = folder)))
       } else
