@@ -36,13 +36,14 @@ Rm_env <- prioritization()
 Rm_env <- bed_unit_utilization()
 Rm_env <- data_quality()
 Rm_env <- data_quality_summary()
+Rm_env$write_app_deps(all = TRUE,
+                      path = file.path("data", "backup"))
+Rm_env$deps_to_destination(Rm_env$app_deps$RminorElevated,
+                      folder = file.path("data", "backup"), dropbox = FALSE)
 beepr::beep(sound = 3)
-
-Rm_env$write_app_deps(Rm_env$app_deps$RminorElevated,
-                      path = file.path("data", "db", "RminorElevated"))
 # Uses RminorElevated as the default
 Rm_env$dropbox_auth()
-Rm_env$deps_to_apps(dropbox = FALSE)
+
 
 
 
