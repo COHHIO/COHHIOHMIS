@@ -52,30 +52,25 @@ app_deps <- list(
   # to Rme
 
   RminorElevated = c(
-    "aps_no_referrals",
     "Beds",
+    "guidance",
+    # dates
     "rm_dates",
     "Client",
-    "dq_main",
+    # cohorts
+    "co_clients_served",
+    # data_quality
+    "aps_no_referrals",
     "dq_past_year",
     "dq_unsheltered",
     "data_APs",
     "dq_overlaps",
     "eligibility_detail",
-    "dq_plot_eligibility",
-    "dq_plot_errors",
-    "dq_plot_hh_errors",
-    "dq_plot_hh_no_spdat",
-    "dq_plot_outstanding_referrals",
-    "dq_plot_projects_errors",
-    "dq_plot_projects_warnings",
-    "dq_plot_unsheltered_high",
-    "dq_plot_warnings",
     "dq_providers",
-    "enhanced_yes_no_translator",
-    "guidance",
-    "HUD_specs",
-    "living_situation",
+    # data_quality_plots
+    "dq_summary",
+    "dq_plot_aps_referrals",
+    "dq_main",
     "Organization",
     # "pe_increase_income",
     "pe_exits_to_ph",
@@ -109,9 +104,9 @@ app_deps <- list(
     "utilization",
     # "vaccine_needs_second_dose",
     # "vaccine_status",
-    # QPR_client_counts
+    # client_counts
     "validation",
-    # Veterans
+    # vet_active
     "veteran_active_list",
     "permanently_housed_vets",
     "entered_past_90_vets",
