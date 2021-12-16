@@ -58,20 +58,24 @@ data_quality_summary <- function(served_in_date_range, Referrals, Project, dq_pa
 
 dq_summary <- list()
 
+client_summary <- dqu_summary(co_clients_served, distinct = FALSE) |>
+  dplyr::rename(`Total Clients` = n)
 
-  dq_summary$projects_errors <- dqu_plot(dq_past_year, filter_exp = Type %in% c("Error", "High Priority") &
+  dq_summary$projects_errors <- dqu_summary(dq_past_year, filter_exp = Type %in% c("Error", "High Priority") &
             !Issue %in% c(
               "No Head of Household",
               "Missing Relationship to Head of Household",
               "Too Many Heads of Household",
               "Children Only Household"
-            ))
+            ), join = client_summary)
 
-  dq_summary$projects_warnings <- dqu_plot(dq_past_year, filter_exp = Type == "Warning", distinct = FALSE)
+  dq_summary$error_types <- dqu_summary(dq_past_year, filter_exp = Type %in% c("Error", "High Priority"), groups = "Issue", distinct = FALSE)
 
-  dq_summary$error_types <- dqu_plot(dq_past_year, filter_exp = Type %in% c("Error", "High Priority"), groups = "Issue", distinct = FALSE)
+  dq_summary$projects_warnings <- dqu_summary(dq_past_year, filter_exp = Type == "Warning", distinct = FALSE, join = client_summary)
 
-  dq_summary$warning_types <- dqu_plot(dq_past_year, filter_exp = Type %in% c("Warning"), groups = "Issue", distinct = FALSE)
+  dq_summary$warning_types <- dqu_summary(dq_past_year, filter_exp = Type %in% c("Warning"), groups = "Issue", distinct = FALSE)
+
+
 
   # Deprecated in Clarity
   # dq_data_unsheltered_high <- dq_unsheltered %>%
@@ -93,15 +97,15 @@ dq_summary <- list()
   #       fill = clientsWithErrors
   #     )
   #   ) +
-  #   dqu_plot_theme_labs(x = "",
+  #   dqu_summary_theme_labs(x = "",
   #                                y = "Clients")
-  dq_summary$hh_issues <- dqu_plot(dq_past_year, filter_exp = Type %in% c("Error", "High Priority") &
+  dq_summary$hh_issues <- dqu_summary(dq_past_year, filter_exp = Type %in% c("Error", "High Priority") &
                                         Issue %in% c(
                                           "No Head of Household",
                                           "Missing Relationship to Head of Household",
                                           "Too Many Heads of Household",
                                           "Children Only Household"
-                                        ))
+                                        ), join = client_summary)
 
 
 
@@ -127,14 +131,13 @@ dq_summary <- list()
     ggplot2::theme_void()
 
 
-  dq_summary$outstanding_referrals <- dqu_plot(internal_old_outstanding_referrals, filter_exp = Issue == "Old Outstanding Referral", distinct = FALSE)
+  dq_summary$outstanding_referrals <- dqu_summary(internal_old_outstanding_referrals, filter_exp = Issue == "Old Outstanding Referral", distinct = FALSE, join = client_summary)
 
-  internal_old_outstanding_referrals <- dplyr::select(internal_old_outstanding_referrals, - ProjectID)
 
-  dq_summary$eligibility <- dqu_plot(eligibility_detail, filter_exp = Type == "Warning" & Issue %in% c("Check Eligibility"))
+  dq_summary$eligibility <- dqu_summary(eligibility_detail, filter_exp = Type == "Warning" & Issue %in% c("Check Eligibility"), join = client_summary)
 
-  dq_summary$clients_without_spdat <- dqu_plot(dq_past_year, filter_exp = Type == "Warning" & Issue %in% c("Non-DV HoHs Entering PH or TH without SPDAT",
-                                                                                             "HoHs in shelter for 8+ days without SPDAT"))
+  dq_summary$clients_without_spdat <- dqu_summary(dq_past_year, filter_exp = Type == "Warning" & Issue %in% c("Non-DV HoHs Entering PH or TH without SPDAT",
+                                                                                             "HoHs in shelter for 8+ days without SPDAT"), join = client_summary)
   dq_main <- dplyr::bind_rows(dq_main, internal_old_outstanding_referrals)
   app_env$gather_deps(dq_plot_aps_referrals, dq_summary, dq_main)
 }
