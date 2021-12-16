@@ -2,7 +2,8 @@ go_to <- function(x, path = "R") {
   if (file.exists(x))
     f <- x
   else
-    f <- list.files(path, pattern = x, full.names = TRUE)
+    f <- UU::list.files2(path) |>
+      stringr::str_subset(stringr::regex(x, ignore_case = TRUE))
 
   if (UU::is_legit(f))
     rstudioapi::navigateToFile(f)
