@@ -7,24 +7,25 @@
 
 
 
-#' @title Render Data Quality plots for RminorElevated
+#' @title Render Data Quality plots & tables for RminorElevated dq_system_wide
 #'
 #' @param Project
 #' @param dq_past_year
+#' @param eligibility_detail
 #' @param rm_dates
 #' @param data_APs
-#' @param ProjectDisplay
+#' @param Referrals
 #' @param app_env
 #'
 #' @return
 #' @export
-#' @include 04_DataQuality.R 04_DataQuality_utils.R
+#' @include 04_DataQuality.R 04_DataQuality_utils.R 04_DataQuality_summary_utils.R
 #' @examples
-data_quality_plots <- function(served_in_date_range, Referrals, Project, dq_past_year, rm_dates, data_APs, ProjectDisplay, vars, app_env = get_app_env(e = rlang::caller_env())) {
+data_quality_summary <- function(served_in_date_range, Referrals, Project, dq_past_year, eligibility_detail, data_APs, rm_dates, vars, app_env = get_app_env(e = rlang::caller_env())) {
+
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  # Plots -------------------------------------------------------------------
-  # Side Door ---------------------------------------------------------------
+
   # use Referrals, get logic from ART report- it's pretty lax I think
 
 
@@ -54,23 +55,23 @@ data_quality_plots <- function(served_in_date_range, Referrals, Project, dq_past
     dplyr::select(dplyr::all_of(c(vars$we_want, "ProjectID")))
 
   # ^^this is pulling in neither the Unsheltered NOR referrals from APs
-dq_plots <- list()
+
+dq_summary <- list()
 
 
-
-  dq_plots$projects_errors <- dq_plot(dq_past_year, filter_exp = Type %in% c("Error", "High Priority") &
+  dq_summary$projects_errors <- dqu_plot(dq_past_year, filter_exp = Type %in% c("Error", "High Priority") &
             !Issue %in% c(
               "No Head of Household",
               "Missing Relationship to Head of Household",
               "Too Many Heads of Household",
               "Children Only Household"
-            ), y_label = "Clients")
+            ))
 
-  dq_plots$warnings <- dq_plot(dq_past_year, filter_exp = Type == "Warning", y_label = "Clients", select = FALSE)
+  dq_summary$projects_warnings <- dqu_plot(dq_past_year, filter_exp = Type == "Warning", distinct = FALSE)
 
-  dq_plots$error_types <- dq_plot(dq_past_year, filter_exp = Type %in% c("Error", "High Priority"), y_label = "Clients", groups = "Issue", select = FALSE)
+  dq_summary$error_types <- dqu_plot(dq_past_year, filter_exp = Type %in% c("Error", "High Priority"), groups = "Issue", distinct = FALSE)
 
-  dq_plots$warning_types <- dq_plot(dq_past_year, filter_exp = Type %in% c("Warning"), y_label = "Clients", groups = "Issue", select = FALSE)
+  dq_summary$warning_types <- dqu_plot(dq_past_year, filter_exp = Type %in% c("Warning"), groups = "Issue", distinct = FALSE)
 
   # Deprecated in Clarity
   # dq_data_unsheltered_high <- dq_unsheltered %>%
@@ -94,7 +95,7 @@ dq_plots <- list()
   #   ) +
   #   dqu_plot_theme_labs(x = "",
   #                                y = "Clients")
-  dq_plots$hh_issues <- dq_plot(dq_past_year, filter_exp = Type %in% c("Error", "High Priority") &
+  dq_summary$hh_issues <- dqu_plot(dq_past_year, filter_exp = Type %in% c("Error", "High Priority") &
                                         Issue %in% c(
                                           "No Head of Household",
                                           "Missing Relationship to Head of Household",
@@ -103,7 +104,6 @@ dq_plots <- list()
                                         ))
 
 
-  data_APs <- dqu_aps(data = TRUE)
 
   dq_plot_aps_referrals <-
     ggplot2::ggplot(data_APs, ggplot2::aes(fill = category, x = providertype, y = percent)) +
@@ -112,28 +112,29 @@ dq_plots <- list()
                       width = .1) +
     ggplot2::geom_label(
       ggplot2::aes(label = paste(
-        data_APs$category,
+        category,
         "\n",
-        data_APs$prettypercent
+        prettypercent
       )),
-      position = ggplot2::position_stack(),
-      vjust = 2,
+      vjust = -1,
+      hjust = "outward",
       fill = "white",
       colour = "black",
       fontface = "bold"
     ) +
-    ggplot2::scale_fill_manual(values = c("#00952e", "#a11207"), guide = FALSE) +
+    ggplot2::scale_fill_manual(values = c("#a11207", "#00952e"), guide = FALSE) +
+    ggplot2::coord_flip()+
     ggplot2::theme_void()
 
 
-  dq_plots$outstanding_referrals <- dq_plot(internal_old_outstanding_referrals, filter_exp = Issue == "Old Outstanding Referral", y_label = NULL, select = FALSE)
+  dq_summary$outstanding_referrals <- dqu_plot(internal_old_outstanding_referrals, filter_exp = Issue == "Old Outstanding Referral", distinct = FALSE)
 
   internal_old_outstanding_referrals <- dplyr::select(internal_old_outstanding_referrals, - ProjectID)
 
-  dq_plots$eligibility <- dq_plot(dq_past_year, filter_exp = Type == "Warning" & Issue %in% c("Check Eligibility"), y_label = NULL)
+  dq_summary$eligibility <- dqu_plot(eligibility_detail, filter_exp = Type == "Warning" & Issue %in% c("Check Eligibility"))
 
-  dq_plots$wout_spdat <- dq_plot(dq_past_year, filter_exp = Type == "Warning" & Issue %in% c("Non-DV HoHs Entering PH or TH without SPDAT",
-                                                                                             "HoHs in shelter for 8+ days without SPDAT"), y_label = NULL)
-
-
+  dq_summary$clients_without_spdat <- dqu_plot(dq_past_year, filter_exp = Type == "Warning" & Issue %in% c("Non-DV HoHs Entering PH or TH without SPDAT",
+                                                                                             "HoHs in shelter for 8+ days without SPDAT"))
+  dq_main <- dplyr::bind_rows(dq_main, internal_old_outstanding_referrals)
+  app_env$gather_deps(dq_plot_aps_referrals, dq_summary, dq_main)
 }
