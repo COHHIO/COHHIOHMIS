@@ -286,24 +286,32 @@ app_env <- R6::R6Class(
     #' @param deps \code{(character)} with names of app dependencies to write.
     #' @param path \code{(character)} of directory to write app dependencies to
     #' @param overwrite \code{(logical)} Whether to overwrite existing files. **Default:`TRUE`**
+    #' @param all \code{(logical)} Whether to backup all dependencies (overrides deps)
     #' @return \code{(character)} vector of the files written
     write_app_deps = function (deps,
                                path = file.path("data", "db", "RminorElevated"),
-                               overwrite = TRUE)
+                               overwrite = TRUE,
+                               all = FALSE)
     {
       # Dir check
       if (!dir.exists(path))
         UU::mkpath(path)
 
       saved_deps <- ls(self$dependencies, all.names = TRUE)
-      to_write <- intersect(deps, saved_deps)
-      .missing <- setdiff(deps, saved_deps)
-      if (UU::is_legit(.missing)) {
-        rlang::warn(paste0(
-          "The following objects are missing from the app dependencies environment and were not written to disk:\n",
-          paste0(.missing, collapse = ", ")))
+      to_write <- purrr::when(all,
+                  . ~ saved_deps,
+                  !. ~ intersect(deps, saved_deps)) |> rlang::set_names()
+      if (!missing(deps)) {
+        .missing <- setdiff(deps, saved_deps)
 
+        if (UU::is_legit(.missing)) {
+          rlang::warn(paste0(
+            "The following objects are missing from the app dependencies environment and were not written to disk:\n",
+            paste0(.missing, collapse = ", ")))
+
+        }
       }
+
 
 
 
@@ -313,16 +321,18 @@ app_env <- R6::R6Class(
 
       out <- purrr::map_chr(to_write, ~{
         o <- get0(.x, envir = self$dependencies, inherits = FALSE)
-          fp <- file.path(path, paste0(.x, UU::object_ext(o)))
+        .ext <- UU::object_ext(o)
+          fp <- file.path(path, paste0(.x, .ext))
+        cli::cli_progress_update(id = .pid, status = .x)
         if (overwrite || !file.exists(fp)) {
-          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "UniqueID") %in% names(o))) && is_clarity())
-            o <- make_linked_df(o, UniqueID)
-          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "EnrollmentID") %in% names(o))) && is_clarity())
-            o <- make_linked_df(o, EnrollmentID)
-          rlang::exec(UU::object_fn(o), o, fp)
+          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "UniqueID") %in% names(o))) && is_clarity() && !all)
+            o <- clarity.looker::make_linked_df(o, UniqueID)
+          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "EnrollmentID") %in% names(o))) && is_clarity() && !all)
+            o <- clarity.looker::make_linked_df(o, EnrollmentID)
+
+          UU::object_write(o, fp, verbose = FALSE)
           stopifnot(file.info(fp)$mtime > Sys.Date())
         }
-        cli::cli_progress_update(id = .pid, status = .x)
         fp
       })
       cli::cli_process_done(.pid)
