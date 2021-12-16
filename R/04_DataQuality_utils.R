@@ -2975,7 +2975,7 @@ dqu_aps <- function(Project, Referrals, data_APs = TRUE, app_env = get_app_env(e
   if (data_APs) {
     l <- c(no = length(aps_no_referrals), w = length(aps_w_referrals))
     out <- tibble::tibble(
-      category = c("No Referrals", "Has Created Referrals"),
+      category = c("Not Referring", "Referring"),
       count = l,
       providertype = rep("Access Points"),
       total = rep(sum(l)),
