@@ -29,6 +29,7 @@ Save dependencies for future functions in an environment and put app dependencie
 \item \href{#method-gather_deps}{\code{app_env$gather_deps()}}
 \item \href{#method-set_parent}{\code{app_env$set_parent()}}
 \item \href{#method-write_app_deps}{\code{app_env$write_app_deps()}}
+\item \href{#method-load_deps}{\code{app_env$load_deps()}}
 \item \href{#method-deps_to_apps}{\code{app_env$deps_to_apps()}}
 \item \href{#method-dropbox_auth}{\code{app_env$dropbox_auth()}}
 \item \href{#method-new}{\code{app_env$new()}}
@@ -116,7 +117,8 @@ Write app dependencies to disk
 \if{html}{\out{<div class="r">}}\preformatted{app_env$write_app_deps(
   deps,
   path = file.path("data", "db", "RminorElevated"),
-  overwrite = TRUE
+  overwrite = TRUE,
+  all = FALSE
 )}\if{html}{\out{</div>}}
 }
 
@@ -133,6 +135,23 @@ Write app dependencies to disk
 }
 \subsection{Returns}{
 \code{(character)} vector of the files written
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-load_deps"></a>}}
+\if{latex}{\out{\hypertarget{method-load_deps}{}}}
+\subsection{Method \code{load_deps()}}{
+Load backed up dependencies from path
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{app_env$load_deps(path = file.path("data", "backup"))}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{path}}{\code{(character)} path to folder with backed up dependencies}
+}
+\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}

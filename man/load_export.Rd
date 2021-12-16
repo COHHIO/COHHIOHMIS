@@ -18,7 +18,7 @@ load_export(
 \item{error}{\code{(logical)} whether to error or send a message via pushbullet when data checks fail}
 }
 \value{
-
+\code{app_env} with data dependencies
 }
 \description{
 Load the HUD Export and join extras.

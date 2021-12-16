@@ -35,6 +35,7 @@ Rm_env <- vet_active()
 Rm_env <- prioritization()
 Rm_env <- bed_unit_utilization()
 Rm_env <- data_quality()
+Rm_env <- data_quality_summary()
 beepr::beep(sound = 3)
 
 Rm_env$write_app_deps(Rm_env$app_deps$RminorElevated,

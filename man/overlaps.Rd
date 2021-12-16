@@ -34,6 +34,7 @@ A client cannot reside in an ES, TH, or Safe Haven at the same time. Nor can the
 }
 \seealso{
 Other Clarity Checks: 
+\code{\link{dq_SOAR_missing_at_exit}()},
 \code{\link{dq_check_disability_ssi}()},
 \code{\link{dq_check_eligibility}()},
 \code{\link{dq_conflicting_hi_ee}()},
@@ -70,7 +71,6 @@ Other Clarity Checks:
 \code{\link{dq_missing_residence_prior}()},
 \code{\link{dq_name}()},
 \code{\link{dq_overlaps}()},
-\code{\link{dq_path_SOAR_missing_at_exit}()},
 \code{\link{dq_path_enrolled_missing}()},
 \code{\link{dq_path_no_status_at_exit}()},
 \code{\link{dq_path_reason_missing}()},

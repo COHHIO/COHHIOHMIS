@@ -52,28 +52,25 @@ app_deps <- list(
   # to Rme
 
   RminorElevated = c(
-    "aps_no_referrals",
     "Beds",
+    "guidance",
+    # dates
     "rm_dates",
     "Client",
-    "dq_main",
+    # cohorts
+    "co_clients_served",
+    # data_quality
+    "aps_no_referrals",
     "dq_past_year",
     "dq_unsheltered",
     "data_APs",
     "dq_overlaps",
     "eligibility_detail",
-    "dq_plot_eligibility",
-    "dq_plot_errors",
-    "dq_plot_hh_errors",
-    "dq_plot_hh_no_spdat",
-    "dq_plot_outstanding_referrals",
-    "dq_plot_projects_errors",
-    "dq_plot_projects_warnings",
-    "dq_plot_unsheltered_high",
-    "dq_plot_warnings",
     "dq_providers",
-    "enhanced_yes_no_translator",
-    "guidance",
+    # data_quality_plots
+    "dq_summary",
+    "dq_plot_aps_referrals",
+    "dq_main",
     "Organization",
     # "pe_increase_income",
     "pe_exits_to_ph",
@@ -106,9 +103,9 @@ app_deps <- list(
     "utilization",
     # "vaccine_needs_second_dose",
     # "vaccine_status",
-    # QPR_client_counts
+    # client_counts
     "validation",
-    # Veterans
+    # vet_active
     "veteran_active_list",
     "permanently_housed_vets",
     "entered_past_90_vets",
@@ -288,24 +285,32 @@ app_env <- R6::R6Class(
     #' @param deps \code{(character)} with names of app dependencies to write.
     #' @param path \code{(character)} of directory to write app dependencies to
     #' @param overwrite \code{(logical)} Whether to overwrite existing files. **Default:`TRUE`**
+    #' @param all \code{(logical)} Whether to backup all dependencies (overrides deps)
     #' @return \code{(character)} vector of the files written
     write_app_deps = function (deps,
                                path = file.path("data", "db", "RminorElevated"),
-                               overwrite = TRUE)
+                               overwrite = TRUE,
+                               all = FALSE)
     {
       # Dir check
       if (!dir.exists(path))
         UU::mkpath(path)
 
       saved_deps <- ls(self$dependencies, all.names = TRUE)
-      to_write <- intersect(deps, saved_deps)
-      .missing <- setdiff(deps, saved_deps)
-      if (UU::is_legit(.missing)) {
-        rlang::warn(paste0(
-          "The following objects are missing from the app dependencies environment and were not written to disk:\n",
-          paste0(.missing, collapse = ", ")))
+      to_write <- purrr::when(all,
+                  . ~ saved_deps,
+                  !. ~ intersect(deps, saved_deps)) |> rlang::set_names()
+      if (!missing(deps)) {
+        .missing <- setdiff(deps, saved_deps)
 
+        if (UU::is_legit(.missing)) {
+          rlang::warn(paste0(
+            "The following objects are missing from the app dependencies environment and were not written to disk:\n",
+            paste0(.missing, collapse = ", ")))
+
+        }
       }
+
 
 
 
@@ -315,16 +320,18 @@ app_env <- R6::R6Class(
 
       out <- purrr::map_chr(to_write, ~{
         o <- get0(.x, envir = self$dependencies, inherits = FALSE)
-          fp <- file.path(path, paste0(.x, UU::object_ext(o)))
+        .ext <- UU::object_ext(o)
+          fp <- file.path(path, paste0(.x, .ext))
+        cli::cli_progress_update(id = .pid, status = .x)
         if (overwrite || !file.exists(fp)) {
-          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "UniqueID") %in% names(o))) && is_clarity())
+          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "UniqueID") %in% names(o))) && is_clarity() && !all)
             o <- clarity.looker::make_linked_df(o, UniqueID)
-          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "EnrollmentID") %in% names(o))) && is_clarity())
+          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "EnrollmentID") %in% names(o))) && is_clarity() && !all)
             o <- clarity.looker::make_linked_df(o, EnrollmentID)
-          rlang::exec(UU::object_fn(o), o, fp)
+
+          UU::object_write(o, fp, verbose = FALSE)
           stopifnot(file.info(fp)$mtime > Sys.Date())
         }
-        cli::cli_progress_update(id = .pid, status = .x)
         fp
       })
       cli::cli_process_done(.pid)
@@ -334,7 +341,19 @@ app_env <- R6::R6Class(
     },
     #' @field app_deps \code{(list)} with all app dependencies as character vectors
     app_deps = c(),
-
+    #' @description Load backed up dependencies from path
+    #' @param path \code{(character)} path to folder with backed up dependencies
+    load_deps = function(path = file.path("data","backup")) {
+      .files <- UU::list.files2(path)
+      .pid <- cli::cli_progress_bar(status = "Reading: ", type = "iterator",
+                                    total = length(.files))
+      purrr::iwalk(.files, ~{
+        cli::cli_progress_update(id = .pid, status = .y)
+        self$dependencies[[.y]] <- clarity.looker::hud_load(.x)
+      })
+      cli::cli_process_done(.pid)
+      cli::cli_alert_success(paste0("Dependencies loaded from {.path {path}}: {.emph {paste0(names(.files), collapse = ', ')}}"))
+    },
 #' @description Transfer all files in the data dependencies folder to the applications via dropbox or `file.copy`. If using dropbox, requires an authorized token to dropbox. See `dropbox_auth`.
 #' @param deps \code{(character/logical)} character vector of files to write to disk. Or `TRUE` **Default** to use the list of app dependencies matching the `dest_folder` name.
 #' @param folder \code{(character)} path to folder with files to transfer transfer
@@ -405,8 +424,8 @@ dependencies <- list()
 
 reset_Rm_env <- function(app_env = get_app_env(e = rlang::caller_env())) {
   deps <- purrr::compact(rlang::env_get_list(app_env$dependencies, ls(app_env$dependencies, all.names = TRUE), default = NULL))
-  rm("Rm_env", envir = .GlobalEnv)
   devtools::load_all()
+  rm("Rm_env", envir = .GlobalEnv)
   .GlobalEnv$Rm_env <- Rm_data::app_env$new()
 
   rlang::env_bind(.GlobalEnv$Rm_env$dependencies, !!!deps)
