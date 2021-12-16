@@ -362,5 +362,5 @@ data_APs <- dqu_aps()
 
 
 
-app_env$gather_deps(served_in_date_range, dq_providers, aps_no_referrals, data_APs, eligibility_detail, dq_overlaps)
+app_env$gather_deps(dq_providers, aps_no_referrals, data_APs, eligibility_detail, dq_overlaps)
 }
