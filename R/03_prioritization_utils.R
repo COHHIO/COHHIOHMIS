@@ -43,3 +43,15 @@ valid_movein_max = function(MoveInDateAdjust, EntryDate) {
     out <- lubridate::NA_Date_
   out
 }
+
+#' @title Retrieve the most recent valid value
+#' Given a timeseries `t` and a `v`, return the most recent valid value
+#' @param t \code{(Date/POSIXct)}
+#' @param v \code{(vector)}
+#'
+#' @return \code{(vector)} of unique, most recent value(s if there is a tie) of `v`
+#' @export
+
+recent_valid <- function(t, v) {
+  unique(v[t == valid_max(t[!is.na(v)])])
+}
