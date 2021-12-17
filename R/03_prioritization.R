@@ -44,13 +44,23 @@ prioritization <- function(
 force(clarity_api)
 if (is_app_env(app_env))
   app_env$set_parent(missing_fmls())
-# clients currently entered into a homeless project in our system
 
-co_currently_homeless <- co_clients_served |>
-  dplyr::filter((is.na(ExitDate) |
-            ExitDate > lubridate::today()) &
-           (ProjectType %in% c(4, project_types$lh) |
-              ProjectType %in% project_types$ph)) |>
+  co_currently_homeless <- co_clients_served |>
+    dplyr::filter(is.na(ExitDate) |
+                      ExitDate > lubridate::today())
+  # get Services Only & Coordinated Entry clients with the most recent LivingSituation as homeless as per email guidance on 2021-12-16T17:58:50-04:00 title: FW: HMIS Data Analyst has invited you to access an application on shinyapps.io
+PID_homeless <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
+  dplyr::filter(ProjectType %in% unlist(project_types[c("so", "ce")]) & PersonalID %in% unique(co_currently_homeless$PersonalID) & LivingSituation %in% living_situations$homeless) |>
+  dplyr::group_by(PersonalID) |>
+  dplyr::summarize(LivingSituation = recent_valid(DateUpdated, LivingSituation)) |>
+  dplyr::pull(PersonalID)
+
+# clients currently entered into a homeless project in our system
+co_currently_homeless <- co_currently_homeless |>
+  dplyr::filter(
+    ProjectType %in% c(4, project_types$lh, project_types$ph) |
+      PersonalID %in% PID_homeless
+  ) |>
   dplyr::select(
     PersonalID,
     UniqueID,
