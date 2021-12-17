@@ -26,33 +26,9 @@ data_quality_summary <- function(served_in_date_range, Referrals, Project, dq_pa
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
-  # use Referrals, get logic from ART report- it's pretty lax I think
 
 
-  # Old Outstanding Referrals -----------------------------------------------
-  # CW says ProviderCreating should work instead of Referred-From Provider
-  # Using ProviderCreating instead. Either way, I feel this should go in the
-  # Provider Dashboard, not the Data Quality report.
 
-  internal_old_outstanding_referrals <- served_in_date_range %>%
-    dplyr::semi_join(Referrals,
-                     by = c("PersonalID", "UniqueID")) %>%
-    dplyr::left_join(Referrals, by = c("PersonalID", "UniqueID")) |>
-    dplyr::select(dplyr::all_of(vars$prep),
-                  R_ReferringProjectID,
-                  R_ReferralDaysElapsed,
-                  R_ReferringProjectName,
-                  R_DaysInQueue,
-                  EnrollmentID) %>%
-    dplyr::filter(R_ReferralDaysElapsed %|% R_DaysInQueue > 14) %>%
-    dplyr::mutate(
-      ProjectName = R_ReferringProjectName,
-      ProjectID = R_ReferringProjectID,
-      Issue = "Old Outstanding Referral",
-      Type = "Warning",
-      Guidance = "Referrals should be closed in about 2 weeks. Please be sure you are following up with any referrals and helping the client to find permanent housing. Once a Referral is made, the receiving agency should be saving the 'Referral Outcome' once it is known. If you have Referrals that are legitimately still open after 2 weeks because there is a lot of follow up going on, no action is needed since the HMIS data is accurate."
-    ) %>%
-    dplyr::select(dplyr::all_of(c(vars$we_want, "ProjectID")))
 
   # ^^this is pulling in neither the Unsheltered NOR referrals from APs
 
@@ -109,35 +85,36 @@ client_summary <- dqu_summary(co_clients_served, distinct = FALSE) |>
 
 
 
-  dq_plot_aps_referrals <-
-    ggplot2::ggplot(data_APs, ggplot2::aes(fill = category, x = providertype, y = percent)) +
-    ggplot2::geom_bar(position = "fill",
-                      stat = "identity",
-                      width = .1) +
-    ggplot2::geom_label(
-      ggplot2::aes(label = paste(
-        category,
-        "\n",
-        prettypercent
-      )),
-      vjust = -1,
-      hjust = "outward",
-      fill = "white",
-      colour = "black",
-      fontface = "bold"
-    ) +
-    ggplot2::scale_fill_manual(values = c("#a11207", "#00952e"), guide = FALSE) +
-    ggplot2::coord_flip()+
-    ggplot2::theme_void()
+  # Deprecated - using progress bar in conjunction with table data as it's much easier
+  # dq_plot_aps_referrals <-
+  #   ggplot2::ggplot(data_APs, ggplot2::aes(fill = category, x = providertype, y = percent)) +
+  #   ggplot2::geom_bar(position = "fill",
+  #                     stat = "identity",
+  #                     width = .1) +
+  #   ggplot2::geom_label(
+  #     ggplot2::aes(label = paste(
+  #       category,
+  #       "\n",
+  #       prettypercent
+  #     )),
+  #     vjust = -1,
+  #     hjust = "outward",
+  #     fill = "white",
+  #     colour = "black",
+  #     fontface = "bold"
+  #   ) +
+  #   ggplot2::scale_fill_manual(values = c("#a11207", "#00952e"), guide = FALSE) +
+  #   ggplot2::coord_flip()+
+  #   ggplot2::theme_void()
 
 
-  dq_summary$outstanding_referrals <- dqu_summary(internal_old_outstanding_referrals, filter_exp = Issue == "Old Outstanding Referral", distinct = FALSE, join = client_summary)
+  dq_summary$outstanding_referrals <- dqu_summary(dq_past_year, filter_exp = Issue == "Old Outstanding Referral", distinct = FALSE, join = client_summary)
 
 
   dq_summary$eligibility <- dqu_summary(eligibility_detail, filter_exp = Type == "Warning" & Issue %in% c("Check Eligibility"), join = client_summary)
 
   dq_summary$clients_without_spdat <- dqu_summary(dq_past_year, filter_exp = Type == "Warning" & Issue %in% c("Non-DV HoHs Entering PH or TH without SPDAT",
                                                                                              "HoHs in shelter for 8+ days without SPDAT"), join = client_summary)
-  dq_main <- dplyr::bind_rows(dq_main, internal_old_outstanding_referrals)
-  app_env$gather_deps(dq_plot_aps_referrals, dq_summary, dq_main)
+
+  app_env$gather_deps(dq_summary)
 }
