@@ -169,6 +169,7 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Client_
       ))
       ) |>
     dplyr::inner_join(projects_current_hmis, by = "ProjectID") |>
+    dplyr::filter(stringr::str_detect(ProjectName, "\\sVASH\\s?", negate = TRUE)) |>
     dplyr::left_join(
       HealthAndDV  |>
         dplyr::filter(DataCollectionStage == 1)  |>
