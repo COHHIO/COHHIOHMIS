@@ -356,11 +356,11 @@ dq_providers <- rlang::set_names(projects_current_hmis$ProjectID, projects_curre
 
 # APs without referrals ----
 # Mon Sep 20 16:31:46 2021
-aps_no_referrals <- dqu_aps(data_APs = FALSE)
-data_APs <- dqu_aps()
+dq_aps_no_referrals <- dqu_aps(data_APs = FALSE)
+dq_APs <- dqu_aps()
 
 
 
 
-app_env$gather_deps(dq_providers, aps_no_referrals, data_APs, eligibility_detail, dq_overlaps)
+app_env$gather_deps(dq_providers, dq_aps_no_referrals, dq_APs, eligibility_detail, dq_overlaps)
 }
