@@ -24,6 +24,12 @@ QPR_EEs <- function(
 ) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
+  # TODO To get the Total RRH (Which should be 75% of all ESG funding spent on Services)
+  # Rme - QPR - RRH Spending
+  # Rm - QPR - RRH vs HP
+  # Services_extras$ServiceAmount[Services_extras$FundName |>
+  #                              stringr::str_detect("RRH") |>
+  #                              which()]
 
   # decided to continue to use a separate file for Goals (instead of building it
   # in a tribble) because this way the CoC team can review it more easily.

@@ -45,7 +45,7 @@ load_export <- function(
   ProjectCoC <-
     clarity_api$ProjectCoC()
   # Project
-  app_env <- load_project(Regions = Regions, ProjectCoC = ProjectCoC)
+  app_env <- load_project(ProjectCoC = ProjectCoC, app_env = app_env)
 
 
   # Affiliation -------------------------------------------------------------
@@ -208,12 +208,7 @@ load_export <- function(
     dplyr::filter(!stray_service) |>
     dplyr::select(-stray_service)
 
-  # TODO To get the Total RRH (Which should be 75% of all ESG funding spent on Services)
-  # Rme - QPR - RRH Spending
-  # Rm - QPR - RRH vs HP
-  # Services_extras$ServiceAmount[Services_extras$FundName |>
-  #                              stringr::str_detect("RRH") |>
-  #                              which()]
+
 
   # Referrals ---------------------------------------------------------------
 
@@ -223,7 +218,9 @@ load_export <- function(
     dplyr::mutate(R_ReferralConnectedPTC = stringr::str_remove(R_ReferralConnectedPTC, "\\s\\(disability required\\)$"),
                   R_ReferralConnectedPTC = dplyr::if_else(R_ReferralConnectedPTC == "Homeless Prevention", "Homelessness Prevention", R_ReferralConnectedPTC),
                   R_ReferralConnectedPTC = HMIS::hud_translations$`2.02.6 ProjectType`(R_ReferralConnectedPTC))
-  # TODO ReferralOutcome must be replaced by a Clarity element (or derived from multiple) for dq_internal_old_outstanding_referrals
+
+  # Full needed for dqu_aps
+  Referrals_full <- Referrals
 
   referrals_expr <- rlang::exprs(
     housed1 = R_RemovedFromQueueSubreason %in% c(
@@ -236,19 +233,20 @@ load_export <- function(
     housed2 = !is.na(R_ReferralConnectedMoveInDate),
     housed3 = R_ExitHoused == "Housed",
     is_last = R_IsLastReferral == "Yes",
+    is_last_enroll = R_IsLastEnrollment == "Yes",
     is_active = R_ActiveInProject == "Yes",
-    accepted1 = R_IsLastReferral == "Yes",
-    accepted2 = stringr::str_detect(R_ReferralResult, "accepted$"),
+    accepted = stringr::str_detect(R_ReferralResult, "accepted$"),
     coq = R_ReferralCurrentlyOnQueue == "Yes"
   )
   referral_result_summarize <- purrr::map(referrals_expr, ~rlang::expr(isTRUE(any(!!.x, na.rm = TRUE))))
 
 
   Referrals <- Referrals |>
-    filter_dupe_soft(!!referrals_expr$is_last,
+    filter_dupe_soft(!!referrals_expr$is_last_enroll,
+                     !!referrals_expr$is_last,
                      !!referrals_expr$is_active,
                      !is.na(R_ReferralResult),
-                     !!referrals_expr$housed3 & !!referrals_expr$accepted2,
+                     !!referrals_expr$housed3 & !!referrals_expr$accepted,
                      key = PersonalID) |>
     filter_dupe_last_EnrollmentID(key = PersonalID, R_ReferredEnrollmentID) |>
     dplyr::arrange(dplyr::desc(R_ReferredEnrollmentID)) |>
@@ -306,6 +304,8 @@ load_client <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
 load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = rlang::caller_env()),
                          app_env = get_app_env(e = rlang::caller_env())) {
 
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
   # Project_extras -----------------------------------------------------------------
   # provider_extras
   # Thu Aug 12 14:23:50 2021
