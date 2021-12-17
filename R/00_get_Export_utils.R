@@ -393,7 +393,7 @@ pe_add_ProjectType <- function(provider_extras) {
 #'
 #' @return
 #' @export
-pe_add_GrantType = function(provider_extras) {
+pe_add_GrantType <- function(provider_extras) {
   hash <- HMIS::hud_translations$`2.06.1 FundingSource`(table = TRUE)
 
   gt <- list(HOPWA = c(13:19), PATH = 21, SSVF = 33, RHY = 22:26)
