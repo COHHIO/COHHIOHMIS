@@ -35,7 +35,7 @@ dqu_summary <- function(.data, filter_exp, groups = c("ProjectName", "ProjectID"
   if (!missing(join)) {
     p_data <- dplyr::left_join(p_data, join, by = UU::common_names(p_data, join))
     ns <- purrr::map(stringr::str_subset(names(p_data), stringr::regex("(?:^n_)|(?:Clients$)", ignore_case = TRUE)), rlang::sym)
-    ex <- rlang::expr(!!ns[[1]] / !!ns[[2]])
+    ex <- rlang::expr(round(!!ns[[1]] / !!ns[[2]], 5))
 
     p_data <- dplyr::mutate(p_data, `Frequency (Errors / Total Clients)` = !!ex,
                     from_mean = dplyr::percent_rank(`Frequency (Errors / Total Clients)`) - .5)
