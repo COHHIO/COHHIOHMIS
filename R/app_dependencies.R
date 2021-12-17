@@ -60,10 +60,10 @@ app_deps <- list(
     # cohorts
     "co_clients_served",
     # data_quality
-    "aps_no_referrals",
+    "dq_aps_no_referrals",
     "dq_past_year",
     "dq_unsheltered",
-    "data_APs",
+    "dq_APs",
     "dq_overlaps",
     "eligibility_detail",
     "dq_providers",
@@ -349,10 +349,12 @@ app_env <- R6::R6Class(
                                     total = length(.files))
       purrr::iwalk(.files, ~{
         cli::cli_progress_update(id = .pid, status = .y)
-        self$dependencies[[.y]] <- clarity.looker::hud_load(.x)
+        if (!stringr::str_detect(.x, "(?:png$)|(?:jpg$)|(?:jpeg$)"))
+          self$dependencies[[.y]] <- clarity.looker::hud_load(.x)
       })
       cli::cli_process_done(.pid)
       cli::cli_alert_success(paste0("Dependencies loaded from {.path {path}}: {.emph {paste0(names(.files), collapse = ', ')}}"))
+      invisible(self$dependencies)
     },
 #' @description Transfer all files in the data dependencies folder to the applications via dropbox or `file.copy`. If using dropbox, requires an authorized token to dropbox. See `dropbox_auth`.
 #' @param deps \code{(character/logical)} character vector of files to write to disk. Or `TRUE` **Default** to use the list of app dependencies matching the `dest_folder` name.
