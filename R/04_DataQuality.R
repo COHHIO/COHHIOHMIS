@@ -356,8 +356,8 @@ dq_providers <- rlang::set_names(projects_current_hmis$ProjectID, projects_curre
 
 # APs without referrals ----
 # Mon Sep 20 16:31:46 2021
-dq_aps_no_referrals <- dqu_aps(data_APs = FALSE)
-dq_APs <- dqu_aps()
+dq_aps_no_referrals <- dqu_aps(data_APs = FALSE, Referrals = Referrals_full)
+dq_APs <- dqu_aps(Referrals = Referrals_full)
 
 
 
