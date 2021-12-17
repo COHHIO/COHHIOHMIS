@@ -240,6 +240,15 @@ EnrollmentCoC_RemoveCoCCodes <- function(EnrollmentCoC, codes_to_remove = c("Def
     out <- EnrollmentCoC
 }
 
+#' @title Filter Projects that have been retired (`zz`'d)
+#'
+#' @inheritParams data_quality_tables
+#'
+#' @return
+#' @export
+Project_rm_zz <- function(Project) {
+  dplyr::filter(Project, stringr::str_detect(ProjectName, "^zz", negate = TRUE))
+}
 
 #' @title Add the Corresponding Region for each Project by way of Geocode matching
 #'
@@ -294,7 +303,7 @@ pe_add_regions <- function(provider_extras, Regions = clarity.looker::hud_load("
 
   # Special cases
   #  St. Vincent de Paul of Dayton serves region 13
-  out[out$Geocode == 391361, "ProjectRegion"] <- 13
+  out[out$Geocode %in% c("391361", "391362"), "ProjectRegion"] <- 13
 
   # Missing Regions
   # missing_region <- out |>
@@ -369,7 +378,7 @@ pe_create_APs = function(provider_extras, ProjectCoC, dirs, app_env = get_app_en
 #' @return \code{(data.frame)}
 
 pe_add_ProjectType <- function(provider_extras) {
-  PT <- hud.extract::hud_translations$`2.02.6 ProjectType`(table = TRUE) |>
+  PT <- HMIS::hud_translations$`2.02.6 ProjectType`(table = TRUE) |>
     tibble::add_row(Value = 12, Text = "Homeless Prevention")
   purrr::map_dbl(provider_extras$ProjectTypeCode, ~PT$Value[agrepl(stringr::str_remove(.x, "\\s\\([\\w\\s]+\\)$"), PT$Text)])
   provider_extras |>
@@ -384,8 +393,8 @@ pe_add_ProjectType <- function(provider_extras) {
 #'
 #' @return
 #' @export
-pe_add_GrantType = function(provider_extras) {
-  hash <- hud.extract::hud_translations$`2.06.1 FundingSource`(table = TRUE)
+pe_add_GrantType <- function(provider_extras) {
+  hash <- HMIS::hud_translations$`2.06.1 FundingSource`(table = TRUE)
 
   gt <- list(HOPWA = c(13:19), PATH = 21, SSVF = 33, RHY = 22:26)
   provider_extras |>

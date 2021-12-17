@@ -8,7 +8,7 @@ client_counts <- function(Project, Enrollment_extra_Client_Exit_HH_CL_AaE, rm_da
 
   validation <- qpr_validation(project_small, enrollment_small)
   if (is_clarity())
-    validation <- make_linked_df(validation, UniqueID)
+    validation <- clarity.looker::make_linked_df(validation, UniqueID)
   app_env$gather_deps("everything")
 }
 

@@ -6,37 +6,39 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
   force(app_env)
   force(clarity_api)
   rm_dates <- list()
-  rm_dates$hc <- purrr::map(list(
-    data_goes_back_to = "01012019",
+  #TODO Dynamically update looker date ranges
+  first <- lubridate::floor_date(Sys.Date(), "year")
+  hc <- list(
+    data_goes_back_to =  first - lubridate::years(2)
+    )
 
-    check_dq_back_to = "10012019", # the default ReportStart for DQ reporting
+  hc$unsheltered_data_start <- hc$data_goes_back_to
+  hc$outreach_to_cls <- hc$check_dq_back_to <-  lubridate::make_date(lubridate::year(hc$data_goes_back_to), month = 10, day = 1) # the default ReportStart for DQ reporting
+  hc$check_eligibility_back_to <- hc$check_dq_back_to - lubridate::years(3)
+  hc$project_eval_start = hc$data_goes_back_to + lubridate::years(1)
+  hc$project_eval_end = lubridate::ceiling_date(hc$project_eval_start, "year")
+  hc$project_eval_docs_due = lubridate::make_date(lubridate::year(hc$project_eval_end), 4, 23)
 
-    project_eval_start = "01012020",
+  hc <- append(hc, purrr::map(
+    c(
+      bos_start_vaccine_data = "02052021",
 
-    project_eval_end = "12312020",
+      psh_started_collecting_move_in_date = "10012017",
 
-    project_eval_docs_due = "04232021",
+      began_collecting_covid_data = "04012020",
 
-    bos_start_vaccine_data = "02052021",
+      began_requiring_spdats = "01012019",
 
-    psh_started_collecting_move_in_date = "10012017",
+      prior_living_situation_required = "10012016",
 
-    began_collecting_covid_data = "04012020",
+      no_more_svcs_on_hh_members = "02012019",
 
-    outreach_to_cls = "10012019",
+      first_vaccine_administered_in_us = "12142020"
+    ),
+    lubridate::mdy
+  ))
+  rm_dates$hc <- hc
 
-    began_requiring_spdats = "01012019",
-
-    unsheltered_data_start = "01012019",
-
-    prior_living_situation_required = "10012016",
-
-    check_eligibility_back_to = "10012016",
-
-    no_more_svcs_on_hh_members = "02012019",
-
-    first_vaccine_administered_in_us = "12142020"
-  ), lubridate::mdy)
 
   # Dates from Metadata -----------------------------------------------------
 
@@ -48,17 +50,6 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
     Export_Start = Export[["ExportStartDate"]][1],
     Export_End = Export[["ExportEndDate"]][1]
   )
-
-
-
-
-
-
-
-
-
-
-
 
   # Calculated Dates --------------------------------------------------------
   Exit <- cl_api$Exit()
@@ -109,5 +100,5 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
   # Gather Dependencies ----
   # Mon Aug 09 17:09:52 2021
 
-  app_env$gather_deps("everything")
+  app_env$gather_deps(rm_dates)
 }

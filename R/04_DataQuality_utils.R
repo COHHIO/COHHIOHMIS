@@ -169,6 +169,7 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Client_
       ))
       ) |>
     dplyr::inner_join(projects_current_hmis, by = "ProjectID") |>
+    dplyr::filter(stringr::str_detect(ProjectName, "\\sVASH\\s?", negate = TRUE)) |>
     dplyr::left_join(
       HealthAndDV  |>
         dplyr::filter(DataCollectionStage == 1)  |>
@@ -187,7 +188,7 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Client_
 #' Filter for Enrollments in a Specific Project Type
 #'
 #' @param served_in_date_range \code{(data.frame)} See `served_in_date_range`
-#' @param type \code{(numeric)} ProjectType. For full project type names see `hud.extract::hud_translations$[["2.02.6 ProjectType"]](table = TRUE)`
+#' @param type \code{(numeric)} ProjectType. For full project type names see `HMIS::hud_translations$[["2.02.6 ProjectType"]](table = TRUE)`
 #'
 #' @return \code{(data.frame)} with `PersonalID` for all Enrollees in the ProjectType, their `MoveInDateAdjust`, the `TimeInterval` for which they were in the Project, and the `ProjectName`
 #' @export
@@ -1333,8 +1334,8 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
 
     out <- check_eligibility |>
       dplyr::mutate(
-        ResidencePrior = hud.extract::hud_translations$`3.12.1 Living Situation Option List`(LivingSituation),
-        LengthOfStay = hud.extract::hud_translations$`3.917.2 LengthOfStay`(LengthOfStay)
+        ResidencePrior = HMIS::hud_translations$`3.12.1 Living Situation Option List`(LivingSituation),
+        LengthOfStay = HMIS::hud_translations$`3.917.2 LengthOfStay`(LengthOfStay)
       ) |>
       dplyr::mutate(
         Issue = "Check Eligibility",
@@ -2117,7 +2118,7 @@ sum_enroll_overlap <- function(PersonalID, EnrollmentID, Stay) {
     if (any(ol)) {
       ol_eids <- x$EnrollmentID[ol]
       # Create text hyperlinks
-      out <- paste0(out, purrr::when(length(out), . != 0 ~ "\n", character()), paste0(make_link(PersonalID, .y), " overlaps: ", paste0(make_link(PersonalID, ol_eids), collapse = ", ")))
+      out <- paste0(out, purrr::when(length(out), . != 0 ~ "\n", character()), paste0(clarity.looker::make_link(PersonalID, .y), " overlaps: ", paste0(clarity.looker::make_link(PersonalID, ol_eids), collapse = ", ")))
       x <- dplyr::filter(x, !EnrollmentID %in% ol_eids)
     }
   }
@@ -2152,7 +2153,7 @@ overlaps <- function(served_in_date_range, p_types = project_types$ph, vars, gui
       Type = "High Priority",
       Guidance = eval(parse(text = guidance$project_stays_eval))
     ) |>
-    make_linked_df(Overlaps, unlink = TRUE, new_ID = EnrollmentID) |>
+    clarity.looker::make_linked_df(Overlaps, unlink = TRUE, new_ID = EnrollmentID) |>
     dplyr::left_join(
       dplyr::select(served_in_date_range, EnrollmentID, ExitDate, EntryDate, ProjectID, MoveInDateAdjust)
     , by = "EnrollmentID")
@@ -2201,7 +2202,7 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
     dplyr::mutate(Issue = "Overlapping Project Stay & Move-In",
                   Type = "High Priority",
                   Guidance = eval(parse(text = guidance$project_stays_eval)))  |>
-    make_linked_df(Overlaps, unlink = TRUE, new_ID = EnrollmentID) |>
+    clarity.looker::make_linked_df(Overlaps, unlink = TRUE, new_ID = EnrollmentID) |>
     dplyr::left_join(
       dplyr::select(served_in_date_range, EnrollmentID, ExitDate, EntryDate, ProjectID),
       by = "EnrollmentID")
@@ -2603,6 +2604,42 @@ dq_services_on_hh_members_ssvf <- function(served_in_date_range, Services, vars,
                   Guidance = guidance$services_on_non_hoh) |>
     dplyr::select(dplyr::all_of(vars$we_want))
 
+}
+
+#' @title Find Old Outstanding Referrals
+#' @family Clarity Checks
+#' @family DQ: Referral Checks
+#' @inherit data_quality_tables params return
+#' @export
+
+
+dq_referrals_outstanding <- function(served_in_date_range, Referrals, vars, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  # Old Outstanding Referrals -----------------------------------------------
+  # CW says ProviderCreating should work instead of Referred-From Provider
+  # Using ProviderCreating instead. Either way, I feel this should go in the
+  # Provider Dashboard, not the Data Quality report.
+
+  served_in_date_range %>%
+    dplyr::semi_join(Referrals,
+                     by = c("PersonalID", "UniqueID")) %>%
+    dplyr::left_join(Referrals, by = c("PersonalID", "UniqueID")) |>
+    dplyr::select(dplyr::all_of(vars$prep),
+                  R_ReferringProjectID,
+                  R_ReferralDaysElapsed,
+                  R_ReferringProjectName,
+                  R_DaysInQueue,
+                  EnrollmentID) %>%
+    dplyr::filter(R_ReferralDaysElapsed %|% R_DaysInQueue > 14) %>%
+    dplyr::mutate(
+      ProjectName = R_ReferringProjectName,
+      ProjectID = R_ReferringProjectID,
+      Issue = "Old Outstanding Referral",
+      Type = "Warning",
+      Guidance = "Referrals should be closed in about 2 weeks. Please be sure you are following up with any referrals and helping the client to find permanent housing. Once a Referral is made, the receiving agency should be saving the 'Referral Outcome' once it is known. If you have Referrals that are legitimately still open after 2 weeks because there is a lot of follow up going on, no action is needed since the HMIS data is accurate."
+    ) %>%
+    dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 #' @title Find Referrals on Household Members in SSVF

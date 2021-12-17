@@ -19,8 +19,7 @@ dirs <- clarity.looker::dirs
 # Use the HUD CSV from the UI until the Looker API is fixed
 dirs$export <- "data"
 cl_api$.__enclos_env__$self$dirs <- dirs
-Rm_env$gather_deps(guidance)
-Rm_env$gather_deps(dirs)
+Rm_env$gather_deps(dirs, guidance)
 run_bg(bg_scripts["update_extras"])
 # Try services
 # rstudioapi::jobRunScript(file.path("inst","src","Services_test.R"), importEnv = TRUE, workingDir = getwd())
@@ -30,17 +29,20 @@ Rm_env <- cohorts()
 Rm_env <- client_counts()
 Rm_env <- covid19()
 Rm_env <- covid19_plots()
+Rm_env <- vets()
+Rm_env <- vet_active()
 Rm_env <- prioritization()
 Rm_env <- bed_unit_utilization()
 Rm_env <- data_quality()
 Rm_env <- data_quality_summary()
+Rm_env$write_app_deps(all = TRUE,
+                      path = file.path("data", "backup"))
+Rm_env$deps_to_destination(Rm_env$app_deps$RminorElevated,
+                      folder = file.path("data", "backup"), dropbox = FALSE)
 beepr::beep(sound = 3)
-
-Rm_env$write_app_deps(Rm_env$app_deps$RminorElevated,
-                      path = file.path("data", "db", "RminorElevated"))
 # Uses RminorElevated as the default
 Rm_env$dropbox_auth()
-Rm_env$deps_to_apps(dropbox = FALSE)
+
 
 
 

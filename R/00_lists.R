@@ -7,20 +7,48 @@ destinations = list(
   other = c(8, 9, 17, 24, 30, 37, 99)
 )
 
+
 # Project Groupings -------------------------------------------------------
 #TODO
 # GPD_project_ids <- c(751, 776, 749, 1229, 127, 550)
 #
 # fake_projects <- c(1027, 1849, 1028, 1033, 1032, 1029, 1931, 1030, 1031, 1317)
 
+col_cats = list(Client = list(
+  gender = c(
+    "Female",
+    "Male",
+    "NoSingleGender",
+    "Transgender",
+    "Questioning",
+    "GenderNone"
+  ),
+  race = c(
+    "AmIndAKNative",
+    "Asian",
+    "BlackAfAmerican",
+    "NativeHIPacific",
+    "White",
+    "RaceNone",
+    "Ethnicity"
+  )
+))
 
-
+# FY 2022
+living_situations <- list(
+  homeless = c(16, 1, 18),
+  likely_homeless = c(16, 1, 18, 17, 7),
+  institutional = c(15, 6, 7, 25, 4, 5),
+  temp_psh = c(29, 14, 2, 32, 13, 36, 12, 22, 35, 23, 26, 27, 28, 19, 13, 31, 33, 34, 10, 20, 21, 11),
+  other = c(30, 17, 24, 37, 8, 9, 99)
+)
 # Project Type Groupings --------------------------------------------------
 
 project_types = list(
   es = 1,
   th = 2,
   sh = 8,
+  so = 6,
   lh = c(1, 2, 8),
   lh_hp = c(1, 2, 8, 12),
   lh_so_hp = c(1, 2, 4, 8, 12),
@@ -31,5 +59,6 @@ project_types = list(
   rrh = 13,
   coc_funded = c(2, 3, 13),
   w_beds = c(1, 2, 3, 8, 9),
-  ap = c(14)
+  ap = 14,
+  ce = 14
 )

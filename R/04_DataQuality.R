@@ -138,8 +138,8 @@ dq_main <- do.call(rbind, dqs) |>
 cli::cli_progress_update(id = .pid,,
                          status = "Finish dq_main")
 if (is_clarity()) {
-  dq_main <- make_linked_df(dq_main, UniqueID)
-  dq_main <- make_linked_df(dq_main, EnrollmentID)
+  dq_main <- clarity.looker::make_linked_df(dq_main, UniqueID)
+  dq_main <- clarity.looker::make_linked_df(dq_main, EnrollmentID)
 }
 
 
@@ -168,8 +168,8 @@ eligibility_detail <- dq_check_eligibility()
 
 
 if (is_clarity()) {
-  eligibility_detail <- make_linked_df(eligibility_detail, UniqueID)
-  eligibility_detail <- make_linked_df(eligibility_detail, EnrollmentID)
+  eligibility_detail <- clarity.looker::make_linked_df(eligibility_detail, UniqueID)
+  eligibility_detail <- clarity.looker::make_linked_df(eligibility_detail, EnrollmentID)
 }
 
 # TODO See note in dq_overlaps
@@ -356,11 +356,11 @@ dq_providers <- rlang::set_names(projects_current_hmis$ProjectID, projects_curre
 
 # APs without referrals ----
 # Mon Sep 20 16:31:46 2021
-aps_no_referrals <- dqu_aps(data_APs = FALSE)
-data_APs <- dqu_aps()
+dq_aps_no_referrals <- dqu_aps(data_APs = FALSE, Referrals = Referrals_full)
+dq_APs <- dqu_aps(Referrals = Referrals_full)
 
 
 
 
-app_env$gather_deps(dq_providers, aps_no_referrals, data_APs, eligibility_detail, dq_overlaps)
+app_env$gather_deps(dq_providers, dq_aps_no_referrals, dq_APs, eligibility_detail, dq_overlaps)
 }

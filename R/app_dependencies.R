@@ -60,10 +60,10 @@ app_deps <- list(
     # cohorts
     "co_clients_served",
     # data_quality
-    "aps_no_referrals",
+    "dq_aps_no_referrals",
     "dq_past_year",
     "dq_unsheltered",
-    "data_APs",
+    "dq_APs",
     "dq_overlaps",
     "eligibility_detail",
     "dq_providers",
@@ -95,7 +95,6 @@ app_deps <- list(
     "qpr_spdats_county",
     "Referrals",
     "Regions",
-    "responsible_providers",
     "Scores",
     "summary_pe_final_scoring",
     "unsheltered_by_month",
@@ -350,10 +349,12 @@ app_env <- R6::R6Class(
                                     total = length(.files))
       purrr::iwalk(.files, ~{
         cli::cli_progress_update(id = .pid, status = .y)
-        self$dependencies[[.y]] <- clarity.looker::hud_load(.x)
+        if (!stringr::str_detect(.x, "(?:png$)|(?:jpg$)|(?:jpeg$)"))
+          self$dependencies[[.y]] <- clarity.looker::hud_load(.x)
       })
       cli::cli_process_done(.pid)
       cli::cli_alert_success(paste0("Dependencies loaded from {.path {path}}: {.emph {paste0(names(.files), collapse = ', ')}}"))
+      invisible(self$dependencies)
     },
 #' @description Transfer all files in the data dependencies folder to the applications via dropbox or `file.copy`. If using dropbox, requires an authorized token to dropbox. See `dropbox_auth`.
 #' @param deps \code{(character/logical)} character vector of files to write to disk. Or `TRUE` **Default** to use the list of app dependencies matching the `dest_folder` name.
@@ -362,12 +363,12 @@ app_env <- R6::R6Class(
 #' @param dropbox \code{(logical)} **Default** Upload dependencies to Dropbox, `FALSE` to pass to the `data` folder in the sibling directory: `dest_folder`.
 #' @return
 
-    deps_to_apps = function(deps = TRUE, folder = file.path("data","db","RminorElevated"), dest_folder = "RminorElevated", dropbox = TRUE) {
+    deps_to_destination = function(deps = TRUE, folder = file.path("data","db","RminorElevated"), dest_folder = file.path("..","RminorElevated","data"), dropbox = TRUE) {
       if (!dropbox)
-        dest_folder = file.path("..",dest_folder,"data")
+        dest_app = stringr::str_subset(stringr::str_split(dest_folder, "\\/")[[1]], paste0("(?:", names(self$app_deps), ")") |> paste0(collapse = "|"))
 
       if (isTRUE(deps))
-        deps <- self$app_deps[[dest_folder]]
+        deps <- self$app_deps[[dest_app]]
       if (UU::is_legit(deps)) {
         files <- purrr::flatten_chr(purrr::compact(purrr::map(deps, hud_filename, path = folder)))
       } else

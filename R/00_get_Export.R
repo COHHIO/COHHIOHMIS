@@ -21,10 +21,10 @@
 #' @inheritParams R6Classes
 #' @param error \code{(logical)} whether to error or send a message via pushbullet when data checks fail
 #'
-#' @return
+#' @return `app_env` with data dependencies
 #' @export
-#'
-#' @examples
+
+
 load_export <- function(
   clarity_api = get_clarity_api(e = rlang::caller_env()),
   app_env = get_app_env(e = rlang::caller_env()),
@@ -32,94 +32,53 @@ load_export <- function(
 ) {
 
   force(clarity_api)
+
+  # Public data
+  app_env <- load_public()
+  # Client
+  app_env <- load_client()
+
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
-  # Service Areas -----------------------------------------------------------
-  ServiceAreas <- clarity.looker::hud_load("ServiceAreas.feather", dirs$public)
+  # ProjectCoC
+  ProjectCoC <-
+    clarity_api$ProjectCoC()
+  # Project
+  app_env <- load_project(ProjectCoC = ProjectCoC, app_env = app_env)
+
 
   # Affiliation -------------------------------------------------------------
 
-  Affiliation <- cl_api$Affiliation()
+  Affiliation <- clarity_api$Affiliation()
 
-  # Client ------------------------------------------------------------------
-
-  Client <- cl_api$Client()
-  # this saves Client as a feather file with redacted PII as a security measure.
-  if (!all(Client$SSN %in% c("ok" ,"Invalid", "DKR", "Missing"))) {
-    Client <- Client_redact(Client)
-    clarity.looker::hud_feather(Client, dirs$export)
-  }
-  # Veteran Client_extras ----
-  VeteranCE <- cl_api$`HUD Extras`$Client_extras()
-
-  Client <- Client_add_UniqueID(Client, cl_api$`HUD Extras`$Client_UniqueID_extras())
 
 
   # Disabilities ------------------------------------------------------------
 
-  Disabilities <- cl_api$Disabilities()
+  Disabilities <- clarity_api$Disabilities()
 
 
   # EmploymentEducation -----------------------------------------------------
 
-  EmploymentEducation <- cl_api$EmploymentEducation()
+  EmploymentEducation <- clarity_api$EmploymentEducation()
 
-  # ProjectCoC --------------------------------------------------------------
-
-  ProjectCoC <-
-    cl_api$ProjectCoC()
-
-
-  app_env$merge_deps_to_env("dirs")
-  force(dirs)
-
-  # Project_extras -----------------------------------------------------------------
-  # provider_extras
-  # Thu Aug 12 14:23:50 2021
-  Regions <- clarity.looker::hud_load("Regions", dirs$public)
-
-  provider_extras <- cl_api$`HUD Extras`$Project_extras()
-  provider_extras <- pe_add_ProjectType(provider_extras) |>
-    pe_add_regions(Regions, dirs = dirs) |>
-    pe_add_GrantType()
-
-  # Rminor: Coordinated Entry Access Points [CEAP]
-  APs <- pe_create_APs(provider_extras, ProjectCoC, dirs = dirs)
-
-
-
-Project <- cl_api$Project()
-Project <- Project |>
-  dplyr::select(-ProjectCommonName) |>
-  {\(x) {dplyr::left_join(x, provider_extras |> dplyr::select(- dplyr::matches("FundingSourceID")) |> dplyr::distinct(ProjectID, .keep_all = TRUE), by = UU::common_names(x, provider_extras))}}()
-UU::join_check(cl_api$Project(), Project)
-
-mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
-  dplyr::select(ProjectID) |>
-  {\(x) {
-    dplyr::left_join(x, dplyr::select(Project, ProjectID, ProjectTypeCode, ProjectName), by = "ProjectID") |>
-      dplyr::filter(stringr::str_detect(ProjectName, "^zz", negate = TRUE)) |>
-      dplyr::distinct(ProjectID, .keep_all = TRUE) |>
-      {\(y) {rlang::set_names(y$ProjectID, dplyr::pull(y, ProjectTypeCode))}}()
-  }}()
 
 
   # EnrollmentCoC -----------------------------------------------------------
 
-  EnrollmentCoC <-
-    cl_api$EnrollmentCoC() |>
+  EnrollmentCoC <- clarity_api$EnrollmentCoC() |>
     EnrollmentCoC_RemoveCoCCodes()
 
 
 
   # Enrollment --------------------------------------------------------------
   # getting EE-related data, joining both to En
-  Enrollment_extras <- cl_api$`HUD Extras`$Enrollment_extras()
-  Enrollment <- cl_api$Enrollment()
+  Enrollment_extras <- clarity_api$`HUD Extras`$Enrollment_extras()
+  Enrollment <- clarity_api$Enrollment()
   Enrollment_extra_Client_Exit_HH_CL_AaE <- dplyr::left_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
     # Add Exit
-    Enrollment_add_Exit(cl_api$Exit()) |>
+    Enrollment_add_Exit(clarity_api$Exit()) |>
     # Add Households
     Enrollment_add_Household(Project) |>
     # Add Veteran Coordinated Entry
@@ -145,63 +104,56 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
   # Funder ------------------------------------------------------------------
 
   Funder <-
-    cl_api$Funder()
+    clarity_api$Funder()
 
   # HealthAndDV -------------------------------------------------------------
 
   HealthAndDV <-
-    cl_api$HealthAndDV()
+    clarity_api$HealthAndDV()
 
   # IncomeBenefits ----------------------------------------------------------
 
   IncomeBenefits <-
-    cl_api$IncomeBenefits()
+    clarity_api$IncomeBenefits()
 
   # Inventory ---------------------------------------------------------------
 
   Inventory <-
-    cl_api$Inventory()
+    clarity_api$Inventory()
 
   # Organization ------------------------------------------------------------
 
   Organization <-
-    cl_api$Organization()
+    clarity_api$Organization()
 
 
   # Contacts ----------------------------------------------------------------
   # only pulling in contacts made between an Entry Date and an Exit Date
 
-  Contacts <- cl_api$`HUD Extras`$Contact_extras()
+  Contacts <- clarity_api$`HUD Extras`$Contact_extras()
 
   # Scores ------------------------------------------------------------------
 
-  Scores <-  cl_api$`HUD Extras`$Client_SPDAT_extras()
+  Scores <-  clarity_api$`HUD Extras`$Client_SPDAT_extras()
 
   # Offers -----------------------------------------------------------------
 
-  # TODO Used in Veterans Active List
-  # Offers <- cl_api$`HUD Extras`$Client_Offer_extras()
-  # Offers <-
-  #   readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 7) |>
-  #   dplyr::mutate(AcceptDeclineDate = lubridate::ymd(as.Date(AcceptDeclineDate, origin = "1899-12-30")),
-  #                 OfferDate = lubridate::ymd(as.Date(OfferDate, origin = "1899-12-30")))
+  Offers <- clarity_api$`HUD Extras`$Client_Offer_extras()
 
 
 
 
-  Doses <- cl_api$`HUD Extras`$Client_Doses_extras()
+  Doses <- clarity_api$`HUD Extras`$Client_Doses_extras()
 
 
   # Users ----
   # Thu Sep 23 14:38:19 2021
-  Users <- cl_api$User()
+  Users <- clarity_api$User()
 
   # Services ----------------------------------------------------------------
 
-  # services_funds <- readxl::read_xlsx(paste0(directory, "/RMisc2.xlsx"), sheet = 9)
-
-  Services <- cl_api$Services()
-  Services_extras <- cl_api$`HUD Extras`$Services_extras()
+  Services <- clarity_api$Services()
+  Services_extras <- clarity_api$`HUD Extras`$Services_extras()
   Services_enroll_extras  <- dplyr::left_join(Services,
                      Services_extras,
                      by = UU::common_names(Services, Services_extras)) |>
@@ -256,22 +208,19 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
     dplyr::filter(!stray_service) |>
     dplyr::select(-stray_service)
 
-  # TODO To get the Total RRH (Which should be 75% of all ESG funding spent on Services)
-  # Rme - QPR - RRH Spending
-  # Rm - QPR - RRH vs HP
-  # Services_extras$ServiceAmount[Services_extras$FundName |>
-  #                              stringr::str_detect("RRH") |>
-  #                              which()]
+
 
   # Referrals ---------------------------------------------------------------
 
 
-  Referrals <- cl_api$`HUD Extras`$CE_Referrals_extras(col_types = list(ReferralConnectedPTC = "c", DeniedByType = "c")) |>
+  Referrals <- clarity_api$`HUD Extras`$CE_Referrals_extras(col_types = list(ReferralConnectedPTC = "c", DeniedByType = "c")) |>
     dplyr::rename_with(.cols = - dplyr::matches("(?:^PersonalID)|^(?:^UniqueID)"), rlang::as_function(~paste0("R_",.x))) |>
     dplyr::mutate(R_ReferralConnectedPTC = stringr::str_remove(R_ReferralConnectedPTC, "\\s\\(disability required\\)$"),
                   R_ReferralConnectedPTC = dplyr::if_else(R_ReferralConnectedPTC == "Homeless Prevention", "Homelessness Prevention", R_ReferralConnectedPTC),
-                  R_ReferralConnectedPTC = hud.extract::hud_translations$`2.02.6 ProjectType`(R_ReferralConnectedPTC))
-  # TODO ReferralOutcome must be replaced by a Clarity element (or derived from multiple) for dq_internal_old_outstanding_referrals
+                  R_ReferralConnectedPTC = HMIS::hud_translations$`2.02.6 ProjectType`(R_ReferralConnectedPTC))
+
+  # Full needed for dqu_aps
+  Referrals_full <- Referrals
 
   referrals_expr <- rlang::exprs(
     housed1 = R_RemovedFromQueueSubreason %in% c(
@@ -284,26 +233,25 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
     housed2 = !is.na(R_ReferralConnectedMoveInDate),
     housed3 = R_ExitHoused == "Housed",
     is_last = R_IsLastReferral == "Yes",
+    is_last_enroll = R_IsLastEnrollment == "Yes",
     is_active = R_ActiveInProject == "Yes",
-    accepted1 = R_IsLastReferral == "Yes",
-    accepted2 = stringr::str_detect(R_ReferralResult, "accepted$"),
+    accepted = stringr::str_detect(R_ReferralResult, "accepted$"),
     coq = R_ReferralCurrentlyOnQueue == "Yes"
   )
   referral_result_summarize <- purrr::map(referrals_expr, ~rlang::expr(isTRUE(any(!!.x, na.rm = TRUE))))
 
 
   Referrals <- Referrals |>
-    filter_dupe_soft(!!referrals_expr$is_last,
+    filter_dupe_soft(!!referrals_expr$is_last_enroll,
+                     !!referrals_expr$is_last,
                      !!referrals_expr$is_active,
                      !is.na(R_ReferralResult),
-                     !!referrals_expr$housed3 & !!referrals_expr$accepted2,
+                     !!referrals_expr$housed3 & !!referrals_expr$accepted,
                      key = PersonalID) |>
     filter_dupe_last_EnrollmentID(key = PersonalID, R_ReferredEnrollmentID) |>
     dplyr::arrange(dplyr::desc(R_ReferredEnrollmentID)) |>
     dplyr::distinct(dplyr::across(-R_ReferredEnrollmentID), .keep_all = TRUE)
-  # HUD CSV Specs -----------------------------------------------------------
-  #TODO hud.extract Data element coercion functions
-  HUD_specs <- clarity.looker::hud_load("HUD_specs", dirs$public)
+
 
 
   app_env$gather_deps("everything")
@@ -312,4 +260,81 @@ mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
 
 
 
+#' @title Load public data pre-requisites for `load_export`
+#'
+#' @inheritParams data_quality_tables
+#' @inherit load_export return
+#' @export
+
+load_public <- function(app_env = get_app_env(e = rlang::caller_env())) {
+  # Public -----------------------------------------------------------
+  ServiceAreas <- clarity.looker::hud_load("ServiceAreas.feather", dirs$public)
+  Regions <- clarity.looker::hud_load("Regions", dirs$public)
+  app_env$gather_deps("everything")
+}
+
+#' @title Load Client data & extras pre-requisites for `load_export`
+#'
+#' @inheritParams data_quality_tables
+#' @inherit load_export return
+#' @export
+
+load_client <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
+                 app_env = get_app_env(e = rlang::caller_env())) {
+  Client <- clarity_api$Client()
+  # this saves Client as a feather file with redacted PII as a security measure.
+  if (!all(Client$SSN %in% c("ok" ,"Invalid", "DKR", "Missing"))) {
+    Client <- Client_redact(Client)
+    clarity.looker::hud_feather(Client, dirs$export)
+  }
+  # Veteran Client_extras ----
+  VeteranCE <- clarity_api$`HUD Extras`$Client_extras()
+
+  Client <- Client_add_UniqueID(Client, clarity_api$`HUD Extras`$Client_UniqueID_extras())
+  app_env$gather_deps("everything")
+}
+
+#' @title Load Project & extras pre-requisites for `load_export`
+#'
+#' @inheritParams data_quality_tables
+#' @param Regions From public data. See `load_public`
+#' @inherit load_export return
+#' @export
+
+load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = rlang::caller_env()),
+                         app_env = get_app_env(e = rlang::caller_env())) {
+
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  # Project_extras -----------------------------------------------------------------
+  # provider_extras
+  # Thu Aug 12 14:23:50 2021
+
+
+  provider_extras <- clarity_api$`HUD Extras`$Project_extras()
+  provider_extras <- pe_add_ProjectType(provider_extras) |>
+    pe_add_regions(Regions, dirs = dirs) |>
+    pe_add_GrantType()
+
+  # Rminor: Coordinated Entry Access Points [CEAP]
+  APs <- pe_create_APs(provider_extras, ProjectCoC, dirs = dirs)
+
+
+
+  Project <- clarity_api$Project()
+  Project <- Project |>
+    dplyr::select(-ProjectCommonName) |>
+    {\(x) {dplyr::left_join(x, provider_extras |> dplyr::select(- dplyr::matches("FundingSourceID")) |> dplyr::distinct(ProjectID, .keep_all = TRUE), by = UU::common_names(x, provider_extras))}}()
+  UU::join_check(clarity_api$Project(), Project)
+
+  mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
+    dplyr::select(ProjectID) |>
+    {\(x) {
+      dplyr::left_join(x, dplyr::select(Project, ProjectID, ProjectTypeCode, ProjectName), by = "ProjectID") |>
+        Project_rm_zz() |>
+        dplyr::distinct(ProjectID, .keep_all = TRUE) |>
+        {\(y) {rlang::set_names(y$ProjectID, dplyr::pull(y, ProjectTypeCode))}}()
+    }}()
+  app_env$gather_deps("everything")
+}
 
