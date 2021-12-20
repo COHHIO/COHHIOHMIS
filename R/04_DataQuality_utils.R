@@ -1788,7 +1788,7 @@ dq_future_exits <- function(served_in_date_range, vars, app_env = get_app_env(e 
 #' @inherit data_quality_tables params return
 #' @export
 
-dq_ph_without_spdats <- function(served_in_date_range, Funder, rm_dates, vars, app_env = get_app_env(e = rlang::caller_env()), unsh = FALSE) {
+dq_ph_without_spdats <- function(served_in_date_range, Funder, Scores, rm_dates, vars, app_env = get_app_env(e = rlang::caller_env()), unsh = FALSE) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
