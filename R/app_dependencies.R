@@ -172,7 +172,7 @@ fun_insert <-
 app_env <- R6::R6Class(
   "app_env",
   public = rlang::list2(
-    #' @field Dependency environment
+    #' @field dependencies Dependency environment
     dependencies = new.env(parent = .GlobalEnv),
     #' @description Pass all dependencies saved from previous functions to an environment for use
     #' @param ... \code{(character)} names of objects to share with `env`. **Default** load all previously stored objects.
@@ -364,8 +364,8 @@ app_env <- R6::R6Class(
 #' @return
 
     deps_to_destination = function(deps = TRUE, folder = file.path("data","db","RminorElevated"), dest_folder = file.path("..","RminorElevated","data"), dropbox = TRUE) {
-      if (!dropbox)
-        dest_app = stringr::str_subset(stringr::str_split(dest_folder, "\\/")[[1]], paste0("(?:", names(self$app_deps), ")") |> paste0(collapse = "|"))
+
+      dest_app = stringr::str_subset(stringr::str_split(dest_folder, "\\/")[[1]], paste0("(?:", names(self$app_deps), ")") |> paste0(collapse = "|"))
 
       if (isTRUE(deps))
         deps <- self$app_deps[[dest_app]]
@@ -378,7 +378,7 @@ app_env <- R6::R6Class(
       out <- purrr::map_chr(files, ~{
         cli::cli_progress_update(id = .pid, status = basename(.x))
         if (dropbox) {
-          rdrop2::drop_upload(.x, file.path(dest_folder))
+          rdrop2::drop_upload(.x, file.path(dest_app))
         } else {
           file.copy(.x, file.path(dest_folder, basename(.x)), overwrite = TRUE)
         }
