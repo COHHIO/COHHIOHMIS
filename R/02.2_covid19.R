@@ -26,14 +26,14 @@ covid19 <- function(
     ))
 
 
-  get_res_prior <- clarity.looker::make_linked_df(validation, UniqueID, unlink = TRUE) %>%
-    dplyr::select(PersonalID, EntryDate, ExitDate, LivingSituation) %>%
-    dplyr::group_by(PersonalID) %>%
-    dplyr::arrange(dplyr::desc(EntryDate)) %>%
+  get_res_prior <- validation |>
+    dplyr::select(PersonalID, EntryDate, ExitDate, LivingSituation) |>
+    dplyr::group_by(PersonalID) |>
+    dplyr::arrange(dplyr::desc(EntryDate)) |>
     dplyr::slice(1L)
 
-  c19priority <- covid19 %>%
-    dplyr::left_join(get_res_prior, by = "PersonalID") %>%
+  c19priority <- covid19 |>
+    dplyr::left_join(get_res_prior, by = "PersonalID") |>
     dplyr::filter(C19AssessmentDate >= lubridate::mdy("04012020") &
                     C19AssessmentDate <= lubridate::today()) |>
     dplyr::mutate(
@@ -102,7 +102,7 @@ Priority = dplyr::case_when(
 rm(get_res_prior)
 
 
-  covid19_status <- c19priority %>%
+  covid19_status <- c19priority |>
     dplyr::mutate(
       COVID19Status = factor(dplyr::case_when(
         C19D_TestPos ~ "Positive",
