@@ -9,16 +9,9 @@ Save dependencies for future functions in an environment and put app dependencie
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{Dependency}}{environment}
+\item{\code{dependencies}}{Dependency environment}
 
 \item{\code{app_deps}}{\code{(list)} with all app dependencies as character vectors}
-}
-\if{html}{\out{</div>}}
-}
-\section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{Dependency}}{environment}
 }
 \if{html}{\out{</div>}}
 }
@@ -30,7 +23,7 @@ Save dependencies for future functions in an environment and put app dependencie
 \item \href{#method-set_parent}{\code{app_env$set_parent()}}
 \item \href{#method-write_app_deps}{\code{app_env$write_app_deps()}}
 \item \href{#method-load_deps}{\code{app_env$load_deps()}}
-\item \href{#method-deps_to_apps}{\code{app_env$deps_to_apps()}}
+\item \href{#method-deps_to_destination}{\code{app_env$deps_to_destination()}}
 \item \href{#method-dropbox_auth}{\code{app_env$dropbox_auth()}}
 \item \href{#method-new}{\code{app_env$new()}}
 \item \href{#method-clone}{\code{app_env$clone()}}
@@ -130,6 +123,8 @@ Write app dependencies to disk
 \item{\code{path}}{\code{(character)} of directory to write app dependencies to}
 
 \item{\code{overwrite}}{\code{(logical)} Whether to overwrite existing files. \strong{Default:\code{TRUE}}}
+
+\item{\code{all}}{\code{(logical)} Whether to backup all dependencies (overrides deps)}
 }
 \if{html}{\out{</div>}}
 }
@@ -155,15 +150,15 @@ Load backed up dependencies from path
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-deps_to_apps"></a>}}
-\if{latex}{\out{\hypertarget{method-deps_to_apps}{}}}
-\subsection{Method \code{deps_to_apps()}}{
+\if{html}{\out{<a id="method-deps_to_destination"></a>}}
+\if{latex}{\out{\hypertarget{method-deps_to_destination}{}}}
+\subsection{Method \code{deps_to_destination()}}{
 Transfer all files in the data dependencies folder to the applications via dropbox or \code{file.copy}. If using dropbox, requires an authorized token to dropbox. See \code{dropbox_auth}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$deps_to_apps(
+\if{html}{\out{<div class="r">}}\preformatted{app_env$deps_to_destination(
   deps = TRUE,
   folder = file.path("data", "db", "RminorElevated"),
-  dest_folder = "RminorElevated",
+  dest_folder = file.path("..", "RminorElevated", "data"),
   dropbox = TRUE
 )}\if{html}{\out{</div>}}
 }

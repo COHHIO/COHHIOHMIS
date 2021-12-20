@@ -83,6 +83,7 @@ Other Clarity Checks:
 \code{\link{dq_psh_missing_project_stay}()},
 \code{\link{dq_race}()},
 \code{\link{dq_referrals_on_hh_members_ssvf}()},
+\code{\link{dq_referrals_outstanding}()},
 \code{\link{dq_rrh_check_exit_destination}()},
 \code{\link{dq_rrh_missing_project_stay}()},
 \code{\link{dq_services_on_hh_members_ssvf}()},
