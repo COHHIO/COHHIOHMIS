@@ -37,7 +37,7 @@ dependencies$DataQuality <-
     "Users"
   )
 
-check_fns <- stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!\\_spdats)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
+check_fns <- stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
 
 data_quality <- function(check_fns = Rm_data::check_fns,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
@@ -356,6 +356,7 @@ dq_providers <- rlang::set_names(projects_current_hmis$ProjectID, projects_curre
 
 # APs without referrals ----
 # Mon Sep 20 16:31:46 2021
+app_env$merge_deps_to_env("Referrals_full")
 dq_aps_no_referrals <- dqu_aps(data_APs = FALSE, Referrals = Referrals_full)
 dq_APs <- dqu_aps(Referrals = Referrals_full)
 
