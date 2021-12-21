@@ -4,7 +4,12 @@
 \alias{setup_RmData}
 \title{Setup RmData options}
 \usage{
-setup_RmData(Clarity = TRUE, ServicePoint = FALSE)
+setup_RmData(
+  Clarity = TRUE,
+  ServicePoint = FALSE,
+  Clarity_URL = "https://cohhio.clarityhs.com",
+  clients_to_filter = NULL
+)
 }
 \arguments{
 \item{Clarity}{\code{(logical)} Does the CoC use Clarity HMIS? \strong{Default} \code{TRUE}}
