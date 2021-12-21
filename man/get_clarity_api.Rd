@@ -18,7 +18,7 @@ get_clarity_api(nm = "cl_api", e = rlang::caller_env())
 Find the \code{clarity_api} R6 object
 }
 \details{
-Searches the \code{Rm_data} package environment and then the environment specified
+Searches the \code{RmData} package environment and then the environment specified
 }
 \examples{
 get_clarity_api()

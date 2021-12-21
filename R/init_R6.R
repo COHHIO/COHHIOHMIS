@@ -22,11 +22,14 @@ if (file.exists("RmData.Rproj") && interactive()) {
 #' \dontrun{
 #' setup_RmData(Clarity = TRUE, ServicePoint = FALSE)
 #' }
-setup_RmData <- function(Clarity = TRUE, ServicePoint = FALSE) {
+setup_RmData <- function(Clarity = TRUE, ServicePoint = FALSE, Clarity_URL = "https://cohhio.clarityhs.com", clients_to_filter = NULL) {
   if (!UU::is_legit(list.files(pattern = "^.Rprofile$")))
     file.create(".Rprofile")
-  write(paste0("options(HMIS = list(Clarity = ",Clarity,",
-              ServicePoint = ",ServicePoint,"))", ".Rprofile"), append = TRUE)
+  .msg <- glue::glue("options(HMIS = list(Clarity = {Clarity},
+              ServicePoint = {ServicePoint},
+             Clarity_URL = {Clarity_URL},
+             clients_to_filter = {clients_to_filter}))")
+  write(.msg, ".Rprofile", append = TRUE)
   cli::cli_alert_success("HMIS options written to .Rprofile in project directory.")
 }
 

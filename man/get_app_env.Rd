@@ -18,7 +18,7 @@ get_app_env(nm = "Rm_env", e = rlang::caller_env())
 Find the \code{app_env} R6 object
 }
 \details{
-Searches the \code{Rm_data} package environment and then the environment specified
+Searches the \code{RmData} package environment and then the environment specified
 }
 \examples{
 get_clarity_api()

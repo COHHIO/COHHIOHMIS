@@ -7,6 +7,7 @@
 dq_ph_without_spdats(
   served_in_date_range,
   Funder,
+  Scores,
   rm_dates,
   vars,
   app_env = get_app_env(e = rlang::caller_env()),

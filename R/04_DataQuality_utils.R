@@ -1,4 +1,24 @@
+#' @title Retrieve an HMIS option set via `setup_RmData`
+#' @param opt \code{(character)} Option name to retrieve
+#' @inheritParams getOption
+#'
 #' @include 04_Guidance.R
+
+hmis_option <- function(opt, default = FALSE) {
+  .opt <- rlang::enexpr(opt)
+  .w <- glue::glue("HMIS option `{.opt}`")
+  .e <- glue::glue("HMIS options")
+  .msg <- " not setup, please see ?setup_RmData to fix this."
+
+  x <- getOption("HMIS", stop(glue::glue("{.e}{.msg}")))
+  out <- x[[opt]]
+  if (!UU::is_legit(out)) {
+    warning(glue::glue("{.w}{.e}"))
+    out <- default
+  }
+
+  out
+}
 
 #' @title Is this instance using Clarity
 #' @description Set an option in `.Rprofile` using `usethis::edit_r_profile('project')` called HMIS which is a list containing two logical values:
@@ -8,22 +28,24 @@
 #' }
 #' @return \code{(logical)}
 is_clarity <- function() {
-  x <- getOption("HMIS")
-  if (UU::is_legit(x))
-    x$Clarity
-  else
-    FALSE
+  hmis_option("Clarity")
 }
 
 #' @title Is this instance using ServicePoint
 #' @inherit is_clarity description return
 
 is_sp <- function() {
-  x <- getOption("HMIS")
-  if (UU::is_legit(x))
-    x$ServicePoint
-  else
-    FALSE
+  hmis_option("ServicePoint")
+}
+
+#' @title Retrieve the Clarity URL from options.
+#' See `?setup_RmData` for details.
+#'
+#' @return \code{(character)}
+#' @export
+
+clarity_url <- function() {
+  hmis_option("Clarity_URL", "https://cohhio.clarityhs.com")
 }
 
 #' @title This instance must be using ServicePoint, otherwise throw an error.
