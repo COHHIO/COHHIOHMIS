@@ -1,4 +1,4 @@
-Package: Rm_data
+Package: RmData
 Title: Data munging dependencies for Rminor & Rminor_elevated
        Shiny apps
 Version: 0.0.0.9000
@@ -6,20 +6,18 @@ Authors@R: c(person(given = "Genelle", family = "Denzin", role
        = c("aut"), email = "genelledenzin@cohhio.org"),
        person(given = "Stephen", family = "Holsenbeck", role =
        c("cre", "aut"), email =
-       "stephenholsenbeck@cohhio.org"), person(given = "Gwen",
+       "hmisdataanalyst@cohhio.org"), person(given = "Gwen",
        family = "Beebe", email = "gwenbeebe@gmail.com", role =
-       "con"))
-Description: This provides workflows for munging and porting
-       data dependencies to the open-source Homeless
-       Management Information System (HMIS) custom reporting
-       apps Rminor & Rminor_elevated
+       "con"),
+       person(give = "Stephen", family = "Holsenbeck", role = "aut",
+       email = "sholsen@alumni.emory.edu"))
+Description: This provides workflows for munging and porting data dependencies to the open-source Homeless Management Information System (HMIS) custom reporting apps Rminor & Rminor_elevated
 License: AGPL-3
 Depends: R (>= 4.1.0)
 Imports: clarity.looker, cli, devtools, dplyr, feather, ggmap,
        ggplot2, glue, HMIS, htmltools, httr, hud.extract,
        janitor, lubridate, magick, purrr, R6, rdrop2, readr, readxl,
-       rlang, scales, slider, stats,
-       stringr, tibble, tidyr, tidyselect, utils, UU
+       rlang, scales, slider, stats, stringr, tibble, tidyr, tidyselect, utils, UU
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
