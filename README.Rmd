@@ -13,9 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-*Note*: this is currently out of date and needs update (2021-08-26)
-
-# Rm_data
+# RmData
 An open-source Homeless Management Information System (HMIS) custom reporting project.
 
 This repository would be helpful to any HUD-designated Continuum of Care looking for a way to get more out of their HMIS data. While there are some reports here, this repository's most important function is getting data from HMIS to a tidy form that can be used in other projects (and repositories). Think of it like a staging area for other projects.
@@ -50,59 +48,50 @@ If you want to know exactly what data I'm using, see below, and email me for mor
 
 The [`clarity.looker`]{https://github.com/COHHIO/clarity.looker} package provides a setup function \link[clarity.looker]{setup_looker} for setting up an API connection with the Clarity Looker instance. An API key & secret will need to be requested.
 
+<!-- ### The Data I'm Using with the HUD CSV Export -->
 
-0. Be sure you have the following directories in your R project:
-   * **data** (to keep your HUD CSV files and whatever other data you will use)
-   
-
-This will one day be written as a package, hopefully.
-
-I hope you can find useful code here. Please share feedback in the issues or email me at genelledenzin at cohhio dot org! 
-
-### The Data I'm Using with the HUD CSV Export
-
-1. Enrollment-level (at Entry):
-   a. County Where Served
-   b. County of Prior Residence
-   c. Entry Exit Type (a ServicePoint-specific feature)
-   d. This is all in an ART report named RMisc. I run it in View Mode and download it to .xlsx.
-2. User data:
-   a. Users' Default Provider (a ServicePoint-specific data element). We need this because we have a shared provider across the entire CoC and we need to be able to show where an Entry came from without listing the User's name.
-   b. Same as what is in the Export, but currently the WS Export only includes "Active" Users, which doesn't work well for joining to the other data tables using UserCreated. We need this for Data Quality purposes.
-   c. This is all in an ART report named RMisc. I run it in View Mode and download it to .xlsx.
-3. Project data:
-   a. Full Project Name (the Export only outputs 50 characters)
-   b. Full Project Organization Name
-   c. Grant Type (a ServicePoint-specific data element). We use this to section off certain types of grants, but honestly we could cut this and use the Funder data instead. 
-   d. Project County. Annoyingly, this is not a HUD-required data element so it is not in the Export and we rely on it HEAVILY, being that we are a Balance of State.
-   e. This is all in an ART report named RMisc. I run it in View Mode and download it to .xlsx.
-4. Case Manager data:
-   a. A couple of our workflows require users to enter Case Manager data. 
-   b. I'm using ReportWriter for this.
-   c. PersonalID, EEProvider, CMUserCreating, CMProvider, CMStartDate, CMEndDate
-5. Custom Veteran data:
-   a. I'm using ReportWriter for this.
-   b. PersonalID, EnrollmentID, DateVeteranIdentified, ExpectedPHDate, HOMESID, ListStatus, MostRecentOfferDate, MostRecentOfferStatus, PHTrack, SSVFIneligible, VAEligible.
-6. Project Evaluation scores for CoC Competition
-   a. This year for the CoC Competition, the CoC team is entering Housing First scoring and such into each project's custom assessment we created and that data is coming out in the Project Evaluation reporting.
-   b. This is coming from ReportWriter.
-   c. ProjectID, ProjectName, ProjectType, CostPerExit, DateReceivedPPDocs, HousingFirstScore, ChronicPrioritizationScore, OnTrackSpendingScoring, UnspentFundsScoring.
-   c. This is coming from ReportWriter.
-7. Offers (part of custom Veteran data)
-   a. PersonalID, AcceptDeclineDate, OfferAccepted?, OfferDate, PHTypeOffered
-   b. This is coming from ReportWriter.
-8. Referrals
-   a. The Referrals available in the Export are limited to PATH-related ones only. We need all of them.
-   b. PersonalID, HouseholdID, NeedID, ReferralDate, ProviderCreating, PATHReferralOutcome, PATHReferralType, ReasonReferralCanceledorDeclined, Referred-FromProvider, ReferralOutcome, ReferralsRanking, Referred-ToProvider, RHYMISReferralType, UserCreating
-   c. This is coming from ReportWriter.
-9. SPDAT Scores
-   a. This is coming from three different ReportWriter, since the data is split into fam, ind, and tay.
-   b. PersonalID, ScoreDate, and Score for each report.
-10. Services
-   a. Like Referrals, the Services in the Export are limited and we need all of them.
-   b. This is coming from two ReportWriter reports, one for the basic info, and the other for the cost data.
-   c. The main report contains: PersonalID, HouseholdID, NeedID, ServiceID, ServiceStartDate, ServiceEndDate, Code, Description, ServiceProvider, ProviderCreating.
-   d. The costing one contains: ServiceID, Fund, Amount.
+<!-- 1. Enrollment-level (at Entry): -->
+<!--    a. County Where Served -->
+<!--    b. County of Prior Residence -->
+<!--    c. Entry Exit Type (a ServicePoint-specific feature) -->
+<!--    d. This is all in an ART report named RMisc. I run it in View Mode and download it to .xlsx. -->
+<!-- 2. User data: -->
+<!--    a. Users' Default Provider (a ServicePoint-specific data element). We need this because we have a shared provider across the entire CoC and we need to be able to show where an Entry came from without listing the User's name. -->
+<!--    b. Same as what is in the Export, but currently the WS Export only includes "Active" Users, which doesn't work well for joining to the other data tables using UserCreated. We need this for Data Quality purposes. -->
+<!--    c. This is all in an ART report named RMisc. I run it in View Mode and download it to .xlsx. -->
+<!-- 3. Project data: -->
+<!--    a. Full Project Name (the Export only outputs 50 characters) -->
+<!--    b. Full Project Organization Name -->
+<!--    c. Grant Type (a ServicePoint-specific data element). We use this to section off certain types of grants, but honestly we could cut this and use the Funder data instead.  -->
+<!--    d. Project County. Annoyingly, this is not a HUD-required data element so it is not in the Export and we rely on it HEAVILY, being that we are a Balance of State. -->
+<!--    e. This is all in an ART report named RMisc. I run it in View Mode and download it to .xlsx. -->
+<!-- 4. Case Manager data: -->
+<!--    a. A couple of our workflows require users to enter Case Manager data.  -->
+<!--    b. I'm using ReportWriter for this. -->
+<!--    c. PersonalID, EEProvider, CMUserCreating, CMProvider, CMStartDate, CMEndDate -->
+<!-- 5. Custom Veteran data: -->
+<!--    a. I'm using ReportWriter for this. -->
+<!--    b. PersonalID, EnrollmentID, DateVeteranIdentified, ExpectedPHDate, HOMESID, ListStatus, MostRecentOfferDate, MostRecentOfferStatus, PHTrack, SSVFIneligible, VAEligible. -->
+<!-- 6. Project Evaluation scores for CoC Competition -->
+<!--    a. This year for the CoC Competition, the CoC team is entering Housing First scoring and such into each project's custom assessment we created and that data is coming out in the Project Evaluation reporting. -->
+<!--    b. This is coming from ReportWriter. -->
+<!--    c. ProjectID, ProjectName, ProjectType, CostPerExit, DateReceivedPPDocs, HousingFirstScore, ChronicPrioritizationScore, OnTrackSpendingScoring, UnspentFundsScoring. -->
+<!--    c. This is coming from ReportWriter. -->
+<!-- 7. Offers (part of custom Veteran data) -->
+<!--    a. PersonalID, AcceptDeclineDate, OfferAccepted?, OfferDate, PHTypeOffered -->
+<!--    b. This is coming from ReportWriter. -->
+<!-- 8. Referrals -->
+<!--    a. The Referrals available in the Export are limited to PATH-related ones only. We need all of them. -->
+<!--    b. PersonalID, HouseholdID, NeedID, ReferralDate, ProviderCreating, PATHReferralOutcome, PATHReferralType, ReasonReferralCanceledorDeclined, Referred-FromProvider, ReferralOutcome, ReferralsRanking, Referred-ToProvider, RHYMISReferralType, UserCreating -->
+<!--    c. This is coming from ReportWriter. -->
+<!-- 9. SPDAT Scores -->
+<!--    a. This is coming from three different ReportWriter, since the data is split into fam, ind, and tay. -->
+<!--    b. PersonalID, ScoreDate, and Score for each report. -->
+<!-- 10. Services -->
+<!--    a. Like Referrals, the Services in the Export are limited and we need all of them. -->
+<!--    b. This is coming from two ReportWriter reports, one for the basic info, and the other for the cost data. -->
+<!--    c. The main report contains: PersonalID, HouseholdID, NeedID, ServiceID, ServiceStartDate, ServiceEndDate, Code, Description, ServiceProvider, ProviderCreating. -->
+<!--    d. The costing one contains: ServiceID, Fund, Amount. -->
 
 ### Security
 

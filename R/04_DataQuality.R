@@ -37,9 +37,9 @@ dependencies$DataQuality <-
     "Users"
   )
 
-check_fns <- stringr::str_subset(ls(envir = .getNamespace("Rm_data"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
+check_fns <- stringr::str_subset(ls(envir = .getNamespace("RmData"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
 
-data_quality <- function(check_fns = Rm_data::check_fns,
+data_quality <- function(check_fns = RmData::check_fns,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
   app_env = get_app_env(e = rlang::caller_env())
   ) {
@@ -95,7 +95,7 @@ data_quality <- function(check_fns = Rm_data::check_fns,
     i <- which(check_fns == .x)
     cli::cli_progress_update(id = .pid,,
                              status = paste0(i,"/",.total,": ",stringr::str_remove(.x, "^dq\\_")))
-    fn <- getFromNamespace(.x, "Rm_data")
+    fn <- getFromNamespace(.x, "RmData")
     arg_names <- rlang::set_names(rlang::fn_fmls_names(fn))
     arg_names <- arg_names[!purrr::map_lgl(rlang::fn_fmls(fn), is.logical)]
     arg_names <- arg_names[arg_names != c("app_env")]

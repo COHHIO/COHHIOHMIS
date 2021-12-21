@@ -27,9 +27,9 @@ vet_active <- function(
   e = rlang::caller_env()
 ) {
   if (missing(clarity_api))
-    clarity_api <- Rm_data::get_clarity_api(e = e)
+    clarity_api <- RmData::get_clarity_api(e = e)
   if (missing(app_env))
-    app_env <- Rm_data::get_app_env(e = e)
+    app_env <- RmData::get_app_env(e = e)
   app_env$set_parent(missing_fmls())
 
   # Get all veterans and associated hh members ------------------------------

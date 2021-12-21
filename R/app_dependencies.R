@@ -410,7 +410,7 @@ app_env <- R6::R6Class(
     #' @param app_deps \code{(list)} with each app and it's dependencies as a character vector. See `app_deps` for formatting.
     initialize = function(app_deps) {
       if (missing(app_deps))
-        app_deps <- Rm_data:::app_deps
+        app_deps <- RmData:::app_deps
       self$app_deps <- app_deps
     }
   ),
@@ -428,7 +428,7 @@ reset_Rm_env <- function(app_env = get_app_env(e = rlang::caller_env())) {
   deps <- purrr::compact(rlang::env_get_list(app_env$dependencies, ls(app_env$dependencies, all.names = TRUE), default = NULL))
   devtools::load_all()
   rm("Rm_env", envir = .GlobalEnv)
-  .GlobalEnv$Rm_env <- Rm_data::app_env$new()
+  .GlobalEnv$Rm_env <- RmData::app_env$new()
 
   rlang::env_bind(.GlobalEnv$Rm_env$dependencies, !!!deps)
   deps <- ls(.GlobalEnv$Rm_env$dependencies, all.names = TRUE)

@@ -57,7 +57,7 @@ stop_with_instructions <- function(..., error = FALSE) {
     stop(.msg)
   else {
     warning(.msg)
-    # authfile <- ifelse(is_dev, file.path("inst", "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"), file.path(system.file(package = "Rm_data"), "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"))
+    # authfile <- ifelse(is_dev, file.path("inst", "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"), file.path(system.file(package = "RmData"), "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"))
     # token <- gargle::token_fetch(scopes = "https://www.googleapis.com/auth/gmail.compose", gargle::credentials_service_account(scopes = "https://www.googleapis.com/auth/gmail.compose", path = authfile))
     # gmailr::gm_auth_configure()
     # gmailr::gm_auth(token = token)
@@ -191,9 +191,9 @@ freeze_pe <- function(dir, overwrite = FALSE) {
   .a <- utils::askYesNo(paste0("Have ", paste0(files, collapse = ", ")," been created with today's data?"))
   if (.a) {
     .d_files <- list.files("data", full.names = TRUE, pattern = "csv$|xlsx$")
-    .d_copied <- Rm_data::copy_lgl(.d_files, dirs[1], overwrite)
+    .d_copied <- RmData::copy_lgl(.d_files, dirs[1], overwrite)
     .rd_files <- grep(paste0(paste0("(?:",files,"$)"), collapse = "|"), list.files("images", full.names = TRUE), value = TRUE, ignore.case = TRUE, perl = TRUE)
-    .rd_copied <- Rm_data::copy_lgl(.rd_files, dirs[2], overwrite)
+    .rd_copied <- RmData::copy_lgl(.rd_files, dirs[2], overwrite)
     out <- list(data = file.path(dirs[1], basename(.d_files[.d_copied])),
                 rdata = file.path(dirs[2], basename(.rd_files[.rd_copied])))
   } else {
