@@ -12,7 +12,7 @@ hmis_option <- function(opt, default = FALSE) {
   x <- getOption("HMIS")
   out <- x[[opt]]
   if (!UU::is_legit(out)) {
-    warning(glue::glue("{.w}{.e}"))
+    warning(glue::glue("{.w}{.msg}"))
     out <- default
   }
 
