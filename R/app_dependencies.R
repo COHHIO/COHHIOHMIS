@@ -408,10 +408,13 @@ app_env <- R6::R6Class(
     },
     #' @description Instantiate with default app dependencies to be collected (if they exist) each time \code{\$gather_deps} is called
     #' @param app_deps \code{(list)} with each app and it's dependencies as a character vector. See `app_deps` for formatting.
-    initialize = function(app_deps) {
+    #' @param dirs \code{(list)} See \link[clarity.looker]{dirs}
+    initialize = function(app_deps, dirs = clarity.looker::dirs) {
       if (missing(app_deps))
         app_deps <- RmData:::app_deps
       self$app_deps <- app_deps
+      self$dependencies$guidance <- guidance
+      self$dependencies$dirs <- dirs
     }
   ),
   private = list(#' @field Save a vector of the names of working dependencies that have been saved for future reference when \code{\$merge_deps_to_env} is called.
