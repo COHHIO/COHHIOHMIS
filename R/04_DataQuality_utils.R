@@ -5,12 +5,11 @@
 #' @include 04_Guidance.R
 
 hmis_option <- function(opt, default = FALSE) {
-  .opt <- rlang::enexpr(opt)
-  .w <- glue::glue("HMIS option `{.opt}`")
-  .e <- glue::glue("HMIS options")
+
+  .w <- glue::glue("HMIS option `{opt}`")
   .msg <- " not setup, please see ?setup_RmData to fix this."
 
-  x <- getOption("HMIS", warning(glue::glue("{.e}{.msg}")))
+  x <- getOption("HMIS")
   out <- x[[opt]]
   if (!UU::is_legit(out)) {
     warning(glue::glue("{.w}{.e}"))

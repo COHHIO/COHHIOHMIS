@@ -52,7 +52,7 @@ if (is_app_env(app_env))
 PID_homeless <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
   dplyr::filter(ProjectType %in% unlist(project_types[c("so", "ce")]) & PersonalID %in% unique(co_currently_homeless$PersonalID) & LivingSituation %in% living_situations$homeless) |>
   dplyr::group_by(PersonalID) |>
-  dplyr::summarize(LivingSituation = recent_valid(DateUpdated, LivingSituation)) |>
+  dplyr::summarize(LivingSituation = recent_valid(DateUpdated, LivingSituation), .groups = "drop") |>
   dplyr::pull(PersonalID)
 
 # clients currently entered into a homeless project in our system
