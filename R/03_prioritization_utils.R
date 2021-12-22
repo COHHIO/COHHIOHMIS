@@ -1,12 +1,7 @@
 
-min_na <- function(...) {
+n_na <- function(...) {
   x <- data.frame(...)
-  if (any(!purrr::map_lgl(x$ExpectedPHDate, is.na))) {
-    idx <- which.max(x$ExpectedPHDate)
-  } else {
-    idx <- which.min(apply(x, 1, rlang::as_function(~sum(is.na(.x)))))
-  }
-  x[idx,]
+  apply(x, 1, rlang::as_function(~sum(is.na(.x))))
 }
 
 #' @title Find a valid maximum from the input values, or if none is present, return the values
