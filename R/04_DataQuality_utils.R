@@ -10,7 +10,7 @@ hmis_option <- function(opt, default = FALSE) {
   .e <- glue::glue("HMIS options")
   .msg <- " not setup, please see ?setup_RmData to fix this."
 
-  x <- getOption("HMIS", stop(glue::glue("{.e}{.msg}")))
+  x <- getOption("HMIS", warning(glue::glue("{.e}{.msg}")))
   out <- x[[opt]]
   if (!UU::is_legit(out)) {
     warning(glue::glue("{.w}{.e}"))
