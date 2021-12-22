@@ -412,23 +412,6 @@ prioritization <- prioritization |>
   dplyr::ungroup() |>
   dplyr::select(-AgeAtEntry)
 
-# Find duplicated and select those with the latest ExpectedPHDate and non-missing CountyServed
-
-  prioritization_dupes <- janitor::get_dupes(prioritization, PersonalID)
-  prioritization_dupes <- prioritization_dupes |>
-    dplyr::group_by(PersonalID, HouseholdID) |>
-    dplyr::summarise(n_na = min_na(CountyServed,
-                                   PHTrack,
-                                   ExpectedPHDate), .groups = "keep") |>
-    tidyr::unpack(cols = n_na)
-
-
-
-  # Remove the duplicated PersonalID
-  prioritization <- dplyr::filter(prioritization, !PersonalID %in% prioritization_dupes$PersonalID)
-  # Rebind with the appropriate rows
-  prioritization <- dplyr::bind_rows(prioritization, dplyr::select(prioritization_dupes, dplyr::all_of(UU::common_names(prioritization_dupes, prioritization))))
-
 
 # County Guessing ---------------------------------------------------------
 
@@ -640,6 +623,7 @@ prioritization_colors <- c(
     ph_date_post = Sys.Date() > ExpectedPHDate,
     ptc_has_entry = PTCStatus == "Has Entry into RRH or PSH",
     ptc_no_entry = PTCStatus == "Currently Has No Entry into RRH or PSH",
+    is_ph = (R_ReferralConnectedPTC %|% ProjectType) %in% project_types$ph,
     is_lh = (R_ReferralConnectedPTC %|% ProjectType) %in% c(project_types$lh, 4, 11),
     moved_in = !is.na(MoveInDateAdjust) & MoveInDateAdjust >= EntryDate,
     referredproject = !is.na(R_ReferralConnectedProjectName),
@@ -653,8 +637,8 @@ prioritization_colors <- c(
     Situation = dplyr::case_when(
       housed ~ "Housed",
       likely_housed ~ "Likely housed: please follow-up with the client to ensure they are housed.",
-      !!sit_expr$ptc_has_entry & !!sit_expr$moved_in ~ "Housed",
-       !!sit_expr$ptc_has_entry & !(!!sit_expr$moved_in) ~ paste("Entered RRH/PSH but has not moved in:",
+      (!!sit_expr$ptc_has_entry | !!sit_expr$is_ph) & !!sit_expr$moved_in ~ "Housed",
+      (!!sit_expr$ptc_has_entry | !!sit_expr$is_ph) & !(!!sit_expr$moved_in) ~ paste("Entered RRH/PSH but has not moved in:",
                                                                                                             R_ReferralConnectedProjectName %|% ProjectName),
         !!sit_expr$ph_track &
         !!sit_expr$ph_date &
@@ -681,6 +665,9 @@ prioritization_colors <- c(
     Situation_col = factor(stringr::str_extract(Situation, paste0("(?:",names(prioritization_colors),")") |> paste0(collapse = "|")), names(prioritization_colors)),
     ExpectedPHDate = dplyr::if_else(is.na(ExpectedPHDate), R_ReferralConnectedMoveInDate, ExpectedPHDate)
   ) |>
+  dplyr::group_by(PersonalID) |>
+  # get the lowest priority achieved
+  dplyr::slice_min(Situation_col) |>
   dplyr::select(-housed, -likely_housed, - dplyr::starts_with("R_")) |>
   dplyr::filter(!Situation_col %in% c("Housed", "Likely housed"))
 
