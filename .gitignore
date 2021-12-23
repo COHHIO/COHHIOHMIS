@@ -36,7 +36,12 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 
-data/*
+data/backup
+data/db
+data/export
+data/extras
+data/SPM_data
+
 inst/auth
 inst/html
 inst/src/**/*.rds
