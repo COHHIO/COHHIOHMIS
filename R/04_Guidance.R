@@ -13,7 +13,7 @@
 # <https://www.gnu.org/licenses/>.
 #' @include guidance.R
 
-if (curl::has_internet() && is_dev && difftime(Sys.time(), attr(guidance, "last_update") %||% Sys.time()) > lubridate::days(7)) {
+if (interactive() && curl::has_internet() && is_dev && (difftime(Sys.time(), attr(guidance, "last_update") %||% Sys.time()) > lubridate::days(7))) {
   googlesheets4::gs4_auth(path = "inst/auth/rminor@rminor-333915.iam.gserviceaccount.com.json")
   dq_id <- "15HsbSGmsscGtUIZnBDSVPaU4Zsotp7Dj79mXpPAu_lw"
   dq_nms <- googlesheets4::sheet_names(dq_id)
