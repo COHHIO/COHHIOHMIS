@@ -205,13 +205,15 @@ Authorize Dropbox
 \subsection{Method \code{new()}}{
 Instantiate with default app dependencies to be collected (if they exist) each time \code{\$gather_deps} is called
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$new(app_deps)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{app_env$new(app_deps, dirs = clarity.looker::dirs)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{app_deps}}{\code{(list)} with each app and it's dependencies as a character vector. See \code{app_deps} for formatting.}
+
+\item{\code{dirs}}{\code{(list)} See \link[clarity.looker]{dirs}}
 }
 \if{html}{\out{</div>}}
 }

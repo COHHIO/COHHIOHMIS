@@ -34,7 +34,7 @@ if (missing(app_env))
 
 # loading in scoring rubric
 
-scoring_rubric <- readxl::read_excel(file.path(dirs$public, "scoring_rubric.xlsx")) %>%
+scoring_rubric <- clarity.looker::hud_load("scoring_rubric", dirs$public) %>%
   dplyr::mutate(maximum = as.double(maximum),
          minimum = as.double(minimum))
 

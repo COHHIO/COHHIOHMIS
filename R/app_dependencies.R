@@ -1,4 +1,4 @@
-#' @include aaa_imports.R
+#' @include aaa_imports.R guidance.R
 app_deps <- list(
   ## to Rm:
   Rminor = c(
