@@ -12,13 +12,11 @@
 
 
 
-# must load Rm_data
+# must load RmData
 devtools::load_all()
 # must set directories if using a directory structure differing from the default in clarity.looker:
 dirs <- clarity.looker::dirs
 # Use the HUD CSV from the UI until the Looker API is fixed
-dirs$export <- "data"
-cl_api$.__enclos_env__$self$dirs <- dirs
 Rm_env$gather_deps(dirs)
 run_bg(bg_scripts["update_extras"])
 # Try services
@@ -35,12 +33,12 @@ Rm_env <- prioritization()
 Rm_env <- bed_unit_utilization()
 Rm_env <- data_quality()
 Rm_env <- data_quality_summary()
+# Uses RminorElevated as the default
 Rm_env$write_app_deps(Rm_env$app_deps$RminorElevated)
 Rm_env$write_app_deps(all = TRUE, path = file.path("data", "backup"))
 Rm_env$dropbox_auth()
 Rm_env$deps_to_destination(Rm_env$app_deps$RminorElevated, dropbox = TRUE)
 beepr::beep(sound = 3)
-# Uses RminorElevated as the default
 
 
 
