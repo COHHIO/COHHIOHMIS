@@ -57,7 +57,7 @@ stop_with_instructions <- function(..., error = FALSE) {
     stop(.msg)
   else {
     warning(.msg)
-    # authfile <- ifelse(is_dev, file.path("inst", "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"), file.path(system.file(package = "RmData"), "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"))
+    # authfile <- ifelse(clarity.looker::is_dev(), file.path("inst", "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"), file.path(system.file(package = "RmData"), "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"))
     # token <- gargle::token_fetch(scopes = "https://www.googleapis.com/auth/gmail.compose", gargle::credentials_service_account(scopes = "https://www.googleapis.com/auth/gmail.compose", path = authfile))
     # gmailr::gm_auth_configure()
     # gmailr::gm_auth(token = token)

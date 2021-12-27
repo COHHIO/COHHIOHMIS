@@ -35,4 +35,3 @@ NULL
 #' @return \code{(data.frame)} `vars$we_want` and `Issue` (Issue Name), `Type` (Error or Warning), and `Guidance` (How to correct the issue)
 NULL
 
-is_dev = basename(getwd()) == "RmData"

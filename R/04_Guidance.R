@@ -13,7 +13,7 @@
 # <https://www.gnu.org/licenses/>.
 #' @include guidance.R
 
-if (interactive() && curl::has_internet() && is_dev && (difftime(Sys.time(), attr(guidance, "last_update") %||% Sys.time()) > lubridate::days(7))) {
+if (interactive() && curl::has_internet() && clarity.looker::is_dev() && (difftime(Sys.time(), attr(guidance, "last_update") %||% Sys.time()) > lubridate::days(7))) {
   googlesheets4::gs4_auth(path = "inst/auth/rminor@rminor-333915.iam.gserviceaccount.com.json")
   dq_id <- "15HsbSGmsscGtUIZnBDSVPaU4Zsotp7Dj79mXpPAu_lw"
   dq_nms <- googlesheets4::sheet_names(dq_id)
@@ -21,7 +21,7 @@ if (interactive() && curl::has_internet() && is_dev && (difftime(Sys.time(), att
   guidance <- purrr::map(rlang::set_names(dq_guidance$`Guidance list`$name), ~{
     dq_guidance$`Guidance list`$guidance[dq_guidance$`Guidance list`$name == .x]
   })
-  f <- ifelse(is_dev, "R/guidance.R", file.path(system.file(package = "RmData"), "R", "guidance.R"))
+  f <- ifelse(clarity.looker::is_dev(), "R/guidance.R", file.path(system.file(package = "RmData"), "R", "guidance.R"))
   attr(guidance, "last_update") <- Sys.time()
   dump("guidance", f)
 }
