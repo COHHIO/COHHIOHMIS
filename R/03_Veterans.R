@@ -22,7 +22,7 @@ if (missing(clarity_api))
   clarity_api <- get_clarity_api(e = e)
 if (missing(app_env))
   app_env <- get_app_env(e = e)
-Rm_env$set_parent(missing_fmls())
+app_env$set_parent(missing_fmls())
 
 # getting all the veterans
 Veterans <- Client |>
