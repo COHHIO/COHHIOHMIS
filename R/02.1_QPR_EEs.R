@@ -34,9 +34,10 @@ QPR_EEs <- function(
 
   # decided to continue to use a separate file for Goals (instead of building it
   # in a tribble) because this way the CoC team can review it more easily.
-  goals <- readr::read_csv(file.path(dirs$public, "BoSGoals.csv"), col_types = "cccdddddddd")
 
-  goals <- goals %>%
+  # goals <- readr::read_csv(file.path(dirs$public, "BoSGoals.csv"), col_types = "cccdddddddd")
+
+  goals <- hud_load("goals", dirs$public) %>%
     tidyr::gather(key = "ProjectType",
            value = "Goal",
            -SummaryMeasure, -Measure, -Operator) %>%

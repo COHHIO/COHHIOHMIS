@@ -56,13 +56,7 @@ Pass all dependencies saved from previous functions to an environment for use
 \subsection{Method \code{gather_deps()}}{
 Gather the objects passed to \code{app_env}s internal environment to be passed to subsequent functions. Save app dependencies into a list.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$gather_deps(
-  ...,
-  app_deps = TRUE,
-  env = rlang::caller_env(),
-  .args = names(rlang::fn_fmls(rlang::call_fn(rlang::call_standardise(match.call(call =
-    sys.call(1))))))
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{app_env$gather_deps(..., app_deps = TRUE, env = rlang::caller_env())}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

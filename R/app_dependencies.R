@@ -207,10 +207,7 @@ app_env <- R6::R6Class(
     #' @return \code{(environment)} The `app_env` object with the saved objects in the internal environment.
     gather_deps = function(...,
                            app_deps = TRUE,
-                           env = rlang::caller_env(),
-                           .args = names(rlang::fn_fmls(rlang::call_fn(rlang::call_standardise(
-                             match.call(call = sys.call(1))
-                           ))))) {
+                           env = rlang::caller_env()) {
       # must be forced to get the calling environment where the user called it since env isn't used until inside the purrr::map call
       force(env)
 
@@ -224,14 +221,6 @@ app_env <- R6::R6Class(
           identical(.work_deps[[1]], "everything")) {
         # Case when "everything" is specified
         .all_objs <- ls(env, all.names = TRUE)
-        .args <- try(force(.args), silent = TRUE)
-        if (UU::is_legit(.args))
-          .all_objs <- stringr::str_subset(
-            .all_objs,
-            negate = TRUE,
-            pattern = paste0("(?:^", .args, "$)", collapse = "|")
-          )
-
         .dep_nms <- stringr::str_subset(.all_objs, "(?:app_env)|(?:clarity_api)", negate = TRUE)
         .work_deps <- purrr::compact(rlang::env_get_list(env, .dep_nms, default = NULL))
       } else if (length(.work_deps) == 1 && is.character(.work_deps[[1]]) && any(.work_deps[[1]] %in% ls(env))) {
@@ -421,9 +410,6 @@ app_env <- R6::R6Class(
     work_deps = c()),
   lock_objects = FALSE
 )
-
-is_app_env <- function(x)
-  inherits(x, "app_env")
 
 dependencies <- list()
 

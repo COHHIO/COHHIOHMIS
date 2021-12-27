@@ -62,3 +62,25 @@ get_app_env <- function(nm = "Rm_env", e = rlang::caller_env()) {
 }
 
 
+#' @title Is object of class `app_env`
+#'
+#' @param x
+#'
+#' @return \code{(logical)}
+#' @export
+
+is_app_env <- function(x) {
+  inherits(x, "app_env")
+}
+
+#' @title Is object of class `clarity_api`
+#'
+#' @param x
+#'
+#' @return \code{(logical)}
+#' @export
+
+is_clarity_api <- function(x) {
+  inherits(x, "clarity_api")
+}
+
