@@ -91,7 +91,6 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
 
   rm_dates$meta_Rmisc_last_run_date <- mean(extras_last_update)
   purrr::iwalk(extra_info, ~{
-
     if (UU::is_legit(extra_info$missing))
       stop_with_instructions(paste0("The following *_extra files are missing ", paste0(extra_info$missing, collapse = ", ")), error = error)
     if (UU::is_legit(extra_info$not_updated))
