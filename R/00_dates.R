@@ -19,7 +19,7 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
   hc$project_eval_end = lubridate::ceiling_date(hc$project_eval_start, "year")
   hc$project_eval_docs_due = lubridate::make_date(lubridate::year(hc$project_eval_end), 4, 23)
 
-  hc <- append(hc, purrr::map(
+  rm_dates$hc <- append(hc, purrr::map(
     c(
       bos_start_vaccine_data = "02052021",
 
@@ -37,7 +37,7 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
     ),
     lubridate::mdy
   ))
-  rm_dates$hc <- hc
+
 
 
   # Dates from Metadata -----------------------------------------------------
@@ -89,7 +89,7 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
   extra_info <- list(missing = setdiff(names(clarity.looker::folder_looks(clarity_api$folders$`HUD Extras`)), stringr::str_remove(names(extras_last_update), "\\.feather$")),
                      not_updated = purrr::keep(extras_last_update, ~!lubridate::`%within%`(.x, lubridate::interval(lubridate::floor_date(Sys.Date(), "day") - 1, Sys.time()))))
 
-  rm_dates$meta_Rmisc_last_run_date <- mean(do.call(c, extras_last_update))
+  rm_dates$meta_Rmisc_last_run_date <- mean(extras_last_update)
   purrr::iwalk(extra_info, ~{
 
     if (UU::is_legit(extra_info$missing))
