@@ -19,6 +19,7 @@ QPR_EEs <- function(
   Services_enroll_extras,
   enrollment_small,
   project_small,
+  dirs,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
   app_env = get_app_env(e = rlang::caller_env())
 ) {
