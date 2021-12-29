@@ -67,8 +67,6 @@ Gather the objects passed to \code{app_env}s internal environment to be passed t
 \item{\code{app_deps}}{\code{(logical/list)} \strong{Default: \code{TRUE}} to save all app dependencies specified at initialization of the \code{app_env} object. Otherwise, a named list of the dependencies to save as a character vector with the list names corresponding to the apps for which to save the dependencies..}
 
 \item{\code{env}}{\code{(env)} The environment from which objects should be saved. \strong{Default: the calling environment}}
-
-\item{\code{.args}}{I don't remember why this is here but it has to be for the function to work properly.}
 }
 \if{html}{\out{</div>}}
 }

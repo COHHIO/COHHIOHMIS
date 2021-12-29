@@ -13,6 +13,8 @@ chrt_filter_select(
   entered = FALSE,
   rm_dates,
   vars,
+  start = rm_dates$calc$data_goes_back_to,
+  end = rm_dates$meta_HUDCSV$Export_End,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }
@@ -32,6 +34,16 @@ chrt_filter_select(
 \item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
 
 \item{vars}{\code{(character)} vector of column names to retrain}
+
+\item{start}{Default = ReportStart, character/date of the start of the date
+range. Characters in format mdY, Ymd, dmY acceptable. Will be automatically
+retrieved from parent environments if not specified. If start is named other
+than ReportStart, it must be specified.}
+
+\item{end}{Default = ReportEnd, character/date of the end of the date range.
+Characters in format mdY, Ymd, dmY acceptable. Will be automatically
+retrieved from parent environments if not specified. If end is named other
+than ReportEnd, it must be specified.}
 
 \item{app_env}{}
 }

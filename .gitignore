@@ -51,3 +51,5 @@ Looker.ini
 profile.rds
 
 .deprecated/
+
+data/spm/
