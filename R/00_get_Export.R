@@ -114,7 +114,8 @@ load_export <- function(
   # IncomeBenefits ----------------------------------------------------------
 
   IncomeBenefits <-
-    clarity_api$IncomeBenefits()
+    clarity_api$IncomeBenefits() |>
+    dplyr::mutate(dplyr::across(c(tidyselect::contains("Amount"), tidyselect::all_of("TotalMonthlyIncome")), as.numeric))
 
   # Inventory ---------------------------------------------------------------
 
