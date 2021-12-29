@@ -14,7 +14,7 @@
 
 # this script uses the HMIS data to populate the QPR.
 
-QPR_EEs <- function(
+qpr_ees <- function(
   Enrollment_extra_Client_Exit_HH_CL_AaE,
   Services_enroll_extras,
   enrollment_small,
@@ -37,11 +37,10 @@ QPR_EEs <- function(
 
   # goals <- readr::read_csv(file.path(dirs$public, "BoSGoals.csv"), col_types = "cccdddddddd")
 
-  goals <- hud_load("goals", dirs$public) %>%
-    tidyr::gather(key = "ProjectType",
-           value = "Goal",
-           -SummaryMeasure, -Measure, -Operator) %>%
-    dplyr::mutate(ProjectType = as.numeric(ProjectType)) %>%
+  goals <- hud_load("goals", dirs$public) |>
+    tidyr::pivot_longer(- tidyselect::all_of(c("SummaryMeasure", "Measure", "Operator")),  names_to = "ProjectType",
+                        values_to = "Goal") |>
+    dplyr::mutate(ProjectType = as.numeric(ProjectType)) |>
     dplyr::filter(!is.na(Goal))
 
 
