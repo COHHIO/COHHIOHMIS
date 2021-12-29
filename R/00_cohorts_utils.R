@@ -24,6 +24,7 @@ chrt_hoh_count <- function(served) {
 #' @param entered \code{(logical)} Uses \link[HMIS]{entered_between}
 #' @inheritParams data_quality_tables
 #' @param vars \code{(character)} vector of column names to retrain
+#' @inheritParams HMIS::between_df
 #' @param app_env
 #'
 #' @return \code{(data.frame)} Output with filter and select applied.
@@ -37,15 +38,14 @@ chrt_filter_select <- function(x,
                                entered = FALSE,
                                rm_dates,
                                vars,
+                               start = rm_dates$calc$data_goes_back_to,
+                               end = rm_dates$meta_HUDCSV$Export_End,
                                app_env = get_app_env(e = rlang::caller_env())
 ) {
 
   addtl_filters <- rlang::enexprs(...)
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-
-  start = rm_dates$calc$data_goes_back_to
-  end = rm_dates$meta_HUDCSV$Export_End
   out <- x
 
   if (served)
