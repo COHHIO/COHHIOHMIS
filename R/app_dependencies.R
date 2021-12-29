@@ -99,6 +99,7 @@ app_deps <- list(
     "summary_pe_final_scoring",
     "unsheltered_by_month",
     "Users",
+    "Users_contact",
     "utilization_clients",
     "utilization",
     # "vaccine_needs_second_dose",
@@ -203,7 +204,6 @@ app_env <- R6::R6Class(
     #' @param ... \code{(objects)} Dependencies for subsequent functions, passed as named objects or a character of the object name. If no name is provided, the name of the object will be retained. Use \code{"everything"} to capture all objects from the parent environment.
     #' @param app_deps \code{(logical/list)} **Default: `TRUE`** to save all app dependencies specified at initialization of the `app_env` object. Otherwise, a named list of the dependencies to save as a character vector with the list names corresponding to the apps for which to save the dependencies..
     #' @param env \code{(env)} The environment from which objects should be saved. **Default: the calling environment**
-    #' @param .args I don't remember why this is here but it has to be for the function to work properly.
     #' @return \code{(environment)} The `app_env` object with the saved objects in the internal environment.
     gather_deps = function(...,
                            app_deps = TRUE,
