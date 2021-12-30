@@ -50,7 +50,7 @@ if (is_app_env(app_env))
                       ExitDate > lubridate::today())
   # get Services Only & Coordinated Entry clients with the most recent LivingSituation as homeless as per email guidance on 2021-12-16T17:58:50-04:00 title: FW: HMIS Data Analyst has invited you to access an application on shinyapps.io
 PID_homeless <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
-  dplyr::filter(ProjectType %in% unlist(project_types[c("so", "ce")]) & PersonalID %in% unique(co_currently_homeless$PersonalID) & LivingSituation %in% living_situations$homeless) |>
+  dplyr::filter(ProjectType %in% unlist(data_types$Project$ProjectType[c("so", "ce")]) & PersonalID %in% unique(co_currently_homeless$PersonalID) & LivingSituation %in% daata_types$CurrentLivingSituation$CurrentLivingSituation$homeless) |>
   dplyr::group_by(PersonalID) |>
   dplyr::summarize(LivingSituation = recent_valid(DateUpdated, LivingSituation), .groups = "drop") |>
   dplyr::pull(PersonalID)
@@ -58,7 +58,7 @@ PID_homeless <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
 # clients currently entered into a homeless project in our system
 co_currently_homeless <- co_currently_homeless |>
   dplyr::filter(
-    ProjectType %in% c(4, project_types$lh, project_types$ph) |
+    ProjectType %in% c(4, data_types$Project$ProjectType$lh, data_types$Project$ProjectType$ph) |
       PersonalID %in% PID_homeless
   ) |>
   dplyr::select(
@@ -253,8 +253,8 @@ prioritization <- co_currently_homeless |>
 
   # label all program as either literally homeless or a housing program
   dplyr::mutate(PTCStatus = dplyr::case_when(
-    ProjectType %in% c(project_types$lh, 4) ~ "LH",
-    ProjectType %in% c(project_types$ph) ~ "PH"
+    ProjectType %in% c(data_types$Project$ProjectType$lh, 4) ~ "LH",
+    ProjectType %in% c(data_types$Project$ProjectType$ph) ~ "PH"
   ),
   PTCStatus = factor(
     PTCStatus,
@@ -623,8 +623,8 @@ prioritization_colors <- c(
     ph_date_post = Sys.Date() > ExpectedPHDate,
     ptc_has_entry = PTCStatus == "Has Entry into RRH or PSH",
     ptc_no_entry = PTCStatus == "Currently Has No Entry into RRH or PSH",
-    is_ph = (R_ReferralConnectedPTC %|% ProjectType) %in% project_types$ph,
-    is_lh = (R_ReferralConnectedPTC %|% ProjectType) %in% c(project_types$lh, 4, 11),
+    is_ph = (R_ReferralConnectedPTC %|% ProjectType) %in% data_types$Project$ProjectType$ph,
+    is_lh = (R_ReferralConnectedPTC %|% ProjectType) %in% c(data_types$Project$ProjectType$lh, 4, 11),
     moved_in = !is.na(MoveInDateAdjust) & MoveInDateAdjust >= EntryDate,
     referredproject = !is.na(R_ReferralConnectedProjectName),
     ph_track = !is.na(PHTrack) & PHTrack != "None"

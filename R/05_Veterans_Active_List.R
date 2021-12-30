@@ -15,7 +15,7 @@
 vet_active <- function(
   ServiceAreas,
   co_clients_served,
-  project_types,
+  data_types,
   Enrollment,
   Project,
   VeteranCE,
@@ -79,7 +79,7 @@ vet_active <- function(
     )
 
   vet_ees <- co_clients_served |>
-    dplyr::filter(ProjectType %in% project_types$lh_at_entry) |>
+    dplyr::filter(ProjectType %in% data_types$Project$ProjectType$lh_at_entry) |>
     dplyr::mutate(VeteranStatus = dplyr::if_else(VeteranStatus == 1, 1, 0)) |>
     dplyr::group_by(HouseholdID) |> # pulling in all Veterans & non-veteran hh members
     dplyr::summarise(VetCount = sum(VeteranStatus, na.rm = TRUE),
@@ -105,7 +105,7 @@ vet_active <- function(
   currently_housed_in_psh_rrh <- vet_ees |>
     HMIS::stayed_between(start = Sys.Date(),
                          end = Sys.Date()) |>
-    dplyr::filter(ProjectType %in% project_types$ph &
+    dplyr::filter(ProjectType %in% data_types$Project$ProjectType$ph &
                     VeteranStatus == 1) |>
     dplyr::pull(PersonalID)
 
@@ -170,7 +170,7 @@ vet_active <- function(
         EntryDate,
         dplyr::case_when(
           is.na(MoveInDateAdjust) & is.na(ExitDate) ~  dplyr::if_else(
-            ProjectType %in% project_types$lh, "to present", "awaiting housing"),
+            ProjectType %in% data_types$Project$ProjectType$lh, "to present", "awaiting housing"),
           !is.na(MoveInDateAdjust) & !is.na(ExitDate) ~
             paste(
               "Moved In on",
@@ -200,7 +200,7 @@ vet_active <- function(
     dplyr::filter(!PersonalID %in% c(currently_housed_in_psh_rrh) &
                     (is.na(ExitDate) |
                        (
-                         !Destination %in% c(destinations$perm) &
+                         !Destination %in% destinations$perm &
                            ExitDate >= lubridate::today() - lubridate::days(90)
                        )))
 
@@ -214,8 +214,8 @@ vet_active <- function(
     dplyr::left_join(hh_size, by = "HouseholdID") |>
     dplyr::rename("HouseholdSize" = n) |>
     dplyr::mutate(EnrollType = dplyr::case_when(
-      ProjectType %in% project_types$lh ~ 1,
-      ProjectType %in% project_types$ph ~ 2,
+      ProjectType %in% data_types$Project$ProjectType$lh ~ 1,
+      ProjectType %in% data_types$Project$ProjectType$ph ~ 2,
       TRUE ~ 3
     )) |>
     dplyr::group_by(PersonalID, EnrollType) |>
@@ -257,19 +257,19 @@ vet_active <- function(
     dplyr::select(PersonalID, ProjectName, TimeInProject, ProjectType, EntryDate)
 
   combined <- enrollments_to_use |>
-    dplyr::filter(ProjectType %in% project_types$lh) |>
+    dplyr::filter(ProjectType %in% data_types$Project$ProjectType$lh) |>
     dplyr::rename_with(.cols = - PersonalID, .fn = ~{paste0(.x,"_LH")}) |>
 
     dplyr::mutate(transitional_housing_entry =
                     dplyr::case_when(ProjectType_LH == 2 &
                                        grepl("Since", TimeInProject_LH) ~ EntryDate_LH)) |>
     dplyr::full_join(enrollments_to_use |>
-                       dplyr::filter(ProjectType %in% project_types$ph),
+                       dplyr::filter(ProjectType %in% data_types$Project$ProjectType$ph),
                      by = "PersonalID") |>
     dplyr::rename_with(.cols = c(- PersonalID, - tidyselect::ends_with("_LH")), .fn = ~{paste0(.x,"_PH")}) |>
     dplyr::full_join(enrollments_to_use |>
-                       dplyr::filter(!ProjectType %in% project_types$lh &
-                                       !ProjectType %in% project_types$ph) |>
+                       dplyr::filter(!ProjectType %in% data_types$Project$ProjectType$lh &
+                                       !ProjectType %in% data_types$Project$ProjectType$ph) |>
                        dplyr::rename_with(.cols = - PersonalID, .fn = ~{paste0(.x,"_O")}),
                      by = "PersonalID") |>
     dplyr::select(!dplyr::contains(c("ProjectType", "EntryDate")))
@@ -470,8 +470,8 @@ vet_active <- function(
 
   entered_past_90_vets <- vet_ees |>
       {\(x) {
-        dplyr::filter(x, (ProjectType %in% project_types$lh |
-                         (ProjectType %in% project_types$ph &
+        dplyr::filter(x, (ProjectType %in% data_types$Project$ProjectType$lh |
+                         (ProjectType %in% data_types$Project$ProjectType$ph &
                             is.na(MoveInDateAdjust))) &
                         (HMIS::entered_between(x, start = lubridate::today() - lubridate::days(90),
                                                end = lubridate::today(), lgl = TRUE) |

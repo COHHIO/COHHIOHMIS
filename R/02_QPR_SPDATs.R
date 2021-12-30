@@ -44,7 +44,7 @@ enrollment_small <- Enrollment_extra_Client_Exit_HH_CL_AaE %>%
   )
 # Entries will give us all the times a hh has an Entry into a PH project
 Entries <- enrollment_small %>%
-  dplyr::filter(ProjectType %in% project_types$ph)
+  dplyr::filter(ProjectType %in% data_types$Project$ProjectType$ph)
 qpr_note <- list()
 qpr_note$served_county <- "The horizontal lines represent the average scores of Heads of Household who were served in the County in a ES, TH, SH, or Outreach project during the reporting period and who were scored. If a Head of Household was served in a County outside the Balance of State or if that data was missing, they are not being counted. When there are multiple project entries for the same client, this only counts the most recent entry. When there are multiple scores, this only counts the most recent score. There should not be more than 1 score on the same day, but if there are it is counting the highest score."
 

@@ -2084,21 +2084,21 @@ overlaps_same_day <- function(served_in_date_range, vars, guidance, unsh = FALSE
   out <- served_in_date_range |>
     dplyr::filter((ProjectType == 13 & MoveInDateAdjust == ExitDate) |
                     ProjectType != 13) |>
-    dplyr::filter(ProjectType != project_types$ap) |>
+    dplyr::filter(ProjectType != data_types$Project$ProjectType$ap) |>
     dplyr::select(dplyr::all_of(vars$prep), ExitAdjust) |>
     dplyr::mutate(
       EntryAdjust = dplyr::case_when(
         #for PSH and RRH, EntryAdjust = MoveInDate
-        ProjectType %in% project_types$lh_hp |
+        ProjectType %in% data_types$Project$ProjectType$lh_hp |
           ProjectName == "Unsheltered Clients - OUTREACH" ~ EntryDate,
-        ProjectType %in% project_types$ph &
+        ProjectType %in% data_types$Project$ProjectType$ph &
           !is.na(MoveInDateAdjust) ~ MoveInDateAdjust,
-        ProjectType %in% project_types$ph &
+        ProjectType %in% data_types$Project$ProjectType$ph &
           is.na(MoveInDateAdjust) ~ EntryDate
       ),
       LiterallyInProject = dplyr::case_when(
         ProjectType %in% c(3, 9) ~ lubridate::interval(MoveInDateAdjust, ExitAdjust),
-        ProjectType %in% project_types$lh_hp_so ~ lubridate::interval(EntryAdjust, ExitAdjust)
+        ProjectType %in% data_types$Project$ProjectType$lh_hp_so ~ lubridate::interval(EntryAdjust, ExitAdjust)
       ),
       Issue = "Overlapping Project Stays",
       Type = "High Priority",
@@ -2155,7 +2155,7 @@ sum_enroll_overlap <- function(PersonalID, EnrollmentID, Stay) {
 #' @family DQ: Overlapping Enrollment/Move-In Dates
 #' @inherit dq_overlaps params return description
 #' @export
-overlaps <- function(served_in_date_range, p_types = project_types$ph, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
+overlaps <- function(served_in_date_range, p_types = data_types$Project$ProjectType$ph, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   out <- served_in_date_range |>
@@ -2194,7 +2194,7 @@ overlaps <- function(served_in_date_range, p_types = project_types$ph, vars, gui
 dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  p_types <- project_types$lh_hp
+  p_types <- data_types$Project$ProjectType$lh_hp
   hasmovein <- served_in_date_range |>
     dplyr::group_by(PersonalID) |>
     dplyr::summarize(movedin = any(!is.na(MoveInDateAdjust), na.rm = TRUE)) |>
@@ -2229,9 +2229,9 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
       by = "EnrollmentID")
 
 
-  psh <- overlaps(p_types = project_types$psh)
-  rrh <- overlaps(p_types = project_types$rrh)
-  lh <- overlaps(p_types = project_types$lh)
+  psh <- overlaps(p_types = data_types$Project$ProjectType$psh)
+  rrh <- overlaps(p_types = data_types$Project$ProjectType$rrh)
+  lh <- overlaps(p_types = data_types$Project$ProjectType$lh)
   out <- dplyr::bind_rows(psh, rrh, lh, dq_movein_overlaps)
 
   return(out)
@@ -3011,7 +3011,7 @@ dqu_aps <- function(Project, Referrals, data_APs = TRUE, app_env = get_app_env(e
     app_env$set_parent(missing_fmls())
 
   co_APs <- Project |>
-    dplyr::filter(ProjectType == project_types$ap) |> # not incl Mah CE
+    dplyr::filter(ProjectType == data_types$Project$ProjectType$ap) |> # not incl Mah CE
     dplyr::select(
       ProjectID,
       OperatingStartDate,

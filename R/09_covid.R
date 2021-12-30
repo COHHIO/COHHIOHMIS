@@ -79,8 +79,8 @@ complete <- doses %>%
 most_recent_entries <- co_clients_served %>%
   dplyr::filter(AgeAtEntry >= 16 &
            is.na(ExitDate) &
-           (ProjectType %in% c(project_types$lh) |
-              (ProjectType %in% c(project_types$ph) &
+           (ProjectType %in% c(data_types$Project$ProjectType$lh) |
+              (ProjectType %in% c(data_types$Project$ProjectType$ph) &
                  is.na(MoveInDateAdjust)))
   ) %>%
   dplyr::group_by(PersonalID) %>%
