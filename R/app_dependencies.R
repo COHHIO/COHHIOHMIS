@@ -361,6 +361,7 @@ app_env <- R6::R6Class(
       out <- purrr::map_chr(files, ~{
         cli::cli_progress_update(id = .pid, status = basename(.x))
         if (dropbox) {
+          self$dropbox_auth()
           rdrop2::drop_upload(.x, file.path(dest_app))
         } else {
           file.copy(.x, file.path(dest_folder, basename(.x)), overwrite = TRUE)
