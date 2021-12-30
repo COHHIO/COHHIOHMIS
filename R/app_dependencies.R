@@ -1,4 +1,4 @@
-#' @include aaa_imports.R guidance.R
+#' @include aaa_imports.R guidance.R 00_lists.R
 app_deps <- list(
   ## to Rm:
   Rminor = c(
@@ -22,7 +22,7 @@ app_deps <- list(
     "note_unit_utilization",
     "Organization",
     "pe_validation_summary",
-    "project_types",
+    "data_types",
     "qpr_benefits",
     "qpr_income",
     "qpr_leavers",
@@ -31,8 +31,6 @@ app_deps <- list(
     "qpr_spdats_project",
     "qpr_spending",
     "Regions",
-    "Scores",
-    "Services",
     "spm_Metric_1b",
     "spm_Metric_2",
     "spm_Metric_7",
@@ -71,7 +69,6 @@ app_deps <- list(
     "dq_summary",
     "dq_plot_aps_referrals",
     "dq_main",
-    "Organization",
     # "pe_increase_income",
     "pe_exits_to_ph",
     "pe_homeless_history_index",
@@ -85,7 +82,7 @@ app_deps <- list(
     "pe_scored_at_ph_entry",
     "prioritization",
     "prioritization_colors",
-    "project_types",
+    "data_types",
     "qpr_income",
     "qpr_benefits",
     "qpr_leavers",
@@ -93,13 +90,10 @@ app_deps <- list(
     "qpr_spending",
     "qpr_spdats_project",
     "qpr_spdats_county",
-    "Referrals",
     "Regions",
-    "Scores",
     "summary_pe_final_scoring",
     "unsheltered_by_month",
-    "Users",
-    "Users_contact",
+    "Users_info",
     "utilization_clients",
     "utilization",
     # "vaccine_needs_second_dose",
@@ -398,12 +392,13 @@ app_env <- R6::R6Class(
     #' @description Instantiate with default app dependencies to be collected (if they exist) each time \code{\$gather_deps} is called
     #' @param app_deps \code{(list)} with each app and it's dependencies as a character vector. See `app_deps` for formatting.
     #' @param dirs \code{(list)} See \link[clarity.looker]{dirs}
-    initialize = function(app_deps, dirs = clarity.looker::dirs) {
-      if (missing(app_deps))
-        app_deps <- RmData:::app_deps
-      self$app_deps <- app_deps
-      self$dependencies$guidance <- guidance
+    #' @param guidance \code{(list)} that is named of character vectors with guidance for each type of Data Quality Issue. See `?guidance`
+    #' @param data_types \code{(list)} that is named with common groupings of HUD CSV data types. See `?data_types`
+    initialize = function(app_deps, dirs = clarity.looker::dirs, guidance, data_types) {
       self$dependencies$dirs <- dirs
+      self$app_deps <- if (missing(app_deps)) get0("app_deps", envir = rlang::ns_env("RmData")) else app_deps
+      self$dependencies$guidance <- if (missing(guidance)) get0("guidance", envir = rlang::ns_env("RmData")) else guidance
+      self$dependencies$data_types <- if (missing(data_types)) get0("data_types", envir = rlang::ns_env("RmData")) else data_types
     }
   ),
   private = list(#' @field Save a vector of the names of working dependencies that have been saved for future reference when \code{\$merge_deps_to_env} is called.
