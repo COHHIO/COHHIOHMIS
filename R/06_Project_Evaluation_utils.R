@@ -1,3 +1,4 @@
+
 merge_projects <- function(x, to_merge) {
   var <- rlang::enexpr(x)
   for (i in seq_along(to_merge)) {
@@ -87,4 +88,25 @@ peval_summary <- function(x, nm, app_env = get_app_env(e = rlang::caller_env()))
     dplyr::summarise(!!nm := dplyr::n(), .groups = "drop") |>
     dplyr::right_join(unique(pe_coc_funded["AltProjectID"]), by = "AltProjectID") %>%
     tidyr::replace_na(rlang::list2(!!nm := 0L))
+}
+
+peval_math <- function(var, project_eval_due) {
+
+  dplyr::case_when(
+    lubridate::today() <= project_eval_due &
+      is.na({{var}}) ~
+      paste0(
+        "Documents either not yet received or not yet processed. They are due ", format(project_eval_due, "%A %b %e, %Y"),"."
+      ),
+    lubridate::today() > project_eval_due &
+      is.na({{var}}) ~
+      paste0(
+        "Documentation either not yet received or not yet processed by the CoC Team. They were due ", format(project_eval_due, "%A %b %e, %Y"), "."
+      ),
+    {{var}} > project_eval_due ~
+      "Documentation received past deadline.",
+    {{var}} <= project_eval_due ~
+      "Your documentation was reviewed by the CoC team and scored. Please contact <a href='mailto:ohioboscoc@cohhio.org' target='_blank'>ohioboscoc@cohhio.org</a> if you have questions about your scoring."
+  )
+
 }

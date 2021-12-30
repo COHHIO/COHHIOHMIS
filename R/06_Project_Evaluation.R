@@ -37,7 +37,7 @@ project_evaluation <- function(
     )
 
   merged_projects <- purrr::map(merged_projects, ~{
-    reg <- purrr::map(.x, ~regex_op(.x, "&"))
+    reg <- purrr::map(.x, ~UU::regex_op(.x, "&"))
     idx <- purrr::map_dbl(reg, ~stringr::str_which(Project$ProjectName, .x))
 
     list(ProjectName = Project$ProjectName[idx],
@@ -271,14 +271,14 @@ project_evaluation <- function(
   # calculates whether the # of errors of whatever type actually throws a flag.
   # includes all alt-projects regardless of if they have errors
 
-  data_quality_flags_detail <- pe_validation_summary %>%
+  data_quality_flags <- pe_validation_summary %>%
     dplyr::left_join(dq_flags_staging, by = "AltProjectName") %>%
     dplyr::mutate(General_DQ = dplyr::if_else(GeneralFlagTotal/ClientsServed >= .02, 1, 0),
                   Benefits_DQ = dplyr::if_else(BenefitsFlagTotal/AdultsEntered >= .02, 1, 0),
                   Income_DQ = dplyr::if_else(IncomeFlagTotal/AdultsEntered >= .02, 1, 0),
                   LoTH_DQ = dplyr::if_else(LoTHFlagTotal/HoHsServed >= .02, 1, 0))
 
-  data_quality_flags_detail[is.na(data_quality_flags_detail)] <- 0
+  data_quality_flags[is.na(data_quality_flags)] <- 0
 
   # writing out a file to help notify flagged projects toward end of process
 
@@ -287,7 +287,7 @@ project_evaluation <- function(
 
 
 
-  Users_contact <- data_quality_flags_detail %>%
+  Users_info <- data_quality_flags %>%
     dplyr::filter(GeneralFlagTotal > 0 |
                     BenefitsFlagTotal > 0 |
                     IncomeFlagTotal > 0 |
@@ -304,14 +304,21 @@ project_evaluation <- function(
 
   # displays flags thrown at the alt-project level
 
-  data_quality_flags <- data_quality_flags_detail %>%
+  data_quality_flags <- data_quality_flags %>%
     dplyr::select(AltProjectName, dplyr::ends_with("DQ"))
 
   # CoC Scoring -------------------------------------------------------------
   browser()
-  #TODO These columns aren't going to exist, where are they coming from?
-  summary_pe_coc_scoring <- pe_coc_funded %>%
-    dplyr::left_join(Project, by = c("ProjectType", "ProjectName", "ProjectID")) %>%
+  #TODO Replace this with actual data
+  coc_scoring <- clarity.looker::hud_load("coc_scoring", dirs$extras) |>
+    dplyr::mutate(DateReceivedPPDocs = as.Date(DateReceivedPPDocs, origin = "1899-12-30"),
+                  ProjectID = as.character(ProjectID))
+
+
+
+
+
+  summary_pe_coc_scoring <- dplyr::left_join(pe_coc_funded, coc_scoring, by = c("ProjectID")) %>%
     dplyr::select(
       ProjectType,
       ProjectID,
@@ -324,30 +331,9 @@ project_evaluation <- function(
     ) %>%
     dplyr::filter(!ProjectID %in% purrr::map_chr(merged_projects, ~.x[[2]][2])) %>%
     dplyr::mutate(
-      PrioritizationWorkgroupScore = tidyr::replace_na(PrioritizationWorkgroupScore, 0),
+      Submission_Math = peval_math(DateReceivedPPDocs, rm_dates$hc$project_eval_docs_due),
       PrioritizationWorkgroupPossible = 5,
-      PrioritizationWorkgroupMath = dplyr::case_when(
-        lubridate::today() <= rm_dates$hc$project_eval_docs_due &
-          is.na(DateReceivedPPDocs) ~
-          paste0(
-            "Documents either not yet received or not yet processed. They are due ",
-            format(rm_dates$hc$project_eval_docs_due, "%A %b %e, %Y"),
-            "."
-          ),
-        lubridate::today() > rm_dates$hc$project_eval_docs_due &
-          is.na(DateReceivedPPDocs) ~
-          paste0(
-            "Documentation either not yet received or not yet processed by the
-               CoC Team. They were due ",
-            format(rm_dates$hc$project_eval_docs_due, "%A %b %e, %Y"),
-            "."
-          ),
-        DateReceivedPPDocs > rm_dates$hc$project_eval_docs_due ~
-          "Documentation received past deadline.",
-        DateReceivedPPDocs <= rm_dates$hc$project_eval_docs_due ~
-          "Your documentation was reviewed by the CoC team and scored. Please contact
-      ohioboscoc@cohhio.org if you have questions about your scoring."
-      ),
+      PrioritizationWorkgroupScore = tidyr::replace_na(PrioritizationWorkgroupScore, 0),
       HousingFirstPossible = 15,
       HousingFirstDQ = dplyr::case_when(
         DateReceivedPPDocs <= rm_dates$hc$project_eval_docs_due &
@@ -363,29 +349,6 @@ project_evaluation <- function(
           is.na(HousingFirstScore) ~ -10,
         DateReceivedPPDocs > rm_dates$hc$project_eval_docs_due ~ -10,
         DateReceivedPPDocs <= rm_dates$hc$project_eval_docs_due ~ HousingFirstScore
-      ),
-      HousingFirstMath = dplyr::case_when(
-        lubridate::today() <= rm_dates$hc$project_eval_docs_due &
-          is.na(DateReceivedPPDocs) ~
-          paste0(
-            "Documents either not yet received or not yet processed. They are
-               due ",
-            format(rm_dates$hc$project_eval_docs_due, "%A %b %e, %Y"),
-            "."
-          ),
-        lubridate::today() > rm_dates$hc$project_eval_docs_due &
-          is.na(DateReceivedPPDocs) ~
-          paste0(
-            "Documentation either not yet received or not yet processed by the
-               CoC Team. They were due ",
-            format(rm_dates$hc$project_eval_docs_due, "%A %b %e, %Y"),
-            "."
-          ),
-        DateReceivedPPDocs > rm_dates$hc$project_eval_docs_due ~
-          "Documentation received past deadline.",
-        DateReceivedPPDocs <= rm_dates$hc$project_eval_docs_due ~
-          "Your documentation was reviewed by the CoC team and scored. Please contact
-      ohioboscoc@cohhio.org if you have questions about your scoring."
       ),
       ChronicPrioritizationDQ = dplyr::case_when(
         DateReceivedPPDocs <= rm_dates$hc$project_eval_docs_due &
@@ -407,29 +370,7 @@ project_evaluation <- function(
             is.na(ChronicPrioritizationScore) ~ -5,
           DateReceivedPPDocs > rm_dates$hc$project_eval_docs_due &
             ProjectType == 3 ~ -5
-        ),
-      ChronicPrioritizationMath = dplyr::case_when(
-        lubridate::today() <= rm_dates$hc$project_eval_docs_due &
-          is.na(DateReceivedPPDocs) ~
-          paste0(
-            "Documents either not yet received or not yet processed. They are due ",
-            format(rm_dates$hc$project_eval_docs_due, "%A %b %e, %Y"),
-            "."
-          ),
-        lubridate::today() > rm_dates$hc$project_eval_docs_due &
-          is.na(DateReceivedPPDocs) ~
-          paste0(
-            "Documentation either not yet received or not yet processed by the
-               CoC Team. They were due ",
-            format(rm_dates$hc$project_eval_docs_due, "%A %b %e, %Y"),
-            "."
-          ),
-        DateReceivedPPDocs > rm_dates$hc$project_eval_docs_due ~
-          "Documentation received past deadline.",
-        DateReceivedPPDocs <= rm_dates$hc$project_eval_docs_due ~
-          "Your documentation was reviewed by the CoC team and scored. Please contact
-      ohioboscoc@cohhio.org if you have questions about your scoring."
-      )
+        )
     )
 
   pt_adjustments_after_freeze <- summary_pe_coc_scoring %>%
@@ -466,19 +407,19 @@ project_evaluation <- function(
                         dplyr::select(ProjectType, AltProjectID, AltProjectName) %>%
                         unique(),
                       by = c("AltProjectName", "ProjectType", "AltProjectID")) %>%
-    dplyr::left_join(data_quality_flags, by = "AltProjectName") %>%
-    dplyr::filter((ProjectType %in% c(2, 8, 13) &
-                     HMIS::exited_between(., rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end)) |
-                    ProjectType == 3) %>% # filtering out non-PSH stayers
+    dplyr::left_join(data_quality_flags, by = "AltProjectName") |>
+    {\(x) {dplyr::filter(x, (ProjectType %in% c(2, 8, 13) &
+                            HMIS::exited_between(x, rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end, lgl = TRUE)) |
+                           ProjectType == 3)}}() |> # filtering out non-PSH stayers
     dplyr::mutate(
       DestinationGroup = dplyr::case_when(
         is.na(Destination) | ExitAdjust > rm_dates$hc$project_eval_end ~
           "Still in Program at Report End Date",
-        Destination %in% c(destinations$temp) ~ "Temporary",
-        Destination %in% c(destinations$perm) ~ "Permanent",
-        Destination %in% c(destinations$institutional) ~ "Institutional",
+        Destination %in% destinations$temp ~ "Temporary",
+        Destination %in% destinations$perm ~ "Permanent",
+        Destination %in% destinations$institutional ~ "Institutional",
         Destination == 24 ~ "Deceased (not counted)",
-        Destination %in% c(destinations$other) ~ "Other"
+        Destination %in% destinations$other ~ "Other"
       ),
       ExitsToPHDQ = dplyr::case_when(
         General_DQ == 1 ~ 1,
@@ -490,15 +431,13 @@ project_evaluation <- function(
             (ProjectType == 3 &
                DestinationGroup == "Still in Program at Report End Date") ~ 1,
           TRUE ~ 0
-        ),
-      PersonalID = as.character(PersonalID)
+        )
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want), ExitsToPHDQ, Destination, DestinationGroup)
 
   summary_pe_exits_to_ph <- pe_exits_to_ph %>%
     dplyr::group_by(ProjectType, AltProjectName, ExitsToPHDQ) %>%
-    dplyr::summarise(ExitsToPH = sum(MeetsObjective)) %>%
-    dplyr::ungroup() %>%
+    dplyr::summarise(ExitsToPH = sum(MeetsObjective), .groups = "drop") %>%
     dplyr::right_join(pe_validation_summary, by = c("ProjectType", "AltProjectName")) %>%
     dplyr::mutate(
       ExitsToPHCohort = dplyr::if_else(ProjectType == 3, "HoHsServed", "HoHsServedLeavers"),
