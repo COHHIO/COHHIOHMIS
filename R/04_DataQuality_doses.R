@@ -5,7 +5,6 @@
 #' @family Clarity Checks
 #' @family DQ: Vaccines
 #' @inherit data_quality_tables params return
-#' @describeIn data_quality_tables
 #' @inheritParams served_in_date_range
 
 dq_vax <- function(served_in_date_range, mahoning_projects = NULL, Doses = NULL, rm_dates = NULL, vars, app_env = get_app_env(e = rlang::caller_env())) {

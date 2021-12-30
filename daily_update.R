@@ -38,8 +38,7 @@ Rm_env <- data_quality_summary()
 # Uses RminorElevated as the default
 Rm_env$write_app_deps(Rm_env$app_deps$RminorElevated)
 Rm_env$write_app_deps(all = TRUE, path = file.path("data", "backup"))
-Rm_env$dropbox_auth()
-Rm_env$deps_to_destination(Rm_env$app_deps$RminorElevated, dropbox = TRUE)
+Rm_env$deps_to_destination(Rm_env$app_deps$RminorElevated[c("qpr_spdats_project", "qpr_spdats_county")], dropbox = TRUE)
 beepr::beep(sound = 3)
 
 

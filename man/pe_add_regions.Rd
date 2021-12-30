@@ -11,7 +11,7 @@ pe_add_regions(
 )
 }
 \arguments{
-\item{dirs}{}
+\item{provider_extras}{\code{(data.frame)} An extra from the from the Program Descriptor model. See \code{?clarity_api} for retrieving a Look with this info.}
 }
 \value{
 \code{(data.frame)} provider_extras with Regions column
