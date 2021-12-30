@@ -27,3 +27,8 @@ if (interactive() && curl::has_internet() && clarity.looker::is_dev() && (diffti
 }
 
 
+#' @title guidance
+#' @name guidance
+#' @description A list of instructions tailored to the specific HMIS software for each Data Quality Issue.
+#' @export
+guidance
