@@ -6,7 +6,7 @@
 \usage{
 overlaps(
   served_in_date_range,
-  p_types = project_types$ph,
+  p_types = data_types$Project$ProjectType$ph,
   vars,
   guidance,
   unsh = FALSE,

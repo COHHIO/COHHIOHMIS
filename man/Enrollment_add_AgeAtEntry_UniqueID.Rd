@@ -7,7 +7,9 @@
 Enrollment_add_AgeAtEntry_UniqueID(Enrollment, Client)
 }
 \arguments{
-\item{Client}{}
+\item{Enrollment}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{Client}{\code{(data.frame)} From the HUD CSV Export}
 }
 \value{
 \code{(data.frame)} Enrollment with \code{AgeAtEntry} column

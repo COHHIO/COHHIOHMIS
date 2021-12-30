@@ -197,7 +197,7 @@ Authorize Dropbox
 \subsection{Method \code{new()}}{
 Instantiate with default app dependencies to be collected (if they exist) each time \code{\$gather_deps} is called
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$new(app_deps, dirs = clarity.looker::dirs)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{app_env$new(app_deps, dirs = clarity.looker::dirs, guidance, data_types)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -206,6 +206,10 @@ Instantiate with default app dependencies to be collected (if they exist) each t
 \item{\code{app_deps}}{\code{(list)} with each app and it's dependencies as a character vector. See \code{app_deps} for formatting.}
 
 \item{\code{dirs}}{\code{(list)} See \link[clarity.looker]{dirs}}
+
+\item{\code{guidance}}{\code{(list)} that is named of character vectors with guidance for each type of Data Quality Issue. See \code{?guidance}}
+
+\item{\code{data_types}}{\code{(list)} that is named with common groupings of HUD CSV data types. See \code{?data_types}}
 }
 \if{html}{\out{</div>}}
 }

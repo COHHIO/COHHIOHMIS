@@ -7,7 +7,7 @@
 EnrollmentCoC_RemoveCoCCodes(EnrollmentCoC, codes_to_remove = c("Default"))
 }
 \arguments{
-\item{EnrollmentCoC}{\code{(data.frame)} HUD CSV Item}
+\item{EnrollmentCoC}{\code{(data.frame)} From the HUD CSV Export}
 
 \item{codes_to_remove}{\code{(character)} codes to remove by filtering the \code{CoCCode} column}
 }
