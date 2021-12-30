@@ -41,7 +41,8 @@ enrollment_small <- Enrollment_extra_Client_Exit_HH_CL_AaE %>%
     ExitDate,
     RelationshipToHoH,
     CountyServed
-  )
+  ) |>
+  dplyr::left_join(Regions, by = c("CountyServed" = "County"))
 # Entries will give us all the times a hh has an Entry into a PH project
 Entries <- enrollment_small %>%
   dplyr::filter(ProjectType %in% data_types$Project$ProjectType$ph)
@@ -58,18 +59,7 @@ qpr_spdats_county <-
     ProjectType %in% c(1, 2, 4, 8) &
       RelationshipToHoH == 1 &
       ScoreDate <= EntryDate &
-      !CountyServed %in% c(
-        "Montgomery",
-        "Cuyahoga",
-        "Mahoning",
-        "Lucas",
-        "Stark",
-        "Summit",
-        "Hamilton",
-        "Franklin",
-        "--Outside of Ohio--"
-      ) &
-      !is.na(CountyServed)
+      !is.na(Region)
   ) %>%
   dplyr::select(
     EnrollmentID,
@@ -79,6 +69,7 @@ qpr_spdats_county <-
     EntryDate,
     ExitDate,
     CountyServed,
+    Region,
     ScoreDate,
     Score
   ) %>%
@@ -89,11 +80,12 @@ qpr_spdats_county <-
   dplyr::ungroup() %>%
   dplyr::select(PersonalID,
                 UniqueID,
-         ProjectName,
-         CountyServed,
-         Score,
-         EntryDate,
-         ExitDate)
+                Region,
+                ProjectName,
+                CountyServed,
+                Score,
+                EntryDate,
+                ExitDate)
 
 qpr_note$housed_county <- "The triangle represents the average score of each household entering into a permanent housing project in a County during the reporting period. This will necessarily leave out households coming from Domestic Violence shelters since they are not scored. Any Heads of Household who entered a permanent housing project without a score will be counted as having a score of 0."
 
@@ -109,18 +101,7 @@ qpr_spdats_project <- entry_scores %>%
   dplyr::filter(
     RelationshipToHoH == 1 &
       (ScoreDate <= EntryDate | is.na(ScoreDate)) &
-      !CountyServed %in% c(
-        "Montgomery",
-        "Cuyahoga",
-        "Mahoning",
-        "Lucas",
-        "Stark",
-        "Summit",
-        "Hamilton",
-        "Franklin",
-        "Outside of Ohio"
-      ) &
-      !is.na(CountyServed)
+      !is.na(Region)
   ) %>%
   dplyr::mutate(
     ScoreAdjusted = dplyr::if_else(is.na(Score), 0, Score),
@@ -131,19 +112,19 @@ qpr_spdats_project <- entry_scores %>%
   dplyr::slice_max(ScoreAdjusted) %>%
   dplyr::distinct() %>%
   dplyr::ungroup() %>%
-  dplyr::select(-ScoreDateAdjusted)
+  dplyr::select(-ScoreDateAdjusted, -RegionName)
 
 # If you have clients here, you should either verify the scores saved here are
 # valid or the correct client is marked as the Head of Household.
 
-SPDATsOnNonHoHs <- entry_scores %>%
-  HMIS::served_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
-  dplyr::filter(RelationshipToHoH != 1 &
-           !is.na(Score)) %>%
-  dplyr::select(ProjectName, PersonalID, UniqueID, EntryDate, ExitDate, Score) %>%
-  dplyr::arrange(ProjectName)
+# SPDATsOnNonHoHs <- entry_scores %>%
+#   HMIS::served_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
+#   dplyr::filter(RelationshipToHoH != 1 &
+#            !is.na(Score)) %>%
+#   dplyr::select(ProjectName, PersonalID, UniqueID, EntryDate, ExitDate, Score) %>%
+#   dplyr::arrange(ProjectName)
 
-rm(Entries, enrollment_small, SPDATsOnNonHoHs)
+
 # WARNING save.image does not save the environment properly, save must be used.
 app_env$gather_deps(ls(pattern = "(?:^qpr)"))
 
