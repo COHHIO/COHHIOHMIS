@@ -212,8 +212,7 @@ Enrollment_add_ClientLocation = function(Enrollment, EnrollmentCoC) {
 
 #' @title Add AgeAtEntry to Enrollment
 #' @description AgeAtEntry is the time elapsed from the Date of Birth `DOB` to the `EntryDate`
-#' @param Enrollment
-#' @param Client
+#' @inheritParams data_quality_tables
 #'
 #' @return \code{(data.frame)} Enrollment with `AgeAtEntry` column
 #' @export
@@ -227,7 +226,7 @@ Enrollment_add_AgeAtEntry_UniqueID <- function(Enrollment, Client) {
 
 #' @title Remove specific CoCCode's from EnrollmentCoC
 #'
-#' @param EnrollmentCoC \code{(data.frame)} HUD CSV Item
+#' @inheritParams data_quality_tables
 #' @param codes_to_remove \code{(character)} codes to remove by filtering the \code{CoCCode} column
 #'
 #' @return \code{(data.frame)} without the entries for the specified \code{CoCCode}s
@@ -252,8 +251,8 @@ Project_rm_zz <- function(Project) {
 
 #' @title Add the Corresponding Region for each Project by way of Geocode matching
 #'
-#' @param provider_extras
-#' @param dirs
+#' @param provider_extras \code{(data.frame)} An extra from the from the Program Descriptor model. See `?clarity_api` for retrieving a Look with this info.
+#' @inheritParams data_quality_tables
 #'
 #' @return \code{(data.frame)} provider_extras with Regions column
 #' @export
@@ -412,6 +411,85 @@ provider_extras_helpers <- list(
   create_APs = pe_create_APs,
   add_GrantType = pe_add_GrantType
 )
+
+
+#' @title Load public data pre-requisites for `load_export`
+#'
+#' @inheritParams data_quality_tables
+#' @inherit load_export return
+#' @export
+
+load_public <- function(app_env = get_app_env(e = rlang::caller_env())) {
+  # Public -----------------------------------------------------------
+  ServiceAreas <- clarity.looker::hud_load("ServiceAreas.feather", dirs$public)
+  Regions <- clarity.looker::hud_load("Regions", dirs$public)
+  app_env$gather_deps("everything")
+}
+
+#' @title Load Client data & extras pre-requisites for `load_export`
+#'
+#' @inheritParams data_quality_tables
+#' @inherit load_export return
+#' @export
+
+load_client <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
+                        app_env = get_app_env(e = rlang::caller_env())) {
+  Client <- clarity_api$Client()
+  # this saves Client as a feather file with redacted PII as a security measure.
+  if (!all(Client$SSN %in% c("ok" ,"Invalid", "DKR", "Missing"))) {
+    Client <- Client_redact(Client)
+    clarity.looker::hud_feather(Client, dirs$export)
+  }
+  # Veteran Client_extras ----
+  VeteranCE <- clarity_api$`HUD Extras`$Client_extras()
+
+  Client <- Client_add_UniqueID(Client, clarity_api$`HUD Extras`$Client_UniqueID_extras())
+  app_env$gather_deps("everything")
+}
+
+#' @title Load Project & extras pre-requisites for `load_export`
+#'
+#' @inheritParams data_quality_tables
+#' @param Regions From public data. See `load_public`
+#' @inherit load_export return
+#' @export
+
+load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = rlang::caller_env()),
+                         app_env = get_app_env(e = rlang::caller_env())) {
+
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  # Project_extras -----------------------------------------------------------------
+  # provider_extras
+  # Thu Aug 12 14:23:50 2021
+
+
+  provider_extras <- clarity_api$`HUD Extras`$Project_extras()
+  provider_extras <- pe_add_ProjectType(provider_extras) |>
+    pe_add_regions(Regions, dirs = dirs) |>
+    pe_add_GrantType()
+
+  # Rminor: Coordinated Entry Access Points [CEAP]
+  APs <- pe_create_APs(provider_extras, ProjectCoC, dirs = dirs)
+
+
+
+  Project <- clarity_api$Project()
+  Project <- Project |>
+    dplyr::select(-ProjectCommonName) |>
+    {\(x) {dplyr::left_join(x, provider_extras |> dplyr::select(- dplyr::matches("FundingSourceID")) |> dplyr::distinct(ProjectID, .keep_all = TRUE), by = UU::common_names(x, provider_extras))}}()
+  UU::join_check(clarity_api$Project(), Project)
+
+  mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
+    dplyr::select(ProjectID) |>
+    {\(x) {
+      dplyr::left_join(x, dplyr::select(Project, ProjectID, ProjectTypeCode, ProjectName), by = "ProjectID") |>
+        Project_rm_zz() |>
+        dplyr::distinct(ProjectID, .keep_all = TRUE) |>
+        {\(y) {rlang::set_names(y$ProjectID, dplyr::pull(y, ProjectTypeCode))}}()
+    }}()
+  app_env$gather_deps("everything")
+}
 
 
 #' @title Filter duplicates without losing any values from `key`
