@@ -655,7 +655,7 @@ prioritization_colors <- c(
           "accepted this household's referral on",
           R_ReferralAcceptedDate
         ),
-      !(!!referrals_expr$coq) | is.na(R_ReferralCurrentlyOnQueue) ~ "Not referred to Community Queue, may need referral to CQ.",
+      !R_ReferralCurrentlyOnQueue == "Yes" | is.na(R_ReferralCurrentlyOnQueue) ~ "Not referred to Community Queue, may need referral to CQ.",
       !!sit_expr$ptc_no_entry &
         !(!!sit_expr$referredproject) &
         !(!!sit_expr$ph_track) ~

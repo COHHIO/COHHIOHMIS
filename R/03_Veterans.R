@@ -120,16 +120,16 @@ VeteranEngagement <- CurrentVeterans |>
     EngagementStatus
   )
 
-veteran_current_in_project <- VeteranEngagement |>
+vets_current <- VeteranEngagement |>
   dplyr::group_by(ProjectName, ProjectType, ProjectRegion, EngagementStatus) |>
   dplyr::summarise(CurrentVeteranCount = dplyr::n(), .groups = "drop") |>
   tidyr::pivot_wider(names_from = EngagementStatus, values_from = CurrentVeteranCount) |>
   dplyr::rename(HasCurrentHousingPlan = `Has Current Housing Plan`,
                 NoCurrentHousingPlan = `No Current Housing Plan`)
 
-veteran_current_in_project[is.na(veteran_current_in_project)] <- 0
+vets_current[is.na(vets_current)] <- 0
 
-veteran_current_in_project <- veteran_current_in_project |>
+vets_current <- vets_current |>
   dplyr::mutate(
     Summary =
       dplyr::case_when(
@@ -219,5 +219,5 @@ current_tay_hohs <- tay |>
       )
   )
 
-  app_env$gather_deps(veteran_current_in_project, current_tay_hohs)
+  app_env$gather_deps(vets_current, current_tay_hohs)
 }

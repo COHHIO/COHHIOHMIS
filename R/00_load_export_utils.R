@@ -488,10 +488,162 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
         dplyr::distinct(ProjectID, .keep_all = TRUE) |>
         {\(y) {rlang::set_names(y$ProjectID, dplyr::pull(y, ProjectTypeCode))}}()
     }}()
-  app_env$gather_deps("everything")
+  app_env$gather_deps(Project, APs)
+}
+
+#' @title Load Enrollment as Enrollment_extra_Client_Exit_HH_CL_AaE
+#'
+#' @inheritParams data_quality_tables params return
+#' @param Enrollment_extras From Clarity Looker API Extras
+#'
+#' @export
+#'
+
+load_enrollment <- function(Enrollment,
+                            EnrollmentCoC,
+                            Enrollment_extras,
+                            Exit,
+                            Client,
+                            app_env = get_app_env(e = rlang::caller_env())) {
+
+  # getting EE-related data, joining both to En
+
+
+  Enrollment_extra_Client_Exit_HH_CL_AaE <- dplyr::left_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
+    # Add Exit
+    Enrollment_add_Exit(Exit) |>
+    # Add Households
+    Enrollment_add_Household(Project) |>
+    # Add Veteran Coordinated Entry
+    Enrollment_add_VeteranCE(VeteranCE = VeteranCE) |>
+    # Add Client Location from EnrollmentCoC
+    Enrollment_add_ClientLocation(EnrollmentCoC) |>
+    # Add Client AgeAtEntry
+    Enrollment_add_AgeAtEntry_UniqueID(Client) |>
+    dplyr::left_join(dplyr::select(Client,-dplyr::all_of(
+      c(
+        "DateCreated",
+        "DateUpdated",
+        "UserID",
+        "DateDeleted",
+        "ExportID"
+      )
+    )),
+    by = c("PersonalID", "UniqueID"))
+
+  UU::join_check(Enrollment, Enrollment_extra_Client_Exit_HH_CL_AaE)
+
+  app_env$gather_deps(Enrollment_extra_Client_Exit_HH_CL_AaE)
+
+}
+
+#' @title Load Services as Services_enroll_extras
+#'
+#' @inherit data_quality_tables params return
+#'
+#' @export
+load_services <- function(Services,
+                          Service_extras,
+                          app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  Services_enroll_extras  <- dplyr::left_join(Services,
+                                              Services_extras,
+                                              by = UU::common_names(Services, Services_extras)) |>
+    dplyr::left_join(dplyr::select(Enrollment_extra_Client_Exit_HH_CL_AaE, dplyr::all_of(
+      c(
+        "EnrollmentID",
+        "PersonalID",
+        "ProjectName",
+        "EntryDate",
+        "ExitAdjust",
+        "ProjectID",
+        "ProjectName"
+      )
+    )),
+    by = c("PersonalID", "EnrollmentID")) |>
+    unique() |>
+    dplyr::mutate(
+      ServiceEndAdjust = dplyr::if_else(
+        is.na(ServiceEndDate) |
+          ServiceEndDate > Sys.Date(),
+        Sys.Date(),
+        ServiceEndDate
+      ),
+      service_interval = lubridate::interval(start = ServiceStartDate, end = ServiceEndAdjust),
+      ee_interval = lubridate::interval(start = EntryDate, end = ExitAdjust),
+      intersect_tf = lubridate::int_overlaps(service_interval, ee_interval),
+      stray_service = is.na(intersect_tf) |
+        intersect_tf == FALSE
+    ) |>
+    dplyr::select(
+      UniqueID,
+      PersonalID,
+      ServiceID,
+      EnrollmentID,
+      ProjectName,
+      HouseholdID,
+      ServiceStartDate,
+      ServiceEndDate,
+      RecordType,
+      ServiceItemName,
+      FundName,
+      FundingSourceID,
+      ServiceAmount,
+      stray_service
+    )
+  app_env$gather_deps(Services_enroll_extras)
 }
 
 
+#' @title Load Referrals
+#' @description Loads Referrals, Referrals_full (unfiltered), and referral_result_summarize with filtering expressions used later
+#' @inherit data_quality_tables params return
+#' @export
+
+load_referrals <- function(Referrals,
+                           app_env = get_app_env(e = rlang::caller_env())) {
+  Referrals <- Referrals |>
+    dplyr::rename_with(.cols = - dplyr::matches("(?:^PersonalID)|^(?:^UniqueID)"), rlang::as_function(~paste0("R_",.x))) |>
+    dplyr::mutate(R_ReferralConnectedPTC = stringr::str_remove(R_ReferralConnectedPTC, "\\s\\(disability required\\)$"),
+                  R_ReferralConnectedPTC = dplyr::if_else(R_ReferralConnectedPTC == "Homeless Prevention", "Homelessness Prevention", R_ReferralConnectedPTC),
+                  R_ReferralConnectedPTC = HMIS::hud_translations$`2.02.6 ProjectType`(R_ReferralConnectedPTC))
+
+  # Full needed for dqu_aps
+  Referrals_full <- Referrals
+
+  referrals_expr <- rlang::exprs(
+    housed1 = R_RemovedFromQueueSubreason %in% c(
+      "Housed with Community Inventory",
+      "Housed with Community Inventory - Not with CE",
+      "Permanently Living with Family/Friends",
+      "Return To Prior Residence",
+      "Rental By Client"
+    ),
+    housed2 = !is.na(R_ReferralConnectedMoveInDate),
+    housed3 = R_ExitHoused == "Housed",
+    is_last = R_IsLastReferral == "Yes",
+    is_last_enroll = R_IsLastEnrollment == "Yes",
+    is_active = R_ActiveInProject == "Yes",
+    accepted = stringr::str_detect(R_ReferralResult, "accepted$"),
+    coq = R_ReferralCurrentlyOnQueue == "Yes"
+  )
+  referral_result_summarize <- purrr::map(referrals_expr, ~rlang::expr(isTRUE(any(!!.x, na.rm = TRUE))))
+
+
+  Referrals <- Referrals |>
+    filter_dupe_soft(!!referrals_expr$is_last_enroll,
+                     !!referrals_expr$is_last,
+                     !!referrals_expr$is_active,
+                     !is.na(R_ReferralResult),
+                     !!referrals_expr$housed3 & !!referrals_expr$accepted,
+                     key = PersonalID) |>
+    filter_dupe_last_EnrollmentID(key = PersonalID, R_ReferredEnrollmentID) |>
+    dplyr::arrange(dplyr::desc(R_ReferredEnrollmentID)) |>
+    dplyr::distinct(dplyr::across(-R_ReferredEnrollmentID), .keep_all = TRUE)
+
+  app_env$gather_deps(Referrals, Referrals_full, referral_result_summarize)
+}
 #' @title Filter duplicates without losing any values from `key`
 #'
 #' @param .data \code{(data.frame)} Data with duplicates

@@ -5,7 +5,6 @@
 \title{Bed Utilizations}
 \usage{
 bed_unit_utilization(
-  Inventory,
   Project,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
   app_env = get_app_env(e = rlang::caller_env())

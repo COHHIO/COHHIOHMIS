@@ -20,7 +20,6 @@ vet_active <- function(
   Project,
   VeteranCE,
   Contacts,
-  Offers,
   bos_counties,
   clarity_api,
   app_env,
@@ -32,6 +31,8 @@ vet_active <- function(
     app_env <- RmData::get_app_env(e = e)
   app_env$set_parent(missing_fmls())
 
+
+  Offers <- clarity_api$`HUD Extras`$Client_Offer_extras()
   # Get all veterans and associated hh members ------------------------------
 
   responsible_providers <- ServiceAreas |>
@@ -447,7 +448,7 @@ vet_active <- function(
 
   # Exited to PH ------------------------------------------------------------
 
-  permanently_housed_vets <- vet_ees |>
+  vets_permanently_housed <- vet_ees |>
     dplyr::filter(VeteranStatus == 1 &
                     Destination %in% c(destinations$perm) &
                     ExitDate >= lubridate::today() - lubridate::days(90)) |>
@@ -468,7 +469,7 @@ vet_active <- function(
 
   # Entered in Past 90 Days -------------------------------------------------
 
-  entered_past_90_vets <- vet_ees |>
+  vets_entered_past_90_days <- vet_ees |>
       {\(x) {
         dplyr::filter(x, (ProjectType %in% data_types$Project$ProjectType$lh |
                          (ProjectType %in% data_types$Project$ProjectType$ph &
@@ -482,12 +483,12 @@ vet_active <- function(
     ) |>
     unique() |>
     dplyr::mutate(housed_in_last_90 = dplyr::if_else(
-      PersonalID %in% permanently_housed_vets$PersonalID, 1, 0
+      PersonalID %in% vets_permanently_housed$PersonalID, 1, 0
     ))
 
   # New GPD ----------------------------------------------------
 
-  new_gpd_vets <- vet_ees |>
+  vets_new_gpd <- vet_ees |>
       HMIS::entered_between(lubridate::today() - lubridate::days(90),
                             end = Sys.Date()) |>
     dplyr::filter(VeteranStatus == 1 &

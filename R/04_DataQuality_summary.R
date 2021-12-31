@@ -11,7 +11,7 @@
 #'
 #' @param Project
 #' @param dq_past_year
-#' @param eligibility_detail
+#' @param dq_eligibility_detail
 #' @param rm_dates
 #' @param data_APs
 #' @param Referrals
@@ -21,7 +21,7 @@
 #' @export
 #' @include 04_DataQuality.R 04_DataQuality_utils.R 04_DataQuality_summary_utils.R
 #' @examples
-data_quality_summary <- function(served_in_date_range, Referrals, Project, dq_past_year, eligibility_detail, data_APs, rm_dates, vars, app_env = get_app_env(e = rlang::caller_env())) {
+data_quality_summary <- function(served_in_date_range, Referrals, Project, dq_past_year, dq_eligibility_detail, data_APs, rm_dates, vars, app_env = get_app_env(e = rlang::caller_env())) {
 
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
@@ -111,7 +111,7 @@ client_summary <- dqu_summary(co_clients_served, distinct = FALSE) |>
   dq_summary$outstanding_referrals <- dqu_summary(dq_past_year, filter_exp = Issue == "Old Outstanding Referral", distinct = FALSE, join = client_summary)
 
 
-  dq_summary$eligibility <- dqu_summary(eligibility_detail, filter_exp = Type == "Warning" & Issue %in% c("Check Eligibility"), join = client_summary)
+  dq_summary$eligibility <- dqu_summary(dq_eligibility_detail, filter_exp = Type == "Warning" & Issue %in% c("Check Eligibility"), join = client_summary)
 
   dq_summary$clients_without_spdat <- dqu_summary(dq_past_year, filter_exp = Type == "Warning" & Issue %in% c("Non-DV HoHs Entering PH or TH without SPDAT",
                                                                                              "HoHs in shelter for 8+ days without SPDAT"), join = client_summary)

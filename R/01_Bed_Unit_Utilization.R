@@ -22,7 +22,6 @@
 #'
 #' @include 01_Bed_Unit_Utilization_utils.R
 bed_unit_utilization <- function(
-  Inventory,
   Project,
   clarity_api = get_clarity_api(e = rlang::caller_env()),
   app_env = get_app_env(e = rlang::caller_env())
@@ -31,7 +30,8 @@ bed_unit_utilization <- function(
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
-
+  Inventory <-
+    clarity_api$Inventory()
 
 # despite the fact we're pulling in usually more than 2 years of data, the
 # utilization reporting will only go back 2 years. (decision based on lack of
@@ -52,7 +52,7 @@ small_project <- Project |>
                 ProjectType,
                 HMISParticipatingProject)
 
-small_inventory <- Inventory %>%
+small_inventory <- Inventory |>
   dplyr::select(
     ProjectID,
     HouseholdType,
@@ -60,7 +60,7 @@ small_inventory <- Inventory %>%
     BedInventory,
     InventoryStartDate,
     InventoryEndDate
-    )  %>%
+    )  |>
   dplyr::filter((
     InventoryStartDate <= rm_dates$calc$two_yrs_prior_end &
       (
@@ -70,11 +70,11 @@ small_inventory <- Inventory %>%
   ) &
     Inventory$CoCCode %in% c("OH-507", "OH-504"))
 
-Beds <- dplyr::inner_join(small_project, small_inventory, by = "ProjectID")
+utilization_beds <- dplyr::inner_join(small_project, small_inventory, by = "ProjectID")
 
 # Creating Utilizers table ------------------------------------------------
 
-small_enrollment <- Enrollment_extra_Client_Exit_HH_CL_AaE %>%
+small_enrollment <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
   dplyr::select(
     UniqueID,
     PersonalID,
@@ -92,9 +92,9 @@ small_enrollment <- Enrollment_extra_Client_Exit_HH_CL_AaE %>%
   HMIS::served_between(rm_dates$calc$two_yrs_prior_start,
                        rm_dates$calc$two_yrs_prior_end)
 
-Utilizers <- dplyr::semi_join(small_enrollment, Beds, by = "ProjectID")
+Utilizers <- dplyr::semi_join(small_enrollment, utilization_beds, by = "ProjectID")
 
-Utilizers <- dplyr::left_join(Utilizers, small_project, by = "ProjectID") %>%
+Utilizers <- dplyr::left_join(Utilizers, small_project, by = "ProjectID") |>
   dplyr::select(
     UniqueID,
     PersonalID,
@@ -116,8 +116,8 @@ Utilizers <- dplyr::left_join(Utilizers, small_project, by = "ProjectID") %>%
 
 # filtering out any PSH or RRH records without a proper Move-In Date plus the
 # fake training providers
-utilization_clients <- Utilizers %>%
-  dplyr::mutate(StayWindow = lubridate::interval(EntryAdjust, ExitAdjust)) %>%
+utilization_clients <- Utilizers |>
+  dplyr::mutate(StayWindow = lubridate::interval(EntryAdjust, ExitAdjust)) |>
   dplyr::filter(
     lubridate::int_overlaps(StayWindow, rm_dates$calc$two_yrs_prior_range) &
       (
@@ -132,8 +132,8 @@ utilization_clients <- Utilizers %>%
 
 # filtering Beds object to exclude any providers that served 0 hhs in date range
 
-Beds <- dplyr::right_join(Beds, utilization_clients %>%
-               dplyr::select(ProjectID) %>%
+utilization_beds <- dplyr::right_join(utilization_beds, utilization_clients |>
+               dplyr::select(ProjectID) |>
                unique(), by = "ProjectID")
 
 
@@ -166,13 +166,13 @@ BedNights <- utilization_clients  |>
 
 # Bed Capacity ------------------------------------------------------------
 
-BedCapacity <- Beds %>%
+BedCapacity <- utilization_beds |>
   dplyr::select(ProjectID,
          ProjectName,
          ProjectType,
          BedInventory,
          InventoryStartDate,
-         InventoryEndDate) %>%
+         InventoryEndDate) |>
   dplyr::mutate(InventoryEndAdjust = dplyr::if_else(is.na(InventoryEndDate),
                                       rm_dates$calc$two_yrs_prior_end,
                                       InventoryEndDate),
@@ -212,7 +212,7 @@ rm(BedCapacity, BedNights)
 # HH Utilization of Units -------------------------------------------------
 
 
-HHUtilizers <- Utilizers %>%
+HHUtilizers <- Utilizers |>
   dplyr::mutate(
     EntryAdjust = dplyr::case_when(
       ProjectType %in% c(data_types$Project$ProjectType$lh) ~ EntryDate,
@@ -224,7 +224,7 @@ HHUtilizers <- Utilizers %>%
       ExitDate
     ),
     StayWindow = lubridate::interval(EntryAdjust, ExitAdjust)
-  ) %>%
+  ) |>
   dplyr::filter(
     (HouseholdID %in% {
       Utilizers |>
@@ -243,7 +243,7 @@ HHUtilizers <- Utilizers %>%
         ) |
           ProjectType %in% data_types$Project$ProjectType$lh
       )
-  ) %>%
+  ) |>
   dplyr::select(-EntryDate,-MoveInDateAdjust,-HouseholdID,-RelationshipToHoH)
 
 HHUtilizers <- bu_add_month_counts(HHUtilizers) |>
@@ -262,7 +262,7 @@ rm(HHUtilizers)
 
 # Unit Capacity -----------------------------------------------------------
 
-UnitCapacity <- Beds %>%
+UnitCapacity <- utilization_beds |>
   dplyr::select(ProjectID,
          ProjectName,
          ProjectType,
@@ -270,7 +270,7 @@ UnitCapacity <- Beds %>%
          UnitInventory,
          BedInventory,
          InventoryStartDate,
-         InventoryEndDate) %>%
+         InventoryEndDate) |>
   dplyr::mutate(InventoryEndAdjust = dplyr::if_else(is.na(InventoryEndDate),
                                       rm_dates$calc$two_yrs_prior_end,
                                       InventoryEndDate),
@@ -297,11 +297,11 @@ utilization_unit <- bu_month_proportion(HHNights,
 rm(UnitCapacity, HHNights, Utilizers)
 
 
-small_project <- Project %>%
+small_project <- Project |>
   dplyr::filter(ProjectType %in% c(data_types$Project$ProjectType$w_beds) &
            OperatingStartDate <= lubridate::today() &
            (is.na(OperatingEndDate) | OperatingEndDate >= lubridate::today()) &
-           is.na(Project$GrantType)) %>%
+           is.na(Project$GrantType)) |>
   dplyr::select(ProjectID,
          ProjectName,
          ProjectType,
@@ -310,13 +310,13 @@ small_project <- Project %>%
 
 # Current Bed Utilization -------------------------------------------------
 
-small_inventory <- Inventory %>%
+small_inventory <- Inventory |>
   dplyr::filter((InventoryStartDate <= lubridate::today() &
             (
               InventoryEndDate >= lubridate::today() |
                 is.na(InventoryEndDate)
             )) &
-           Inventory$CoCCode %in% c("OH-507", "OH-504")) %>%
+           Inventory$CoCCode %in% c("OH-507", "OH-504")) |>
   dplyr::select(
     ProjectID,
     HouseholdType,
@@ -328,7 +328,7 @@ small_inventory <- Inventory %>%
 
 small_inventory <- dplyr::inner_join(small_project, small_inventory, by = "ProjectID")
 
-Capacity <- small_inventory %>%
+Capacity <- small_inventory |>
   dplyr::select(ProjectID,
          ProjectName,
          ProjectType,
@@ -337,30 +337,30 @@ Capacity <- small_inventory %>%
          UnitInventory,
          BedInventory,
          InventoryStartDate,
-         InventoryEndDate) %>%
+         InventoryEndDate) |>
   dplyr::mutate(UnitCount = dplyr::if_else(HouseholdType == 3,
-                             UnitInventory, BedInventory)) %>%
-  dplyr::group_by(ProjectID, ProjectName, ProjectType, OrganizationName) %>%
+                             UnitInventory, BedInventory)) |>
+  dplyr::group_by(ProjectID, ProjectName, ProjectType, OrganizationName) |>
   dplyr::summarise(UnitCount = sum(UnitCount),
             BedCount = sum(BedInventory),
             .groups = "drop")
 
-providerids <- Capacity %>%
-  dplyr::select(ProjectID, ProjectName, OrganizationName, ProjectType) %>%
+providerids <- Capacity |>
+  dplyr::select(ProjectID, ProjectName, OrganizationName, ProjectType) |>
   dplyr::arrange(ProjectName)
 #here is where you could add a left join to the Regions object and add in Region
 
 Clients <- Enrollment_extra_Client_Exit_HH_CL_AaE  |>
-  dplyr::left_join(providerids, by = c("ProjectID", "ProjectName")) %>%
-  dplyr::filter(is.na(ExitDate)) %>%
-  dplyr::group_by(ProjectID, ProjectName) %>%
+  dplyr::left_join(providerids, by = c("ProjectID", "ProjectName")) |>
+  dplyr::filter(is.na(ExitDate)) |>
+  dplyr::group_by(ProjectID, ProjectName) |>
   dplyr::summarise(Clients = dplyr::n_distinct(PersonalID),
                    .groups = "drop")
 
 Households <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
-  dplyr::left_join(providerids, by = c("ProjectID", "ProjectName")) %>%
-  dplyr::filter(is.na(ExitDate)) %>%
-  dplyr::group_by(ProjectID, ProjectName) %>%
+  dplyr::left_join(providerids, by = c("ProjectID", "ProjectName")) |>
+  dplyr::filter(is.na(ExitDate)) |>
+  dplyr::group_by(ProjectID, ProjectName) |>
   dplyr::summarise(Households = dplyr::n_distinct(HouseholdID),
                    .groups = "drop")
 
@@ -368,34 +368,17 @@ utilization <-
   dplyr::left_join(Capacity, Clients,
             by = c("ProjectID", "ProjectName"))  |>
   dplyr::left_join(Households,
-            by = c("ProjectID", "ProjectName")) %>%
-  dplyr::filter(ProjectType %in% c(data_types$Project$ProjectType$w_beds)) %>%
+            by = c("ProjectID", "ProjectName")) |>
+  dplyr::filter(ProjectType %in% c(data_types$Project$ProjectType$w_beds)) |>
   dplyr::mutate(BedUtilization = scales::percent(Clients/BedCount, accuracy = 1),
          UnitUtilization = scales::percent(Households/UnitCount, accuracy = 1))
 
 
 rm(Households, Clients, Capacity, small_inventory, small_project, providerids)
 
-note_bed_utilization <- "Bed Utilization is the percentage of a project's available beds being populated by individual clients."
+# notes moved to Rminor: notes.R
 
-note_unit_utilization <- "Unit Utilization is the percentage of a project's available units being populated by households. A household can be a single individual or multiple clients presenting together for housing."
 
-note_calculation_utilization <- "Bed Utilization = bed nights* served / total possible bed nights** in a month.
-Unit Utilization = unit nights* served / total possible unit nights in a
-month.
-
-* A bed night is a single night in a bed.
-* A unit night is a single night in a unit.
-** Total possible bed/unit nights = number of beds/units a project has multiplied by how many days are in the given month.
-
-Example A: Client A enters a shelter on May 1 and exits on May 5. They spent four nights in the shelter, so that was 4 bed nights from that client alone in the month of May for that shelter.
-
-Example B: PSH Project A served 10 people every single night in the month of June. Each client was served 30 bed nights during that month, and since there were 10 clients, that PSH project served a total of 300 bed nights for the month of June.
-
-Example C: PSH Project B has 5 beds. That project's total possible bed
-nights for the month of April (which has 30 days in it) is 30 x 5, which is 150.
-
-Example D: Using what we know from Example B of PSH Project A's total bed nights for the month of June, let's calculate what their bed utilization was for that month. They have 11 beds and June has 30 days so since 11 × 30 = 330 possible bed nights. Their bed utilization is bed nights (300) divided by possible bed nights (330), which is: 91%!"
 
 # removing all the Value objects we created as those are not used in the apps
 
@@ -403,7 +386,7 @@ Example D: Using what we know from Example B of PSH Project A's total bed nights
 
 # Find Outliers for HIC Purposes ------------------------------------------
 
-# utilization_unit_overall <- utilization_unit %>%
+# utilization_unit_overall <- utilization_unit |>
 #   select(ProjectID, ProjectName, ProjectType, rm_dates$calc$two_yrs_prior_range)
 #
 # outliers_hi <- subset(utilization_unit_overall,
@@ -415,8 +398,7 @@ Example D: Using what we know from Example B of PSH Project A's total bed nights
 # outliers <- rbind(outliers_hi, outliers_lo)
 
 # WARNING save.image does not save the environment properly, save must be used.
-app_env$gather_deps("everything")
-app_env
+app_env$gather_deps(utilization, utilization_unit, utilization_bed, utilization_beds)
 
 }
 

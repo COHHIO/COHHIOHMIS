@@ -57,7 +57,6 @@ must_sp <- function(.call = match.call()[[1]]) {
 }
 
 get_null_names <- function(fmls = rlang::fn_fmls(), e = rlang::caller_env()) {
-  browser()
   names(fmls)[purrr::imap_lgl(fmls, ~exists(.y, e, mode = "NULL"))]
 }
 
@@ -79,8 +78,6 @@ Funder_VA_ProjectID <- function(x, ids = c(27, 30, 33, 37:42, 45)) {
 
 #' @title Filter for Current HMIS participating projects
 #'
-#' @param Project
-#' @param Inventory
 #' @inheritParams data_quality_tables
 #'
 #' @return \code{(data.frame)}

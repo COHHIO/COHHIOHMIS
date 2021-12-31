@@ -14,6 +14,8 @@ dq_referrals_outstanding(
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
 
+\item{Referrals}{\code{(data.frame)} From the Clarity Looker API Extras}
+
 \item{vars}{\code{(named list)}
 \itemize{
 \item{\code{prep}}{ Column names for Prep}

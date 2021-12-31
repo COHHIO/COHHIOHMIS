@@ -46,8 +46,7 @@ enrollment_small <- Enrollment_extra_Client_Exit_HH_CL_AaE %>%
 # Entries will give us all the times a hh has an Entry into a PH project
 Entries <- enrollment_small %>%
   dplyr::filter(ProjectType %in% data_types$Project$ProjectType$ph)
-qpr_note <- list()
-qpr_note$served_county <- "The horizontal lines represent the average scores of Heads of Household who were served in the County in a ES, TH, SH, or Outreach project during the reporting period and who were scored. If a Head of Household was served in a County outside the Balance of State or if that data was missing, they are not being counted. When there are multiple project entries for the same client, this only counts the most recent entry. When there are multiple scores, this only counts the most recent score. There should not be more than 1 score on the same day, but if there are it is counting the highest score."
+
 
 # this object is used in the app to create the plot. it has date variables
 # included so the numbers can be filtered by date range in the app. it takes
@@ -87,9 +86,12 @@ qpr_spdats_county <-
                 EntryDate,
                 ExitDate)
 
-qpr_note$housed_county <- "The triangle represents the average score of each household entering into a permanent housing project in a County during the reporting period. This will necessarily leave out households coming from Domestic Violence shelters since they are not scored. Any Heads of Household who entered a permanent housing project without a score will be counted as having a score of 0."
+# notes moved to Rminor notes.R
 
-qpr_note$dq_community_need <- "It is very important that your Duplicate Entry Exits and your Household Data Quality tabs are totally clear for this report to be accurate. It is also important that your VI-SPDAT scores are ON THE HEAD OF HOUSEHOLD'S RECORD. Any scores recorded on non-HoHs will not be counted here.  Also if a HoH is missing their County data or they were served in a County outside the Ohio Balance of State, they will also not show here."
+
+
+
+
 
 # this pulls all entries into PSH or RRH
 entry_scores <- dplyr::left_join(Entries, Scores, by = UU::common_names(Entries, Scores))

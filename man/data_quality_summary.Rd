@@ -9,7 +9,7 @@ data_quality_summary(
   Referrals,
   Project,
   dq_past_year,
-  eligibility_detail,
+  dq_eligibility_detail,
   data_APs,
   rm_dates,
   vars,
