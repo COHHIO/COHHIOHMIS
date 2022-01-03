@@ -69,11 +69,12 @@ load_export <- function(
 
 
   # Enrollment --------------------------------------------------------------
+
+
   app_env <- load_enrollment(Enrollment = clarity_api$Enrollment(),
                              EnrollmentCoC = clarity_api$EnrollmentCoC(),
                              Enrollment_extras = clarity_api$`HUD Extras`$Enrollment_extras(),
-                             Exit = clarity_api$Exit(),
-                             Client = Client)
+                             Exit = clarity_api$Exit())
 
   # Funder ------------------------------------------------------------------
 
@@ -93,7 +94,7 @@ load_export <- function(
 
   # Inventory ---------------------------------------------------------------
 
-  # Only used in Bed_Unit_Utilization, moved there
+  # Only used in Bed_Unit_Utilization & DQ, moved to BUU
 
   # Organization ------------------------------------------------------------
 
@@ -121,7 +122,7 @@ load_export <- function(
 
   # Services ----------------------------------------------------------------
   app_env <- load_services(Services = clarity_api$Services(),
-                Service_extras = clarity_api$`HUD Extras`$Services_extras()
+                Services_extras = clarity_api$`HUD Extras`$Services_extras()
                 )
 
 
