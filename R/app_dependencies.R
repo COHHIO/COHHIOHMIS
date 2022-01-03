@@ -130,6 +130,25 @@ fun_insert <-
 
 
 
+folder_clean <- function(files, dest_files, dropbox = FALSE) {
+  to_clean <- setdiff(basename(dest_files), basename(files))
+  destpath <- unique(dirname(dest_files))
+  if (UU::is_legit(to_clean)) {
+    if (dropbox) {
+      .cleaned <- purrr::map(to_clean, rdrop2::drop_delete)
+      .cleaned <- purrr::map_chr(.cleaned, ~basename(.x$metadata$path_display))
+      .cleaned <- intersect(to_clean, .cleaned)
+    } else {
+      .cleaned <- purrr::map_lgl(to_clean, ~file.remove(file.path(destpath, .x)))
+      .cleaned <- to_clean[.cleaned]
+    }
+    cli::cli_alert_info("Cleaned from {.path {ifelse(dropbox, 'dropbox', destpath)}}: {cli::col_silver(basename(.cleaned))}")
+  }
+}
+
+
+
+
 # app_env ----
 # Thu Aug 05 10:07:19 2021
 
