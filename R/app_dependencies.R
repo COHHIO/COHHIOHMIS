@@ -257,64 +257,6 @@ app_env <- R6::R6Class(
       parent.env(self$dependencies) <- .GlobalEnv
       parent.env(env) <- self$dependencies
     },
-    #' @description Write app dependencies to disk
-    #' @param deps \code{(character)} with names of app dependencies to write.
-    #' @param path \code{(character)} of directory to write app dependencies to
-    #' @param overwrite \code{(logical)} Whether to overwrite existing files. **Default:`TRUE`**
-    #' @param all \code{(logical)} Whether to backup all dependencies (overrides deps)
-    #' @return \code{(character)} vector of the files written
-    write_app_deps = function (deps,
-                               path = file.path("data", "db", "RminorElevated"),
-                               overwrite = TRUE,
-                               all = FALSE)
-    {
-      # Dir check
-      if (!dir.exists(path))
-        UU::mkpath(path)
-
-      saved_deps <- ls(self$dependencies, all.names = TRUE)
-      to_write <- purrr::when(all,
-                  . ~ saved_deps,
-                  !. ~ intersect(deps, saved_deps)) |> rlang::set_names()
-      if (!missing(deps)) {
-        .missing <- setdiff(deps, saved_deps)
-
-        if (UU::is_legit(.missing)) {
-          rlang::warn(paste0(
-            "The following objects are missing from the app dependencies environment and were not written to disk:\n",
-            paste0(.missing, collapse = ", ")))
-
-        }
-      }
-
-
-
-
-      .pid <- cli::cli_progress_bar(status = "Writing: ", type = "iterator",
-                                    total = length(to_write))
-
-
-      out <- purrr::map_chr(to_write, ~{
-        o <- get0(.x, envir = self$dependencies, inherits = FALSE)
-        .ext <- UU::object_ext(o)
-          fp <- file.path(path, paste0(.x, .ext))
-        cli::cli_progress_update(id = .pid, status = .x)
-        if (overwrite || !file.exists(fp)) {
-          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "UniqueID") %in% names(o))) && is_clarity() && !all)
-            o <- clarity.looker::make_linked_df(o, UniqueID)
-          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "EnrollmentID") %in% names(o))) && is_clarity() && !all)
-            o <- clarity.looker::make_linked_df(o, EnrollmentID)
-
-          UU::object_write(o, fp, verbose = FALSE)
-          stopifnot(file.info(fp)$mtime > Sys.Date())
-        }
-        fp
-      })
-      cli::cli_process_done(.pid)
-      .deps <- stringr::str_remove(basename(out), '\\.\\w{1,10}$')
-      cli::cli_alert_success(paste0("Dependencies written to {.path {unique(dirname(out))}}: {.emph {paste0(.deps, collapse = ', ')}}"))
-
-    },
     #' @field app_deps \code{(list)} with all app dependencies as character vectors
     app_deps = c(),
     #' @description Load backed up dependencies from path
@@ -332,42 +274,200 @@ app_env <- R6::R6Class(
       cli::cli_alert_success(paste0("Dependencies loaded from {.path {path}}: {.emph {paste0(names(.files), collapse = ', ')}}"))
       invisible(self$dependencies)
     },
-#' @description Transfer all files in the data dependencies folder to the applications via dropbox or `file.copy`. If using dropbox, requires an authorized token to dropbox. See `dropbox_auth`.
-#' @param deps \code{(character/logical)} character vector of files to write to disk. Or `TRUE` **Default** to use the list of app dependencies matching the `dest_folder` name.
-#' @param folder \code{(character)} path to folder with files to transfer transfer
-#' @param dest_folder \code{(character)} folder to transfer too. This will be created inside the `HMIS Apps` folder if using Dropbox.
-#' @param dropbox \code{(logical)} **Default** Upload dependencies to Dropbox, `FALSE` to pass to the `data` folder in the sibling directory: `dest_folder`.
+#' @description Write `deps` to a folder via `file.copy` or to dropbox. If using dropbox, requires an authorized token to dropbox. See `dropbox_auth`.
+#' @param deps \code{(character/logical)} character vector of files to write to disk. Or `TRUE` **Default** to use `app_deps`. Use `"all"` to write all objects in the `dependencies` environment to `dest_folder`.
+#' @param dest_folder \code{(character)} folder(s) to transfer deps to - must be same length as `deps` or length 1 and will be recycled if `deps` is a list. When **dropbox = TRUE** th(is/ese) folder(s) will be used to stage files for upload.
+#' @param dropbox \code{(logical)} Transfer `deps` to the root folder assigned by the API key (**HMIS Apps** at COHHIO) on Dropbox.
+#' @param clean \code{(logical)} **Default** clean unused dependencies from folder. Set to `FALSE` to preserve unused dependencies in `dest_folder`
 #' @return
 
-    deps_to_destination = function(deps = TRUE, folder = file.path("data","db","RminorElevated"), dest_folder = file.path("..","RminorElevated","data"), dropbox = TRUE) {
+    deps_to_destination = function(deps = TRUE, dest_folder = file.path("..",c("Rminor", "RminorElevated"),"data"), dropbox = TRUE, clean = TRUE) {
 
-      dest_app = stringr::str_subset(stringr::str_split(dest_folder, "\\/")[[1]], paste0("(?:", names(self$app_deps), ")") |> paste0(collapse = "|"))
+      all <- deps == "all"
+      self_deps <- isTRUE(deps)
+      if (all) {
+        dropbox = FALSE
+        deps_flat <- ls(self$dependencies, all.names = TRUE)
+        deps <- list(all = deps_flat)
+      } else {
+        # Use self$app_deps if TRUE, if not a list, make one for iteration
 
-      if (isTRUE(deps))
-        deps <- self$app_deps[[dest_app]]
-      if (UU::is_legit(deps)) {
-        files <- purrr::flatten_chr(purrr::compact(purrr::map(deps, hud_filename, path = folder)))
-      } else
-        files <- list.files(folder, full.names = TRUE)
-      .pid <- cli::cli_progress_bar(status = "Transferring: ", type = "iterator",
-                            total = length(files))
-      out <- purrr::map_chr(files, ~{
-        cli::cli_progress_update(id = .pid, status = basename(.x))
-        if (dropbox) {
-          self$dropbox_auth()
-          rdrop2::drop_upload(.x, file.path(dest_app))
-        } else {
-          file.copy(.x, file.path(dest_folder, basename(.x)), overwrite = TRUE)
+        deps <- purrr::when(deps, isTRUE(.) ~ self$app_deps, !rlang::is_list(deps) ~ list(deps), ~ deps)
+        if (self_deps) {
+          # Add dependencies vectors to the objects that are saved
+          deps <- purrr::imap(deps, ~{
+            nm <- paste0("deps_", .y)
+            assign(nm, .x, envir = self$dependencies)
+            c(nm, .x)
+          })
         }
-        .x
-      })
-      cli::cli_process_done(.pid)
-      cli::cli_alert_success(paste0("Transferred: {.emph {paste0(basename(out), collapse = ', ')}} to {.path {dest_folder}}"))
-      .missing <- setdiff(deps, stringr::str_remove(basename(out), "\\.\\w{1,10}$"))
-      if (UU::is_legit(.missing))
-        warning(.missing, " was not found in ", folder)
 
-    },
+        deps_flat <- purrr::flatten_chr(deps) |> unique()
+
+
+        # Get all dependencies
+        saved_deps <- ls(self$dependencies, all.names = TRUE)
+
+        # Handle missing
+        to_write <- intersect(deps_flat, saved_deps) |>
+          unique() |>
+          rlang::set_names()
+
+
+        .missing <- setdiff(deps_flat, saved_deps)
+
+        if (UU::is_legit(.missing)) {
+          rlang::warn(paste0(
+            "The following objects are missing from the app dependencies environment and will not be written to disk:\n",
+            paste0(.missing, collapse = ", ")))
+
+        }
+        deps_flat <- setdiff(deps_flat, .missing)
+      }
+      # make folders if they don't exist
+      purrr::map(dest_folder, UU::mkpath)
+
+
+
+      # load app_deps
+      if (dropbox) {
+        self$dropbox_auth()
+        db_info <- rdrop2::drop_dir()
+        db_files <- basename(db_info$path_display)
+        db_updated <- rlang::set_names(db_info$client_modified, db_files)
+      }
+
+
+      # don't mess with images
+      # stringr::str_subset(UU::regex_or(paste0(c("jpg", "png", "jpeg"), "$")), negate = TRUE)
+      # # make the destination folder
+      # if (length(dest_folder) != length(deps))
+      #   dest_folder <- rlang::set_names(rep(dest_folder, length(deps)))
+
+      # Check recency
+      maybe_write <- purrr::map_dfr(deps_flat, ~{
+        o_info <- list(nm = .x)
+        o_info$ex <- list(rlang::expr(get0(!!.x, envir = self$dependencies, inherits = FALSE)))
+        o <- rlang::eval_bare(o_info$ex[[1]])
+        o_info$ext <- UU::object_ext(o)
+        o_info$class <- list(class(o))
+        if (!all) {
+          # If not making a backup, prep the dfs for the apps
+          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "UniqueID") %in% names(o))) && is_clarity() && !all)
+            .o <- clarity.looker::make_linked_df(o, UniqueID)
+          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "EnrollmentID") %in% names(o))) && is_clarity() && !all)
+            .o <- clarity.looker::make_linked_df(o, EnrollmentID)
+          # Avoid making these links twice by saving the object as the expression
+          if (exists(".o", inherits = FALSE) && !identical(o, .o)) {
+            o_info$ex <- list(.o)
+            o <- .o
+          }
+        }
+        # Check if it's an image as these should be overwritten
+        .is_image <- o_info$ext %in% paste0(".", c("png", "jpg", "jpeg"))
+        out <- purrr::map2_dfr(deps, dest_folder, ~{
+          if (o_info$nm %in% .x) {
+            fp <- file.path(.y, paste0(o_info$nm, o_info$ext))
+            if (file.exists(fp)) {
+              .file <- try(UU::file_fn(fp)(fp), silent = TRUE)
+              # Sometimes invalid files, delete them
+              if (!UU::is_legit(.file))
+                file.remove(fp)
+              if (.is_image)
+                .same_data <- FALSE
+              else
+                .same_data <- isTRUE(all.equal(.file, o, check.attributes = FALSE, check.tzone = FALSE))
+            } else
+              .same_data <- FALSE
+
+            out <- tibble::tibble_row(
+              !!!o_info,
+              filepath = fp,
+              to_update = !.same_data
+            )
+          } else
+            out <- NULL
+          out
+        })
+      })
+
+      to_write <- dplyr::filter(maybe_write, to_update)
+      if (nrow(to_write)) {
+        # If sending all to one folder, don't duplicate writes
+        if (length(unique(dest_folder)) == 1)
+          to_write <- dplyr::distinct(to_write, nm, .keep_all = TRUE)
+        # Stage files
+        .pid <- cli::cli_progress_bar(status = "Writing: ", type = "iterator",
+                                      total = nrow(to_write),
+                                      auto_terminate = TRUE,
+                                      .auto_close = TRUE,
+                                      format = "{cli::pb_bar} {cli::pb_percent} [{cli::pb_elapsed}]"
+        )
+
+        purrr::pwalk(to_write, ~{
+          .x <- list(...)
+          cli::cli_progress_update(id = .pid, status = cli::format_message("{.path {.x$filepath}}"))
+          o <- rlang::eval_bare(.x$ex)
+          UU::object_write(o, .x$filepath, verbose = FALSE)
+        })
+
+        # Clean folder
+        if (clean && !self_deps)
+          purrr::walk(unique(dest_folder), ~ {
+            dplyr::mutate(maybe_write,
+                          dirpath = dirname(filepath)) |>
+              dplyr::filter(dirpath == .x) |>
+              dplyr::pull(filepath) |>
+              folder_clean(UU::list.files2(.x))
+          })
+
+        if (dropbox) {
+
+          folder_clean(unique(basename(maybe_write$filepath)), db_files, dropbox = dropbox)
+
+          to_upload <- dplyr::mutate(maybe_write,
+                                     filename = basename(filepath),
+                                     updated = file.info(filepath)$mtime,
+                                     db_updated = db_updated[filename],
+                                     needs_update = (updated > db_updated) %|% TRUE) |>
+            dplyr::filter(needs_update) |>
+            dplyr::distinct(nm, .keep_all = TRUE)
+
+          purrr::walk(to_upload$filepath, rdrop2::drop_upload)
+        }
+      }
+
+
+
+
+
+      .success <- c(
+        if (nrow(to_write))
+          to_write |>
+            dplyr::mutate(path = dirname(filepath)) |>
+            dplyr::group_by(path) |>
+            dplyr::group_split() |>
+            purrr::map(~glue::glue("{cli::col_br_blue('Wrote')} to {{.path {unique(.x$path)}}}: {{.emph {paste0(.x$nm, collapse = ', ')}}}")),
+        if (exists("to_upload", inherits = FALSE))
+          to_upload |>
+          dplyr::mutate(path = dirname(filepath)) |>
+          dplyr::group_by(path) |>
+          dplyr::group_split() |>
+          purrr::map(~glue::glue(
+            "{cli::col_br_green('Transferred to Dropbox')} from {.path {unique(.x$path)}}: {{.emph {paste0(baseame(.x$filepath), collapse = ', ')}}}"
+          ))
+      )
+      purrr::walk(.success, cli::cli_alert_success)
+
+      .skipped <- maybe_write[!maybe_write$to_update,]
+      if (nrow(.skipped))
+        .skipped |>
+          dplyr::mutate(path = dirname(filepath)) |>
+          dplyr::group_by(path) |>
+          dplyr::group_split() |>
+          purrr::map(~glue::glue("{cli::col_yellow('Unchanged & Skipped')} in {{.path {unique(.x$path)}}}: {cli::col_silver(paste0(.x$nm, collapse = ', '))}")) |>
+          cli::cli_inform()
+      },
 
 #' @description Authorize Dropbox
 #' @param db_auth_token \code{(character)} path to the Dropbox authorization token. See \link[rdrop2]{drop_auth}
