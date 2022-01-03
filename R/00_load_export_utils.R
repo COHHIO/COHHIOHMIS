@@ -7,7 +7,7 @@
 #' @export
 
 Client_redact <- function(Client) {
-  Client %>%
+  Client |>
     Client_filter() |>
     dplyr::mutate(
       FirstName = dplyr::case_when(
@@ -47,7 +47,7 @@ Client_redact <- function(Client) {
           ) ~ "Invalid",
         SSNDataQuality == 2 & nchar(SSN) != 9 ~ "Incomplete"
       )
-    ) %>%
+    ) |>
     dplyr::mutate(SSN = dplyr::case_when(is.na(SSN) ~ "ok",!is.na(SSN) ~ SSN))
 }
 
@@ -101,23 +101,22 @@ Enrollment_add_Exit <- function(Enrollment, Exit) {
 #' @export
 
 Enrollment_add_Household = function(Enrollment, Project, rm_dates, app_env = get_app_env(e = rlang::caller_env())) {
-  if (is_app_env(app_env))
-    app_env$set_parent(missing_fmls())
+
   # getting HH information
   # only doing this for RRH and PSHs since Move In Date doesn't matter for ES, etc.
 
 
-  small_project <- Project %>%
+  small_project <- Project |>
     dplyr::select(ProjectID, ProjectType, ProjectName) |>
     dplyr::distinct()
   # TODO Check to see if Enrollment data has the MoveInDate
   # TODO Does Move-in Date in Clarity auto-populate from previous enrollments?
-  HHMoveIn <- Enrollment %>%
+  HHMoveIn <- Enrollment |>
     dplyr::left_join(
       # Adding ProjectType to Enrollment too bc we need EntryAdjust & MoveInAdjust
       small_project,
-      by = "ProjectID") %>%
-    dplyr::filter(ProjectType %in% c(3, 9, 13)) %>%
+      by = "ProjectID") |>
+    dplyr::filter(ProjectType %in% c(3, 9, 13)) |>
     dplyr::mutate(
       AssumedMoveIn = dplyr::if_else(
         EntryDate < rm_dates$hc$psh_started_collecting_move_in_date &
@@ -137,27 +136,27 @@ Enrollment_add_Household = function(Enrollment, Project, rm_dates, app_env = get
           MoveInDate >= EntryDate &
           ProjectType == 13 ~ MoveInDate
       )
-    ) %>%
-    dplyr::filter(!is.na(ValidMoveIn)) %>%
-    dplyr::group_by(HouseholdID) %>%
-    dplyr::mutate(HHMoveIn = min(ValidMoveIn, na.rm = TRUE)) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(HouseholdID, HHMoveIn) %>%
+    ) |>
+    dplyr::filter(!is.na(ValidMoveIn)) |>
+    dplyr::group_by(HouseholdID) |>
+    dplyr::mutate(HHMoveIn = min(ValidMoveIn, na.rm = TRUE)) |>
+    dplyr::ungroup() |>
+    dplyr::select(HouseholdID, HHMoveIn) |>
     unique()
 
-  HHEntry <- Enrollment %>%
-    dplyr::left_join(small_project, by = "ProjectID") %>%
-    dplyr::group_by(HouseholdID) %>%
-    dplyr::mutate(FirstEntry = min(EntryDate, na.rm = TRUE)) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(HouseholdID, "HHEntry" = FirstEntry) %>%
-    unique() %>%
+  HHEntry <- Enrollment |>
+    dplyr::left_join(small_project, by = "ProjectID") |>
+    dplyr::group_by(HouseholdID) |>
+    dplyr::mutate(FirstEntry = min(EntryDate, na.rm = TRUE)) |>
+    dplyr::ungroup() |>
+    dplyr::select(HouseholdID, "HHEntry" = FirstEntry) |>
+    unique() |>
     dplyr::left_join(HHMoveIn, by = "HouseholdID")
 
 
-  out <- Enrollment %>%
-    dplyr::left_join(small_project, by = "ProjectID") %>%
-    dplyr::left_join(HHEntry, by = "HouseholdID") %>%
+  out <- Enrollment |>
+    dplyr::left_join(small_project, by = "ProjectID") |>
+    dplyr::left_join(HHEntry, by = "HouseholdID") |>
     dplyr::mutate(
       # Puts EntryDate as MoveInDate for projects that don't use a MoveInDate
       MoveInDateAdjust = dplyr::case_when(
@@ -332,7 +331,7 @@ pe_create_APs = function(provider_extras, ProjectCoC, dirs, app_env = get_app_en
     dplyr::filter(!is.na(CountiesServed)) |>
     dplyr::select(!tidyselect::starts_with("AP") & !ProjectTypeCode)
 
-  project_addresses <- ProjectCoC %>%
+  project_addresses <- ProjectCoC |>
     dplyr::select(ProjectID, CoCCode, Address1, Address2, City, State, ZIP) |>
     dplyr::distinct() |>
     dplyr::mutate(
@@ -513,7 +512,7 @@ load_enrollment <- function(Enrollment,
     # Add Exit
     Enrollment_add_Exit(Exit) |>
     # Add Households
-    Enrollment_add_Household(Project) |>
+    Enrollment_add_Household(Project, rm_dates = rm_dates) |>
     # Add Veteran Coordinated Entry
     Enrollment_add_VeteranCE(VeteranCE = VeteranCE) |>
     # Add Client Location from EnrollmentCoC
