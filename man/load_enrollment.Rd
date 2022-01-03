@@ -10,6 +10,8 @@ load_enrollment(
   Enrollment_extras,
   Exit,
   Client,
+  Project,
+  rm_dates,
   app_env = get_app_env(e = rlang::caller_env())
 )
 }

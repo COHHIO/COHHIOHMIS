@@ -8,6 +8,8 @@
 
 \item{IncomeBenefits}{\code{(data.frame)} From the HUD CSV Export}
 
+\item{Inventory}{\code{(data.frame)} From the HUD CSV Export}
+
 \item{HealthAndDV}{\code{(data.frame)} From the HUD CSV Export}
 
 \item{Disabilities}{\code{(data.frame)} From the HUD CSV Export}

@@ -14,6 +14,8 @@ projects_current_hmis(
 \arguments{
 \item{Project}{\code{(data.frame)} From the HUD CSV Export}
 
+\item{Inventory}{\code{(data.frame)} From the HUD CSV Export}
+
 \item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
 }
 \value{

@@ -21,7 +21,6 @@ Save dependencies for future functions in an environment and put app dependencie
 \item \href{#method-merge_deps_to_env}{\code{app_env$merge_deps_to_env()}}
 \item \href{#method-gather_deps}{\code{app_env$gather_deps()}}
 \item \href{#method-set_parent}{\code{app_env$set_parent()}}
-\item \href{#method-write_app_deps}{\code{app_env$write_app_deps()}}
 \item \href{#method-load_deps}{\code{app_env$load_deps()}}
 \item \href{#method-deps_to_destination}{\code{app_env$deps_to_destination()}}
 \item \href{#method-dropbox_auth}{\code{app_env$dropbox_auth()}}
@@ -94,37 +93,6 @@ Set the given environment to inherit from the internal 'global' environment
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-write_app_deps"></a>}}
-\if{latex}{\out{\hypertarget{method-write_app_deps}{}}}
-\subsection{Method \code{write_app_deps()}}{
-Write app dependencies to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$write_app_deps(
-  deps,
-  path = file.path("data", "db", "RminorElevated"),
-  overwrite = TRUE,
-  all = FALSE
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deps}}{\code{(character)} with names of app dependencies to write.}
-
-\item{\code{path}}{\code{(character)} of directory to write app dependencies to}
-
-\item{\code{overwrite}}{\code{(logical)} Whether to overwrite existing files. \strong{Default:\code{TRUE}}}
-
-\item{\code{all}}{\code{(logical)} Whether to backup all dependencies (overrides deps)}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-\code{(character)} vector of the files written
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-load_deps"></a>}}
 \if{latex}{\out{\hypertarget{method-load_deps}{}}}
 \subsection{Method \code{load_deps()}}{
@@ -145,26 +113,26 @@ Load backed up dependencies from path
 \if{html}{\out{<a id="method-deps_to_destination"></a>}}
 \if{latex}{\out{\hypertarget{method-deps_to_destination}{}}}
 \subsection{Method \code{deps_to_destination()}}{
-Transfer all files in the data dependencies folder to the applications via dropbox or \code{file.copy}. If using dropbox, requires an authorized token to dropbox. See \code{dropbox_auth}.
+Write \code{deps} to a folder via \code{file.copy} or to dropbox. If using dropbox, requires an authorized token to dropbox. See \code{dropbox_auth}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{app_env$deps_to_destination(
   deps = TRUE,
-  folder = file.path("data", "db", "RminorElevated"),
-  dest_folder = file.path("..", "RminorElevated", "data"),
-  dropbox = TRUE
+  dest_folder = file.path("..", c("Rminor", "RminorElevated"), "data"),
+  dropbox = TRUE,
+  clean = TRUE
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{deps}}{\code{(character/logical)} character vector of files to write to disk. Or \code{TRUE} \strong{Default} to use the list of app dependencies matching the \code{dest_folder} name.}
+\item{\code{deps}}{\code{(character/logical)} character vector of files to write to disk. Or \code{TRUE} \strong{Default} to use \code{app_deps}. Use \code{"all"} to write all objects in the \code{dependencies} environment to \code{dest_folder}.}
 
-\item{\code{folder}}{\code{(character)} path to folder with files to transfer transfer}
+\item{\code{dest_folder}}{\code{(character)} folder(s) to transfer deps to - must be same length as \code{deps} or length 1 and will be recycled if \code{deps} is a list. When \strong{dropbox = TRUE} th(is/ese) folder(s) will be used to stage files for upload.}
 
-\item{\code{dest_folder}}{\code{(character)} folder to transfer too. This will be created inside the \verb{HMIS Apps} folder if using Dropbox.}
+\item{\code{dropbox}}{\code{(logical)} Transfer \code{deps} to the root folder assigned by the API key (\strong{HMIS Apps} at COHHIO) on Dropbox.}
 
-\item{\code{dropbox}}{\code{(logical)} \strong{Default} Upload dependencies to Dropbox, \code{FALSE} to pass to the \code{data} folder in the sibling directory: \code{dest_folder}.}
+\item{\code{clean}}{\code{(logical)} \strong{Default} clean unused dependencies from folder. Set to \code{FALSE} to preserve unused dependencies in \code{dest_folder}}
 }
 \if{html}{\out{</div>}}
 }
