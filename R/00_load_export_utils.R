@@ -458,6 +458,7 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
 
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
+  force(ProjectCoC)
   # Project_extras -----------------------------------------------------------------
   # provider_extras
   # Thu Aug 12 14:23:50 2021
@@ -473,11 +474,11 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
 
 
 
-  Project <- clarity_api$Project()
-  Project <- Project |>
+  .Project <- clarity_api$Project()
+  Project <- .Project |>
     dplyr::select(-ProjectCommonName) |>
     {\(x) {dplyr::left_join(x, provider_extras |> dplyr::select(- dplyr::matches("FundingSourceID")) |> dplyr::distinct(ProjectID, .keep_all = TRUE), by = UU::common_names(x, provider_extras))}}()
-  UU::join_check(clarity_api$Project(), Project)
+  UU::join_check(.Project, Project)
 
   mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>
     dplyr::select(ProjectID) |>
