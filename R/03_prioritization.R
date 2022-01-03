@@ -50,7 +50,7 @@ if (is_app_env(app_env))
                       ExitDate > lubridate::today())
   # get Services Only & Coordinated Entry clients with the most recent LivingSituation as homeless as per email guidance on 2021-12-16T17:58:50-04:00 title: FW: HMIS Data Analyst has invited you to access an application on shinyapps.io
 PID_homeless <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
-  dplyr::filter(ProjectType %in% unlist(data_types$Project$ProjectType[c("so", "ce")]) & PersonalID %in% unique(co_currently_homeless$PersonalID) & LivingSituation %in% daata_types$CurrentLivingSituation$CurrentLivingSituation$homeless) |>
+  dplyr::filter(ProjectType %in% unlist(data_types$Project$ProjectType[c("so", "ce")]) & PersonalID %in% unique(co_currently_homeless$PersonalID) & LivingSituation %in% data_types$CurrentLivingSituation$CurrentLivingSituation$homeless) |>
   dplyr::group_by(PersonalID) |>
   dplyr::summarize(LivingSituation = recent_valid(DateUpdated, LivingSituation), .groups = "drop") |>
   dplyr::pull(PersonalID)
