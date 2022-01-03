@@ -547,7 +547,8 @@ load_enrollment <- function(Enrollment,
 #'
 #' @export
 load_services <- function(Services,
-                          Service_extras,
+                          Services_extras,
+                          Enrollment_extra_Client_Exit_HH_CL_AaE,
                           app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
@@ -573,13 +574,16 @@ load_services <- function(Services,
           ServiceEndDate > Sys.Date(),
         Sys.Date(),
         ServiceEndDate
-      ),
-      service_interval = lubridate::interval(start = ServiceStartDate, end = ServiceEndAdjust),
-      ee_interval = lubridate::interval(start = EntryDate, end = ExitAdjust),
-      intersect_tf = lubridate::int_overlaps(service_interval, ee_interval),
-      stray_service = is.na(intersect_tf) |
-        intersect_tf == FALSE
+      )
     ) |>
+    # stray_service logic (not currently in use)
+    # dplyr::mutate(
+    #   service_interval = lubridate::interval(start = ServiceStartDate, end = ServiceEndAdjust),
+    #   ee_interval = lubridate::interval(start = EntryDate, end = ExitAdjust),
+    #   intersect_tf = lubridate::int_overlaps(service_interval, ee_interval),
+    #   stray_service = is.na(intersect_tf) |
+    #     intersect_tf == FALSE
+    # ) |>
     dplyr::select(
       UniqueID,
       PersonalID,
@@ -593,8 +597,8 @@ load_services <- function(Services,
       ServiceItemName,
       FundName,
       FundingSourceID,
-      ServiceAmount,
-      stray_service
+      ServiceAmount
+      #, stray_service
     )
   app_env$gather_deps(Services_enroll_extras)
 }
