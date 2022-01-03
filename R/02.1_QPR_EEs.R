@@ -161,6 +161,8 @@ qpr_ees <- function(
     dplyr::arrange(ProjectName, HouseholdID)
 
   qpr_spending <- Services_enroll_extras |>
+    dplyr::filter(!is.na(ServiceAmount)) |>
+    dplyr::distinct(ServiceID, PersonalID, EnrollmentID, ServiceStartDate, ServiceEndDate, FundName, ServiceAmount, .keep_all = TRUE) |>
     dplyr::left_join(Enrollment_extra_Client_Exit_HH_CL_AaE,
               by = UU::common_names(Services_enroll_extras, Enrollment_extra_Client_Exit_HH_CL_AaE)) |>
     dplyr::left_join(project_small, by = c("ProjectID", "ProjectType", "ProjectName")) |>
