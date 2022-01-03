@@ -504,8 +504,12 @@ load_enrollment <- function(Enrollment,
                             Enrollment_extras,
                             Exit,
                             Client,
+                            Project,
+                            rm_dates,
                             app_env = get_app_env(e = rlang::caller_env())) {
 
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
   # getting EE-related data, joining both to En
 
 
