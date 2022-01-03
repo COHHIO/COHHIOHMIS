@@ -20,10 +20,12 @@ project_evaluation <- function(
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
+  # NOTE Dependency needs to be fetched from cloud location
   scoring_rubric <- clarity.looker::hud_load("scoring_rubric", dirs$public) %>%
     dplyr::mutate(maximum = as.double(maximum),
                   minimum = as.double(minimum))
   # Staging
+  # COMBAK These will likely need updating in the future
   merged_projects <-
     list(
       `GLCAP - PSH - Combined` = list(c("GLCAP", "Homenet", "PSH"),
@@ -287,7 +289,7 @@ project_evaluation <- function(
 
 
 
-  Users_info <- data_quality_flags %>%
+  pe_users_info <- data_quality_flags %>%
     dplyr::filter(GeneralFlagTotal > 0 |
                     BenefitsFlagTotal > 0 |
                     IncomeFlagTotal > 0 |
@@ -309,7 +311,7 @@ project_evaluation <- function(
 
   # CoC Scoring -------------------------------------------------------------
   browser()
-  #TODO Replace this with actual data
+  # NOTE Dependency needs to be fetched from cloud location
   coc_scoring <- clarity.looker::hud_load("coc_scoring", dirs$extras) |>
     dplyr::mutate(DateReceivedPPDocs = as.Date(DateReceivedPPDocs, origin = "1899-12-30"),
                   ProjectID = as.character(ProjectID))
@@ -1477,12 +1479,13 @@ project_evaluation <- function(
                     HoHsMovedInLeavers == 0) %>%
     dplyr::select(-HoHDeaths)
 
+  # TODO These need to be send somewhere rather than saved
   readr::write_csv(zero_divisors, "random_data/zero_divisors.csv")
 
   readr::write_csv(final_scores %>%
                      dplyr::select(OrganizationName,
                                    AltProjectName,
-                                   TotalScore), "random_data/pe_final.csv")
+                                   TotalScore), "random_data/pe_final_consolidated_projects.csv")
 
   readr::write_csv(pe_final_scores, "random_data/pe_final_all.csv")
 
@@ -2046,8 +2049,8 @@ data_quality_flags_detail[is.na(data_quality_flags_detail)] <- 0
 
 # writing out a file to help notify flagged projects toward end of process
 
-# TODO Automation email drafts to the right set of users (need to filter COHHIO_admin_user_ids)
-# Retrieve AgencyID, get all attached UserIDs, Send email to those Users.
+
+# TODO EDA groups need to be deprecated
 users_eda_groups <- readxl::read_xlsx("data/RMisc2.xlsx",
                              sheet = 15) %>%
   dplyr::select(UserID, UserEmail, EDAGroupName)
@@ -2069,7 +2072,8 @@ notify_about_dq <- data_quality_flags_detail %>%
               dplyr::select(ProjectID, AltProjectID), by = "AltProjectID") %>%
   dplyr::mutate(ProjectID = dplyr::if_else(is.na(ProjectID), AltProjectID, ProjectID)) %>%
   dplyr::left_join(providers_users, by = "ProjectID")
-
+# TODO One of the following:
+# Auto upload to Dropbox
 readr::write_csv(notify_about_dq, "Reports/notify.csv")
 
 # this file ^^ is used by Reports/CoC_Competition/Notify_DQ.Rmd to produce
