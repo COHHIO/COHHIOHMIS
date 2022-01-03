@@ -488,7 +488,7 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
         dplyr::distinct(ProjectID, .keep_all = TRUE) |>
         {\(y) {rlang::set_names(y$ProjectID, dplyr::pull(y, ProjectTypeCode))}}()
     }}()
-  app_env$gather_deps(Project, APs)
+  app_env$gather_deps(Project, APs, mahoning_projects)
 }
 
 #' @title Load Enrollment as Enrollment_extra_Client_Exit_HH_CL_AaE
