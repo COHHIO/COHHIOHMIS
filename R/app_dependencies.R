@@ -210,13 +210,14 @@ app_env <- R6::R6Class(
           identical(.work_deps[[1]], "everything")) {
         # Case when "everything" is specified
         .dep_nms <- stringr::str_subset(.all_objs, "(?:app_env)|(?:clarity_api)", negate = TRUE)
-
-      } else if (length(.work_deps) == 1 && is.character(.work_deps[[1]]) && any(.work_deps[[1]] %in% ls(env))) {
+        work_deps_has_obs <- FALSE
+      } else if (length(.work_deps) == 1 && is.character(.work_deps[[1]]) && any(.work_deps[[1]] %in% .all_objs)) {
         # case when character vector of objects to gather is provided
         .dep_nms <- .work_deps[[1]]
-        stopifnot(names(.work_deps) == .dep_nms)
+        work_deps_has_obs <- FALSE
       } else {
         .dep_nms <- names(.work_deps)
+        work_deps_has_obs <- TRUE
       }
 
       # Determine what needs to be saved for the apps
@@ -225,26 +226,30 @@ app_env <- R6::R6Class(
 
       if (is.list(app_deps)) {
         app_vars <- purrr::imap(app_deps, ~ {
-          intersect(.x, .all_objs)
+          intersect(.x, c(.all_objs, .dep_nms))
         })
         app_vars_chr <- purrr::flatten_chr(app_vars)
         .all_nms <- unique(c(app_vars_chr, .dep_nms))
       } else
         .all_nms <- .dep_nms
 
-      .work_deps <- purrr::compact(rlang::env_get_list(env, .all_nms, default = NULL))
+
+      .all_deps <- purrr::compact(rlang::env_get_list(env, purrr::when(work_deps_has_obs, . ~ setdiff(.all_nms, .dep_nms), ~ .all_nms), default = NULL))
+
+      .all_deps <- purrr::list_modify(.all_deps, !!!.work_deps)
+
       # Remove test clients
-      .work_deps <- purrr::map(.work_deps, clarity.looker::Client_filter)
+      .all_deps <- purrr::map(.all_deps, clarity.looker::Client_filter)
 
       private$work_deps <- unique(c(private$work_deps, .all_nms))
 
-      rlang::env_bind(self$dependencies, !!!.work_deps)
+      rlang::env_bind(self$dependencies, !!!.all_deps)
 
 
       cli::cli_h2("Saved Dependencies")
       cli::cli_alert_success("{cli::col_br_green('Global')}: {paste0(.dep_nms, collapse =', ')}")
       if (exists("app_vars", inherits = FALSE))
-        purrr::iwalk(app_vars, ~cli::cli_alert_success("{.path {.y}}: {paste0(.x, collapse = ', ')}"))
+        purrr::iwalk(app_vars, ~ if (UU::is_legit(.x)) cli::cli_alert_success("{.path {.y}}: {paste0(.x, collapse = ', ')}"))
 
       invisible(self)
     },
