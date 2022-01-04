@@ -1,6 +1,8 @@
+# ServicePoint DQ Checks ----
+# Tue Sep 14 10:14:17 2021
+
 if (is_sp()) {
-  # ServicePoint DQ Checks ----
-  # Tue Sep 14 10:14:17 2021
+
   #' @title Incorrect Entry/Exit Types
   #' @inherit data_quality_tables params return
   #' @family ServicePoint Checks

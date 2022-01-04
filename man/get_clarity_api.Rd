@@ -4,7 +4,11 @@
 \alias{get_clarity_api}
 \title{Find the \code{clarity_api} R6 object}
 \usage{
-get_clarity_api(nm = "cl_api", e = rlang::caller_env())
+get_clarity_api(
+  nm = "cl_api",
+  e = rlang::caller_env(),
+  ifnotfound = stop("Clarity API object not found")
+)
 }
 \arguments{
 \item{nm}{The name of the instantiated object}

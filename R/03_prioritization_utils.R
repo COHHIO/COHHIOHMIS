@@ -6,7 +6,7 @@ n_na <- function(...) {
 
 #' @title Find a valid maximum from the input values, or if none is present, return the values
 #'
-#' @param x \code({numeric/real})
+#' @param x \code{(numeric/real)}
 #'
 #' @return Maximum value
 #' @export

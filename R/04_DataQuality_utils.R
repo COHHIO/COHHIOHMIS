@@ -247,7 +247,6 @@ enrolled_in <-
 #' @title Data Quality report on Missing First Names
 #' @family Clarity Checks
 #' @family DQ: Missing UDEs
-#' @describeIn data_quality_tables
 #' @inherit data_quality_tables params return
 
 dq_name <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
@@ -276,7 +275,6 @@ dq_name <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env 
 #' @title Data quality report on Missing/Incorrect DOB
 #' @family Clarity Checks
 #' @family DQ: Missing UDEs
-#' @describeIn data_quality_tables
 #' @inherit data_quality_tables params return
 # TODO Check to ensure missing DOB are not present in imported.
 
@@ -318,7 +316,7 @@ dq_dob <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env =
 #' @title Data quality report on SSN Validity
 #' @family Clarity Checks
 #' @family DQ: Missing UDEs
-#' @describeIn data_quality_tables
+
 #' @inherit data_quality_tables params return
 
 
@@ -350,7 +348,7 @@ dq_ssn <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env =
 #' @title Data quality report on Race data
 #' @family Clarity Checks
 #' @family DQ: Missing UDEs
-#' @describeIn data_quality_tables
+
 #' @inherit data_quality_tables params return
 
 dq_race <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
@@ -377,7 +375,7 @@ dq_race <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env 
 #' @title Data quality report on Ethnicity data
 #' @family Clarity Checks
 #' @family DQ: Missing UDEs
-#' @describeIn data_quality_tables
+
 #' @inherit data_quality_tables params return
 
 dq_ethnicity <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
@@ -405,7 +403,7 @@ gender_qs <- c("Questioning", "GenderNone", "Male", "Female", "NoSingleGender", 
 #' @title Data quality report on Gender Data
 #' @family Clarity Checks
 #' @family DQ: Missing UDEs
-#' @describeIn data_quality_tables
+
 #' @inherit data_quality_tables params return
 #TODO Change for FY 2022
 dq_gender <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
@@ -2754,7 +2752,7 @@ ssvf_served_in_date_range <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, se
 #' @title Data quality report on Veteran Status
 #' @family Clarity Checks
 #' @family DQ: Missing UDEs
-#' @describeIn data_quality_tables
+
 #' @inherit data_quality_tables params return
 
 dq_veteran <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {

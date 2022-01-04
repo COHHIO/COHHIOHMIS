@@ -78,8 +78,8 @@
 #'
 #' @format A tibble with 88 rows and 13 variables:
 #' \describe{
-#'   \item{State}
-#'   \item{County}
+#'   \item{State}{}
+#'   \item{County}{}
 #'   \item{SSVFServiceArea}{ the SSVF program for the area}
 #'   \item{VAMC}{ the VAMC program for the area}
 #'   \item{HomelessPlanningRegion}{ The BoS Region}
@@ -89,7 +89,7 @@
 #'   \item{CoC}{ the Continuum of Care for the area}
 #'   \item{YHDP}{ the YHDP program for the area}
 #'   \item{RHY}{ the RHY program for the area}
-#'   \item{Unknown}
+#'   \item{Unknown}{}
 #'   \item{HNHF}{ the HNHF program for the area}
 #' }
 

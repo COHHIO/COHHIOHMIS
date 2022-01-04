@@ -9,18 +9,15 @@
 
 #' @title Render Data Quality plots & tables for RminorElevated dq_system_wide
 #'
-#' @param Project
-#' @param dq_past_year
-#' @param dq_eligibility_detail
-#' @param rm_dates
-#' @param data_APs
-#' @param Referrals
-#' @param app_env
+#' @inheritParams data_quality_tables
+#' @param dq_past_year \code{(data.frame)} See `data_quality`
+#' @param dq_eligibility_detail \code{(data.frame)} See `data_quality`
+#' @param data_APs \code{(data.frame)} See `data_APs`
 #'
 #' @return
 #' @export
 #' @include 04_DataQuality.R 04_DataQuality_utils.R 04_DataQuality_summary_utils.R
-#' @examples
+
 data_quality_summary <- function(served_in_date_range, Referrals, Project, dq_past_year, dq_eligibility_detail, data_APs, rm_dates, vars, app_env = get_app_env(e = rlang::caller_env())) {
 
   if (is_app_env(app_env))

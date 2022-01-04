@@ -4,7 +4,11 @@
 \alias{get_app_env}
 \title{Find the \code{app_env} R6 object}
 \usage{
-get_app_env(nm = "Rm_env", e = rlang::caller_env())
+get_app_env(
+  nm = "Rm_env",
+  e = rlang::caller_env(),
+  ifnotfound = stop("app_env object not found")
+)
 }
 \arguments{
 \item{nm}{The name of the instantiated object}

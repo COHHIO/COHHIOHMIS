@@ -17,7 +17,25 @@ data_quality_summary(
 )
 }
 \arguments{
-\item{app_env}{}
+\item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
+
+\item{Referrals}{\code{(data.frame)} From the Clarity Looker API Extras}
+
+\item{Project}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{dq_past_year}{\code{(data.frame)} See \code{data_quality}}
+
+\item{dq_eligibility_detail}{\code{(data.frame)} See \code{data_quality}}
+
+\item{data_APs}{\code{(data.frame)} See \code{data_APs}}
+
+\item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
+
+\item{vars}{\code{(named list)}
+\itemize{
+\item{\code{prep}}{ Column names for Prep}
+\item{\code{we_want}}{ Column names for output}
+}}
 }
 \value{
 

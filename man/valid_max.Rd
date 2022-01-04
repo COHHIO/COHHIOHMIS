@@ -7,7 +7,7 @@
 valid_max(x)
 }
 \arguments{
-\item{x}{\code({numeric/real})}
+\item{x}{\code{(numeric/real)}}
 }
 \value{
 Maximum value
