@@ -33,6 +33,15 @@ setup_RmData <- function(Clarity = TRUE, ServicePoint = FALSE, Clarity_URL = "ht
   cli::cli_alert_success("HMIS options written to .Rprofile in project directory.")
 }
 
+from_ns <- function(nm, ns) {
+  purrr::possibly(~getFromNamespace(nm, ns), otherwise = NULL)(nm, ns)
+}
+
+by_class <- function(class, e) {
+  purrr::possibly(~UU::find_by_class(class, e), otherwise = NULL)(class, e)
+}
+
+
 #' Find the `clarity_api` R6 object
 #' @family Get R6 Classes
 #' @param nm The name of the instantiated object
@@ -43,8 +52,8 @@ setup_RmData <- function(Clarity = TRUE, ServicePoint = FALSE, Clarity_URL = "ht
 #'
 #' @examples
 #' get_clarity_api()
-get_clarity_api <- function(nm = "cl_api", e = rlang::caller_env()) {
-  tryCatch(getFromNamespace(nm, "RmData"), error = rlang::as_function(~{NULL})) %||% UU::find_by_class("clarity_api", e)
+get_clarity_api <- function(nm = "cl_api", e = rlang::caller_env(), ifnotfound = stop("Clarity API object not found")) {
+  from_ns(nm, "RmData") %||% by_class("clarity_api", e) %||% ifnotfound
 }
 
 #' Find the `app_env` R6 object
@@ -57,8 +66,8 @@ get_clarity_api <- function(nm = "cl_api", e = rlang::caller_env()) {
 #'
 #' @examples
 #' get_clarity_api()
-get_app_env <- function(nm = "Rm_env", e = rlang::caller_env()) {
-  tryCatch(getFromNamespace(nm, "RmData"), error = rlang::as_function(~{NULL})) %||% UU::find_by_class("app_env", e)
+get_app_env <- function(nm = "Rm_env", e = rlang::caller_env(), ifnotfound = stop("app_env object not found")) {
+  from_ns(nm, "RmData") %||% by_class("app_env", e) %||% ifnotfound
 }
 
 
