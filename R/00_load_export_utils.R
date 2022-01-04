@@ -8,7 +8,7 @@
 
 Client_redact <- function(Client) {
   Client |>
-    Client_filter() |>
+    clarity.looker::Client_filter() |>
     dplyr::mutate(
       FirstName = dplyr::case_when(
         NameDataQuality %in% c(8, 9) ~ "DKR",
