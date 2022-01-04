@@ -24,9 +24,6 @@ Find the \code{app_env} R6 object
 \details{
 Searches the \code{RmData} package environment and then the environment specified
 }
-\examples{
-get_clarity_api()
-}
 \seealso{
 Other Get R6 Classes: 
 \code{\link{get_clarity_api}()}

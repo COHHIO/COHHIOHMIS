@@ -49,9 +49,6 @@ by_class <- function(class, e) {
 #' @details Searches the `RmData` package environment and then the environment specified
 #' @return
 #' @export
-#'
-#' @examples
-#' get_clarity_api()
 get_clarity_api <- function(nm = "cl_api", e = rlang::caller_env(), ifnotfound = stop("Clarity API object not found")) {
   from_ns(nm, "RmData") %||% by_class("clarity_api", e) %||% ifnotfound
 }
@@ -63,9 +60,7 @@ get_clarity_api <- function(nm = "cl_api", e = rlang::caller_env(), ifnotfound =
 #' @details Searches the `RmData` package environment and then the environment specified
 #' @return
 #' @export
-#'
-#' @examples
-#' get_clarity_api()
+
 get_app_env <- function(nm = "Rm_env", e = rlang::caller_env(), ifnotfound = stop("app_env object not found")) {
   from_ns(nm, "RmData") %||% by_class("app_env", e) %||% ifnotfound
 }
