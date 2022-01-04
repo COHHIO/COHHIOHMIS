@@ -204,47 +204,47 @@ app_env <- R6::R6Class(
             rlang::set_names(x, stringr::str_remove_all(names(x), "\""))
           }
         }()
+
+      .all_objs <- ls(env, all.names = TRUE)
       if (length(.work_deps) == 1 &&
           identical(.work_deps[[1]], "everything")) {
         # Case when "everything" is specified
-        .all_objs <- ls(env, all.names = TRUE)
         .dep_nms <- stringr::str_subset(.all_objs, "(?:app_env)|(?:clarity_api)", negate = TRUE)
-        .work_deps <- purrr::compact(rlang::env_get_list(env, .dep_nms, default = NULL))
+
       } else if (length(.work_deps) == 1 && is.character(.work_deps[[1]]) && any(.work_deps[[1]] %in% ls(env))) {
         # case when character vector of objects to gather is provided
         .dep_nms <- .work_deps[[1]]
-        .work_deps <- purrr::compact(rlang::env_get_list(env, .dep_nms, default = NULL))
         stopifnot(names(.work_deps) == .dep_nms)
       } else {
         .dep_nms <- names(.work_deps)
       }
 
-      private$work_deps <- unique(c(private$work_deps, .dep_nms))
-
-
-      rlang::env_bind(self$dependencies, !!!.work_deps)
-
-
-
-
-      cli::cli_h2("Saved Dependencies")
-      cli::cli_alert_success(paste0("Global: ", paste0(.dep_nms, collapse = ", ")))
-
-
+      # Determine what needs to be saved for the apps
       if (isTRUE(app_deps))
         app_deps <- self$app_deps
 
       if (is.list(app_deps)) {
-        purrr::imap(app_deps, ~ {
-          .work_deps <- purrr::compact(rlang::env_get_list(env, .x, default = NULL))
-          if (UU::is_legit(.work_deps)) {
-            # Add Client_filter for all dependencies to ensure test clients are removed from reporting
-            rlang::env_bind(self$dependencies, !!!.work_deps)
-
-            cli::cli_alert_success(paste0(.y, ": ", paste0(names(.work_deps), collapse = ", ")))
-          }
+        app_vars <- purrr::imap(app_deps, ~ {
+          intersect(.x, .all_objs)
         })
-      }
+        app_vars_chr <- purrr::flatten_chr(app_vars)
+        .all_nms <- unique(c(app_vars_chr, .dep_nms))
+      } else
+        .all_nms <- .dep_nms
+
+      .work_deps <- purrr::compact(rlang::env_get_list(env, .all_nms, default = NULL))
+      # Remove test clients
+      .work_deps <- purrr::map(.work_deps, clarity.looker::Client_filter)
+
+      private$work_deps <- unique(c(private$work_deps, .all_nms))
+
+      rlang::env_bind(self$dependencies, !!!.work_deps)
+
+
+      cli::cli_h2("Saved Dependencies")
+      cli::cli_alert_success("{cli::col_br_green('Global')}: {paste0(.dep_nms, collapse =', ')}")
+      if (exists("app_vars", inherits = FALSE))
+        purrr::iwalk(app_vars, ~cli::cli_alert_success("{.path {.y}}: {paste0(.x, collapse = ', ')}"))
 
       invisible(self)
     },
