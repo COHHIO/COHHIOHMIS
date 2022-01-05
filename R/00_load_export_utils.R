@@ -288,7 +288,7 @@ pe_add_regions <- function(provider_extras, Regions = clarity.looker::hud_load("
       geocodes <- geocodes |>
         tibble::add_row(GeographicCode = row$Geocode, State = "OH", County = row$County)
     }
-    feather::write_feather(geocodes, hud_filename("geocodes", dirs$public))
+    UU::object_write(geocodes, "geocodes", dirs$public)
     out <- out |>
       dplyr::left_join(geocodes, by = c(Geocode = "GeographicCode"))
   }
