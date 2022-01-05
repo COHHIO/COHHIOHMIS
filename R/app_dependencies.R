@@ -459,7 +459,7 @@ app_env <- R6::R6Class(
           dplyr::group_by(path) |>
           dplyr::group_split() |>
           purrr::map(~glue::glue(
-            "{cli::col_br_green('Transferred to Dropbox')} from {.path {unique(.x$path)}}: {{.emph {paste0(baseame(.x$filepath), collapse = ', ')}}}"
+            "{cli::col_br_green('Transferred to Dropbox')} from {{.path {unique(.x$path)}}}: {{.emph {paste0(baseame(.x$filepath), collapse = ', ')}}}"
           ))
       )
       purrr::walk(.success, cli::cli_alert_success)
