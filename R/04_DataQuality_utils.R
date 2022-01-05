@@ -2158,7 +2158,7 @@ overlaps <- function(served_in_date_range, p_types = data_types$Project$ProjectT
     dplyr::select(dplyr::all_of(vars$prep), ExitAdjust, EnrollmentID) |>
     janitor::get_dupes(PersonalID) |>
     dplyr::mutate(
-      Stay = lubridate::interval(EntryDate, ExitAdjust)
+      Stay = lubridate::interval(EntryDate, ExitAdjust - lubridate::days(1))
     ) |>
     dplyr::group_by(PersonalID) |>
     dplyr::arrange(EntryDate) |>
@@ -2202,10 +2202,10 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
                   # The client should be exited by the day following move_in
                   max_movein = dplyr::if_else(!is.na(max_movein), max_movein + lubridate::days(1), max_movein)) |>
     dplyr::ungroup() |>
-    dplyr::filter(!is.na(max_movein) & max_movein < ExitAdjust & # keep all the literally homeless project enrollments to see if the move-in date is within the enrollment
+    dplyr::filter(!is.na(max_movein) & max_movein <= ExitAdjust & # keep all the literally homeless project enrollments to see if the move-in date is within the enrollment
                     ProjectType %in% p_types) |>
     dplyr::mutate(
-      LiterallyInProject = lubridate::interval(max_movein, ExitAdjust)
+      LiterallyInProject = lubridate::interval(EntryAdjust, ExitAdjust - lubridate::days(1))
     ) |>
     dplyr::filter(!is.na(LiterallyInProject)) |>
     janitor::get_dupes(PersonalID) |>
