@@ -46,7 +46,7 @@ dq_vax <- function(served_in_date_range, mahoning_projects = NULL, Doses = NULL,
   ) |>
     dplyr::mutate(
       Type = "Warning",
-      Issue = "Vaccine data not collected and client has exited",
+      Issue = "Vaccine consent data not collected and client has exited",
       Guidance = guidance$vax_missing_exit
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
@@ -59,7 +59,7 @@ dq_vax <- function(served_in_date_range, mahoning_projects = NULL, Doses = NULL,
   ) %>%
     dplyr::mutate(
       Type = "Error",
-      Issue = "Vaccine data not collected on current client",
+      Issue = "Vaccine consent data not collected on current client",
       Guidance = guidance$vax_missing_current
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want))
