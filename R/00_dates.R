@@ -6,7 +6,6 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
   force(app_env)
   force(clarity_api)
   rm_dates <- list()
-  #TODO Dynamically update looker date ranges
   first <- lubridate::floor_date(Sys.Date(), "year")
   hc <- list(
     data_goes_back_to =  first - lubridate::years(2)
@@ -77,24 +76,24 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
 
 
 
-  if(rm_dates$meta_HUDCSV$Export_Start != rm_dates$hc$data_goes_back_to |
+  if(rm_dates$meta_HUDCSV$Export_Start > rm_dates$hc$data_goes_back_to |
      rm_dates$meta_HUDCSV$Export_End != Sys.Date())
-    stop_with_instructions("The HUD CSV Export is not up to date.\n", error = error)
+    stop_with_instructions("The HUD CSV Export is not up to date", error = error)
 
 
   #  Check recency of Extras ----
   # Mon Aug 09 17:09:43 2021
   extras_last_update <- clarity.looker::hud_last_updated(path = dirs$extras)
 
-  extra_info <- list(missing = setdiff(names(clarity.looker::folder_looks(clarity_api$folders$`HUD Extras`)), stringr::str_remove(names(extras_last_update), "\\.feather$")),
+  extra_info <- list(missing = setdiff(names(clarity.looker::folder_looks(clarity_api$folders$`HUD Extras`)), UU::ext(basename(names(extras_last_update)), strip = TRUE)),
                      not_updated = purrr::keep(extras_last_update, ~!lubridate::`%within%`(.x, lubridate::interval(lubridate::floor_date(Sys.Date(), "day") - 1, Sys.time()))))
 
   rm_dates$meta_Rmisc_last_run_date <- mean(extras_last_update)
   purrr::iwalk(extra_info, ~{
-    if (UU::is_legit(extra_info$missing))
-      stop_with_instructions(paste0("The following *_extra files are missing ", paste0(extra_info$missing, collapse = ", ")), error = error)
-    if (UU::is_legit(extra_info$not_updated))
-      stop_with_instructions(paste0("The following files are not up to date: ", paste0(purrr::imap_chr(extra_info$not_update, ~paste0(.y,": ", .x)), collapse = "\n")), error = error)
+    if (UU::is_legit(.x)) {
+      .fp <- paste0(basename(names(.x)), collapse = ", ")
+    stop_with_instructions(glue::glue("The following extras ({{.path {dirs$extras}}}) are {switch(.y, missing = 'missing', not_updated = 'not up to date')}: {.fp}"), error = error)
+    }
   })
   # Gather Dependencies ----
   # Mon Aug 09 17:09:52 2021
