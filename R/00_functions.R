@@ -353,7 +353,7 @@ case_when_text <- function(.x, .y, out = c("Text", "Value")[1]) {
 }
 
 #' @title Service Point / Clarity Field representation translations (numeric/character)
-#' @inherit hud.extract::hud_translate params return
+#' @inherit HMIS::hud_translate params return
 #' @export
 sp2cl_translations <-
   purrr::imap(sp2cl_tables, ~{
@@ -362,7 +362,7 @@ sp2cl_translations <-
       if (table) {
         out <- hash
       } else {
-        out <- hud.extract::hud_translate(.x, hash)
+        out <- HMIS::hud_translate(.x, hash)
       }
       out
     })
