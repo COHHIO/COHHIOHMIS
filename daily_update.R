@@ -18,31 +18,15 @@ devtools::load_all()
 dirs <- clarity.looker::dirs
 # Use the HUD CSV from the UI until the Looker API is fixed
 Rm_env$gather_deps(dirs)
-run_bg(bg_scripts["update_extras"])
 # Try services
 # rstudioapi::jobRunScript(file.path("inst","src","Services_test.R"), importEnv = TRUE, workingDir = getwd())
-Rm_env <- dates()
-Rm_env <- load_export()
-Rm_env <- cohorts()
-Rm_env <- client_counts()
-Rm_env <- qpr_ees()
-Rm_env <- qpr_spdats()
-Rm_env <- covid19()
-Rm_env <- covid19_plots()
-Rm_env <- vets()
-Rm_env <- vet_active()
-Rm_env <- prioritization()
-Rm_env <- bed_unit_utilization()
-Rm_env <- data_quality()
-Rm_env <- data_quality_summary()
-Rm_env$deps_to_destination("all", dest_folder = file.path("data", "backup"))
-Rm_env$deps_to_destination(dropbox = TRUE)
+daily_update(backup = TRUE)
 beepr::beep(sound = 3)
 
 
 
 
-increment("Importing raw HMIS data\n")
+# increment("Importing raw HMIS data\n")
 
 # list.files(full.names = TRUE, "~/R/Contributor_Repos/COHHIO/COHHIO_HMIS/public_data") %>%
 #   purrr::walk(~{
