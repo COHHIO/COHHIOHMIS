@@ -545,12 +545,12 @@ dq_missing_previous_street_ESSH <- function(served_in_date_range, vars, guidance
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
-#' @title Find Missing Prior Residence
+#' @title Find Missing Prior Living Situation
 #' @inherit data_quality_tables params return
 #' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
 #' @export
-dq_missing_residence_prior <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_missing_prior_living_situation <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   missing_residence_prior <- served_in_date_range |>
@@ -560,7 +560,7 @@ dq_missing_residence_prior <- function(served_in_date_range, vars, guidance = NU
                   LivingSituation) |>
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
                     (is.na(LivingSituation) | LivingSituation == 99)) |>
-    dplyr::mutate(Issue = "Missing Residence Prior",
+    dplyr::mutate(Issue = "Missing Prior Living Situation",
                   Type = "Error",
                   Guidance = guidance$missing_at_entry) |>
     dplyr::select(dplyr::all_of(vars$we_want))
@@ -568,12 +568,12 @@ dq_missing_residence_prior <- function(served_in_date_range, vars, guidance = NU
 
 }
 
-#' @title Find Don't Know/Refused Prior Residence
+#' @title Find Don't Know/Refused Prior Living Situation
 #' @inherit data_quality_tables params return
 #' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
 #' @export
-dq_dkr_residence_prior <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+dq_dkr_prior_living_situation <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$set_parent(missing_fmls())
   dkr_residence_prior <- served_in_date_range |>
@@ -583,7 +583,7 @@ dq_dkr_residence_prior <- function(served_in_date_range, vars, guidance = NULL, 
                   LivingSituation) |>
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
                     LivingSituation %in% c(8, 9)) |>
-    dplyr::mutate(Issue = "Don't Know/Refused Residence Prior",
+    dplyr::mutate(Issue = "Don't Know/Refused Prior Living Situation",
                   Type = "Warning",
                   Guidance = guidance$dkr_data) |>
     dplyr::select(dplyr::all_of(vars$we_want))
@@ -606,7 +606,7 @@ dq_dkr_LoS <- function(served_in_date_range, vars, guidance = NULL, app_env = ge
                   LengthOfStay) |>
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
                     LengthOfStay %in% c(8, 9)) |>
-    dplyr::mutate(Issue = "Don't Know/Refused Residence Prior",
+    dplyr::mutate(Issue = "Don't Know/Refused Length of Stay",
                   Type = "Warning",
                   Guidance = guidance$dkr_data) |>
     dplyr::select(dplyr::all_of(vars$we_want))
@@ -645,35 +645,6 @@ dq_missing_months_times_homeless <- function(served_in_date_range, vars, guidanc
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
-#' @title Find Don't Know/Refused Months or Times Homeless
-#' @inherit data_quality_tables params return
-#' @family Clarity Checks
-#' @family DQ: Missing Data at Entry
-#' @export
-dq_dkr_months_times_homeless <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
-  if (is_app_env(app_env))
-		app_env$set_parent(missing_fmls())
-
-  served_in_date_range |>
-    dplyr::select(
-      dplyr::all_of(vars$prep),
-      AgeAtEntry,
-      RelationshipToHoH,
-      MonthsHomelessPastThreeYears,
-      TimesHomelessPastThreeYears
-    ) |>
-    dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    EntryDate >= rm_dates$hc$prior_living_situation_required &
-                    (
-                      MonthsHomelessPastThreeYears %in% c(8, 9) |
-                        TimesHomelessPastThreeYears %in% c(8, 9)
-                    )
-    ) |>
-    dplyr::mutate(Issue = "Don't Know/Refused Months or Times Homeless",
-                  Type = "Warning",
-                  Guidance = guidance$dkr_data) |>
-    dplyr::select(dplyr::all_of(vars$we_want))
-}
 
 #' @title Find Invalid Months or Times Homeless Entries
 #' @inherit data_quality_tables params return
@@ -781,50 +752,31 @@ dq_missing_living_situation <- function(served_in_date_range, vars, rm_dates = N
 }
 
 
-#' @title Find Don't Know/Refused Living Situation
+#' @title Find Don't Know/Refused Months or Times Homeless
 #' @inherit data_quality_tables params return
 #' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
 #' @export
-dq_dkr_living_situation <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
-) {
+dq_dkr_months_times_homeless <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
-		app_env$set_parent(missing_fmls())
+    app_env$set_parent(missing_fmls())
+
   served_in_date_range |>
     dplyr::select(
-      dplyr::all_of(unique(c(vars$prep,
-                             "PersonalID",
-                             "HouseholdID",
-                             "EnrollmentID",
-                             "ProjectID",
-                             "ProjectType",
-                             "ProjectName",
-                             "ProjectRegion",
-                             "EntryDate",
-                             "MoveInDateAdjust",
-                             "ExitDate",
-                             "AgeAtEntry",
-                             "CountyServed",
-                             "RelationshipToHoH",
-                             "LivingSituation",
-                             "LengthOfStay",
-                             "LOSUnderThreshold",
-                             "PreviousStreetESSH",
-                             "DateToStreetESSH",
-                             "MonthsHomelessPastThreeYears",
-                             "TimesHomelessPastThreeYears",
-                             "UserCreating"))
-      )
+      dplyr::all_of(vars$prep),
+      AgeAtEntry,
+      RelationshipToHoH,
+      MonthsHomelessPastThreeYears,
+      TimesHomelessPastThreeYears
     ) |>
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
-                    EntryDate > rm_dates$hc$prior_living_situation_required &
+                    EntryDate >= rm_dates$hc$prior_living_situation_required &
                     (
                       MonthsHomelessPastThreeYears %in% c(8, 9) |
-                        TimesHomelessPastThreeYears %in% c(8, 9) |
-                        LivingSituation %in% c(8, 9)
+                        TimesHomelessPastThreeYears %in% c(8, 9)
                     )
     ) |>
-    dplyr::mutate(Issue = "Don't Know/Refused Living Situation",
+    dplyr::mutate(Issue = "Don't Know/Refused Months or Times Homeless",
                   Type = "Warning",
                   Guidance = guidance$dkr_data) |>
     dplyr::select(dplyr::all_of(vars$we_want))
@@ -1350,7 +1302,7 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
 
     out <- check_eligibility |>
       dplyr::mutate(
-        ResidencePrior = HMIS::hud_translations$`3.12.1 Living Situation Option List`(LivingSituation),
+        LivingSituation = HMIS::hud_translations$`3.12.1 Living Situation Option List`(LivingSituation),
         LengthOfStay = HMIS::hud_translations$`3.917.2 LengthOfStay`(LengthOfStay)
       ) |>
       dplyr::mutate(
@@ -1358,7 +1310,7 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
         Type = "Warning",
         Guidance = guidance$check_eligibility
       ) |>
-      dplyr::select(dplyr::all_of(vars$we_want), PreviousStreetESSH, LengthOfStay, ResidencePrior)
+      dplyr::select(dplyr::all_of(vars$we_want), PreviousStreetESSH, LengthOfStay, LivingSituation)
 
   return(out)
 }
@@ -1792,7 +1744,7 @@ dq_future_exits <- function(served_in_date_range, vars, app_env = get_app_env(e 
 
 # HoHs Entering PH without SPDATs -----------------------------------------
 
-#' @title Find Non-DV HoHs Entering PH or TH without SPDAT, HoHs in shelter for 8+ days without SPDAT, and SPDAT Created on a Non-HoH
+#' @title Find Non-DV HoHs Entering PH, or TH without SPDAT, HoHs in shelter for 8+ days without SPDAT, and SPDAT Created on a Non-HoH
 #' @family Clarity Checks
 #' @family DQ: SPDAT Checks
 #' @description This checks for three warning types:
@@ -1804,7 +1756,7 @@ dq_future_exits <- function(served_in_date_range, vars, app_env = get_app_env(e 
 #' @inherit data_quality_tables params return
 #' @export
 
-dq_ph_without_spdats <- function(served_in_date_range, Funder, Scores, rm_dates, vars, app_env = get_app_env(e = rlang::caller_env()), unsh = FALSE) {
+dq_without_spdats <- function(served_in_date_range, Funder, Scores, rm_dates, vars, app_env = get_app_env(e = rlang::caller_env()), unsh = FALSE) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
