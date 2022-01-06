@@ -19,11 +19,13 @@ if (interactive() && curl::has_internet() && clarity.looker::is_dev() && (diffti
   dq_nms <- googlesheets4::sheet_names(dq_id)
   dq_guidance <- purrr::map(rlang::set_names(dq_nms), ~googlesheets4::read_sheet(dq_id, sheet = .x, col_types = "c"))
   # Handle irrelevant
+  all_dq <- stringr::str_subset(ls(envir = .getNamespace("RmData"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
   if (is_clarity()) {
     irrelevant <- dq_guidance$`Guidance list`$name[(nchar(dq_guidance$`Guidance list`$irrelevant) > 0) %|% FALSE]
-    relevant_dq <- unique(dq_guidance$Checks$DQ_Check[!stringr::str_extract(dq_guidance$Checks$Guidance, "(?<=guidance\\$)[\\w\\_]+") %in% irrelevant])
+    irrelevant <- unique(dq_guidance$Checks$DQ_Check[stringr::str_extract(dq_guidance$Checks$Guidance, "(?<=guidance\\$)[\\w\\_]+") %in% irrelevant])
+    relevant_dq <- setdiff(all_dq, irrelevant)
   } else {
-    relevant_dq <- stringr::str_subset(ls(envir = .getNamespace("RmData"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
+    relevant_dq <- all_dq
   }
   dump("relevant_dq", file.path("R","relevant_dq.R"))
   guidance <- purrr::map(rlang::set_names(dq_guidance$`Guidance list`$name), ~{

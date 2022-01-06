@@ -157,11 +157,11 @@ dq_main |>
 
   }}()
 
-cli::cli_progress_update(id = .pid,,
+cli::cli_progress_update(id = .pid,
                          status = "Overlapping Project Stays")
 dq_overlaps <- dq_overlaps()
 
-cli::cli_progress_update(id = .pid,,
+cli::cli_progress_update(id = .pid,
                          status = "Eligibility Checks")
 
 dq_eligibility_detail <- dq_check_eligibility()
@@ -172,7 +172,7 @@ if (is_clarity()) {
   dq_eligibility_detail <- clarity.looker::make_linked_df(dq_eligibility_detail, EnrollmentID)
 }
 
-# TODO See note in dq_overlaps
+# NOTE See note in dq_overlaps
 # if (is_sp()) {
 #   unsh_overlaps <- dq_overlaps(unsh = TRUE)
 # }
@@ -314,7 +314,7 @@ if (is_clarity()) {
 # referrals_on_hh_members_ssvf <- dq_referrals_on_hh_members_ssvf()
 # AP entering project stays -----------------------------------------------
 #aps_with_ees <- dq_aps_with_ees
-# TODO Stray Services? See load_services
+# NOTE Stray Services? See load_services
 # Stray Services (fall outside EE) ----------------------------------------
 # Because a lot of these records are stray Services due to there being no
 # Entry Exit at all, this can't be shown in the same data set as all the other
