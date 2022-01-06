@@ -24,6 +24,7 @@ NULL
 #' @param EnrollmentCoC \code{(data.frame)} From the HUD CSV Export
 #' @param Exit \code{(data.frame)} From the HUD CSV Export
 #' @param Client \code{(data.frame)} From the HUD CSV Export
+#' @param Funder \code{(data.frame)} From the HUD CSV Export
 #' @param Services \code{(data.frame)} From the HUD CSV Export
 #' @param Services_extras \code{(data.frame)} From the Clarity Looker API Extras
 #' @param Referrals \code{(data.frame)} From the Clarity Looker API Extras

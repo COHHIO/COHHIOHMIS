@@ -130,11 +130,11 @@ fun_insert <-
 
 
 
-folder_clean <- function(files, dest_files, dropbox = FALSE) {
+folder_clean <- function(files, dest_files, remote = FALSE) {
   to_clean <- setdiff(basename(dest_files), basename(files))
   destpath <- unique(dirname(dest_files))
   if (UU::is_legit(to_clean)) {
-    if (dropbox) {
+    if (remote) {
       .cleaned <- purrr::map(to_clean, rdrop2::drop_delete)
       .cleaned <- purrr::map_chr(.cleaned, ~basename(.x$metadata$path_display))
       .cleaned <- intersect(to_clean, .cleaned)
@@ -236,7 +236,8 @@ app_env <- R6::R6Class(
 
       .all_deps <- purrr::compact(rlang::env_get_list(env, purrr::when(work_deps_has_obs, . ~ setdiff(.all_nms, .dep_nms), ~ .all_nms), default = NULL))
 
-      .all_deps <- purrr::list_modify(.all_deps, !!!.work_deps)
+      if (work_deps_has_obs)
+        .all_deps <- purrr::list_modify(.all_deps, !!!.work_deps)
 
       # Remove test clients
       .all_deps <- purrr::map(.all_deps, clarity.looker::Client_filter)
@@ -286,12 +287,12 @@ app_env <- R6::R6Class(
 #' @param clean \code{(logical)} **Default** clean unused dependencies from folder. Set to `FALSE` to preserve unused dependencies in `dest_folder`
 #' @return
 
-    deps_to_destination = function(deps = TRUE, dest_folder = file.path("..",c("Rminor", "RminorElevated"),"data"), dropbox = TRUE, clean = TRUE) {
+    deps_to_destination = function(deps = TRUE, dest_folder = file.path("..",c("Rminor", "RminorElevated"),"data"), remote = TRUE, clean = TRUE) {
 
       all <- deps == "all"
       self_deps <- isTRUE(deps)
       if (all) {
-        dropbox = FALSE
+        remote = FALSE
         deps_flat <- ls(self$dependencies, all.names = TRUE)
         deps <- list(all = deps_flat)
       } else {
@@ -335,7 +336,7 @@ app_env <- R6::R6Class(
 
 
       # load app_deps
-      if (dropbox) {
+      if (remote) {
         self$dropbox_auth()
         db_info <- rdrop2::drop_dir()
         db_files <- basename(db_info$path_display)
@@ -426,9 +427,9 @@ app_env <- R6::R6Class(
               folder_clean(UU::list.files2(.x))
           })
 
-        if (dropbox) {
+        if (remote) {
 
-          folder_clean(unique(basename(maybe_write$filepath)), db_files, dropbox = dropbox)
+          folder_clean(unique(basename(maybe_write$filepath)), db_files, remote = remote)
 
           to_upload <- dplyr::mutate(maybe_write,
                                      filename = basename(filepath),
@@ -459,7 +460,7 @@ app_env <- R6::R6Class(
           dplyr::group_by(path) |>
           dplyr::group_split() |>
           purrr::map(~glue::glue(
-            "{cli::col_br_green('Transferred to Dropbox')} from {{.path {unique(.x$path)}}}: {{.emph {paste0(baseame(.x$filepath), collapse = ', ')}}}"
+            "{cli::col_br_green('Transferred to Remote')} from {{.path {unique(.x$path)}}}: {{.emph {paste0(baseame(.x$filepath), collapse = ', ')}}}"
           ))
       )
       purrr::walk(.success, cli::cli_alert_success)
