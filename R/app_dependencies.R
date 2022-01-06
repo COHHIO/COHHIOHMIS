@@ -287,7 +287,7 @@ app_env <- R6::R6Class(
 #' @param clean \code{(logical)} **Default** clean unused dependencies from folder. Set to `FALSE` to preserve unused dependencies in `dest_folder`
 #' @return
 
-    deps_to_destination = function(deps = TRUE, dest_folder = file.path("..",c("Rminor", "RminorElevated"),"data"), remote = TRUE, clean = TRUE) {
+    deps_to_destination = function(deps = TRUE, dest_folder = file.path("..",c("Rminor", "RminorElevated"),"data"), remote = FALSE, clean = TRUE) {
 
       all <- deps == "all"
       self_deps <- isTRUE(deps)
@@ -375,7 +375,12 @@ app_env <- R6::R6Class(
           if (o_info$nm %in% .x) {
             fp <- file.path(.y, paste0(o_info$nm, o_info$ext))
             if (file.exists(fp)) {
-              .file <- try(UU::file_fn(fp)(fp), silent = TRUE)
+              fn <- UU::file_fn(fp)
+              if (identical(fn, arrow::read_feather))
+                .args <- list(mmap = FALSE)
+              else
+                .args <- list()
+              .file <- try(rlang::exec(fn, fp, !!!.args), silent = TRUE)
               # Sometimes invalid files, delete them
               if (!UU::is_legit(.file))
                 file.remove(fp)
