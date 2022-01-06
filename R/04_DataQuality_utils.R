@@ -60,17 +60,15 @@ get_null_names <- function(fmls = rlang::fn_fmls(), e = rlang::caller_env()) {
   names(fmls)[purrr::imap_lgl(fmls, ~exists(.y, e, mode = "NULL"))]
 }
 
-#' @title Funder_VA
-#' @description This filters for VA Funders
-#' @param x \code{(data.frame)} Funder Export Object
-#' @param ids \code{(numeric)} All VA Related IDs
-#'
+#' @title Funder_ProjectIDs
+#' @description This filters for Project IDs funded by FundingSources matching `fund_regex`. See \link[HMIS]{hud_translations}\code{\$2.06.1 FundingSource(table = TRUE)} for Funding Source names.
+#' @inheritParams data_quality_tables
+#' @param fund_regex \code{(character)} regular expression. **Default: `"^VA"` for VA funded projects
 #' @return \code{(data.frame)} with Project ID
 #'
-#TODO need to update IDs of VA associated projects
-Funder_VA_ProjectID <- function(x, ids = c(27, 30, 33, 37:42, 45)) {
-  x |>
-    dplyr::filter(Funder %in% ids) |>
+
+Funder_ProjectIDs <- function(Funder, fund_regex = "^VA") {
+  dplyr::filter(Funder, stringr::str_detect(HMIS::hud_translations$`2.06.1 FundingSource`(Funder), fund_regex)) |>
     dplyr::select(ProjectID)
 }
 
@@ -1760,8 +1758,8 @@ dq_without_spdats <- function(served_in_date_range, Funder, Scores, rm_dates, va
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
-  va_funded <- Funder |>
-    Funder_VA_ProjectID()
+  va_funded <-
+    Funder_ProjectIDs(Funder)
 
 
   ees_with_spdats <- served_in_date_range |>
