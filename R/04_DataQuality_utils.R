@@ -1,16 +1,16 @@
 #' @title Retrieve an HMIS option set via `setup_RmData`
 #' @param opt \code{(character)} Option name to retrieve
-#' @inheritParams getOption
+#' @inheritParams base::getOption
 #'
 #' @include 04_Guidance.R
 
-hmis_option <- function(opt, default = FALSE) {
+hmis_option <- function(x, default = FALSE) {
 
-  .w <- glue::glue("HMIS option `{opt}`")
+  .w <- glue::glue("HMIS option `{x}`")
   .msg <- " not setup, please see ?setup_RmData to fix this."
 
-  x <- getOption("HMIS")
-  out <- x[[opt]]
+  opts <- getOption("HMIS")
+  out <- opts[[x]]
   if (!UU::is_legit(out)) {
     warning(glue::glue("{.w}{.msg}"))
     out <- default
