@@ -52,11 +52,12 @@ glue_skip_NA <- function(..., str_expr, na = "omit") {
 #' @param ... Error Messages to print to the console
 #' @export
 stop_with_instructions <- function(..., error = FALSE) {
-  .msg <- paste0(paste0(..., collapse = "\n"),"\nPlease contact hmisapps@cohhio.org for help!")
+  .msgs <- paste0(..., collapse = "\n")
+  .msg <- cli::cli_warn(c(x = .msgs, i = "Please contact {.emph hmisapps@cohhio.org} for help!"))
   if (error)
-    stop(.msg)
+    stop(.msg, .call = FALSE)
   else {
-    warning(.msg)
+
     # authfile <- ifelse(clarity.looker::is_dev(), file.path("inst", "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"), file.path(system.file(package = "RmData"), "auth", "rminor@rminor-333915.iam.gserviceaccount.com.json"))
     # token <- gargle::token_fetch(scopes = "https://www.googleapis.com/auth/gmail.compose", gargle::credentials_service_account(scopes = "https://www.googleapis.com/auth/gmail.compose", path = authfile))
     # gmailr::gm_auth_configure()
