@@ -524,7 +524,7 @@ load_enrollment <- function(Enrollment,
     Enrollment_add_ClientLocation(EnrollmentCoC) |>
     # Add Client AgeAtEntry
     Enrollment_add_AgeAtEntry_UniqueID(Client) |>
-    dplyr::left_join(dplyr::select(Client,-dplyr::all_of(
+    dplyr::left_join(dplyr::select(Client,-dplyr::any_of(
       c(
         "DateCreated",
         "DateUpdated",
