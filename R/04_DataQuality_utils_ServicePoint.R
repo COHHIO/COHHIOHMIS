@@ -231,14 +231,14 @@ if (is_sp()) {
     unsh_dq <- c("dq_check_disability_ssi",
                  "dq_dkr_destination",
                  "dq_dkr_months_times_homeless",
-                 "dq_dkr_residence_prior",
+                 "dq_dkr_prior_living_situation",
                  "dq_dkr_LoS",
                  "dq_dob",
                  "dq_ethnicity",
                  "dq_race",
                  "dq_gender",
                  "dq_name",
-                 dq_overlaps(unsh = TRUE),
+                 "dq_overlaps",
                  "dq_duplicate_ees",
                  "dq_future_ees",
                  "dq_future_exits",
@@ -248,7 +248,7 @@ if (is_sp()) {
                  "dq_hh_missing_rel_to_hoh", #collectively hh_issues
                  "dq_sp_incorrect_ee_type",
                  "dq_internal_old_outstanding_referrals",
-                 dq_ph_without_spdats(unsh = TRUE), # lh_without_spdat, spdat_on_non_hoh"
+                 dq_without_spdats(unsh = TRUE), # lh_without_spdat, spdat_on_non_hoh"
                  dq_psh_check_exit_destination, # "maybe_psh_destination"
                  "missing_approx_date_homeless",
                  "missing_destination",
