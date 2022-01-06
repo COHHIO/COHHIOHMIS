@@ -142,7 +142,7 @@ folder_clean <- function(files, dest_files, remote = FALSE) {
       .cleaned <- purrr::map_lgl(to_clean, ~file.remove(file.path(destpath, .x)))
       .cleaned <- to_clean[.cleaned]
     }
-    cli::cli_alert_info("Cleaned from {.path {ifelse(dropbox, 'dropbox', destpath)}}: {cli::col_silver(basename(.cleaned))}")
+    cli::cli_alert_info("Cleaned from {.path {ifelse(remote, 'Remote', destpath)}}: {cli::col_silver(basename(.cleaned))}")
   }
 }
 
@@ -291,8 +291,9 @@ app_env <- R6::R6Class(
 
       all <- deps == "all"
       self_deps <- isTRUE(deps)
+      .remote <- is.character(remote)
       if (all) {
-        remote = FALSE
+        .remote = FALSE
         deps_flat <- ls(self$dependencies, all.names = TRUE)
         deps <- list(all = deps_flat)
       } else {
@@ -336,7 +337,7 @@ app_env <- R6::R6Class(
 
 
       # load app_deps
-      if (remote) {
+      if (.remote) {
         self$dropbox_auth()
         db_info <- rdrop2::drop_dir()
         db_files <- basename(db_info$path_display)
@@ -432,9 +433,9 @@ app_env <- R6::R6Class(
               folder_clean(UU::list.files2(.x))
           })
 
-        if (remote) {
+        if (.remote) {
 
-          folder_clean(unique(basename(maybe_write$filepath)), db_files, remote = remote)
+          folder_clean(unique(basename(maybe_write$filepath)), db_files, remote = .remote)
 
           to_upload <- dplyr::mutate(maybe_write,
                                      filename = basename(filepath),
