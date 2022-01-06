@@ -247,7 +247,7 @@ project_evaluation <- function(
         ),
       LoTHFlag =
         dplyr::if_else(
-          Issue %in% c("Missing Residence Prior",
+          Issue %in% c("Missing Prior Living Situation",
                        "Missing Months or Times Homeless",
                        "Incomplete Living Situation Data"),
           1,

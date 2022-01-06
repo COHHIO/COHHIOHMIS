@@ -38,9 +38,8 @@ Other Clarity Checks:
 \code{\link{dq_conflicting_unlikely_ncbs}()},
 \code{\link{dq_detail_missing_disabilities}()},
 \code{\link{dq_dkr_destination}()},
-\code{\link{dq_dkr_living_situation}()},
 \code{\link{dq_dkr_months_times_homeless}()},
-\code{\link{dq_dkr_residence_prior}()},
+\code{\link{dq_dkr_prior_living_situation}()},
 \code{\link{dq_dob}()},
 \code{\link{dq_duplicate_ees}()},
 \code{\link{dq_ethnicity}()},
@@ -63,7 +62,7 @@ Other Clarity Checks:
 \code{\link{dq_missing_ncbs}()},
 \code{\link{dq_missing_path_contact}()},
 \code{\link{dq_missing_previous_street_ESSH}()},
-\code{\link{dq_missing_residence_prior}()},
+\code{\link{dq_missing_prior_living_situation}()},
 \code{\link{dq_name}()},
 \code{\link{dq_overlaps}()},
 \code{\link{dq_path_enrolled_missing}()},
@@ -96,15 +95,14 @@ Other Clarity Checks:
 
 Other DQ: Missing Data at Entry: 
 \code{\link{dq_detail_missing_disabilities}()},
-\code{\link{dq_dkr_living_situation}()},
 \code{\link{dq_dkr_months_times_homeless}()},
-\code{\link{dq_dkr_residence_prior}()},
+\code{\link{dq_dkr_prior_living_situation}()},
 \code{\link{dq_invalid_months_times_homeless}()},
 \code{\link{dq_missing_approx_date_homeless}()},
 \code{\link{dq_missing_living_situation}()},
 \code{\link{dq_missing_months_times_homeless}()},
 \code{\link{dq_missing_previous_street_ESSH}()},
-\code{\link{dq_missing_residence_prior}()},
+\code{\link{dq_missing_prior_living_situation}()},
 \code{\link{dq_sp_missing_LoS}()}
 }
 \concept{Clarity Checks}

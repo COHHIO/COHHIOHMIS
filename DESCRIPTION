@@ -50,6 +50,7 @@ Collate:
     '03_prioritization_utils.R'
     '03_prioritization.R'
     '04_DataQuality_doses.R'
+    'relevant_dq.R'
     '04_Guidance.R'
     '04_DataQuality_utils.R'
     '04_DataQuality.R'

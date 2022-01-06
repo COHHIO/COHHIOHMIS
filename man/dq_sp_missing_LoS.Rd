@@ -39,15 +39,14 @@ Other ServicePoint Checks:
 Other DQ: Missing Data at Entry: 
 \code{\link{dq_detail_missing_disabilities}()},
 \code{\link{dq_dkr_LoS}()},
-\code{\link{dq_dkr_living_situation}()},
 \code{\link{dq_dkr_months_times_homeless}()},
-\code{\link{dq_dkr_residence_prior}()},
+\code{\link{dq_dkr_prior_living_situation}()},
 \code{\link{dq_invalid_months_times_homeless}()},
 \code{\link{dq_missing_approx_date_homeless}()},
 \code{\link{dq_missing_living_situation}()},
 \code{\link{dq_missing_months_times_homeless}()},
 \code{\link{dq_missing_previous_street_ESSH}()},
-\code{\link{dq_missing_residence_prior}()}
+\code{\link{dq_missing_prior_living_situation}()}
 }
 \concept{DQ: Missing Data at Entry}
 \concept{ServicePoint Checks}
