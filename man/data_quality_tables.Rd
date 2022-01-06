@@ -24,6 +24,8 @@
 
 \item{Client}{\code{(data.frame)} From the HUD CSV Export}
 
+\item{Funder}{\code{(data.frame)} From the HUD CSV Export}
+
 \item{Services}{\code{(data.frame)} From the HUD CSV Export}
 
 \item{Services_extras}{\code{(data.frame)} From the Clarity Looker API Extras}

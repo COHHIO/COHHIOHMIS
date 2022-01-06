@@ -4,16 +4,14 @@
 \alias{Funder_VA_ProjectID}
 \title{Funder_VA}
 \usage{
-Funder_VA_ProjectID(x, ids = c(27, 30, 33, 37:42, 45))
+Funder_VA_ProjectID(Funder)
 }
 \arguments{
-\item{x}{\code{(data.frame)} Funder Export Object}
-
-\item{ids}{\code{(numeric)} All VA Related IDs}
+\item{Funder}{\code{(data.frame)} From the HUD CSV Export}
 }
 \value{
 \code{(data.frame)} with Project ID
 }
 \description{
-This filters for VA Funders
+This filters for VA Funded Project IDs
 }

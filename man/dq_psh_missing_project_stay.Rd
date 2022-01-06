@@ -70,7 +70,6 @@ Other Clarity Checks:
 \code{\link{dq_path_no_status_at_exit}()},
 \code{\link{dq_path_reason_missing}()},
 \code{\link{dq_path_status_determination}()},
-\code{\link{dq_ph_without_spdats}()},
 \code{\link{dq_psh_check_exit_destination}()},
 \code{\link{dq_psh_incorrect_destination}()},
 \code{\link{dq_race}()},
@@ -89,6 +88,7 @@ Other Clarity Checks:
 \code{\link{dq_th_stayers_bos}()},
 \code{\link{dq_vax}()},
 \code{\link{dq_veteran}()},
+\code{\link{dq_without_spdats}()},
 \code{\link{dqu_project_small}()},
 \code{\link{overlaps_same_day}()},
 \code{\link{overlaps}()}

@@ -64,4 +64,5 @@ Collate:
     '07_SPM.R'
     '09_covid.R'
     'convenience_funs.R'
+    'daily_update.R'
     'data.R'
