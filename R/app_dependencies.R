@@ -420,7 +420,10 @@ app_env <- R6::R6Class(
           .x <- list(...)
           cli::cli_progress_update(id = .pid, status = cli::format_message("{.path {.x$filepath}}"))
           o <- rlang::eval_bare(.x$ex)
-          UU::object_write(o, .x$filepath, verbose = FALSE)
+          .args <- list(o, .x$filepath, verbose = FALSE)
+          if (UU::ext(.x$filepath) == "feather")
+            .args$compression = "uncompressed"
+          do.call(UU::object_write, .args)
         })
 
         # Clean folder
