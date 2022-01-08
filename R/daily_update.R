@@ -129,33 +129,79 @@ pb_update.Progress <- function(pbar, message = NULL, inc = NULL, set = NULL, ...
 
 
 
+#' @title Is the data in `dir` updated?
+#'
+#' @param dir \code{(character)} path to directory
+#'
+#' @return \code{(logical)}
+#' @export
+
 data_ready <- function(dir = clarity.looker::dirs$export) {
   max(clarity.looker::hud_last_updated(path = dir), na.rm = TRUE) > lubridate::floor_date(Sys.time(), "day")
 }
 
 
-update_data <- function(export_zip = FALSE, clarity_api = RmData::get_clarity_api(e = rlang::caller_env()), is_shiny = FALSE) {
-  .total <- total <-  1
-  pbar <- pb_start(name = "Update Data", type = "iterator", total = .total, is_shiny = is_shiny, auto_terminate = FALSE)
+#' @title Update HUD CSV Export & Extras data
+#'
+#' @param export_zip \code{(logical)} Did the HUD Export CSV's come from an uploaded zip file?
+#' @inheritParams data_quality_tables
+#'
+#' @return \code{(none)} retrieves and saves Export CSVs via `clarity.looker` if `export_zip = FALSE` (the default). See \link[clarity.looker]{\code{clarity_api}}\code{$get_export} & \code{$get_folder_looks} for details.
+#' @export
+
+update_data <- function(export_zip = FALSE, clarity_api = RmData::get_clarity_api(e = rlang::caller_env())) {
+
+
   if (!data_ready() && !export_zip) {
-    pb_update(pbar, message = "Updating export", set = 0)
+    cli::cli_inform(message = cli::col_grey("Updating export..."))
     clarity_api$get_export()
-    .total  = .total / 2
-    pb_update(pbar, message = "Updated export", set = .total)
   }
 
 
 
   if (!data_ready(clarity_api$dirs$extras)) {
-    pb_update(pbar, message = "Updating extras", set = .total)
+    cli::cli_inform(message = cli::col_grey("Updating extras..."))
     clarity_api$get_folder_looks(clarity_api$folders$`HUD Extras`,
                                  .write = TRUE,
                                  path = clarity_api$dirs$extras)
-    pb_update(pbar, message = "Updated extras", set = total)
   }
-  pb_close(pbar, e = environment())
 }
 
+
+#' @title Update the Rminor apps
+#'
+#' @param steps \code{(character)} vector of the steps to run. Any of:
+#' \itemize{
+#'   \item{\code{ update }}{  Update Data }
+#'   \item{\code{ funs }}{  Run RmData functions }
+#'   \item{\code{ send }}{  Send Dependencies to Dropbox }
+#' }
+#' @param funs \code{(character)} vector of functions to run. Any of:
+#' \itemize{
+#'   \item{\code{ dates }}
+#'   \item{\code{ load_export }}
+#'   \item{\code{ cohorts }}
+#'   \item{\code{ client_counts }}
+#'   \item{\code{ qpr_ees }}
+#'   \item{\code{ qpr_spdats }}
+#'   \item{\code{ covid19 }}
+#'   \item{\code{ covid19_plots }}
+#'   \item{\code{ vets }}
+#'   \item{\code{ vet_active }}
+#'   \item{\code{ prioritization }}
+#'   \item{\code{ bed_unit_utilization }}
+#'   \item{\code{ data_quality }}
+#'   \item{\code{ data_quality_summary }}
+#' }
+#' @inheritParams update_data
+#' @param remote \code{(logical)} Whether to send dependencies to the remote storage.
+#' @param backup \code{(logical)} Whether to back up all raw dependencies in the dependencies environment.
+#' @inheritParams data_quality_tables
+#' @param session \code{(shiny session object)}
+#' @param e \code{(calling environment)}
+#'
+#' @return Updates the Rminor apps and provides status messages along the way
+#' @export
 
 daily_update <- function(steps = c(
   "Update Data" = "update",
@@ -182,12 +228,12 @@ funs = rlang::set_names(c(
 export_zip = TRUE,
 remote = FALSE,
 backup = FALSE,
-now = Sys.time(),
 app_env,
 clarity_api,
 session,
 e = rlang::caller_env()
 ) {
+  now = Sys.time()
   if (missing(app_env))
     app_env <- get_app_env(e = e)
   if (missing(clarity_api))
@@ -198,20 +244,17 @@ e = rlang::caller_env()
   } else
     .shiny = FALSE
 
-
-
   # Prepare Progress bar
 
 
   pbar <- pb_start(total = length(steps), type = "tasks", is_shiny = .shiny, auto_terminate = FALSE)
   if ("update" %in% steps) {
-    pb_update(pbar, message = "Updating Data")
     update_data(export_zip, clarity_api = clarity_api)
-    pb_update(pbar, message = "Updated Data", inc = 1)
   }
 
   if ("funs" %in% steps) {
-    pb_fn <- pb_start("Functions", total = length(funs), type = "iterator", auto_terminate = FALSE)
+    cli::cli_inform(cli::col_grey("Running functions..."))
+    pb_fn <- pb_start("Functions", total = length(funs), type = "tasks", auto_terminate = FALSE, format = "{cli::pb_name}: {.path {cli::pb_status}} {cli::pb_current}/{cli::pb_total} [{cli::col_br_blue(cli::pb_elapsed)}]")
     funs <- funs[order(match(funs, eval(rlang::fn_fmls()$funs)))]
     for (fn in funs) {
       pb_update(pb_fn, message = fn, set = which(funs %in% fn) - 1, e = environment())
@@ -223,23 +266,20 @@ e = rlang::caller_env()
         .args$clarity_api = clarity_api
 
       app_env <- do.call(.fn, .args)
-      pb_update(pb_fn, message = paste0(fn, " Done"), set = which(funs %in% fn), e = environment())
+      pb_update(pb_fn, message = paste0(fn, " done"), set = which(funs %in% fn), e = environment())
     }
     pb_close(pb_fn, e = environment())
   }
 
   if (backup) {
-    cli::cli_progress_message("Backing up dependencies")
+    cli::cli_inform(cli::col_grey("Backing up dependencies..."))
     app_env$deps_to_destination("all", dest_folder = file.path("data", "backup"))
   }
 
   if ("send" %in% steps) {
-    pb_update(pbar, message = "Sending Dependencies to apps")
-    app_env$deps_to_destination(dest_folder = file.path("data", "db"), remote = remote)
-    pb_update(pbar, inc = 1, message = "App data updated")
+    cli::cli_inform(cli::col_grey("Sending Dependencies to apps..."))
+    app_env$deps_to_destination(dest_folder = ifelse(interactive(), file.path("..",c("Rminor", "RminorElevated"),"data"), file.path("data", "db")), remote = remote)
   }
 
-  pb_close(pbar)
-
-  cli::cli_inform(paste0("Total runtime: ", round(difftime(Sys.time(), now, units = "mins"), 2), "m"))
+  cli::cli_alert_success(paste0("Total runtime: ", round(difftime(Sys.time(), now, units = "mins"), 2), "m"))
 }
