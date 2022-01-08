@@ -320,7 +320,7 @@ pe_create_APs = function(provider_extras, ProjectCoC, dirs, app_env = get_app_en
   # Programs serve multiple Counties which may fall into multiple regions. This creates a row for each Region served by a Program such that Coordinated Entry Access Points will show all the appropriate programs when filtering by Region.
   # @Rm
   APs <- purrr::pmap_dfr(APs, ~{
-    .x <- list(...)
+    .x <- tibble::tibble(...)
     .counties <- trimws(stringr::str_split(.x$CountiesServed, ",\\s")[[1]])
 
     .x |>

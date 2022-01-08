@@ -37,7 +37,7 @@ qpr_ees <- function(
 
   # goals <- readr::read_csv(file.path(dirs$public, "BoSGoals.csv"), col_types = "cccdddddddd")
 
-  goals <- hud_load("goals", dirs$public) |>
+  goals <- clarity.looker::hud_load("goals", dirs$public) |>
     tidyr::pivot_longer(- tidyselect::all_of(c("SummaryMeasure", "Measure", "Operator")),  names_to = "ProjectType",
                         values_to = "Goal") |>
     dplyr::mutate(ProjectType = as.numeric(ProjectType)) |>

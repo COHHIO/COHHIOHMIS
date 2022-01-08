@@ -38,7 +38,7 @@ Enrollment_Custom$box = hud_load("Enrollment_Custom", "data") |>
   )
 # Further exclusions
 Enrollment_Custom$exclusions <- purrr::map(c(EnrollmentID = "cohhio_enrollments_enrollmentid_excluded",
-                                             PersonalID = "cohhio_enrollments_personalid_excluded"), hud_load)
+                                             PersonalID = "cohhio_enrollments_personalid_excluded"), clarity.looker::hud_load)
 
 Enrollment_Custom$exclusions <- Enrollment_Custom$exclusions |> purrr::map(~rlang::set_names(.x, c("EnrollmentCustomID", "PersonalID", "EnrollmentID")))
 
