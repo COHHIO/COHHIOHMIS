@@ -143,16 +143,15 @@ data_ready <- function(dir = clarity.looker::dirs$export) {
 
 #' @title Update HUD CSV Export & Extras data
 #'
-#' @param export_zip \code{(logical)} Did the HUD Export CSV's come from an uploaded zip file?
 #' @inheritParams data_quality_tables
 #'
-#' @return \code{(none)} retrieves and saves Export CSVs via `clarity.looker` if `export_zip = FALSE` (the default). See \code{\link[clarity.looker]{clarity_api}$get_export} & \code{$get_folder_looks} for details.
+#' @return \code{(none)} retrieves and saves Export CSVs via `clarity.looker` if not up to date. See \code{\link[clarity.looker]{clarity_api}$get_export} & \code{$get_folder_looks} for details.
 #' @export
 
-update_data <- function(export_zip = FALSE, clarity_api = RmData::get_clarity_api(e = rlang::caller_env())) {
+update_data <- function(clarity_api = RmData::get_clarity_api(e = rlang::caller_env())) {
 
 
-  if (!data_ready() && !export_zip) {
+  if (!data_ready()) {
     cli::cli_inform(message = cli::col_grey("Updating export..."))
     clarity_api$get_export()
   }
@@ -225,7 +224,6 @@ funs = rlang::set_names(c(
   "data_quality_summary"
 
 )),
-export_zip = TRUE,
 remote = FALSE,
 backup = FALSE,
 app_env,
@@ -249,7 +247,7 @@ e = rlang::caller_env()
 
   pbar <- pb_start(total = length(steps), type = "tasks", is_shiny = .shiny, auto_terminate = FALSE)
   if ("update" %in% steps) {
-    update_data(export_zip, clarity_api = clarity_api)
+    update_data(clarity_api = clarity_api)
   }
 
   if ("funs" %in% steps) {
