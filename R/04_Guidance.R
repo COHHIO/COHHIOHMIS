@@ -11,25 +11,25 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
-#' @include guidance.R relevant_dq.R
+#' @include guidance.R relevant_dq.R 04_DataQuality_utils.R
 
 if (interactive() && curl::has_internet() && clarity.looker::is_dev() && (difftime(Sys.time(), attr(guidance, "last_update") %||% Sys.time()) > lubridate::days(7))) {
   googlesheets4::gs4_auth(path = "inst/auth/rminor@rminor-333915.iam.gserviceaccount.com.json")
   dq_id <- "15HsbSGmsscGtUIZnBDSVPaU4Zsotp7Dj79mXpPAu_lw"
   dq_nms <- googlesheets4::sheet_names(dq_id)
-  dq_guidance <- purrr::map(rlang::set_names(dq_nms), ~googlesheets4::read_sheet(dq_id, sheet = .x, col_types = "c"))
+  guidance <- purrr::map(rlang::set_names(dq_nms), ~googlesheets4::read_sheet(dq_id, sheet = .x, col_types = "c"))
   # Handle irrelevant
   all_dq <- stringr::str_subset(ls(envir = .getNamespace("RmData"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
   if (is_clarity()) {
-    irrelevant <- dq_guidance$`Guidance list`$name[(nchar(dq_guidance$`Guidance list`$irrelevant) > 0) %|% FALSE]
-    irrelevant <- unique(dq_guidance$Checks$DQ_Check[stringr::str_extract(dq_guidance$Checks$Guidance, "(?<=guidance\\$)[\\w\\_]+") %in% irrelevant])
+    irrelevant <- guidance$`Guidance list`$name[(nchar(guidance$`Guidance list`$irrelevant) > 0) %|% FALSE]
+    irrelevant <- unique(guidance$Checks$DQ_Check[stringr::str_extract(guidance$Checks$Guidance, "(?<=guidance\\$)[\\w\\_]+") %in% irrelevant])
     relevant_dq <- setdiff(all_dq, irrelevant)
   } else {
     relevant_dq <- all_dq
   }
   dump("relevant_dq", file.path("R","relevant_dq.R"))
-  guidance <- purrr::map(rlang::set_names(dq_guidance$`Guidance list`$name), ~{
-    dq_guidance$`Guidance list`$guidance[dq_guidance$`Guidance list`$name == .x]
+  guidance <- purrr::map(rlang::set_names(guidance$`Guidance list`$name), ~{
+    guidance$`Guidance list`$guidance[guidance$`Guidance list`$name == .x]
   })
   f <- ifelse(clarity.looker::is_dev(), "R/guidance.R", file.path(system.file(package = "RmData"), "R", "guidance.R"))
   attr(guidance, "last_update") <- Sys.time()
