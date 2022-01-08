@@ -272,11 +272,11 @@ pe_add_regions <- function(provider_extras, Regions = clarity.looker::hud_load("
                   ProjectCounty = "County")
 
   .need_filled <- out |>
-    dplyr::filter(is.na(County)) |>
+    dplyr::filter(is.na(ProjectCounty)) |>
     dplyr::distinct(Geocode, .keep_all = TRUE) |>
     nrow()
   if (.need_filled > 0)
-    cli::cli_warn(cli::cli_format("Some geocodes did not match a geocode. See {.path .deprecated/fill_geocodes.R} for a function to fix this issue."))
+    cli::cli_warn(cli::cli_format("Some geocodes did not match a county. See {.path .deprecated/fill_geocodes.R} for a function to fix this issue."))
   # Special cases
   #  St. Vincent de Paul of Dayton serves region 13
   out[out$Geocode %in% c("391361", "391362"), "ProjectRegion"] <- 13
