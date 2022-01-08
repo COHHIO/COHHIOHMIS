@@ -75,19 +75,33 @@ pb_update <- function(pbar, message = NULL, inc = NULL, set = NULL, ..., e = rla
 #' @title S3 character Method pb_update
 #' @export
 pb_update.character <- function(pbar, message = NULL, inc = NULL, set = NULL, ..., e = rlang::caller_env()) {
-  if (!missing(set) && !missing(inc))
-    stop("Either `set` or `inc` must be supplied, not both.")
-  .dots <- rlang::dots_list(..., .named = TRUE)
-  .dots <- .dots[names(.dots) %in% rlang::fn_fmls_names(cli::cli_progress_update)]
-  .args <- rlang::list2(
-    id = pbar,
-    status = message,
-    set = set,
-    inc = inc,
-    .envir = e,
-    !!!.dots
-  )
-  do.call(cli::cli_progress_update, .args)
+  inc_set <- purrr::map_lgl(list(inc = inc, set = set), ~!is.null(.x))
+
+  if (any(inc_set)) {
+    if (all(inc_set))
+      stop("Either `set` or `inc` must be supplied, not both.")
+    .dots <- rlang::dots_list(..., .named = TRUE)
+    .dots <- .dots[names(.dots) %in% rlang::fn_fmls_names(cli::cli_progress_update)]
+    .args <- rlang::list2(
+      id = pbar,
+      status = message,
+      set = set,
+      inc = inc,
+      .envir = e,
+      !!!.dots
+    )
+  } else if (all(!inc_set)) {
+    .args <- list(
+      msg = message,
+      .envir = e,
+      .auto_close = FALSE
+    )
+  }
+
+  fn <- purrr::when(all(!inc_set),
+                    . ~ cli::cli_progress_message,
+                    ~ cli::cli_progress_update)
+  do.call(fn, .args)
 }
 
 #' @title S3 Progress Method pb_update
