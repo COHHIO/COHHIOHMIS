@@ -283,7 +283,7 @@ app_env <- R6::R6Class(
 #' @description Write `deps` to a folder via `file.copy` or to dropbox. If using dropbox, requires an authorized token to dropbox. See `dropbox_auth`.
 #' @param deps \code{(character/logical)} character vector of files to write to disk. Or `TRUE` **Default** to use `app_deps`. Use `"all"` to write all objects in the `dependencies` environment to `dest_folder`.
 #' @param dest_folder \code{(character)} folder(s) to transfer deps to - must be same length as `deps` or length 1 and will be recycled if `deps` is a list. When **dropbox = TRUE** th(is/ese) folder(s) will be used to stage files for upload.
-#' @param dropbox \code{(logical)} Transfer `deps` to the root folder assigned by the API key (**HMIS Apps** at COHHIO) on Dropbox.
+#' @param remote \code{(logical)} Transfer `deps` to the root folder assigned by the API key (**HMIS Apps** at COHHIO) on Dropbox.
 #' @param clean \code{(logical)} **Default** clean unused dependencies from folder. Set to `FALSE` to preserve unused dependencies in `dest_folder`
 #' @return
 
@@ -409,16 +409,15 @@ app_env <- R6::R6Class(
         if (length(unique(dest_folder)) == 1)
           to_write <- dplyr::distinct(to_write, nm, .keep_all = TRUE)
         # Stage files
-        .pid <- cli::cli_progress_bar(status = "Writing: ", type = "iterator",
+        .pid <- cli::cli_progress_bar(status = "Writing: ", type = "tasks",
                                       total = nrow(to_write),
                                       auto_terminate = TRUE,
-                                      .auto_close = TRUE,
-                                      format = "{cli::pb_bar} {cli::pb_percent} [{cli::pb_elapsed}]"
+                                      format = "{cli::pb_name}: {.path {cli::pb_status}} {cli::pb_current}/{cli::pb_total} [{cli::col_br_blue(cli::pb_elapsed)}]"
         )
 
         purrr::pwalk(to_write, ~{
           .x <- list(...)
-          cli::cli_progress_update(id = .pid, status = cli::format_message("{.path {.x$filepath}}"))
+          cli::cli_progress_update(id = .pid, status = .x$filepath)
           o <- rlang::eval_bare(.x$ex)
           .args <- list(o, .x$filepath, verbose = FALSE)
           if (UU::ext(.x$filepath) == "feather")
