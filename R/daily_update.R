@@ -146,7 +146,7 @@ data_ready <- function(dir = clarity.looker::dirs$export) {
 #' @param export_zip \code{(logical)} Did the HUD Export CSV's come from an uploaded zip file?
 #' @inheritParams data_quality_tables
 #'
-#' @return \code{(none)} retrieves and saves Export CSVs via `clarity.looker` if `export_zip = FALSE` (the default). See \link[clarity.looker]{\code{clarity_api}}\code{$get_export} & \code{$get_folder_looks} for details.
+#' @return \code{(none)} retrieves and saves Export CSVs via `clarity.looker` if `export_zip = FALSE` (the default). See \code{\link[clarity.looker]{clarity_api}$get_export} & \code{$get_folder_looks} for details.
 #' @export
 
 update_data <- function(export_zip = FALSE, clarity_api = RmData::get_clarity_api(e = rlang::caller_env())) {

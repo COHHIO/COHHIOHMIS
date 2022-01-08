@@ -13,7 +13,7 @@ update_data(
 \item{export_zip}{\code{(logical)} Did the HUD Export CSV's come from an uploaded zip file?}
 }
 \value{
-\code{(none)} retrieves and saves Export CSVs via \code{clarity.looker} if \code{export_zip = FALSE} (the default). See \link[clarity.looker]{\code{clarity_api}}\code{$get_export} & \code{$get_folder_looks} for details.
+\code{(none)} retrieves and saves Export CSVs via \code{clarity.looker} if \code{export_zip = FALSE} (the default). See \code{\link[clarity.looker]{clarity_api}$get_export} & \code{$get_folder_looks} for details.
 }
 \description{
 Update HUD CSV Export & Extras data
