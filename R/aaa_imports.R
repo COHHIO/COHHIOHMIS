@@ -40,3 +40,60 @@ NULL
 #' @return \code{(data.frame)} `vars$we_want` and `Issue` (Issue Name), `Type` (Error or Warning), and `Guidance` (How to correct the issue)
 NULL
 
+#' @title Retrieve an HMIS option set via `setup_RmData`
+#' @param opt \code{(character)} Option name to retrieve
+#' @inheritParams base::getOption
+#'
+#' @include 04_Guidance.R
+
+hmis_option <- function(x, default = FALSE) {
+
+  .w <- glue::glue("HMIS option `{x}`")
+  .msg <- " not setup, please see ?setup_RmData to fix this."
+
+  opts <- getOption("HMIS")
+  out <- opts[[x]]
+  if (!UU::is_legit(out)) {
+    warning(glue::glue("{.w}{.msg}"))
+    out <- default
+  }
+
+  out
+}
+
+#' @title Is this instance using Clarity
+#' @description Set an option in `.Rprofile` using `usethis::edit_r_profile('project')` called HMIS which is a list containing two logical values:
+#' \itemize{
+#'   \item{\code{Clarity}}{ A logical to indicate whether Clarity is (or has been) used by this CoC}
+#'   \item{\code{ServicePoint}}{ A logical to indicate whether Servicepoint is (or has been) used by this CoC}
+#' }
+#' @return \code{(logical)}
+is_clarity <- function() {
+  hmis_option("Clarity")
+}
+
+#' @title Is this instance using ServicePoint
+#' @inherit is_clarity description return
+
+is_sp <- function() {
+  hmis_option("ServicePoint")
+}
+
+#' @title Retrieve the Clarity URL from options.
+#' See `?setup_RmData` for details.
+#'
+#' @return \code{(character)}
+#' @export
+
+clarity_url <- function() {
+  hmis_option("Clarity_URL", "https://cohhio.clarityhs.com")
+}
+
+#' @title This instance must be using ServicePoint, otherwise throw an error.
+#' @inherit is_clarity description return
+
+must_sp <- function(.call = match.call()[[1]]) {
+  if (!is_sp())
+    rlang::abort(.call, " is a ServicePoint specific data quality check.")
+  TRUE
+}
