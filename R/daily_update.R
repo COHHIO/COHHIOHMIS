@@ -136,8 +136,12 @@ pb_update.Progress <- function(pbar, message = NULL, inc = NULL, set = NULL, ...
 #' @return \code{(logical)}
 #' @export
 
-data_ready <- function(dir = clarity.looker::dirs$export) {
-  max(clarity.looker::hud_last_updated(path = dir), na.rm = TRUE) > lubridate::floor_date(Sys.time(), "day")
+data_ready <- function(dir = clarity.looker::dirs$export, .all = FALSE) {
+  .updated <- clarity.looker::hud_last_updated(path = dir) > lubridate::floor_date(Sys.time(), "day")
+  if (.all)
+    all(.updated)
+  else
+    any(.updated)
 }
 
 
@@ -158,7 +162,7 @@ update_data <- function(clarity_api = RmData::get_clarity_api(e = rlang::caller_
 
 
 
-  if (!data_ready(clarity_api$dirs$extras)) {
+  if (!data_ready(clarity_api$dirs$extras, .all = TRUE)) {
     cli::cli_inform(message = cli::col_grey("Updating extras..."))
     clarity_api$get_folder_looks(clarity_api$folders$`HUD Extras`,
                                  .write = TRUE,
