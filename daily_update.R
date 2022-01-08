@@ -12,18 +12,16 @@
 
 
 
-# must load RmData
+#1. must load RmData
 devtools::load_all()
-# must set directories if using a directory structure differing from the default in clarity.looker:
-dirs <- clarity.looker::dirs
-# Use the HUD CSV from the UI until the Looker API is fixed
-Rm_env$gather_deps(dirs)
-# Try services
-# rstudioapi::jobRunScript(file.path("inst","src","Services_test.R"), importEnv = TRUE, workingDir = getwd())
+
+#2. must set directories if using a directory structure differing from the default in clarity.looker:
+# dirs <- clarity.looker::dirs
+# Rm_env$gather_deps(dirs)
+
+# 3. Run update
 daily_update(backup = TRUE)
 beepr::beep(sound = 3)
-
-
 
 
 # increment("Importing raw HMIS data\n")

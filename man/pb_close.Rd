@@ -4,10 +4,12 @@
 \alias{pb_close}
 \title{Close a \link[cli]{cli_progress_bar} or \link[shiny]{Progress} based progress bar}
 \usage{
-pb_close(pbar)
+pb_close(pbar, e = rlang::caller_env())
 }
 \arguments{
 \item{pbar}{\code{(progress bar id (character) or R6 object)}}
+
+\item{e}{\code{(environment)} calling environment}
 }
 \description{
 Close a \link[cli]{cli_progress_bar} or \link[shiny]{Progress} based progress bar

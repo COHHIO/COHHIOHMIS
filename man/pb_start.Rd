@@ -9,7 +9,9 @@ pb_start(
   status = NULL,
   type = c("iterator", "tasks", "download", "custom")[1],
   total = NA,
-  is_shiny = FALSE
+  is_shiny = FALSE,
+  e = rlang::caller_env(),
+  ...
 )
 }
 \arguments{

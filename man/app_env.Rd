@@ -118,7 +118,7 @@ Write \code{deps} to a folder via \code{file.copy} or to dropbox. If using dropb
 \if{html}{\out{<div class="r">}}\preformatted{app_env$deps_to_destination(
   deps = TRUE,
   dest_folder = file.path("..", c("Rminor", "RminorElevated"), "data"),
-  dropbox = TRUE,
+  remote = FALSE,
   clean = TRUE
 )}\if{html}{\out{</div>}}
 }
@@ -130,7 +130,7 @@ Write \code{deps} to a folder via \code{file.copy} or to dropbox. If using dropb
 
 \item{\code{dest_folder}}{\code{(character)} folder(s) to transfer deps to - must be same length as \code{deps} or length 1 and will be recycled if \code{deps} is a list. When \strong{dropbox = TRUE} th(is/ese) folder(s) will be used to stage files for upload.}
 
-\item{\code{dropbox}}{\code{(logical)} Transfer \code{deps} to the root folder assigned by the API key (\strong{HMIS Apps} at COHHIO) on Dropbox.}
+\item{\code{remote}}{\code{(logical)} Transfer \code{deps} to the root folder assigned by the API key (\strong{HMIS Apps} at COHHIO) on Dropbox.}
 
 \item{\code{clean}}{\code{(logical)} \strong{Default} clean unused dependencies from folder. Set to \code{FALSE} to preserve unused dependencies in \code{dest_folder}}
 }

@@ -4,7 +4,7 @@
 \alias{pb_close.Progress}
 \title{S3 Progress Method pb_close}
 \usage{
-\method{pb_close}{Progress}(pbar)
+\method{pb_close}{Progress}(pbar, e)
 }
 \description{
 S3 Progress Method pb_close

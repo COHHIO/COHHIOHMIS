@@ -4,7 +4,7 @@
 \alias{pb_close.character}
 \title{S3 character Method pb_close}
 \usage{
-\method{pb_close}{character}(pbar)
+\method{pb_close}{character}(pbar, e)
 }
 \description{
 S3 character Method pb_close
