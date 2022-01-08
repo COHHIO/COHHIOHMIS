@@ -264,41 +264,19 @@ pe_add_regions <- function(provider_extras, Regions = clarity.looker::hud_load("
     dplyr::left_join(geocodes |> dplyr::select(GeographicCode, County), by = c(Geocode = "GeographicCode")) |>
     dplyr::filter(!Geocode %in% c("000000", "429003", "399018"))
 
-  # Some geocodes may be legacy and County will be NA - the following looks these geocodes up on the Google Geocode API via `ggmap`
-  fill_geocodes <- out |>
-    dplyr::filter(is.na(County)) |>
-    dplyr::distinct(Geocode, .keep_all = TRUE)
-  if (nrow(fill_geocodes) > 0) {
-    # This environment variable must be set in the .Renviron file (at the project level preferably). Be sure to add .Renviron to .gitignore/.Rbuildignore if the file resides in the project directory
-    ggmap::register_google(key = Sys.getenv("GGMAP_GOOGLE_API_KEY"))
-    fill_geocodes <- slider::slide_dfr(fill_geocodes, ~{
-      r <- purrr::keep(.x, ~!is.na(.x))
-      .args <- purrr::list_modify(r[names(r) %in% c("Address", "City", "State", "ZIP")], State = "OH")
-      out <- ggmap::geocode(glue::glue_data(.args, "{Address}, {City}, {State}, {ZIP}"), output = "all")
-      .county <- purrr::keep(out$results[[1]]$address_components, ~any(stringr::str_detect(purrr::flatten(.x), "County")))[[1]]$short_name |>
-        stringr::str_remove("\\sCounty")
-      .x$County <- purrr::when(.county,
-                               UU::is_legit(.) ~ .county,
-                               ~ NA)
-      .x
-    })
 
-    for (rn in 1:nrow(fill_geocodes)) {
-      row <- fill_geocodes[rn,]
-      geocodes <- geocodes |>
-        tibble::add_row(GeographicCode = row$Geocode, State = "OH", County = row$County)
-    }
-    UU::object_write(geocodes, "geocodes", dirs$public)
-    out <- out |>
-      dplyr::left_join(geocodes, by = c(Geocode = "GeographicCode"))
-  }
 
   out <- out |>
     dplyr::left_join(Regions |> dplyr::select(- RegionName), by = "County") |>
     dplyr::rename(ProjectRegion = "Region",
                   ProjectCounty = "County")
 
-
+  .need_filled <- out |>
+    dplyr::filter(is.na(County)) |>
+    dplyr::distinct(Geocode, .keep_all = TRUE) |>
+    nrow()
+  if (.need_filled > 0)
+    cli::cli_warn(cli::cli_format("Some geocodes did not match a geocode. See {.path .deprecated/fill_geocodes.R} for a function to fix this issue."))
   # Special cases
   #  St. Vincent de Paul of Dayton serves region 13
   out[out$Geocode %in% c("391361", "391362"), "ProjectRegion"] <- 13
@@ -341,7 +319,8 @@ pe_create_APs = function(provider_extras, ProjectCoC, dirs, app_env = get_app_en
 
   # Programs serve multiple Counties which may fall into multiple regions. This creates a row for each Region served by a Program such that Coordinated Entry Access Points will show all the appropriate programs when filtering by Region.
   # @Rm
-  APs <- slider::slide_dfr(APs, ~{
+  APs <- purrr::pmap_dfr(APs, ~{
+    .x <- list(...)
     .counties <- trimws(stringr::str_split(.x$CountiesServed, ",\\s")[[1]])
 
     .x |>

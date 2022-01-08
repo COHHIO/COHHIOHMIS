@@ -345,7 +345,8 @@ tables_from_compare_list <- function(columns_to_parse = c("c_covid19_vaccine_doc
 case_when_text <- function(.x, .y, out = c("Text", "Value")[1]) {
   nms <- c("Text", "Value")
   rlang::parse_expr(paste0("dplyr::case_when(\n\t", paste0(append(
-    slider::slide(x, ~{
+    purrr::pmap(x, ~{
+      .x <- list(...)
       rlang::expr(x == !!.x[[setdiff(nms, out)]] ~ !!.x[[out]])
     }),
     rlang::expr(is.na(x) ~ !!ifelse(out == "Text", NA_character_, NA_real_))
