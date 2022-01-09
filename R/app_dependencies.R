@@ -283,7 +283,7 @@ app_env <- R6::R6Class(
 #' @description Write `deps` to a folder via `file.copy` or to dropbox. If using dropbox, requires an authorized token to dropbox. See `dropbox_auth`.
 #' @param deps \code{(character/logical)} character vector of files to write to disk. Or `TRUE` **Default** to use `app_deps`. Use `"all"` to write all objects in the `dependencies` environment to `dest_folder`.
 #' @param dest_folder \code{(character)} folder(s) to transfer deps to - must be same length as `deps` or length 1 and will be recycled if `deps` is a list. When **dropbox = TRUE** th(is/ese) folder(s) will be used to stage files for upload.
-#' @param remote \code{(logical)} Transfer `deps` to the root folder assigned by the API key (**HMIS Apps** at COHHIO) on Dropbox.
+#' @param remote \code{(logical/character)} Transfer `deps` to the root folder assigned by the API key (**HMIS Apps** at COHHIO) on Dropbox.
 #' @param clean \code{(logical)} **Default** clean unused dependencies from folder. Set to `FALSE` to preserve unused dependencies in `dest_folder`
 #' @return
 
@@ -291,7 +291,7 @@ app_env <- R6::R6Class(
 
       all <- deps == "all"
       self_deps <- isTRUE(deps)
-      .remote <- is.character(remote)
+      .remote <- isTRUE(remote) || is.character(remote)
       if (all) {
         .remote = FALSE
         deps_flat <- ls(self$dependencies, all.names = TRUE)
