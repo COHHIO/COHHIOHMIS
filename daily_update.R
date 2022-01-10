@@ -1,15 +1,7 @@
-# Must set GGMAP_GOOGLE_API_KEY in .Renviron (should not be neeqded until 2022), see ?ggmap::register_google for details.
-# Set this option to bypass errors in ggmap
-# options(ggmap = list(google = list(second_limit = 50L,
-#                                    day_limit = 2500)))
-# These are necessary when rapidly modifying these dependencies
+# Optional: These are necessary when rapidly modifying these dependencies
 
 # devtools::load_all("../../lookr")
 # devtools::load_all("../hud.extract")
-
-# RPushBullet setup
-#RPushbullet::pbSetup(conffile = file.path("inst","auth","rpushbullet.json"))
-
 
 
 #1. must load RmData
@@ -24,47 +16,10 @@ daily_update(backup = TRUE)
 beepr::beep(sound = 3)
 
 
-# increment("Importing raw HMIS data\n")
-
-# list.files(full.names = TRUE, "~/R/Contributor_Repos/COHHIO/COHHIO_HMIS/public_data") %>%
-#   purrr::walk(~{
-#     file.copy(.x, file.path("~/R/Contributor_Repos/COHHIO/COHHIOHMIS/data/public",basename(.x)))
-#   })
-# file.copy("~/R/Contributor_Repos/COHHIO/COHHIO_HMIS/Looker.ini", "~/R/Contributor_Repos/COHHIO/COHHIOHMIS/Looker.ini")
-# c("cli",
-#   "feather",
-#   "HMIS",
-#   "lubridate",
-#   "readxl",
-#   "rlang",
-#   "scales",
-#   "janitor",
-#   "devtools",
-#   "fs",
-#   "purrr",
-#   # "urbnmapr",
-#   "sf",
-#   # "choroplethrMaps",
-#   "plotly") %>% sort %>% cat(sep = ",\n")
 
 
-# cohorts <- function(env) {
-#   #load("")
-#   # Code  ----
-#   # Mon Sep 28 11:20:46 2020
-#   # save.image
-#   environment()
-# }
-#
-#
-# env$cohorts <- cohorts()
-# Veterans <- function(env) {
-#   parent.env(environment(env$cohorts))
-#   #load(")
-#   #Veterans
-#   #save.image(")
-#   environment()
-# }
-#
-#
-# Veterans(env$cohorts)
+# WHEN NEW GEOCODES ARE ISSUED BY HUD, some projects may fail to match with their county in `pe_add_regions`.  ggmap is used to determine the missing county for these projects. ggmap and its dependencies are currently ignored in the renv/settings.dcf See ?ggmap::register_google for details on setting up ggmap.
+# 1. Set GGMAP_GOOGLE_API_KEY in .Renviron.
+# 2. Set this option to bypass errors in ggmap
+# options(ggmap = list(google = list(second_limit = 50L,
+#                                    day_limit = 2500)))

@@ -1,10 +1,59 @@
-ignored.packages: tidyverse, broom, dbplyr, dtplyr, forcats, gargle, uuid,
-    googledrive, ids, googlesheets4, haven, modelr, reprex, selectr, rvest,
-    sinew, jobs, timeR, sodium, filelock, keyring, shinyjs, datapasta, collapse,
-    rlist, XML, htmltools, later, cachem, bslib, fontawesome, stringi, shiny,
-    lineprof, lobstr, pryr, beepr, audio, todor, rex, R.methodsS3, R.oo, R.utils
+bioconductor.version:
+external.libraries:
+ignored.packages: audio,
+    beepr,
+    bitops,
+    broom,
+    bslib,
+    cachem,
+    clipr,
+    collapse,
+    datapasta,
+    dbplyr,
+    dtplyr,
+    filelock,
+    fontawesome,
+    forcats,
+    ggmap,
+    googledrive,
+    haven,
+    htmltools,
+    ids,
+    jobs,
+    jpeg,
+    keyring,
+    later,
+    lineprof,
+    lobstr,
+    modelr,
+    plyr,
+    png,
+    pryr,
+    R.methodsS3,
+    R.oo,
+    R.utils,
+    reprex,
+    rex,
+    RgoogleMaps,
+    rjson,
+    rlist,
+    rvest,
+    selectr,
+    shiny,
+    shinyjs,
+    sinew,
+    sodium,
+    sp,
+    stringi,
+    tidyverse,
+    timeR,
+    todor,
+    uuid,
+    XML
 package.dependency.fields: Imports, Depends, LinkingTo
 r.version: 4.1.0
 snapshot.type: explicit
 use.cache: TRUE
-renv.config.user.profile: TRUE
+vcs.ignore.cellar: TRUE
+vcs.ignore.library: TRUE
+vcs.ignore.local: TRUE

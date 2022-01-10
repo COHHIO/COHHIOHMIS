@@ -37,7 +37,7 @@
 #'   \item{ReferenceNo}{ The value pertaining to the variable}
 #'   \item{Description}{ The description of that value}
 #' }
-#' @seealso hud.extract::hud_translations
+#' @seealso HMIS::hud_translations
 #' @source \href{https://hudhdx.info/Resources/Vendors/HMIS_CSV_Specifications_FY2022_v1.2_clean.pdf}{HUD Specs PDF FY 2021}. See \link[hud.extract]{hud_value_tables} for instructions on extracting these in subsequent years.
 
 "HUD_specs"

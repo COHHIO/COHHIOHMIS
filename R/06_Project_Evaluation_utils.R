@@ -79,8 +79,6 @@ peval_summary <- function(x, nm, app_env = get_app_env(e = rlang::caller_env()))
     nm <- rlang::expr_deparse(rlang::enexpr(x))
   nm <- nm |>
       stringr::str_extract("(?<=summary\\_)[\\w\\_]+")|>
-      snakecase::to_upper_camel_case() |>
-      stringr::str_replace("Hoh", "HoH") |>
       rlang::sym()
   out <- x
 
