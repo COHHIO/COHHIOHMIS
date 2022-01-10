@@ -811,7 +811,6 @@
         "magrittr",
         "purrr",
         "rlang",
-        "snakecase",
         "stringr",
         "tidyr",
         "tidyselect"
@@ -1268,16 +1267,6 @@
       "Hash": "3f9796a8d0a0e8c6eb49a4b029359d1f",
       "Requirements": [
         "cli"
-      ]
-    },
-    "snakecase": {
-      "Package": "snakecase",
-      "Version": "0.11.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "4079070fc210c7901c0832a3aeab894f",
-      "Requirements": [
-        "stringr"
       ]
     },
     "stringr": {
