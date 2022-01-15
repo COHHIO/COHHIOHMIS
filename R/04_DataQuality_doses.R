@@ -36,7 +36,7 @@ dq_vax <- function(served_in_date_range, mahoning_projects = NULL, Doses = NULL,
     dplyr::filter(!!dose_exp$not_mp &
                     !!dose_exp$age) |>
     dplyr::left_join(Doses,
-                     by = c("PersonalID", "UniqueID"))
+                     by = c("PersonalID", "UniqueID", "EnrollmentID"))
 
   out <- list()
   out$missing_vax_exited <- dplyr::filter(
@@ -67,7 +67,7 @@ dq_vax <- function(served_in_date_range, mahoning_projects = NULL, Doses = NULL,
     dplyr::select(dplyr::all_of(vars$we_want))
 
   out$vax_incorrect_date <- dplyr::filter(served_in_date_range,
-                C19AssessmentDate < rm_dates$hc$first_vaccine_administered_in_us) %>%
+                C19AssessmentDate < rm_dates$hc$first_vaccine_administered_in_us & !is.na(C19VaccineManufacturer)) %>%
     dplyr::mutate(Type = "Error",
                   Issue = "Vaccine Date Incorrect",
                   Guidance = guidance$vax_incorrect_date) %>%
