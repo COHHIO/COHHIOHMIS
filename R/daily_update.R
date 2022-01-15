@@ -280,7 +280,7 @@ e = rlang::caller_env()
 
   if ("send" %in% steps) {
     cli::cli_inform(cli::col_grey("Sending Dependencies to apps..."))
-    app_env$deps_to_destination(dest_folder = ifelse(clarity.looker::is_dev(), file.path("..",c("Rminor", "RminorElevated"),"data"), file.path("data", "db")), remote = remote)
+    app_env$deps_to_destination(dest_folder = if (clarity.looker::is_dev()) file.path("..",c("Rminor", "RminorElevated"),"data") else file.path("data", "db"), remote = remote)
   }
 
   cli::cli_alert_success(paste0("Total runtime: ", round(difftime(Sys.time(), now, units = "mins"), 2), "m"))
