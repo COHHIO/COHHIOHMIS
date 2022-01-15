@@ -27,12 +27,14 @@ dq_vax <- function(served_in_date_range, mahoning_projects = NULL, Doses = NULL,
                     is.na(MoveInDateAdjust)
                 )),
    vax_manu = stringr::str_starts(C19VaccineManufacturer, "Client doesn't know"),
-   vax_self_report = C19VaccineDocumentation == "Self-report"
+   vax_self_report = C19VaccineDocumentation == "Self-report",
+   age = AgeAtEntry >= 5
  )
 
   served_in_date_range <- served_in_date_range |>
     HMIS::served_between(rm_dates$hc$bos_start_vaccine_data, lubridate::today()) %>%
-    dplyr::filter(!!dose_exp$not_mp) |>
+    dplyr::filter(!!dose_exp$not_mp &
+                    !!dose_exp$age) |>
     dplyr::left_join(Doses,
                      by = c("PersonalID", "UniqueID"))
 
