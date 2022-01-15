@@ -65,7 +65,7 @@ qpr_ees <- function(
         Destination %in% destinations$other ~ "Other",
         is.na(Destination) ~ "Still in Program"
       ),
-      DaysinProject = difftime(ExitAdjust, EntryDate, units = "days")
+      DaysinProject = as.numeric(difftime(ExitAdjust, EntryDate, units = "days"))
     ) |>
     HMIS::stayed_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
     dplyr::arrange(ProjectName)
