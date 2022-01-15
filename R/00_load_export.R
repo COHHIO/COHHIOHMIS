@@ -119,6 +119,9 @@ load_export <- function(
   # Users ----
   # Thu Sep 23 14:38:19 2021
   Users <- clarity_api$User()
+  Users_link <- clarity_api$`HUD Extras`$UserNamesIDs_extras() |>
+    dplyr::mutate(UserCreated = as.character(UserCreated))
+  Users <- dplyr::left_join(Users, Users_link, by = c(UserID = "UserCreated"))
 
   # Services ----------------------------------------------------------------
   app_env <- load_services(Services = clarity_api$Services(),
