@@ -360,10 +360,13 @@ app_env <- R6::R6Class(
         o_info$class <- list(class(o))
         if (!all) {
           # If not making a backup, prep the dfs for the apps
-          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "UniqueID") %in% names(o))) && is_clarity() && !all)
-            .o <- clarity.looker::make_linked_df(o, UniqueID)
-          if (UU::is_legit(names(o)) && isTRUE(all(c("PersonalID", "EnrollmentID") %in% names(o))) && is_clarity() && !all)
-            .o <- clarity.looker::make_linked_df(o, EnrollmentID)
+          if (UU::is_legit(names(o)) && is_clarity() && !all) {
+            .o <- o
+            if (isTRUE(all(c("PersonalID", "UniqueID") %in% names(.o))))
+              .o <- clarity.looker::make_linked_df(.o, UniqueID)
+            if (isTRUE(all(c("PersonalID", "EnrollmentID") %in% names(.o))))
+              .o <- clarity.looker::make_linked_df(.o, EnrollmentID)
+          }
           # Avoid making these links twice by saving the object as the expression
           if (exists(".o", inherits = FALSE) && !identical(o, .o)) {
             o_info$ex <- list(.o)
