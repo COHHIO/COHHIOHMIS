@@ -4,16 +4,10 @@
 \alias{update_data}
 \title{Update HUD CSV Export & Extras data}
 \usage{
-update_data(
-  export_zip = FALSE,
-  clarity_api = RmData::get_clarity_api(e = rlang::caller_env())
-)
-}
-\arguments{
-\item{export_zip}{\code{(logical)} Did the HUD Export CSV's come from an uploaded zip file?}
+update_data(clarity_api = RmData::get_clarity_api(e = rlang::caller_env()))
 }
 \value{
-\code{(none)} retrieves and saves Export CSVs via \code{clarity.looker} if \code{export_zip = FALSE} (the default). See \code{\link[clarity.looker]{clarity_api}$get_export} & \code{$get_folder_looks} for details.
+\code{(none)} retrieves and saves Export CSVs via \code{clarity.looker} if not up to date. See \code{\link[clarity.looker]{clarity_api}$get_export} & \code{$get_folder_looks} for details.
 }
 \description{
 Update HUD CSV Export & Extras data

@@ -23,6 +23,6 @@ HUD_specs
 A table of the HUD CSV variable specifications
 }
 \seealso{
-hud.extract::hud_translations
+HMIS::hud_translations
 }
 \keyword{datasets}

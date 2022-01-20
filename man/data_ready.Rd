@@ -4,7 +4,7 @@
 \alias{data_ready}
 \title{Is the data in \code{dir} updated?}
 \usage{
-data_ready(dir = clarity.looker::dirs$export)
+data_ready(dir = clarity.looker::dirs$export, .all = FALSE)
 }
 \arguments{
 \item{dir}{\code{(character)} path to directory}

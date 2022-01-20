@@ -10,7 +10,6 @@ daily_update(
   funs = rlang::set_names(c("dates", "load_export", "cohorts", "client_counts",
     "qpr_ees", "qpr_spdats", "covid19", "covid19_plots", "vets", "vet_active",
     "prioritization", "bed_unit_utilization", "data_quality", "data_quality_summary")),
-  export_zip = TRUE,
   remote = FALSE,
   backup = FALSE,
   app_env,
@@ -44,8 +43,6 @@ daily_update(
 \item{\code{ data_quality }}
 \item{\code{ data_quality_summary }}
 }}
-
-\item{export_zip}{\code{(logical)} Did the HUD Export CSV's come from an uploaded zip file?}
 
 \item{remote}{\code{(logical)} Whether to send dependencies to the remote storage.}
 
