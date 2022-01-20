@@ -47,7 +47,17 @@ qpr_ees <- function(
   # Building qpr_leavers ----------------------------------------------------
 
   enrollment_small <- enrollment_small |>
-    {\(x) {dplyr::filter(x, HouseholdID %in% (x |> dplyr::group_by(HouseholdID) |> dplyr::summarise(N = dplyr::n()) |> dplyr::filter(N == 1) |> dplyr::pull(HouseholdID)))}}() #<- only pulls in hohs and singles
+    {
+      \(x) {
+        dplyr::filter(
+          x,
+          HouseholdID %in% (
+            x |> dplyr::group_by(HouseholdID) |> dplyr::summarise(N = dplyr::n()) |> dplyr::filter(N == 1) |> dplyr::pull(HouseholdID)
+          ) |
+            RelationshipToHoH == 1
+        )
+      }
+    }() #<- only pulls in hohs and singles
 
   # captures all leavers PLUS stayers in either HP or PSH because we include those
   # stayers in Permanent Destinations. This is used for LoS and Exits to PH.
