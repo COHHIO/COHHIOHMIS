@@ -11,13 +11,15 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU Affero General Public License for more details at
 # <https://www.gnu.org/licenses/>.
-#' @include guidance.R relevant_dq.R 04_DataQuality_utils.R
+
+
+#' @include guidance.R relevant_dq.R aaa_imports.R
+NULL
 
 if (interactive() && curl::has_internet() && clarity.looker::is_dev() && (difftime(Sys.time(), attr(guidance, "last_update") %||% Sys.time()) > lubridate::days(7))) {
   googlesheets4::gs4_auth(path = "inst/auth/rminor@rminor-333915.iam.gserviceaccount.com.json")
-  dq_id <- "15HsbSGmsscGtUIZnBDSVPaU4Zsotp7Dj79mXpPAu_lw"
-  dq_nms <- googlesheets4::sheet_names(dq_id)
-  guidance <- purrr::map(rlang::set_names(dq_nms), ~googlesheets4::read_sheet(dq_id, sheet = .x, col_types = "c"))
+  id <- "15HsbSGmsscGtUIZnBDSVPaU4Zsotp7Dj79mXpPAu_lw"
+  guidance <- purrr::map(rlang::set_names(googlesheets4::sheet_names(id)), ~googlesheets4::read_sheet(id, sheet = .x, col_types = "c"))
   # Handle irrelevant
   all_dq <- stringr::str_subset(ls(envir = .getNamespace("RmData"), pattern = "^dq\\_"), "^((?!\\_sp\\_)(?!\\_overlaps)(?!\\_check_eligibility).)*$")
   if (is_clarity()) {
