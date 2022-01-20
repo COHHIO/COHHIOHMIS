@@ -289,7 +289,7 @@ app_env <- R6::R6Class(
 
     deps_to_destination = function(deps = TRUE, dest_folder = file.path("..",c("Rminor", "RminorElevated"),"data"), remote = FALSE, clean = TRUE) {
 
-      all <- deps == "all"
+      all <- identical(deps, "all")
       self_deps <- isTRUE(deps)
       .remote <- isTRUE(remote) || is.character(remote)
       if (all) {
