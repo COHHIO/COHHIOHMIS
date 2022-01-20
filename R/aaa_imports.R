@@ -44,7 +44,6 @@ NULL
 #' @param opt \code{(character)} Option name to retrieve
 #' @inheritParams base::getOption
 #'
-#' @include 04_Guidance.R
 
 hmis_option <- function(x, default = FALSE) {
 
@@ -68,6 +67,7 @@ hmis_option <- function(x, default = FALSE) {
 #'   \item{\code{ServicePoint}}{ A logical to indicate whether Servicepoint is (or has been) used by this CoC}
 #' }
 #' @return \code{(logical)}
+
 is_clarity <- function() {
   hmis_option("Clarity")
 }
