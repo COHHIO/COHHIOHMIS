@@ -84,8 +84,8 @@ qpr_ees <- function(
     HMIS::entered_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
     dplyr::filter(ProjectType == 13 & RelationshipToHoH == 1) |>
     dplyr::mutate(
-      DaysToHouse = difftime(MoveInDateAdjust, EntryDate, units = "days"),
-      DaysinProject = difftime(ExitAdjust, EntryAdjust, units = "days")
+      DaysToHouse = as.numeric(difftime(MoveInDateAdjust, EntryDate, units = "days")),
+      DaysinProject = as.numeric(difftime(ExitAdjust, EntryAdjust, units = "days"))
     )
 
   smallMainstreamBenefits <- IncomeBenefits |>
