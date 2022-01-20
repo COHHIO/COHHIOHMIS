@@ -439,8 +439,8 @@ app_env <- R6::R6Class(
           })
 
         if (.remote) {
-
-          folder_clean(unique(basename(maybe_write$filepath)), db_files, remote = .remote)
+          if (clean)
+            folder_clean(unique(basename(maybe_write$filepath)), db_files, remote = .remote)
 
           to_upload <- dplyr::mutate(maybe_write,
                                      filename = basename(filepath),
