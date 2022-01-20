@@ -716,7 +716,8 @@ prioritization <- prioritization |>
       ProjectName
     )
   ) |>
-  dplyr::select(-IncomeInHH)
+  dplyr::select(-IncomeInHH) |>
+    dplyr::ungroup()
 
 # landing_data <- prioritization |>
 #   select(PersonalID, CountyServed, COVID19Priority, ShortSituation) |>
