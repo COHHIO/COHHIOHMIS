@@ -377,6 +377,7 @@ vet_active <- function(
               "Expected housed by ExpectedPHDate",
               TRUE ~ "No Housing plan"),
         ListStatus = dplyr::case_when(
+          !is.na(ProjectName_PH) & stringr::str_detect(ProjectName_PH, "VASH") ~ "Inactive (Permanently Housed)",
           stringr::str_detect(TimeInProject_LH, "Since") ~ "Active - ES/TH",
 
           is.na(ListStatus) ~ "No Status Set",
