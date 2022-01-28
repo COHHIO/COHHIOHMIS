@@ -301,7 +301,7 @@ app_env <- R6::R6Class(
         # Use self$app_deps if TRUE, if not a list, make one for iteration
 
         deps <- purrr::when(deps, isTRUE(.) ~ self$app_deps, !rlang::is_list(deps) ~ list(deps), ~ deps)
-        if (self_deps) {
+        if (!is.null(names(deps))) {
           # Add dependencies vectors to the objects that are saved
           deps <- purrr::imap(deps, ~{
             nm <- paste0("deps_", .y)
