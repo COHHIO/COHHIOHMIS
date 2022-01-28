@@ -1546,8 +1546,7 @@ dq_missing_path_contact <- function(served_in_date_range, Contacts, rm_dates, va
     dplyr::left_join(served_in_date_range, by = "PersonalID") |>
     dplyr::filter(
       ContactDate >= EntryDate &
-        ContactDate <= ExitAdjust &
-        ContactDate < rm_dates$hc$outreach_to_cls
+        ContactDate <= ExitAdjust
     ) |>
     dplyr::group_by(PersonalID, ProjectName, EntryDate, ExitDate) |>
     dplyr::summarise(ContactCount = dplyr::n()) |>
@@ -1563,7 +1562,6 @@ dq_missing_path_contact <- function(served_in_date_range, Contacts, rm_dates, va
                             "ProjectName",
                             "EntryDate",
                             "ExitDate")) |>
-
     dplyr::filter(is.na(ContactCount)) |>
     dplyr::mutate(
       Issue = "Missing PATH Contact",
@@ -1704,30 +1702,32 @@ dq_without_spdats <- function(served_in_date_range, Funder, Scores, rm_dates, va
   va_funded <-
     Funder_ProjectIDs(Funder)
 
-
-  ees_with_spdats <- served_in_date_range |>
-    dplyr::anti_join(va_funded, by = "ProjectID") |>
-    dplyr::left_join(Scores, by = "PersonalID") |>
+  no_va <- served_in_date_range |>
+    dplyr::anti_join(va_funded, by = "ProjectID")
+  ees_with_spdats <- no_va |>
+    dplyr::left_join(Scores  |>
+                       dplyr::mutate(ScoreAdjusted = dplyr::if_else(is.na(Score), 0, Score)), by = c("UniqueID", "PersonalID")) |>
     dplyr::ungroup() |>
     dplyr::select(PersonalID,
+                  UniqueID,
                   EnrollmentID,
                   RelationshipToHoH,
                   EntryDate,
                   ExitAdjust,
                   ScoreDate,
-                  Score) |>
-    dplyr::filter(ScoreDate + lubridate::days(365) > EntryDate &
+                  ScoreAdjusted) |>
+    dplyr::filter(!is.na(ScoreDate) &
+                    ScoreDate + lubridate::days(365) > EntryDate &
                     # score is < 1 yr old
-                    ScoreDate < ExitAdjust) |>  # score is prior to Exit
+                    ScoreDate <= ExitAdjust) |>  # score is prior to Exit
     dplyr::group_by(EnrollmentID) |>
     dplyr::slice_max(ScoreDate) |>
-    dplyr::slice_max(Score) |>
+    dplyr::slice_max(ScoreAdjusted) |>
     dplyr::distinct() |>
-    dplyr::ungroup() |>
-    dplyr::mutate(ScoreAdjusted = dplyr::if_else(is.na(Score), 0, Score))
+    dplyr::ungroup()
 
   entered_ph_without_spdat <-
-    dplyr::anti_join(served_in_date_range, ees_with_spdats, by = "EnrollmentID") |>
+    dplyr::anti_join(no_va, ees_with_spdats, by = "EnrollmentID") |>
     dplyr::filter(
       ProjectType %in% c(2, 3, 9, 13) &
         EntryDate > rm_dates$hc$began_requiring_spdats &
@@ -1770,6 +1770,7 @@ dq_without_spdats <- function(served_in_date_range, Funder, Scores, rm_dates, va
       served_in_date_range,
       by = c(
         "PersonalID",
+        "UniqueID",
         "EnrollmentID",
         "RelationshipToHoH",
         "EntryDate",
@@ -2027,7 +2028,7 @@ sum_enroll_overlap <- function(PersonalID, EnrollmentID, Stay) {
     if (any(ol)) {
       ol_eids <- x$EnrollmentID[ol]
       # Create text hyperlinks
-      out <- paste0(out, purrr::when(length(out), . != 0 ~ "\n", character()), paste0(clarity.looker::make_link(PersonalID, .y), " overlaps: ", paste0(clarity.looker::make_link(PersonalID, ol_eids), collapse = ", ")))
+      out <- paste0(out, purrr::when(length(out), . != 0 ~ "\n", character()), paste0(clarity.looker::make_link(PersonalID, .y, type = "enrollment"), " overlaps: ", paste0(clarity.looker::make_link(PersonalID, ol_eids, type = "enrollment"), collapse = ", ")))
       x <- dplyr::filter(x, !EnrollmentID %in% ol_eids)
     }
   }
@@ -2111,10 +2112,19 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
     dplyr::mutate(Issue = "Overlapping Project Stay & Move-In",
                   Type = "High Priority",
                   Guidance = eval(parse(text = guidance$project_stays_eval)))  |>
-    clarity.looker::make_linked_df(Overlaps, unlink = TRUE, new_ID = EnrollmentID) |>
+    clarity.looker::make_linked_df(Overlaps, unlink = TRUE, new_ID = EnrollmentID)
+  if (nrow(dq_movein_overlaps))
+    dq_movein_overlaps <- dq_movein_overlaps |>
     dplyr::left_join(
-      dplyr::select(served_in_date_range, EnrollmentID, ExitDate, EntryDate, ProjectID),
-      by = "EnrollmentID")
+      dplyr::select(
+        served_in_date_range,
+        EnrollmentID,
+        ExitDate,
+        EntryDate,
+        ProjectID
+      ),
+      by = "EnrollmentID"
+    )
 
 
   psh <- overlaps(p_types = data_types$Project$ProjectType$psh)
