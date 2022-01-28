@@ -64,6 +64,7 @@ app_deps <- list(
     "pe_scored_at_ph_entry",
     "pe_summary_final_scoring",
     "pe_summary_validation",
+    "program_lookup",
     "prioritization",
     "prioritization_colors",
     "qpr_benefits",
