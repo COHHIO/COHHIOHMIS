@@ -391,6 +391,30 @@ provider_extras_helpers <- list(
 )
 
 
+#' @title Fetch Program Lookup table
+#'
+#' @inheritParams data_quality_tables
+#'
+#' @return \code{(tbl)}
+#' @export
+
+load_program_lookup <- function(clarity_api = get_clarity_api(e = rlang::caller_env())) {
+  look_info <- clarity_api$api$getLook(74300)
+  .col_types <- clarity.looker::col_types_from_col_names(clarity.looker::col_names_from_look_vis_config(look_info))
+  program_lookup <- clarity_api$api$runLook(74300,
+                          resultFormat = "csv",
+                          as = "parsed",
+                          col_types = .col_types,
+                          queryParams = list(limit = -1,
+                                             apply_vis = TRUE,
+                                             cache = FALSE))
+  program_lookup |>
+    dplyr::mutate(dplyr::across(c(dplyr::ends_with("Active"), dplyr::matches("HMISParticipating")), ~dplyr::if_else(.x %in% c("Active", "Yes"), TRUE, FALSE))) |>
+    clarity.looker::make_linked_df(ProgramName, type = "program_edit") |>
+    clarity.looker::make_linked_df(AgencyName, type = "agency_switch")
+
+}
+
 #' @title Load public data pre-requisites for `load_export`
 #'
 #' @inheritParams data_quality_tables
