@@ -137,10 +137,10 @@ dq_main <- do.call(rbind, dqs) |>
                   ))
 cli::cli_progress_update(id = .pid,,
                          status = "Finish dq_main")
-if (is_clarity()) {
-  dq_main <- clarity.looker::make_linked_df(dq_main, UniqueID)
-  dq_main <- clarity.looker::make_linked_df(dq_main, EnrollmentID)
-}
+# if (is_clarity()) {
+#   dq_main <- clarity.looker::make_linked_df(dq_main, UniqueID)
+#   dq_main <- clarity.looker::make_linked_df(dq_main, EnrollmentID)
+# }
 
 
 # Controls what is shown in the CoC-wide DQ tab ---------------------------
@@ -167,10 +167,10 @@ cli::cli_progress_update(id = .pid,
 dq_eligibility_detail <- dq_check_eligibility()
 
 
-if (is_clarity()) {
-  dq_eligibility_detail <- clarity.looker::make_linked_df(dq_eligibility_detail, UniqueID)
-  dq_eligibility_detail <- clarity.looker::make_linked_df(dq_eligibility_detail, EnrollmentID)
-}
+# if (is_clarity()) {
+#   dq_eligibility_detail <- clarity.looker::make_linked_df(dq_eligibility_detail, UniqueID)
+#   dq_eligibility_detail <- clarity.looker::make_linked_df(dq_eligibility_detail, EnrollmentID)
+# }
 
 # NOTE See note in dq_overlaps
 # if (is_sp()) {
