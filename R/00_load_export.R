@@ -129,6 +129,7 @@ load_export <- function(
                 )
 
 
+  program_lookup <- load_program_lookup(clarity_api)
 
 
 
