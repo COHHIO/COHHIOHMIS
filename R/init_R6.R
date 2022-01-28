@@ -50,7 +50,7 @@ by_class <- function(class, e) {
 #' @return
 #' @export
 get_clarity_api <- function(nm = "cl_api", e = rlang::caller_env(), ifnotfound = stop("Clarity API object not found")) {
-  from_ns(nm, "RmData") %||% by_class("clarity_api", e) %||% ifnotfound
+  from_ns(nm, "RmData") %||% by_class("clarity_api", e) %||% by_class("clarity_api", .GlobalEnv) %||% ifnotfound
 }
 
 #' Find the `app_env` R6 object
@@ -62,7 +62,7 @@ get_clarity_api <- function(nm = "cl_api", e = rlang::caller_env(), ifnotfound =
 #' @export
 
 get_app_env <- function(nm = "Rm_env", e = rlang::caller_env(), ifnotfound = stop("app_env object not found")) {
-  from_ns(nm, "RmData") %||% by_class("app_env", e) %||% ifnotfound
+  from_ns(nm, "RmData") %||% by_class("app_env", e) %||% by_class("app_env", .GlobalEnv) %||% ifnotfound
 }
 
 
