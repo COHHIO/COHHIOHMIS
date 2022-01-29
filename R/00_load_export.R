@@ -94,7 +94,8 @@ load_export <- function(
 
   # Inventory ---------------------------------------------------------------
 
-  # Only used in Bed_Unit_Utilization & DQ, moved to BUU
+  Inventory <- clarity_api$Inventory()
+
 
   # Organization ------------------------------------------------------------
 
@@ -131,7 +132,7 @@ load_export <- function(
                 )
 
 
-  program_lookup <- load_program_lookup(clarity_api)
+  program_lookup <- load_program_lookup(clarity_api$`HUD Extras`$Program_lookup_extras())
 
 
 
