@@ -158,15 +158,18 @@ Enrollment_add_Household = function(Enrollment, Project, rm_dates, app_env = get
     dplyr::left_join(small_project, by = "ProjectID") |>
     dplyr::left_join(HHEntry, by = "HouseholdID") |>
     dplyr::mutate(
+      # Deprecated in Clarity ----
+      # Fri Jan 28 21:05:08 2022
       # Puts EntryDate as MoveInDate for projects that don't use a MoveInDate
       MoveInDateAdjust = dplyr::case_when(
         !is.na(HHMoveIn) & HHMoveIn <= ExitAdjust & EntryDate <= HHMoveIn ~ HHMoveIn,
         TRUE ~ NA_real_),
-      EntryAdjust = dplyr::case_when(
-        ProjectType %in% c(1, 2, 4, 8, 12) ~ EntryDate,
-        ProjectType %in% c(3, 9, 13) &
-          !is.na(MoveInDateAdjust) ~ MoveInDateAdjust
-      )
+      # EntryAdjust = dplyr::case_when(
+      #   ProjectType %in% c(1, 2, 4, 8, 12) ~ EntryDate,
+      #   ProjectType %in% c(3, 9, 13) &
+      #     !is.na(MoveInDateAdjust) ~ MoveInDateAdjust
+      # )
+      EntryAdjust = EntryDate
     )
   UU::join_check(Enrollment, out)
   out
