@@ -91,7 +91,8 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
                      not_updated = purrr::keep(extras_last_update, ~!lubridate::`%within%`(.x, lubridate::interval(lubridate::floor_date(Sys.Date(), "day") - 1, Sys.time()))))
 
   rm_dates$meta_Rmisc_last_run_date <- mean(extras_last_update)
-  purrr::iwalk(extra_info, ~{
+
+  purrr::iwalk(purrr::when("missing" %in% names(extra_info), . ~ list(extra_info), ~extra_info), ~{
     if (UU::is_legit(.x)) {
       .fp <- paste0(basename(names(.x)), collapse = ", ")
     stop_with_instructions(glue::glue("The following extras ({{.path {dirs$extras}}}) are {switch(.y, missing = 'missing', not_updated = 'not up to date')}: {.fp}"), error = error)
