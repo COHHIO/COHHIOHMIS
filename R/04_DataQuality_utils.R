@@ -49,6 +49,31 @@ projects_current_hmis <- function (Project,
     dplyr::distinct(ProjectID, .keep_all = TRUE)
 }
 
+make_vars <- function() {
+  vars <- list()
+  vars$prep <- c(
+    "EnrollmentID",
+    "EntryAdjust",
+    "EntryDate",
+    "ExitDate",
+    "HouseholdID",
+    "MoveInDateAdjust",
+    "PersonalID",
+    "ProjectID",
+    "ProjectName",
+    "ProjectRegion",
+    "ProjectType",
+    "UniqueID",
+    "UserCreating"
+  )
+
+  vars$we_want <- c(vars$prep,
+                    "Issue",
+                    "Type",
+                    "Guidance")
+  vars
+}
+
 #' @title Create the data.frame of Clients to Check `served_in_date_range`
 #'
 #' @param projects_current_hmis \code{(data.frame)} of Providers to check. See `projects_current_hmis`
@@ -1543,16 +1568,15 @@ dq_missing_path_contact <- function(served_in_date_range, Contacts, rm_dates, va
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   small_contacts <-  Contacts |>
-    dplyr::left_join(served_in_date_range, by = "PersonalID") |>
+    dplyr::left_join(served_in_date_range, by = UU::common_names(Contacts, served_in_date_range)) |>
     dplyr::filter(
       ContactDate >= EntryDate &
-        ContactDate <= ExitAdjust
+        (ContactDate <= ExitAdjust | is.na(ExitAdjust))
     ) |>
     dplyr::group_by(PersonalID, ProjectName, EntryDate, ExitDate) |>
-    dplyr::summarise(ContactCount = dplyr::n()) |>
-    dplyr::ungroup()
+    dplyr::summarise(ContactCount = dplyr::n(), .groups = "drop")
 
-  served_in_date_range |>
+  dqm <- served_in_date_range |>
     dplyr::filter(GrantType == "PATH" &
                     (AgeAtEntry > 17 |
                        RelationshipToHoH == 1)) |>

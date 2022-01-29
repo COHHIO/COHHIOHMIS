@@ -55,27 +55,7 @@ data_quality <- function(check_fns = RmData::relevant_dq,
   app_env$gather_deps(projects_current_hmis)
   # The Variables That We Want ----------------------------------------------
 
-  vars <- list()
-  vars$prep <- c(
-    "EnrollmentID",
-    "EntryAdjust",
-    "EntryDate",
-    "ExitDate",
-    "HouseholdID",
-    "MoveInDateAdjust",
-    "PersonalID",
-    "ProjectID",
-    "ProjectName",
-    "ProjectRegion",
-    "ProjectType",
-    "UniqueID",
-    "UserCreating"
-  )
-
-  vars$we_want <- c(vars$prep,
-                            "Issue",
-                            "Type",
-                            "Guidance")
+  vars <- make_vars()
   app_env$gather_deps(vars)
 
   # Clients to Check --------------------------------------------------------

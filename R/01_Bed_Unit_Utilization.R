@@ -30,8 +30,6 @@ bed_unit_utilization <- function(
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
-  Inventory <- clarity_api$Inventory()
-  app_env$gather_deps(Inventory)
 
 # despite the fact we're pulling in usually more than 2 years of data, the
 # utilization reporting will only go back 2 years. (decision based on lack of
