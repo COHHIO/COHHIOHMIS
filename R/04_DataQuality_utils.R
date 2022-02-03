@@ -2089,7 +2089,7 @@ overlaps <- function(served_in_date_range, p_types = data_types$Project$ProjectT
     ) |>
     clarity.looker::make_linked_df(Overlaps, unlink = TRUE, new_ID = EnrollmentID) |>
     dplyr::left_join(
-      dplyr::select(served_in_date_range, EnrollmentID, ExitDate, EntryDate, ProjectID, MoveInDateAdjust)
+      dplyr::select(served_in_date_range, EnrollmentID, ExitDate, EntryDate, ProjectID, ProjectName, MoveInDateAdjust)
     , by = "EnrollmentID")
 
     return(out)
@@ -2145,7 +2145,8 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
         EnrollmentID,
         ExitDate,
         EntryDate,
-        ProjectID
+        ProjectID,
+        ProjectName
       ),
       by = "EnrollmentID"
     )
