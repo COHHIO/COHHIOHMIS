@@ -1571,7 +1571,7 @@ dq_missing_path_contact <- function(served_in_date_range, Contacts, rm_dates, va
     dplyr::left_join(served_in_date_range, by = UU::common_names(Contacts, served_in_date_range)) |>
     dplyr::filter(
       ContactDate >= EntryDate &
-        (ContactDate <= ExitAdjust | is.na(ExitAdjust))
+        (ContactDate <= (ExitAdjust %|% (Sys.Date() + 1)))
     ) |>
     dplyr::group_by(PersonalID, ProjectName, EntryDate, ExitDate) |>
     dplyr::summarise(ContactCount = dplyr::n(), .groups = "drop")
