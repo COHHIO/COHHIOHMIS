@@ -14,6 +14,7 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
   hc$unsheltered_data_start <- hc$data_goes_back_to
   hc$outreach_to_cls <- hc$check_dq_back_to <-  lubridate::make_date(lubridate::year(hc$data_goes_back_to), month = 10, day = 1) # the default ReportStart for DQ reporting
   hc$check_eligibility_back_to <- hc$check_dq_back_to - lubridate::years(3)
+  hc$spm_range <- lubridate::interval(hc$check_dq_back_to, lubridate::`year<-`(hc$check_dq_back_to, lubridate::year(hc$check_dq_back_to) + 1) - lubridate::days(1))
   hc$project_eval_start = hc$data_goes_back_to + lubridate::years(1)
   hc$project_eval_end = lubridate::ceiling_date(hc$project_eval_start, "year")
   hc$project_eval_docs_due = lubridate::make_date(lubridate::year(hc$project_eval_end), 4, 23)
