@@ -110,13 +110,15 @@ load_export <- function(
   # Scores ------------------------------------------------------------------
 
   Scores <-  clarity_api$`HUD Extras`$Client_SPDAT_extras() |>
+    dplyr::filter(Deleted == "No") |>
     dplyr::mutate(Score = dplyr::if_else(is.na(Score), CustomScore, Score),
                   CustomScore = NULL)
 
   # Offers -----------------------------------------------------------------
 # Only used in vet_active. Moved There
 
-  Doses <- clarity_api$`HUD Extras`$Client_Doses_extras()
+  Doses <- clarity_api$`HUD Extras`$Client_Doses_extras() |>
+    dplyr::filter(Deleted == "No")
 
 
   # Users ----

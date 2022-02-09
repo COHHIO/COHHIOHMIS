@@ -15,6 +15,7 @@ covid19 <- function(
   # COVID-19 ----------------------------------------------------------------
 
   covid19 <- clarity_api$`HUD Extras`$Client_COVID_extras() |>
+    dplyr::filter(Deleted == "No") |>
     dplyr::mutate(dplyr::across(
       .cols = dplyr::all_of(c(dplyr::matches("^C19Tested$"),
                               dplyr::matches("^C19UnderInvestigation$"),
