@@ -267,9 +267,13 @@ app_env <- R6::R6Class(
     #' @field app_deps \code{(list)} with all app dependencies as character vectors
     app_deps = c(),
     #' @description Load backed up dependencies from path
+    #' @param deps \code{(chr)} of deps to search for and load
     #' @param path \code{(character)} path to folder with backed up dependencies
-    load_deps = function(path = file.path("data","backup")) {
-      .files <- UU::list.files2(path)
+    load_deps = function(deps, path = file.path("data","backup")) {
+      if (!missing(deps))
+        .files <- do.call(c, purrr::map(deps, clarity.looker::hud_filename, path = path))
+      else
+        .files <- UU::list.files2(path)
       .pid <- cli::cli_progress_bar(status = "Reading: ", type = "iterator",
                                     total = length(.files))
       purrr::iwalk(.files, ~{
@@ -353,7 +357,13 @@ app_env <- R6::R6Class(
       #   dest_folder <- rlang::set_names(rep(dest_folder, length(deps)))
 
       # Check recency
+      .pid <- cli::cli_progress_bar(status = "Checking recency: ", type = "tasks",
+                                    total = length(deps_flat),
+                                    auto_terminate = TRUE,
+                                    format = "{cli::pb_name}: {.path {cli::pb_status}} {cli::pb_current}/{cli::pb_total} [{cli::col_br_blue(cli::pb_elapsed)}]"
+      )
       maybe_write <- purrr::map_dfr(deps_flat, ~{
+        cli::cli_progress_update(id = .pid, status = .x)
         o_info <- list(nm = .x)
         o_info$ex <- list(rlang::expr(get0(!!.x, envir = self$dependencies, inherits = FALSE)))
         o <- rlang::eval_bare(o_info$ex[[1]])
