@@ -12,7 +12,7 @@ devtools::load_all()
 # Rm_env$gather_deps(dirs)
 
 # 3. Run update
-daily_update(backup = TRUE)
+daily_update(backup = TRUE, remote = TRUE)
 beepr::beep(sound = 3)
 
 
