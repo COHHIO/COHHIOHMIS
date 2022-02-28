@@ -436,7 +436,9 @@ app_env <- R6::R6Class(
           .args <- list(o, .x$filepath, verbose = FALSE)
           if (UU::ext(.x$filepath) == "feather")
             .args$compression = "uncompressed"
-          do.call(UU::object_write, .args)
+          fp <- do.call(UU::object_write, .args)
+          if (UU::ext(fp) == "png")
+            knitr::plot_crop(fp)
         })
 
         # Clean folder
