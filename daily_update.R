@@ -11,7 +11,9 @@ devtools::load_all()
 # dirs <- clarity.looker::dirs
 # Rm_env$gather_deps(dirs)
 
-# 3. Run update
+# 3. Extract the HUD Export zip
+clarity.looker::hud_export_extract()
+# 4. Run update
 daily_update(backup = TRUE, remote = TRUE)
 beepr::beep(sound = 3)
 

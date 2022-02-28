@@ -137,7 +137,7 @@ pb_update.Progress <- function(pbar, message = NULL, inc = NULL, set = NULL, ...
 #' @export
 
 data_ready <- function(dir = clarity.looker::dirs$export, .all = FALSE) {
-  .updated <- clarity.looker::hud_last_updated(path = dir) > lubridate::floor_date(Sys.time(), "day")
+  .updated <- UU::last_updated(path = dir) > lubridate::floor_date(Sys.time(), "day")
   if (.all)
     all(.updated)
   else
