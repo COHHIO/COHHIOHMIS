@@ -73,3 +73,16 @@ qpr_validation <- function(project_small, enrollment_small, app_env = get_app_en
     dplyr::filter(!is.na(EntryDate))
 }
 
+qpr_mental_health <- function(validation, Disabilities, app_env = get_app_env(e = rlang::caller_env())) {
+  out <- dplyr::left_join(validation, dplyr::select(Disabilities, dplyr::ends_with("ID"), DisabilityType, DateUpdated), by = c("PersonalID", "EnrollmentID")) |>
+    dplyr::filter(DisabilityType %in% c(9, # Mental Health
+                                        10 # Substance Abuse
+                                        ) &
+                  CountyServed %in% c("Lake", "Lorain", "Trumbull") &
+                  is.na(ExitDate) & # Assumed actively enrolled
+                  LivingSituation %in% data_types$CurrentLivingSituation$CurrentLivingSituation$homeless) |>
+    dplyr::distinct(UniqueID, PersonalID, LivingSituation, DisabilityType)
+
+}
+
+

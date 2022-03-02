@@ -86,7 +86,7 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
 
   #  Check recency of Extras ----
   # Mon Aug 09 17:09:43 2021
-  extras_last_update <- UU::last_updated(path = dirs$extras)
+  extras_last_update <- UU::last_updated(dirs$extras, path = TRUE)
 
   extra_info <- list(missing = setdiff(names(clarity.looker::folder_looks(clarity_api$folders$`HUD Extras`)), UU::ext(basename(names(extras_last_update)), strip = TRUE)),
                      not_updated = purrr::keep(extras_last_update, ~!lubridate::`%within%`(.x, lubridate::interval(lubridate::floor_date(Sys.Date(), "day") - 1, Sys.time()))))
