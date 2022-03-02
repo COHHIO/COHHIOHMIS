@@ -8,6 +8,9 @@ client_counts <- function(Project, Enrollment_extra_Client_Exit_HH_CL_AaE, rm_da
 
   validation <- qpr_validation(project_small, enrollment_small)
 
+  mental_health_unsheltered <-  qpr_mental_health(validation, Disabilities)
+
+
   app_env$gather_deps("everything")
 }
 

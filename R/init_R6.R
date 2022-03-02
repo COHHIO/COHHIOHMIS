@@ -2,7 +2,7 @@
 if (file.exists("RmData.Rproj") && interactive()) {
   if (!exists("cl_api")) {
     devtools::load_all("../clarity.looker")
-    .GlobalEnv$cl_api <- clarity.looker::clarity_api$new(file.path("inst","auth","Looker.ini"))
+    .GlobalEnv$cl_api <- clarity.looker::clarity_api$new(file.path("inst","vault","Looker.ini"))
   }
 
   if (!exists("Rm_env"))
