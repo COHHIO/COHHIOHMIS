@@ -664,12 +664,19 @@ prioritization_colors <- c(
     ),
     Situation_col = factor(stringr::str_extract(Situation, paste0("(?:",names(prioritization_colors),")") |> paste0(collapse = "|")), names(prioritization_colors)),
     ExpectedPHDate = dplyr::if_else(is.na(ExpectedPHDate), R_ReferralConnectedMoveInDate, ExpectedPHDate)
-  ) |>
-  dplyr::group_by(PersonalID) |>
-  # get the lowest priority achieved
-  dplyr::slice_min(Situation_col) |>
-  dplyr::select(-housed, -likely_housed, - dplyr::starts_with("R_")) |>
-  dplyr::filter(!Situation_col %in% c("Housed", "Likely housed"))
+  )
+
+
+
+
+  # Filter Housed and likely housed
+  prioritization <- prioritization |>
+    dplyr::group_by(PersonalID) |>
+    # get the lowest priority achieved
+    dplyr::slice_min(Situation_col) |>
+    dplyr::select(-housed, -likely_housed) |>
+    dplyr::filter(!Situation_col %in% c("Housed", "Likely housed")) |>
+    dplyr::select( - dplyr::starts_with("R_"))
 
 
 # Fleeing DV --------------------------------------------------------------
