@@ -501,7 +501,7 @@ app_env <- R6::R6Class(
 
 #' @description Authorize Dropbox
 #' @param db_auth_token \code{(character)} path to the Dropbox authorization token. See \link[rdrop2]{drop_auth}
-    dropbox_auth = function(db_auth_token = file.path("~","R","auth_tokens", "db_token.rds")) {
+    dropbox_auth = function(db_auth_token = file.path("inst", "vault")) {
       db_auth_token <- path.expand(db_auth_token)
       # Dropbox Auth
       if (!file.exists(db_auth_token)) {
