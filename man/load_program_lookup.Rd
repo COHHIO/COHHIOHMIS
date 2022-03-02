@@ -4,7 +4,7 @@
 \alias{load_program_lookup}
 \title{Fetch Program Lookup table}
 \usage{
-load_program_lookup(clarity_api = get_clarity_api(e = rlang::caller_env()))
+load_program_lookup(program_lookup)
 }
 \value{
 \code{(tbl)}

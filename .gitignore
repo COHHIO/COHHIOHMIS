@@ -53,3 +53,7 @@ profile.rds
 .deprecated/
 
 data/spm/
+
+data/random/final_csv/
+
+inst/vault/

@@ -10,6 +10,7 @@ data_quality_summary(
   Project,
   dq_past_year,
   dq_eligibility_detail,
+  dq_overlaps,
   data_APs,
   rm_dates,
   vars,

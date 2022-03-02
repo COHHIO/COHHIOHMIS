@@ -98,12 +98,14 @@ Set the given environment to inherit from the internal 'global' environment
 \subsection{Method \code{load_deps()}}{
 Load backed up dependencies from path
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$load_deps(path = file.path("data", "backup"))}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{app_env$load_deps(deps, path = file.path("data", "backup"))}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{deps}}{\code{(chr)} of deps to search for and load}
+
 \item{\code{path}}{\code{(character)} path to folder with backed up dependencies}
 }
 \if{html}{\out{</div>}}
