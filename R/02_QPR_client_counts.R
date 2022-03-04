@@ -10,6 +10,7 @@ client_counts <- function(Project, Enrollment_extra_Client_Exit_HH_CL_AaE, rm_da
 
   mental_health_unsheltered <-  qpr_mental_health(validation, Disabilities)
 
+  path_referrals <- qpr_path_to_rrhpsh(Enrollment_extra_Client_Exit_HH_CL_AaE, Referrals)
 
   app_env$gather_deps("everything")
 }
