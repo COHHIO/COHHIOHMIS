@@ -74,15 +74,68 @@ qpr_validation <- function(project_small, enrollment_small, app_env = get_app_en
 }
 
 qpr_mental_health <- function(validation, Disabilities, app_env = get_app_env(e = rlang::caller_env())) {
-  out <- dplyr::left_join(validation, dplyr::select(Disabilities, dplyr::ends_with("ID"), DisabilityType, DateUpdated), by = c("PersonalID", "EnrollmentID")) |>
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  dplyr::left_join(validation, dplyr::select(Disabilities, dplyr::ends_with("ID"), DisabilityType, DateUpdated), by = c("PersonalID", "EnrollmentID")) |>
     dplyr::filter(DisabilityType %in% c(9, # Mental Health
                                         10 # Substance Abuse
                                         ) &
                   CountyServed %in% c("Lake", "Lorain", "Trumbull") &
                   is.na(ExitDate) & # Assumed actively enrolled
                   LivingSituation %in% data_types$CurrentLivingSituation$CurrentLivingSituation$homeless) |>
-    dplyr::distinct(UniqueID, PersonalID, LivingSituation, DisabilityType)
+    dplyr::distinct(UniqueID, PersonalID, LivingSituation, DisabilityType) |>
+    dplyr::group_by(DisabilityType) |>
+    dplyr::summarise(n = dplyr::n()) |>
+    dplyr::mutate(DisabilityType = HMIS::hud_translations$`1.3 DisabilityType`(DisabilityType))
 
 }
 
+qpr_path_to_rrhpsh <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, Referrals, app_env = get_app_env(e = rlang::caller_env())) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  # referred_from_PATH <- prioritization |>
+  #   dplyr::filter(stringr::str_detect(ProjectName, "\\sPATH\\s"))|>
+  #   dplyr::group_by(Situation_col) |>
+  #   dplyr::summarise(n = dplyr::n(), .groups = "drop") |>
+  #   dplyr::mutate(p = scales::percent(n / sum(n), accuracy = .01))
+  rrh_psh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC"))) |>
+    paste("%in% c(3, 13)") |> #RRH or PSH Respectively
+    purrr::map(rlang::parse_expr)
+
+  rrh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC"))) |>
+    paste("%in% c(3)") |> #RRH or PSH Respectively
+    purrr::map(rlang::parse_expr)
+
+  psh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC"))) |>
+    paste("%in% c(13)") |> #RRH or PSH Respectively
+    purrr::map(rlang::parse_expr)
+
+  in_path <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
+    HMIS::served_between(start = Sys.Date() - lubridate::years(1), end = lubridate::today()) |>
+    dplyr::filter(ClientEnrolledInPATH == 1 & (!is.na(ExitDate) & EntryDate > (Sys.Date() - lubridate::years(1))))
+  total_path <- in_path |>
+    dplyr::pull(PersonalID) |>
+    unique() |>
+    length()
+  path_referrals <- in_path |>
+    dplyr::left_join(Referrals, by = UU::common_names(Enrollment_extra_Client_Exit_HH_CL_AaE, Referrals)) |>
+    dplyr::filter(!!purrr::reduce(rrh_psh_expr, ~rlang::expr(!!.x | !!.y))) |>
+    dplyr::select(dplyr::any_of(paste0(c("Enrollment", "Personal", "Unique", "Household"), "ID")), EntryDate, ExitDate, ProjectID, ProjectType, dplyr::starts_with("R_")) |>
+    dplyr::arrange(PersonalID, dplyr::desc(EntryDate)) |>
+    # needs to count individuals
+    # needs to be individuals in, referred by, referred to
+    dplyr::group_by(!!!rlang::syms(stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC"))))) |>
+    dplyr::filter(is.na(R_ReferralConnectedPTC) || R_ReferralConnectedPTC != 2) |>
+    dplyr::distinct(PersonalID, .keep_all = TRUE) |>
+    dplyr::mutate(rrhpsh = dplyr::case_when(
+      ProjectType %in% c(13) ~ "RRH",
+      ProjectType %in% c(3) ~ "PSH",
+      R_ReferralConnectedPTC %in% c(3) ~ "PSH",
+      R_ReferralConnectedPTC %in% c(13) ~ "PSH",
+    )) |>
+    dplyr::group_by(rrhpsh) |>
+    dplyr::summarise(n = dplyr::n(),
+                     `PctPATH` = scales::percent(n / total_path, accuracy = 0.01))
+
+}
 
