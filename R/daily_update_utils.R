@@ -136,12 +136,12 @@ pb_update.Progress <- function(pbar, message = NULL, inc = NULL, set = NULL, ...
 #' @return \code{(logical)}
 #' @export
 
-data_ready <- function(dir = clarity.looker::dirs$export, .all = FALSE) {
-  .updated <- UU::last_updated(path = dir) > lubridate::floor_date(Sys.time(), "day")
-  if (.all)
-    all(.updated)
+data_ready <- function(dir = clarity.looker::dirs$export) {
+  if (basename(dir) == "export")
+    .files <- UU::list.files2(dir, pattern = "csv$")
   else
-    any(.updated)
+    .files <- UU::list.files2(dir)
+  UU::needs_update(.files)
 }
 
 
@@ -155,14 +155,15 @@ data_ready <- function(dir = clarity.looker::dirs$export, .all = FALSE) {
 update_data <- function(clarity_api = RmData::get_clarity_api(e = rlang::caller_env())) {
 
 
-  if (!data_ready()) {
+  .export_ready <- data_ready(clarity_api$dirs$export)
+  if (any(.export_ready$needs_update)) {
     cli::cli_inform(message = cli::col_grey("Updating export..."))
     clarity_api$get_export()
   }
 
 
-
-  if (!data_ready(clarity_api$dirs$extras, .all = TRUE)) {
+  .extras_ready <- data_ready(clarity_api$dirs$extras)
+  if (any(.extras_ready$needs_update)) {
     cli::cli_inform(message = cli::col_grey("Updating extras..."))
     clarity_api$get_folder_looks(clarity_api$folders$`HUD Extras`,
                                  .write = TRUE,
@@ -275,12 +276,12 @@ e = rlang::caller_env()
 
   if (backup) {
     cli::cli_inform(cli::col_grey("Backing up dependencies..."))
-    app_env$deps_to_destination("all", dest_folder = file.path("data", "backup"))
+    app_env$deps_to_destination(clean = TRUE, deps =  "all", dest_folder = file.path("data", "backup"))
   }
 
   if ("send" %in% steps) {
     cli::cli_inform(cli::col_grey("Sending Dependencies to apps..."))
-    app_env$deps_to_destination(dest_folder = if (clarity.looker::is_dev()) file.path("..",c("Rminor", "RminorElevated"),"data") else file.path("data", "db"), remote = remote)
+    app_env$deps_to_destination(clean = TRUE, dest_folder = if (clarity.looker::is_dev()) file.path("..",c("Rminor", "RminorElevated"),"data") else file.path("data", "db"), remote = remote)
   }
 
   cli::cli_alert_success(paste0("Total runtime: ", round(difftime(Sys.time(), now, units = "mins"), 2), "m"))
