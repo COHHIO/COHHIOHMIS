@@ -53,6 +53,7 @@ app_deps <- list(
     "dq_summary",
     "dq_unsheltered",
     "guidance",
+    "path_referrals",
     "pe_benefits_at_exit",
     "pe_entries_no_income",
     "pe_exits_to_ph",
