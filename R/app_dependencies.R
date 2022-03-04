@@ -290,10 +290,10 @@ app_env <- R6::R6Class(
 #' @param deps \code{(character/logical)} character vector of files to write to disk. Or `TRUE` **Default** to use `app_deps`. Use `"all"` to write all objects in the `dependencies` environment to `dest_folder`.
 #' @param dest_folder \code{(character)} folder(s) to transfer deps to - must be same length as `deps` or length 1 and will be recycled if `deps` is a list. When **dropbox = TRUE** th(is/ese) folder(s) will be used to stage files for upload.
 #' @param remote \code{(logical/character)} Transfer `deps` to the root folder assigned by the API key (**HMIS Apps** at COHHIO) on Dropbox.
-#' @param clean \code{(logical)} **Default** clean unused dependencies from folder. Set to `FALSE` to preserve unused dependencies in `dest_folder`
+#' @param clean \code{(logical)}  clean unused dependencies from folder. **Default** `FALSE` to preserve unused dependencies in `dest_folder`
 #' @return
 
-    deps_to_destination = function(deps = TRUE, dest_folder = file.path("..",c("Rminor", "RminorElevated"),"data"), remote = FALSE, clean = TRUE) {
+    deps_to_destination = function(deps = TRUE, dest_folder = file.path("..",c("Rminor", "RminorElevated"),"data"), remote = FALSE, clean = FALSE) {
 
       all <- identical(deps, "all")
       self_deps <- isTRUE(deps)
@@ -502,7 +502,7 @@ app_env <- R6::R6Class(
 
 #' @description Authorize Dropbox
 #' @param db_auth_token \code{(character)} path to the Dropbox authorization token. See \link[rdrop2]{drop_auth}
-    dropbox_auth = function(db_auth_token = file.path("inst", "vault")) {
+    dropbox_auth = function(db_auth_token = file.path("inst", "vault", "db_token.rds")) {
       db_auth_token <- path.expand(db_auth_token)
       # Dropbox Auth
       if (!file.exists(db_auth_token)) {
