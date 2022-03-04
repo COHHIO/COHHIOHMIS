@@ -89,8 +89,8 @@
       "RemoteRepo": "UU",
       "RemoteUsername": "yogat3ch",
       "RemoteRef": "HEAD",
-      "RemoteSha": "4125a46970c782558002f99d1dda3df623b835d0",
-      "Hash": "9b43b8d0e9cb8e434015fab973189017",
+      "RemoteSha": "316ba81f564741dd74538bdc67a1d659379e5188",
+      "Hash": "8814f90b5cc2ccf738844b4acafb656a",
       "Requirements": [
         "arrow",
         "cli",
@@ -389,8 +389,8 @@
       "RemoteRepo": "clarity.looker",
       "RemoteUsername": "COHHIO",
       "RemoteRef": "HEAD",
-      "RemoteSha": "2062e8e98641358d841c860ab4f9e1149f8d214f",
-      "Hash": "cbec10e606b6e66ff40e6e190f0f36f6",
+      "RemoteSha": "404eaa803ba3560e06b03d3f13e2e3f570da6d55",
+      "Hash": "f85c7a21eb84b89f9b1b350b7a6c7c9b",
       "Requirements": [
         "UU",
         "arrow",
