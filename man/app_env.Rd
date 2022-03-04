@@ -121,7 +121,7 @@ Write \code{deps} to a folder via \code{file.copy} or to dropbox. If using dropb
   deps = TRUE,
   dest_folder = file.path("..", c("Rminor", "RminorElevated"), "data"),
   remote = FALSE,
-  clean = TRUE
+  clean = FALSE
 )}\if{html}{\out{</div>}}
 }
 
@@ -134,7 +134,7 @@ Write \code{deps} to a folder via \code{file.copy} or to dropbox. If using dropb
 
 \item{\code{remote}}{\code{(logical/character)} Transfer \code{deps} to the root folder assigned by the API key (\strong{HMIS Apps} at COHHIO) on Dropbox.}
 
-\item{\code{clean}}{\code{(logical)} \strong{Default} clean unused dependencies from folder. Set to \code{FALSE} to preserve unused dependencies in \code{dest_folder}}
+\item{\code{clean}}{\code{(logical)}  clean unused dependencies from folder. \strong{Default} \code{FALSE} to preserve unused dependencies in \code{dest_folder}}
 }
 \if{html}{\out{</div>}}
 }
@@ -149,7 +149,7 @@ Write \code{deps} to a folder via \code{file.copy} or to dropbox. If using dropb
 Authorize Dropbox
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{app_env$dropbox_auth(
-  db_auth_token = file.path("~", "R", "auth_tokens", "db_token.rds")
+  db_auth_token = file.path("inst", "vault", "db_token.rds")
 )}\if{html}{\out{</div>}}
 }
 
