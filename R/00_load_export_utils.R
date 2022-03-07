@@ -462,7 +462,8 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
   # Thu Aug 12 14:23:50 2021
 
 
-  provider_extras <- clarity_api$`HUD Extras`$Project_extras()
+  provider_extras <- clarity_api$`HUD Extras`$Project_extras() |>
+    dplyr::mutate(Geocode = as.character(Geocode))
   provider_extras <- pe_add_ProjectType(provider_extras) |>
     pe_add_regions(Regions, dirs = dirs) |>
     pe_add_GrantType()
@@ -598,7 +599,7 @@ load_services <- function(Services,
       ServiceAmount
       #, stray_service
     )
-  app_env$gather_deps(Services_enroll_extras)
+  app_env$gather_deps(Services_enroll_extras, Services_extras)
 }
 
 
