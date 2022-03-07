@@ -59,3 +59,5 @@ data/random/final_csv/
 inst/vault/
 
 data/random/coc_scoring.feather
+
+.DS_Store
