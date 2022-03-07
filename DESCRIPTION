@@ -14,7 +14,8 @@ Authors@R: c(person(given = "Genelle", family = "Denzin", role
 Description: This provides workflows for munging and porting data dependencies to the open-source Homeless Management Information System (HMIS) custom reporting apps Rminor & Rminor_elevated
 License: AGPL-3
 Depends: R (>= 4.1.0)
-Imports: clarity.looker,
+Imports: 
+    clarity.looker,
     cli,
     devtools,
     dplyr,
@@ -36,6 +37,7 @@ Imports: clarity.looker,
     stringr,
     tibble,
     tidyr,
+    tsibble,
     tidyselect,
     utils,
     UU
