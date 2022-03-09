@@ -104,11 +104,13 @@ vet_active <- function(
   # RRH PSH stays with no Exit but a valid Move-In Date
 
   currently_housed_in_psh_rrh <- vet_ees |>
-    HMIS::stayed_between(start = Sys.Date(),
-                         end = Sys.Date()) |>
+    {\(x) {HMIS::stayed_between(x, start = min(x$EntryAdjust, na.rm = TRUE),
+                               end = Sys.Date())}}() |>
     dplyr::filter(ProjectType %in% data_types$Project$ProjectType$ph &
                     VeteranStatus == 1) |>
     dplyr::pull(PersonalID)
+
+  # browser()
 
   # Declined  ---------------------------------------------------------------
   most_recent_offer <- Offers |>
