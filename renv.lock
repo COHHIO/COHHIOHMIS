@@ -9,6 +9,14 @@
     ]
   },
   "Packages": {
+    "BH": {
+      "Package": "BH",
+      "Version": "1.75.0-0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "e4c04affc2cac20c8fec18385cd14691",
+      "Requirements": []
+    },
     "HMIS": {
       "Package": "HMIS",
       "Version": "0.0.1",
@@ -18,9 +26,10 @@
       "RemoteRepo": "HMIS",
       "RemoteUsername": "COHHIO",
       "RemoteRef": "HEAD",
-      "RemoteSha": "fabbf76333158e01ef7010ba8efe5353176e79b8",
-      "Hash": "32b03803524db2e6cfc0a95fb8becda6",
+      "RemoteSha": "2ed55a9de475c23fffdf5d26d21a5a11165c6d20",
+      "Hash": "6a8fbe877e39e53a3841a1ad44b88653",
       "Requirements": [
+        "arrow",
         "dplyr",
         "lubridate",
         "purrr",
@@ -89,19 +98,28 @@
       "RemoteRepo": "UU",
       "RemoteUsername": "yogat3ch",
       "RemoteRef": "HEAD",
-      "RemoteSha": "316ba81f564741dd74538bdc67a1d659379e5188",
-      "Hash": "8814f90b5cc2ccf738844b4acafb656a",
+      "RemoteSha": "98688f1066dda427c500f16ea11059d1ac1a0035",
+      "Hash": "9d534c8bff1c681939dce1b25f4d0322",
       "Requirements": [
-        "arrow",
         "cli",
         "dplyr",
         "fs",
         "glue",
         "purrr",
-        "readr",
         "rlang",
         "stringr",
         "tibble"
+      ]
+    },
+    "anytime": {
+      "Package": "anytime",
+      "Version": "0.3.9",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "74a64813f17b492da9c6afda6b128e3d",
+      "Requirements": [
+        "BH",
+        "Rcpp"
       ]
     },
     "arrow": {
@@ -389,13 +407,15 @@
       "RemoteRepo": "clarity.looker",
       "RemoteUsername": "COHHIO",
       "RemoteRef": "HEAD",
-      "RemoteSha": "404eaa803ba3560e06b03d3f13e2e3f570da6d55",
-      "Hash": "f85c7a21eb84b89f9b1b350b7a6c7c9b",
+      "RemoteSha": "8c7765838d9d4824ab05dbaa3af12a0b90acf109",
+      "Hash": "c6da75e561d1438cefb3885ecc8aba9a",
       "Requirements": [
         "UU",
         "arrow",
         "cli",
         "dplyr",
+        "httpuv",
+        "httr",
         "lookr",
         "readr",
         "rlang",
@@ -794,6 +814,18 @@
         "vctrs"
       ]
     },
+    "httpuv": {
+      "Package": "httpuv",
+      "Version": "1.6.5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "97fe71f0a4a1c9890e6c2128afa04bc0",
+      "Requirements": [
+        "R6",
+        "Rcpp",
+        "promises"
+      ]
+    },
     "httr": {
       "Package": "httr",
       "Version": "1.4.2",
@@ -845,10 +877,10 @@
     },
     "jsonlite": {
       "Package": "jsonlite",
-      "Version": "1.7.3",
+      "Version": "1.8.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "68c37fd8f863c6273dcd24928c17d6e1",
+      "Hash": "d07e729b27b372429d42d24d503613a0",
       "Requirements": []
     },
     "knitr": {
@@ -981,10 +1013,10 @@
     },
     "openssl": {
       "Package": "openssl",
-      "Version": "1.4.6",
+      "Version": "2.0.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "69fdf291af288f32fd4cd93315084ea8",
+      "Hash": "cf4329aac12c2c44089974559c18e446",
       "Requirements": [
         "askpass"
       ]
@@ -1086,6 +1118,19 @@
         "crayon",
         "hms",
         "prettyunits"
+      ]
+    },
+    "promises": {
+      "Package": "promises",
+      "Version": "1.2.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "4ab2c43adb4d4699cf3690acd378d75d",
+      "Requirements": [
+        "R6",
+        "Rcpp",
+        "magrittr",
+        "rlang"
       ]
     },
     "ps": {
@@ -1212,10 +1257,10 @@
     },
     "rlang": {
       "Package": "rlang",
-      "Version": "1.0.1",
+      "Version": "1.0.2",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "3bf0219f19d9f5b3c682acbb3546a151",
+      "Hash": "04884d9a75d778aca22c7154b8333ec9",
       "Requirements": []
     },
     "roxygen2": {
@@ -1405,6 +1450,30 @@
         "vctrs"
       ]
     },
+    "tsibble": {
+      "Package": "tsibble",
+      "Version": "1.1.1",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "tsibble",
+      "RemoteUsername": "tidyverts",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "460a2af8e49e45266cf6b1903a1c7fadf15ed8b4",
+      "Hash": "f0840ea76b0984b8b580fca7d059669c",
+      "Requirements": [
+        "anytime",
+        "dplyr",
+        "ellipsis",
+        "generics",
+        "lifecycle",
+        "lubridate",
+        "rlang",
+        "tibble",
+        "tidyselect",
+        "vctrs"
+      ]
+    },
     "tzdb": {
       "Package": "tzdb",
       "Version": "0.2.0",
@@ -1527,10 +1596,10 @@
     },
     "withr": {
       "Package": "withr",
-      "Version": "2.4.3",
+      "Version": "2.5.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "a376b424c4817cda4920bbbeb3364e85",
+      "Hash": "c0e49a9760983e81e55cdd9be92e7182",
       "Requirements": []
     },
     "xfun": {

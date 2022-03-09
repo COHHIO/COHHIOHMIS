@@ -61,3 +61,5 @@ inst/vault/
 data/random/coc_scoring.feather
 
 .DS_Store
+
+data/ohfa/

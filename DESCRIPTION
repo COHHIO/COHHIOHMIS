@@ -64,7 +64,6 @@ Collate:
     '01_Bed_Unit_Utilization.R'
     '02.1_QPR_EEs.R'
     '02.1_QPR_EEs_utils.R'
-    '02.1_QPR_PATH.R'
     '02.2_covid19_utils.R'
     '02.2_covid19.R'
     '02.3_covid19_plots.R'
