@@ -653,6 +653,169 @@ load_referrals <- function(Referrals,
 
   app_env$gather_deps(Referrals, Referrals_full, referral_result_summarize)
 }
+
+
+
+
+
+#' Add HousingStatus indicating the client's current housing status and Situation with details on that status.
+#' @inheritParams data_quality_tables
+#' @param PH ProjectType codes considered Permanently Housed.  See `HMIS::hud_translations$ProjectType(table = TRUE)` & `?data_types`
+#' @return Input data with HousingStatus & Situation column
+#' @export
+
+Enrollment_add_HousingStatus <-
+  function(Enrollment_extra_Client_Exit_HH_CL_AaE,
+           PH = data_types$Project$ProjectType$ph,
+           Referrals,
+           prioritization_colors,
+           app_env = get_app_env(e = rlang::caller_env())) {
+
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  .nms <- names(Enrollment_extra_Client_Exit_HH_CL_AaE)
+  .cols <- list(
+    id = paste0(c("Personal", "Unique"), "ID"),
+    req = c(
+      "PersonalID",
+      "ProjectType",
+      "ExpectedPHDate",
+      "MoveInDateAdjust",
+      "EntryDate",
+      "PHTrack"
+    ),
+    ref = c(paste0(
+      "R_Referral",
+      c(
+        "ConnectedPTC",
+        "ConnectedProjectName",
+        "AcceptedDate",
+        "CurrentlyOnQueue",
+        "ConnectedMoveInDate"
+      )
+    ),
+    "R_ReferredProjectName")
+  )
+  .cols$grp <- na.omit(
+    stringr::str_extract(UU::common_names(Enrollment_extra_Client_Exit_HH_CL_AaE, Referrals), UU::regex_or(.cols$id))
+  )[1]
+  .cols$sym <- rlang::sym(.cols$grp)
+
+
+
+  if (!any(.cols$id %in% .nms) || !all(.cols$req %in% .nms))
+    stop_with_instructions("data requires PersonalID or UniqueID & the following columns:\n", paste0(.cols$req, collapse = ",\n"))
+
+  out <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
+    dplyr::select(dplyr::any_of(c(.cols$id, "EntryDate", "ProjectType"))) |>
+    dplyr::group_by(!!.cols$sym) |>
+    # Get the latest entry
+    dplyr::slice_max(EntryDate, n = 1L) |>
+    # apply human-readable status labels
+    dplyr::mutate(PTCStatus = factor(
+      dplyr::if_else(
+        ProjectType %in% PH, "PH", "LH"
+      ),
+      levels =
+        c("LH",
+          "PH")
+    )) |>
+    dplyr::select(!!.cols$sym, PTCStatus) |>
+    dplyr::right_join(Enrollment_extra_Client_Exit_HH_CL_AaE, by = .cols$grp)
+
+
+
+  # Create a summary of last referrals & whether they were accepted
+  # Get housed
+  .housed <- Referrals |>
+    dplyr::group_by(!!.cols$sym) |>
+    # summarise specific statuses: accepted, housed or currently on queue
+    dplyr::summarise(housed = !!referral_result_summarize$housed1 || !!referral_result_summarize$housed2 || !!referral_result_summarize$housed3,
+                     .groups = "drop") |>
+    dplyr::filter(housed) |>
+    dplyr::select(!!.cols$sym) |>
+    dplyr::left_join(dplyr::select(Referrals, !!.cols$sym, R_ReferralConnectedMoveInDate, R_RemovedFromQueueSubreason, R_ExitHoused, R_ExitDestination), by = .cols$grp)
+
+  # These folks are R_ExitHoused == "Not Housed" but should be housed soon.
+  .likely_housed <- .housed |>
+    dplyr::group_by(!!.cols$sym) |>
+    dplyr::summarise(housed = !!referral_result_summarize$housed3) |>
+    dplyr::filter(!housed) |>
+    dplyr::select(!!.cols$sym)
+
+
+  out <- out |>
+    dplyr::mutate(housed = !!.cols$sym %in% .housed[[.cols$grp]],
+                  likely_housed = !!.cols$sym %in% .likely_housed[[.cols$grp]])
+
+
+
+
+  if (!all(.cols$ref %in% .nms))
+    out <- dplyr::left_join(
+      out,
+      dplyr::select(Referrals,
+                    !!.cols$sym,
+                    !!!rlang::syms(.cols$ref)),
+      by = .cols$grp)
+
+
+
+  sit_expr = rlang::exprs(
+    ph_date = !is.na(ExpectedPHDate),
+    ph_date_pre = Sys.Date() < ExpectedPHDate,
+    ph_date_post = Sys.Date() > ExpectedPHDate,
+    ptc_has_entry = PTCStatus == "PH",
+    ptc_no_entry = PTCStatus == "LH",
+    is_ph = (R_ReferralConnectedPTC %|% ProjectType) %in% data_types$Project$ProjectType$ph,
+    is_lh = (R_ReferralConnectedPTC %|% ProjectType) %in% c(data_types$Project$ProjectType$lh, 4, 11),
+    moved_in = !is.na(MoveInDateAdjust) & MoveInDateAdjust >= EntryDate,
+    referredproject = !is.na(R_ReferralConnectedProjectName),
+    ph_track = !is.na(PHTrack) & PHTrack != "None"
+  )
+  # Referral Situation ----
+  # Tue Nov 09 12:49:51 2021
+
+  out <- dplyr::mutate(
+    out,
+    ExpectedPHDate = dplyr::if_else(is.na(ExpectedPHDate), R_ReferralConnectedMoveInDate, ExpectedPHDate),
+    Situation = dplyr::case_when(
+      housed ~ "Housed",
+      likely_housed ~ "Likely housed: please follow-up with the client to ensure they are housed.",
+      (!!sit_expr$ptc_has_entry | !!sit_expr$is_ph) & !!sit_expr$moved_in ~ "Housed",
+      (!!sit_expr$ptc_has_entry | !!sit_expr$is_ph) & !(!!sit_expr$moved_in) ~ paste("Entered RRH/PSH but has not moved in:",
+                                                                                     R_ReferralConnectedProjectName %|% ProjectName),
+      !!sit_expr$ph_track &
+        !!sit_expr$ph_date &
+        !!sit_expr$ph_date_pre ~ paste("Permanent Housing Track. Track:", PHTrack,"Expected Move-in:", ExpectedPHDate),
+      !!sit_expr$ph_track &
+        !!sit_expr$ph_date &
+        !!sit_expr$ph_date_post &
+        !(!!sit_expr$moved_in) ~ paste("Follow-up needed on PH Track, client is not yet moved in:", PHTrack,"Expected Move-in:", ExpectedPHDate),
+      !!sit_expr$ptc_no_entry &
+        !!sit_expr$referredproject ~
+        paste(
+          "No current Entry into RRH or PSH but",
+          R_ReferredProjectName,
+          "accepted this household's referral on",
+          R_ReferralAcceptedDate
+        ),
+      !R_ReferralCurrentlyOnQueue == "Yes" | is.na(R_ReferralCurrentlyOnQueue) ~ "Not referred to Community Queue, may need referral to CQ.",
+      !!sit_expr$ptc_no_entry &
+        !(!!sit_expr$referredproject) &
+        !(!!sit_expr$ph_track) ~
+        "No Entry or accepted Referral into PSH/RRH, and no current Permanent Housing Track",
+      TRUE ~ "No Entry or accepted Referral into PSH/RRH, and no current Permanent Housing Track"
+    ),
+    HousingStatus = factor(stringr::str_extract(Situation, UU::regex_or(names(prioritization_colors))), levels = names(prioritization_colors)),
+    housed = NULL,
+    likely_housed = NULL
+  ) |>
+    dplyr::ungroup()
+  return(out)
+}
+
+
 #' @title Filter duplicates without losing any values from `key`
 #'
 #' @param .data \code{(data.frame)} Data with duplicates
