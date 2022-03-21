@@ -81,6 +81,19 @@ living_situations <- data_types$CurrentLivingSituation$CurrentLivingSituation
 #' @export
 destinations <- data_types$Exit$Destination
 
+#' Colors for the various level of housing status used in the prioritization report
+#' @export
+prioritization_colors <- c(
+  "Housed",
+  "Likely housed",
+  "Entered RRH",
+  "Permanent Housing Track",
+  "Follow-up needed",
+  "No current Entry",
+  "Not referred",
+  "No Entry"
+) |>
+  {\(x) {rlang::set_names(grDevices::colorRampPalette(c("#45d63e", "#ff2516"), space = "Lab")(length(x)), x)}}()
 
 
 
