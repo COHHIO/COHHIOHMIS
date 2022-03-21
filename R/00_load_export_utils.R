@@ -504,6 +504,7 @@ load_enrollment <- function(Enrollment,
                             Exit,
                             Client,
                             Project,
+                            Referrals,
                             rm_dates,
                             app_env = get_app_env(e = rlang::caller_env())) {
 
@@ -532,7 +533,8 @@ load_enrollment <- function(Enrollment,
         "ExportID"
       )
     )),
-    by = c("PersonalID", "UniqueID"))
+    by = c("PersonalID", "UniqueID")) |>
+    Enrollment_add_HousingStatus()
 
   UU::join_check(Enrollment, Enrollment_extra_Client_Exit_HH_CL_AaE)
 
