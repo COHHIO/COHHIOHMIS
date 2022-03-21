@@ -171,7 +171,7 @@ extended_disability <- co_currently_homeless |>
 
 # adding household aggregations into the full client list
 
-co_currently_homeless <- co_currently_homeless |>
+prioritization <- co_currently_homeless |>
   dplyr::left_join(income_data,
                    by = c("PersonalID", "EnrollmentID")) |>
   dplyr::left_join(extended_disability, by = "EnrollmentID") |>
@@ -246,40 +246,8 @@ co_currently_homeless <- co_currently_homeless |>
     "ChronicStatus"
   )
 
-# Account for Multiple EEs -------------------------------------------------
 
-prioritization <- co_currently_homeless |>
-  dplyr::group_by(PersonalID) |>
 
-  # label all program as either literally homeless or a housing program
-  dplyr::mutate(PTCStatus = dplyr::case_when(
-    ProjectType %in% c(data_types$Project$ProjectType$lh, 4) ~ "LH",
-    ProjectType %in% c(data_types$Project$ProjectType$ph) ~ "PH"
-  ),
-  PTCStatus = factor(
-    PTCStatus,
-    levels = c(
-      "LH", "PH"
-    )),
-
-  # label all clients as literally homeless or in a housing program
-  client_status = dplyr::if_else(PTCStatus == "LH", 0, 1),
-  client_status = max(client_status)
-  ) |>
-
-  # if the client has at least one literally homeless entry, keep the most recent
-  # otherwise, keep the most recent housing program entry
-  dplyr::arrange(PTCStatus, dplyr::desc(EntryDate)) |>
-  dplyr::slice(1L) |>
-
-  # apply human-readable status labels
-  dplyr::mutate(PTCStatus = dplyr::if_else(
-    client_status == 1,
-    "Has Entry into RRH or PSH",
-    "Currently Has No Entry into RRH or PSH"
-  )) |>
-  dplyr::ungroup() |>
-  dplyr::select(-client_status)
 
 # correcting for bad hh data (while also flagging it) ---------------------
 
@@ -563,108 +531,8 @@ prioritization <- prioritization |>
 # referrals to a homeless project wouldn't mean anything on an Active List,
 # right?
 
-# Create a summary of last referrals & whether they were accepted
-
-
-
-# Referrals_summary <- Referrals |>
-#   dplyr::group_by(PersonalID) |>
-#   # calculate the last touch point
-#   dplyr::mutate(max_time = max(R_ExitUpdatedTime, na.rm = TRUE),
-#                 max_time_greatest = max_time > (R_ReferredDate %|% R_ReferralAcceptedDate))
-
-# Get housed
-.housed <- Referrals |>
-  dplyr::group_by(PersonalID) |>
-  # summarise specific statuses: accepted, housed or currently on queue
-  dplyr::summarise(housed = !!referral_result_summarize$housed1 || !!referral_result_summarize$housed2 || !!referral_result_summarize$housed3,
-                   .groups = "drop") |>
-  dplyr::filter(housed) |>
-  dplyr::select(PersonalID) |>
-  dplyr::left_join(dplyr::select(Referrals, PersonalID, R_ReferralConnectedMoveInDate, R_RemovedFromQueueSubreason, R_ExitHoused, R_ExitDestination), by = "PersonalID")
-
-# These folks are R_ExitHoused == "Not Housed" but should be housed soon.
-likely_housed <- .housed |>
-  dplyr::group_by(PersonalID) |>
-  dplyr::summarise(housed = !!referral_result_summarize$housed3) |>
-  dplyr::filter(!housed) |>
-  dplyr::select(PersonalID)
-
-
-prioritization <- prioritization |>
-  dplyr::mutate(housed = PersonalID %in% .housed$PersonalID,
-                likely_housed = PersonalID %in% likely_housed$PersonalID) |>
-  dplyr::left_join(
-    dplyr::select(Referrals,
-                  PersonalID,
-                  R_ReferralConnectedPTC,
-                  R_ReferralConnectedProjectName,
-                  R_ReferredProjectName,
-                  R_ReferralAcceptedDate,
-                  R_ReferralCurrentlyOnQueue,
-                  R_ReferralConnectedMoveInDate),
-    by = "PersonalID")
-
-prioritization_colors <- c(
-  "Housed",
-  "Likely housed",
-  "Entered RRH",
-  "Permanent Housing Track",
-  "Follow-up needed",
-  "No current Entry",
-  "Not referred",
-  "No Entry"
-) |>
-  {\(x) {rlang::set_names(grDevices::colorRampPalette(c("#45d63e", "#ff2516"), space = "Lab")(length(x)), x)}}()
-
-  sit_expr = rlang::exprs(
-    ph_date = !is.na(ExpectedPHDate),
-    ph_date_pre = Sys.Date() < ExpectedPHDate,
-    ph_date_post = Sys.Date() > ExpectedPHDate,
-    ptc_has_entry = PTCStatus == "Has Entry into RRH or PSH",
-    ptc_no_entry = PTCStatus == "Currently Has No Entry into RRH or PSH",
-    is_ph = (R_ReferralConnectedPTC %|% ProjectType) %in% data_types$Project$ProjectType$ph,
-    is_lh = (R_ReferralConnectedPTC %|% ProjectType) %in% c(data_types$Project$ProjectType$lh, 4, 11),
-    moved_in = !is.na(MoveInDateAdjust) & MoveInDateAdjust >= EntryDate,
-    referredproject = !is.na(R_ReferralConnectedProjectName),
-    ph_track = !is.na(PHTrack) & PHTrack != "None"
-  )
-  # Referral Situation ----
-  # Tue Nov 09 12:49:51 2021
-
-  prioritization <- dplyr::mutate(
-    prioritization,
-    Situation = dplyr::case_when(
-      housed ~ "Housed",
-      likely_housed ~ "Likely housed: please follow-up with the client to ensure they are housed.",
-      (!!sit_expr$ptc_has_entry | !!sit_expr$is_ph) & !!sit_expr$moved_in ~ "Housed",
-      (!!sit_expr$ptc_has_entry | !!sit_expr$is_ph) & !(!!sit_expr$moved_in) ~ paste("Entered RRH/PSH but has not moved in:",
-                                                                                                            R_ReferralConnectedProjectName %|% ProjectName),
-        !!sit_expr$ph_track &
-        !!sit_expr$ph_date &
-        !!sit_expr$ph_date_pre ~ paste("Permanent Housing Track. Track:", PHTrack,"Expected Move-in:", ExpectedPHDate),
-      !!sit_expr$ph_track &
-        !!sit_expr$ph_date &
-        !!sit_expr$ph_date_post &
-        !(!!sit_expr$moved_in) ~ paste("Follow-up needed on PH Track, client is not yet moved in:", PHTrack,"Expected Move-in:", ExpectedPHDate),
-      !!sit_expr$ptc_no_entry &
-        !!sit_expr$referredproject ~
-        paste(
-          "No current Entry into RRH or PSH but",
-          R_ReferredProjectName,
-          "accepted this household's referral on",
-          R_ReferralAcceptedDate
-        ),
-      !R_ReferralCurrentlyOnQueue == "Yes" | is.na(R_ReferralCurrentlyOnQueue) ~ "Not referred to Community Queue, may need referral to CQ.",
-      !!sit_expr$ptc_no_entry &
-        !(!!sit_expr$referredproject) &
-        !(!!sit_expr$ph_track) ~
-        "No Entry or accepted Referral into PSH/RRH, and no current Permanent Housing Track",
-      TRUE ~ "No Entry or accepted Referral into PSH/RRH, and no current Permanent Housing Track"
-    ),
-    Situation_col = factor(stringr::str_extract(Situation, paste0("(?:",names(prioritization_colors),")") |> paste0(collapse = "|")), names(prioritization_colors)),
-    ExpectedPHDate = dplyr::if_else(is.na(ExpectedPHDate), R_ReferralConnectedMoveInDate, ExpectedPHDate)
-  )
+# Referral handling & PTCStatus & Housing Status moved to Load Export since this data is essential in other reports. ----
+# Wed Mar 16 10:37:00 2022
 
 
 
@@ -672,10 +540,9 @@ prioritization_colors <- c(
   # Filter Housed and likely housed
   prioritization <- prioritization |>
     dplyr::group_by(PersonalID) |>
-    # get the lowest priority achieved
-    dplyr::slice_min(Situation_col) |>
-    dplyr::select(-housed, -likely_housed) |>
-    dplyr::filter(!Situation_col %in% c("Housed", "Likely housed")) |>
+    # get the lowest priority
+    dplyr::slice_min(HousingStatus) |>
+    dplyr::filter(!HousingStatus %in% c("Housed", "Likely housed")) |>
     dplyr::select( - dplyr::starts_with("R_"))
 
 
