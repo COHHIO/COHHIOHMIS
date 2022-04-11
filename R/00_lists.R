@@ -85,7 +85,6 @@ destinations <- data_types$Exit$Destination
 #' @export
 prioritization_colors <- c(
   "Housed",
-  "Likely housed",
   "Entered RRH",
   "Permanent Housing Track",
   "Follow-up needed",

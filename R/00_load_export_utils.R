@@ -622,15 +622,7 @@ load_referrals <- function(Referrals,
   Referrals_full <- Referrals
 
   referrals_expr <- rlang::exprs(
-    housed1 = R_RemovedFromQueueSubreason %in% c(
-      "Housed with Community Inventory",
-      "Housed with Community Inventory - Not with CE",
-      "Permanently Living with Family/Friends",
-      "Return To Prior Residence",
-      "Rental By Client"
-    ),
-    housed2 = !is.na(R_ReferralConnectedMoveInDate),
-    housed3 = R_ExitHoused == "Housed",
+    housed = R_ExitHoused == "Housed",
     is_last = R_IsLastReferral == "Yes",
     is_last_enroll = R_IsLastEnrollment == "Yes",
     is_active = R_ActiveInProject == "Yes",
