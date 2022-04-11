@@ -637,19 +637,19 @@ load_referrals <- function(Referrals,
                      !!referrals_expr$is_last,
                      !!referrals_expr$is_active,
                      !is.na(R_ReferralResult),
-                     !!referrals_expr$housed3 & !!referrals_expr$accepted,
+                     !!referrals_expr$housed & !!referrals_expr$accepted,
                      key = PersonalID) |>
     filter_dupe_last_EnrollmentID(key = PersonalID, R_ReferredEnrollmentID) |>
     dplyr::arrange(dplyr::desc(R_ReferredEnrollmentID)) |>
-    dplyr::distinct(dplyr::across(-R_ReferredEnrollmentID), .keep_all = TRUE)
+    dplyr::select(- R_ReferredEnrollmentID) |>
+    dplyr::distinct()
 
   app_env$gather_deps(Referrals, Referrals_full, referral_result_summarize)
 }
 
 
 
-
-
+26065
 #' Add HousingStatus indicating the client's current housing status and Situation with details on that status.
 #' @inheritParams data_quality_tables
 #' @param PH ProjectType codes considered Permanently Housed.  See `HMIS::hud_translations$ProjectType(table = TRUE)` & `?data_types`
