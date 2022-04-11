@@ -864,7 +864,8 @@ filter_dupe_soft <- function(.data, ..., key) {
   }
   to_add <- dplyr::bind_rows(to_add)
   out <- dplyr::filter(out, !(!!.key %in% c(to_add[[.key]], x[[.key]]))) |>
-    dplyr::bind_rows(to_add, x)
+    dplyr::bind_rows(to_add, x) |>
+    dplyr::select(-dplyr::any_of("dupe_count"))
 
   if (anyDuplicated(out[[.key]])) {
     rlang::warn("Duplicates still exist.")
@@ -891,5 +892,6 @@ filter_dupe_last_EnrollmentID <- function(.data, key, EnrollmentID) {
   dplyr::bind_rows(
     dplyr::filter(.data, !(!!.key) %in% x[[.key]]),
     x
-  )
+  ) |>
+    dplyr::select(- dplyr::any_of("dupe_count"))
 }
