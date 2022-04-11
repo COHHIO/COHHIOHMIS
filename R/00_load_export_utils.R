@@ -670,6 +670,7 @@ Enrollment_add_HousingStatus <-
     id = paste0(c("Personal", "Unique"), "ID"),
     req = c(
       "PersonalID",
+      "ProjectName",
       "ProjectType",
       "ExpectedPHDate",
       "MoveInDateAdjust",
