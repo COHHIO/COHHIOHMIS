@@ -55,6 +55,7 @@ vet_active <- function(
       "ExpectedPHDate",
       "HOMESID",
       "HouseholdID",
+      "HousingStatus",
       "LengthOfStay",
       "ListStatus",
       "LivingSituation",
@@ -80,7 +81,7 @@ vet_active <- function(
     )
 
   vet_ees <- co_clients_served |>
-    dplyr::filter(ProjectType %in% data_types$Project$ProjectType$lh_at_entry) |>
+    dplyr::filter(ProjectType %in% c(data_types$Project$ProjectType$lh_at_entry, data_types$Project$ProjectType$ap)) |>
     dplyr::mutate(VeteranStatus = dplyr::if_else(VeteranStatus == 1, 1, 0)) |>
     dplyr::group_by(HouseholdID) |> # pulling in all Veterans & non-veteran hh members
     dplyr::summarise(VetCount = sum(VeteranStatus, na.rm = TRUE),
@@ -110,6 +111,7 @@ vet_active <- function(
                     VeteranStatus == 1) |>
     dplyr::pull(PersonalID)
 
+  # If they're in RRH or PSH and have MoveInDates they should not appear on the active list
   # browser()
 
   # Declined  ---------------------------------------------------------------
@@ -200,12 +202,8 @@ vet_active <- function(
   # stayers & people who exited in the past 90 days to a temp destination
 
   vet_active <- vet_ees |>
-    dplyr::filter(!PersonalID %in% c(currently_housed_in_psh_rrh) &
-                    (is.na(ExitDate) |
-                       (
-                         !Destination %in% destinations$perm &
-                           ExitDate >= lubridate::today() - lubridate::days(90)
-                       )))
+    dplyr::filter(!HousingStatus %in% c("Housed", "Likely housed"))
+
 
   hh_size <- vet_active |>
     dplyr::select(HouseholdID, PersonalID) |>

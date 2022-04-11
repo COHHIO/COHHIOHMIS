@@ -365,7 +365,8 @@ prioritization <- prioritization |>
         HouseholdID,
         CountyServed,
         PHTrack,
-        ExpectedPHDate
+        ExpectedPHDate,
+        HousingStatus
       ),
     by = c("PersonalID", "HouseholdID")
   ) |>
@@ -535,12 +536,10 @@ prioritization <- prioritization |>
 # Wed Mar 16 10:37:00 2022
 
 
-
-
   # Filter Housed and likely housed
   prioritization <- prioritization |>
     dplyr::group_by(PersonalID) |>
-    # get the lowest priority
+    # get the lowest priority (furthest towards housed)
     dplyr::slice_min(HousingStatus) |>
     dplyr::filter(!HousingStatus %in% c("Housed", "Likely housed")) |>
     dplyr::select( - dplyr::starts_with("R_"))
