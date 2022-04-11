@@ -98,15 +98,15 @@ qpr_path_to_rrhpsh <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, Referrals
   #   dplyr::group_by(Situation_col) |>
   #   dplyr::summarise(n = dplyr::n(), .groups = "drop") |>
   #   dplyr::mutate(p = scales::percent(n / sum(n), accuracy = .01))
-  rrh_psh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC"))) |>
+  rrh_psh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC$"))) |>
     paste("%in% c(3, 13)") |> #RRH or PSH Respectively
     purrr::map(rlang::parse_expr)
 
-  rrh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC"))) |>
+  rrh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC$"))) |>
     paste("%in% c(3)") |> #RRH or PSH Respectively
     purrr::map(rlang::parse_expr)
 
-  psh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC"))) |>
+  psh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC$"))) |>
     paste("%in% c(13)") |> #RRH or PSH Respectively
     purrr::map(rlang::parse_expr)
 
@@ -118,13 +118,12 @@ qpr_path_to_rrhpsh <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, Referrals
     unique() |>
     length()
   path_referrals <- in_path |>
-    dplyr::left_join(Referrals, by = UU::common_names(Enrollment_extra_Client_Exit_HH_CL_AaE, Referrals)) |>
     dplyr::filter(!!purrr::reduce(rrh_psh_expr, ~rlang::expr(!!.x | !!.y))) |>
     dplyr::select(dplyr::any_of(paste0(c("Enrollment", "Personal", "Unique", "Household"), "ID")), EntryDate, ExitDate, ProjectID, ProjectType, dplyr::starts_with("R_")) |>
     dplyr::arrange(PersonalID, dplyr::desc(EntryDate)) |>
     # needs to count individuals
     # needs to be individuals in, referred by, referred to
-    dplyr::group_by(!!!rlang::syms(stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC"))))) |>
+    dplyr::group_by(!!!rlang::syms(stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC$"))) |> unique())) |>
     dplyr::filter(is.na(R_ReferralConnectedPTC) || R_ReferralConnectedPTC != 2) |>
     dplyr::distinct(PersonalID, .keep_all = TRUE) |>
     dplyr::mutate(rrhpsh = dplyr::case_when(
