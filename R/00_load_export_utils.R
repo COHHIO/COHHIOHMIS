@@ -699,8 +699,14 @@ Enrollment_add_HousingStatus <-
   if (!any(.cols$id %in% .nms) || !all(.cols$req %in% .nms))
     stop_with_instructions("data requires PersonalID or UniqueID & the following columns:\n", paste0(.cols$req, collapse = ",\n"))
 
+  # Get the Last enrollment
+  last_enroll <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
+    dplyr::group_by(PersonalID) |>
+    dplyr::summarise(EnrollmentID = recent_valid(EnrollmentID, as.numeric(EnrollmentID)))
+
   out <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
-    dplyr::select(dplyr::any_of(c(.cols$id, "EntryDate", "ProjectType"))) |>
+    dplyr::filter(EnrollmentID %in% last_enroll$EnrollmentID) |>
+    dplyr::select(!!.cols$sym, dplyr::any_of(.cols$req)) |>
     dplyr::group_by(!!.cols$sym) |>
     # Get the latest entry
     dplyr::slice_max(EntryDate, n = 1L) |>
