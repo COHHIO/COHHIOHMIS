@@ -718,9 +718,7 @@ Enrollment_add_HousingStatus <-
       levels =
         c("LH",
           "PH")
-    )) |>
-    dplyr::select(!!.cols$sym, PTCStatus) |>
-    dplyr::right_join(Enrollment_extra_Client_Exit_HH_CL_AaE, by = .cols$grp)
+    ))
 
 
 
@@ -729,34 +727,23 @@ Enrollment_add_HousingStatus <-
   .housed <- Referrals |>
     dplyr::group_by(!!.cols$sym) |>
     # summarise specific statuses: accepted, housed or currently on queue
-    dplyr::summarise(housed = !!referral_result_summarize$housed1 || !!referral_result_summarize$housed2 || !!referral_result_summarize$housed3,
+    dplyr::summarise(housed = !!referral_result_summarize$housed,
                      .groups = "drop") |>
-    dplyr::filter(housed) |>
-    dplyr::select(!!.cols$sym) |>
-    dplyr::left_join(dplyr::select(Referrals, !!.cols$sym, R_ReferralConnectedMoveInDate, R_RemovedFromQueueSubreason, R_ExitHoused, R_ExitDestination), by = .cols$grp)
+    dplyr::filter(housed)
 
-  # These folks are R_ExitHoused == "Not Housed" but should be housed soon.
-  .likely_housed <- .housed |>
-    dplyr::group_by(!!.cols$sym) |>
-    dplyr::summarise(housed = !!referral_result_summarize$housed3) |>
-    dplyr::filter(!housed) |>
-    dplyr::select(!!.cols$sym)
 
 
   out <- out |>
-    dplyr::mutate(housed = !!.cols$sym %in% .housed[[.cols$grp]],
-                  likely_housed = !!.cols$sym %in% .likely_housed[[.cols$grp]])
+    dplyr::mutate(housed = !!.cols$sym %in% .housed[[.cols$grp]])
 
 
 
 
   if (!all(.cols$ref %in% .nms))
-    out <- dplyr::left_join(
-      out,
-      dplyr::select(Referrals,
-                    !!.cols$sym,
-                    !!!rlang::syms(.cols$ref)),
-      by = .cols$grp)
+    out <- dplyr::left_join(out,
+                            # Remove R_ReferralResult because the computation in Looker is bugged. A person can be simultaneously Accepted & Rejected
+                            Referrals |> dplyr::select( - R_ReferralResult) |> dplyr::distinct(R_ReferralID, .keep_all = TRUE),
+                            by = UU::common_names(out, Referrals))
 
 
 
@@ -780,7 +767,6 @@ Enrollment_add_HousingStatus <-
     ExpectedPHDate = dplyr::if_else(is.na(ExpectedPHDate), R_ReferralConnectedMoveInDate, ExpectedPHDate),
     Situation = dplyr::case_when(
       housed ~ "Housed",
-      likely_housed ~ "Likely housed: please follow-up with the client to ensure they are housed.",
       (!!sit_expr$ptc_has_entry | !!sit_expr$is_ph) & !!sit_expr$moved_in ~ "Housed",
       (!!sit_expr$ptc_has_entry | !!sit_expr$is_ph) & !(!!sit_expr$moved_in) ~ paste("Entered RRH/PSH but has not moved in:",
                                                                                      R_ReferralConnectedProjectName %|% ProjectName),
@@ -807,13 +793,28 @@ Enrollment_add_HousingStatus <-
       TRUE ~ "No Entry or accepted Referral into PSH/RRH, and no current Permanent Housing Track"
     ),
     HousingStatus = factor(stringr::str_extract(Situation, UU::regex_or(names(prioritization_colors))), levels = names(prioritization_colors)),
-    housed = NULL,
-    likely_housed = NULL
+    housed = NULL
   ) |>
-    dplyr::ungroup()
+    dplyr::select(- dplyr::any_of(c(.cols$req, "UniqueID")))
+
+
+  out <-
+    dplyr::left_join(
+      Enrollment_extra_Client_Exit_HH_CL_AaE,
+      dplyr::select(out,-PTCStatus),
+      by = c(.cols$grp, "EnrollmentID" = "R_ReferringEnrollmentID")
+    ) |>
+    dplyr::select(PersonalID, HousingStatus, Situation, dplyr::everything()) |>
+    dplyr::distinct()
   return(out)
 }
 
+get_dupe_colnames <- function(x, ...) {
+  janitor::get_dupes(x, ...) |>
+    purrr::map(unique) |>
+    purrr::keep(~length(.x) > 1) |>
+    names()
+}
 
 #' @title Filter duplicates without losing any values from `key`
 #'
