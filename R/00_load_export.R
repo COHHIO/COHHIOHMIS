@@ -68,6 +68,10 @@ load_export <- function(
   # Used in load_enrollment
 
 
+  # Referrals ---------------------------------------------------------------
+  app_env <- load_referrals(Referrals = clarity_api$`HUD Extras`$CE_Referrals_extras(col_types = list(ReferralConnectedPTC = "c", DeniedByType = "c")))
+
+
   # Enrollment --------------------------------------------------------------
 
 
@@ -136,12 +140,6 @@ load_export <- function(
 
   program_lookup <- load_program_lookup(clarity_api$`HUD Extras`$Program_lookup_extras())
 
-
-
-
-
-  # Referrals ---------------------------------------------------------------
-app_env <- load_referrals(Referrals = clarity_api$`HUD Extras`$CE_Referrals_extras(col_types = list(ReferralConnectedPTC = "c", DeniedByType = "c")))
 
 
 
