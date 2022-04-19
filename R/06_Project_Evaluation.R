@@ -311,7 +311,7 @@ project_evaluation <- function(
   # CoC Scoring -------------------------------------------------------------
 
   # NOTE Dependency needs to be fetched from cloud location
-  coc_scoring <- clarity.looker::hud_load("coc_scoring", dirs$random) |>
+  coc_scoring <- clarity.looker::hud_load("coc_scoring", dirs$public) |>
     dplyr::mutate(DateReceivedPPDocs = as.Date(DateReceivedPPDocs, origin = "1899-12-30"),
                   ProjectID = as.character(ProjectID))
 
@@ -1362,7 +1362,7 @@ project_evaluation <- function(
     dplyr::left_join(pe_summary, by = c("ProjectType", "AltProjectName")) |>
     dplyr::left_join(summary_pe_coc_scoring, by = c("ProjectType", "AltProjectName"))
 
-browser()
+
   pe_final_scores <- pe_summary_final_scoring
 
   pe_final_scores$HousingFirstScore[is.na(pe_final_scores$HousingFirstScore)] <- 0
