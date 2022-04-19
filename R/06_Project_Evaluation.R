@@ -311,7 +311,7 @@ project_evaluation <- function(
   # CoC Scoring -------------------------------------------------------------
 
   # NOTE Dependency needs to be fetched from cloud location
-  coc_scoring <- clarity.looker::hud_load("coc_scoring", dirs$public) |>
+  coc_scoring <- arrow::read_feather(file.path(dirs$public, "coc_scoring.feather")) |>
     dplyr::mutate(DateReceivedPPDocs = as.Date(DateReceivedPPDocs, origin = "1899-12-30"),
                   ProjectID = as.character(ProjectID))
 

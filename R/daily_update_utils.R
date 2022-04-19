@@ -226,11 +226,11 @@ funs = rlang::set_names(c(
   # "covid19_plots",
   "vets",
   "vet_active",
-  "prioritization",
   "bed_unit_utilization",
   "data_quality",
   "data_quality_summary",
-  "project_evaluation"
+  "project_evaluation",
+  "prioritization"
 
 )),
 remote = FALSE,
