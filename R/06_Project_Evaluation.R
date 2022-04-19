@@ -1362,6 +1362,7 @@ project_evaluation <- function(
     dplyr::left_join(pe_summary, by = c("ProjectType", "AltProjectName")) |>
     dplyr::left_join(summary_pe_coc_scoring, by = c("ProjectType", "AltProjectName"))
 
+
   pe_final_scores <- pe_summary_final_scoring
 
   pe_final_scores$HousingFirstScore[is.na(pe_final_scores$HousingFirstScore)] <- 0
@@ -1435,8 +1436,11 @@ project_evaluation <- function(
 
   readr::write_csv(pe_final_scores, fs::path(dirs$random, "pe_final_all.csv"))
 
+  exported_pe <- pe[c("ScoredAtPHEntry", "LongTermHomeless", "HomelessHistoryIndex", "LengthOfStay", "ResPrior", "BenefitsAtExit", "ExitstoPH")] |>
+    {\(x) {rlang::set_names(x, paste0("pe_", snakecase::to_snake_case(names(x))))}}()
+
   # saving old data to "current" image so it all carries to the apps
-  app_env$gather_deps()
+  rlang::exec(app_env$gather_deps, pe_summary_final_scoring = pe_summary_final_scoring, !!!exported_pe, pe_entries_no_income = summary_pe$EntriesNoIncome)
   app_env
 }
 
