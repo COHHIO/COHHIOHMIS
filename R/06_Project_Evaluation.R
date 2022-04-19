@@ -50,7 +50,7 @@ project_evaluation <- function(
   # consolidated projects
 
   pe_coc_funded <- Funder %>%
-    dplyr::filter(Funder %in% c(1:7) &
+    dplyr::filter(Funder %in% c(1:7, 43, 44) &
                     (ProjectID %in% .merged |
                        (
                          StartDate <= rm_dates$hc$project_eval_end &
@@ -1362,7 +1362,6 @@ project_evaluation <- function(
     dplyr::left_join(pe_summary, by = c("ProjectType", "AltProjectName")) |>
     dplyr::left_join(summary_pe_coc_scoring, by = c("ProjectType", "AltProjectName"))
 
-browser()
   pe_final_scores <- pe_summary_final_scoring
 
   pe_final_scores$HousingFirstScore[is.na(pe_final_scores$HousingFirstScore)] <- 0
