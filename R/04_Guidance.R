@@ -16,7 +16,7 @@
 #' @include guidance.R relevant_dq.R aaa_imports.R
 NULL
 
-if (interactive() && curl::has_internet() && clarity.looker::is_dev() && (difftime(Sys.time(), UU::`%|try|%`(readRDS("last_update.rds"), Sys.time()) > lubridate::days(7))) {
+if (interactive() && curl::has_internet() && clarity.looker::is_dev() && (difftime(Sys.time(), UU::`%|try|%`(readRDS("last_update.rds"), Sys.time())) > lubridate::days(7))) {
   googlesheets4::gs4_auth(path = "inst/vault/rminor@rminor-333915.iam.gserviceaccount.com.json")
   id <- "15HsbSGmsscGtUIZnBDSVPaU4Zsotp7Dj79mXpPAu_lw"
   guidance <- purrr::map(rlang::set_names(googlesheets4::sheet_names(id)), ~googlesheets4::read_sheet(id, sheet = .x, col_types = "c"))
