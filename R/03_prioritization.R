@@ -366,6 +366,7 @@ prioritization <- prioritization |>
         CountyServed,
         PHTrack,
         ExpectedPHDate,
+        Situation,
         HousingStatus
       ),
     by = c("PersonalID", "HouseholdID")
