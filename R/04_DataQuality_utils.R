@@ -829,7 +829,7 @@ dq_mahoning_ce_60_days <- function(served_in_date_range, mahoning_projects, vars
     app_env$set_parent(missing_fmls())
   mahoning_ce <- mahoning_projects[stringr::str_detect(names(mahoning_projects), "Coordinated Entry")]
   served_in_date_range |>
-    dplyr::filter(ProjectID == mahoning_ce &
+    dplyr::filter(ProjectID %in% mahoning_ce &
                     EntryDate <= lubridate::today() - lubridate::days(60) &
                     is.na(ExitDate)) |>
     dplyr::mutate(

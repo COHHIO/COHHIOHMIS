@@ -311,7 +311,7 @@ project_evaluation <- function(
   # CoC Scoring -------------------------------------------------------------
 
   # NOTE Dependency needs to be fetched from cloud location
-  coc_scoring <- clarity.looker::hud_load("coc_scoring", dirs$random) |>
+  coc_scoring <- clarity.looker::hud_load("coc_scoring", dirs$public) |>
     dplyr::mutate(DateReceivedPPDocs = as.Date(DateReceivedPPDocs, origin = "1899-12-30"),
                   ProjectID = as.character(ProjectID))
 

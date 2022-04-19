@@ -137,11 +137,14 @@ pb_update.Progress <- function(pbar, message = NULL, inc = NULL, set = NULL, ...
 #' @export
 
 data_ready <- function(dir = clarity.looker::dirs$export) {
+  if (!dir.exists(dir))
+    UU::mkpath(dir)
   if (basename(dir) == "export")
     .files <- UU::list.files2(dir, pattern = "csv$")
   else
     .files <- UU::list.files2(dir)
   UU::needs_update(.files)
+
 }
 
 
@@ -156,14 +159,14 @@ update_data <- function(clarity_api = RmData::get_clarity_api(e = rlang::caller_
 
 
   .export_ready <- data_ready(clarity_api$dirs$export)
-  if (any(.export_ready$needs_update)) {
+  if (any(UU::`%|0|%`(.export_ready$needs_update, TRUE))) {
     cli::cli_inform(message = cli::col_grey("Updating export..."))
     clarity_api$get_export()
   }
 
 
   .extras_ready <- data_ready(clarity_api$dirs$extras)
-  if (any(.extras_ready$needs_update)) {
+  if (any(UU::`%|0|%`(.extras_ready$needs_update, TRUE))) {
     cli::cli_inform(message = cli::col_grey("Updating extras..."))
     clarity_api$get_folder_looks(clarity_api$folders$`HUD Extras`,
                                  .write = TRUE,
@@ -226,7 +229,8 @@ funs = rlang::set_names(c(
   "prioritization",
   "bed_unit_utilization",
   "data_quality",
-  "data_quality_summary"
+  "data_quality_summary",
+  "project_evaluation"
 
 )),
 remote = FALSE,
