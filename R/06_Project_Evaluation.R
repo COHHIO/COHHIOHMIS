@@ -403,7 +403,7 @@ project_evaluation <- function(
 
   # PSH (includes stayers tho), TH, SH, RRH
 
-  pe$ExitstoPH <- pe$HoHsServed %>%
+  pe$ExitsToPH <- pe$HoHsServed %>%
     dplyr::right_join(pe_coc_funded %>%
                         dplyr::select(ProjectType, AltProjectID, AltProjectName) %>%
                         unique(),
@@ -436,7 +436,7 @@ project_evaluation <- function(
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want), ExitsToPHDQ, Destination, DestinationGroup)
 
-  summary_pe$ExitstoPH <- pe$ExitstoPH %>%
+  summary_pe$ExitsToPH <- pe$ExitsToPH %>%
     dplyr::group_by(ProjectType, AltProjectName, ExitsToPHDQ) %>%
     dplyr::summarise(ExitsToPH = sum(MeetsObjective), .groups = "drop") %>%
     dplyr::right_join(pe_summary_validation, by = c("ProjectType", "AltProjectName")) %>%
@@ -1436,7 +1436,7 @@ project_evaluation <- function(
 
   readr::write_csv(pe_final_scores, fs::path(dirs$random, "pe_final_all.csv"))
 
-  exported_pe <- pe[c("ScoredAtPHEntry", "LongTermHomeless", "HomelessHistoryIndex", "LengthOfStay", "ResPrior", "BenefitsAtExit", "ExitstoPH")] |>
+  exported_pe <- pe[c("ScoredAtPHEntry", "LongTermHomeless", "HomelessHistoryIndex", "LengthOfStay", "ResPrior", "BenefitsAtExit", "ExitsToPH")] |>
     {\(x) {rlang::set_names(x, paste0("pe_", snakecase::to_snake_case(names(x))))}}()
 
   # saving old data to "current" image so it all carries to the apps
