@@ -1436,11 +1436,11 @@ project_evaluation <- function(
 
   readr::write_csv(pe_final_scores, fs::path(dirs$random, "pe_final_all.csv"))
 
-  exported_pe <- pe[c("ScoredAtPHEntry", "LongTermHomeless", "HomelessHistoryIndex", "LengthOfStay", "ResPrior", "BenefitsAtExit", "ExitsToPH")] |>
+  exported_pe <- pe[c("ScoredAtPHEntry", "LongTermHomeless", "HomelessHistoryIndex", "LengthOfStay", "ResPrior", "BenefitsAtExit", "ExitstoPH", "EntriesNoIncome")] |>
     {\(x) {rlang::set_names(x, paste0("pe_", snakecase::to_snake_case(names(x))))}}()
 
   # saving old data to "current" image so it all carries to the apps
-  rlang::exec(app_env$gather_deps, pe_summary_final_scoring = pe_summary_final_scoring, !!!exported_pe, pe_entries_no_income = summary_pe$EntriesNoIncome)
+  rlang::exec(app_env$gather_deps, pe_summary_final_scoring = pe_summary_final_scoring, !!!exported_pe)
   app_env
 }
 
