@@ -176,7 +176,7 @@ increment <- function(..., cenv = rlang::caller_env()) {
 
 age_years <- function(earlier, later)
 {
-  floor(lubridate::as.duration(later - earlier) / lubridate::dyears(1))
+  lubridate::time_length(lubridate::interval(earlier, later), "years")
 }
 
 #' @title Copy files to directory
