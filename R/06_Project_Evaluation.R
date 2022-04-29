@@ -21,9 +21,16 @@ project_evaluation <- function(
     app_env$set_parent(missing_fmls())
 
   # NOTE Dependency needs to be fetched from cloud location
-  scoring_rubric <- clarity.looker::hud_load("scoring_rubric", dirs$public) %>%
-    dplyr::mutate(maximum = as.double(maximum),
-                  minimum = as.double(minimum))
+  # read scoring rubric from google sheets
+  googlesheets4::gs4_auth(path = "inst/vault/rminor@rminor-333915.iam.gserviceaccount.com.json")
+  scoring_rubric <- googlesheets4::read_sheet("1lLsNI8A2E-dDE8O2EHmCP9stSImxZkYJTGx-Oxs1W74",
+                                              sheet = "Sheet1",
+                                              col_types = c("metric" = "c", "ProjectType" = "n", "goal_type" = "c", "minimum" = "n", "maximum" = "n",
+                                                               "points" = "n") |> paste0(collapse = ""))
+
+
+  # scoring_rubric <- clarity.looker::hud_load("scoring_rubric", dirs$public) |>
+
   # Staging
   # COMBAK These will likely need updating in the future
   merged_projects <-
@@ -129,7 +136,6 @@ project_evaluation <- function(
   pe <- list()
   pe$ClientsServed <- peval_filter_select(co_clients_served, vars = vars$prep,  served = TRUE)
   # several measures will use this
-
   # Checking for deceased hohs for points adjustments
 
 
@@ -436,7 +442,7 @@ project_evaluation <- function(
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want), ExitsToPHDQ, Destination, DestinationGroup)
 
-  summary_pe$ExitsToPH <- pe$ExitsToPH %>%
+    summary_pe$ExitsToPH <- pe$ExitsToPH %>%
     dplyr::group_by(ProjectType, AltProjectName, ExitsToPHDQ) %>%
     dplyr::summarise(ExitsToPH = sum(MeetsObjective), .groups = "drop") %>%
     dplyr::right_join(pe_summary_validation, by = c("ProjectType", "AltProjectName")) %>%
@@ -1436,7 +1442,7 @@ project_evaluation <- function(
 
   readr::write_csv(pe_final_scores, fs::path(dirs$random, "pe_final_all.csv"))
 
-  exported_pe <- pe[c("ScoredAtPHEntry", "LongTermHomeless", "HomelessHistoryIndex", "LengthOfStay", "ResPrior", "BenefitsAtExit", "ExitstoPH", "EntriesNoIncome")] |>
+  exported_pe <- pe[c("ScoredAtPHEntry", "LongTermHomeless", "HomelessHistoryIndex", "LengthOfStay", "ResPrior", "BenefitsAtExit", "ExitsToPH", "EntriesNoIncome")] |>
     {\(x) {rlang::set_names(x, paste0("pe_", snakecase::to_snake_case(names(x))))}}()
 
   # saving old data to "current" image so it all carries to the apps
