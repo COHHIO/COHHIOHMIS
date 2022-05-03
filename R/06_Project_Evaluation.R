@@ -154,7 +154,7 @@ project_evaluation <- function(
   pe$AdultsEntered <- peval_filter_select(co_adults_served, vars = vars$prep, distinct = FALSE) |>
     dplyr::group_by(HouseholdID) %>%
     dplyr::mutate(HHEntryDate = min(EntryDate)) %>%
-    dplyr::ungroup() %>%
+    dplyr::ungroup() |>
     HMIS::entered_between(rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end) |>
     dplyr::filter(EntryDate == HHEntryDate) |>
     dplyr::select(-HHEntryDate)
