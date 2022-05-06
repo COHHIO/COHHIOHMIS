@@ -114,7 +114,8 @@ dq_main <- do.call(rbind, dqs) |>
                         "Don't Know/Refused Veteran Status",
                         "Missing County Served"
                       )
-                  ))
+                  )) |>
+  dplyr::filter(Issue != "Old Outstanding Referral")
 cli::cli_progress_update(id = .pid,,
                          status = "Finish dq_main")
 # if (is_clarity()) {
