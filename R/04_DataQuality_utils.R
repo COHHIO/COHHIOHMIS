@@ -800,14 +800,15 @@ if (is_app_env(app_env))
                   EnrollmentID,
                   AgeAtEntry,
                   RelationshipToHoH,
-                  DisablingCondition) |>
+                  DisablingCondition,
+                  GrantType) |>
     dplyr::left_join(
       smallDisabilities |>
         dplyr::filter(IndefiniteAndImpairs == 1L),
       by = c("PersonalID", "EnrollmentID")
     ) |>
     dplyr::filter((DisablingCondition == 0 & !is.na(DisabilitiesID)) |
-                    (DisablingCondition == 1 & is.na(DisabilitiesID))) |>
+                    (DisablingCondition == 1 & is.na(DisabilitiesID) & GrantType != "SSVF")) |>
     dplyr::mutate(
       Issue = "Conflicting Disability of Long Duration yes/no",
       Type = "Error",
