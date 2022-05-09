@@ -2968,7 +2968,7 @@ dqu_aps <- function(Project, Referrals, data_APs = TRUE, app_env = get_app_env(e
   } else {
     out <- co_APs |>
       dplyr::filter(ProjectID %in% aps_no_referrals) |>
-      dplyr::select(ProjectID, ProjectName)
+      dplyr::select(ProjectID, ProjectName, OperatingEndDate)
 
   }
 
