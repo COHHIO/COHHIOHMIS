@@ -541,7 +541,7 @@ prioritization <- prioritization |>
   prioritization <- prioritization |>
     dplyr::group_by(PersonalID) |>
     # get the lowest priority (furthest towards housed)
-    dplyr::slice_min(HousingStatus) |>
+    dplyr::slice_min(HousingStatus, with_ties = FALSE) |>
     dplyr::filter(!HousingStatus %in% c("Housed", "Likely housed")) |>
     dplyr::select( - dplyr::starts_with("R_"))
 
