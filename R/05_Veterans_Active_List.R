@@ -112,7 +112,7 @@ vet_active <- function(
     dplyr::pull(PersonalID)
 
   # If they're in RRH or PSH and have MoveInDates they should not appear on the active list
-  # browser()
+
 
   # Declined  ---------------------------------------------------------------
   most_recent_offer <- Offers |>

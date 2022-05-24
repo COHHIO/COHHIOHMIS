@@ -134,7 +134,8 @@ fun_insert <-
 
 folder_clean <- function(files, dest_files, remote = FALSE) {
   to_clean <- setdiff(basename(dest_files), basename(files))
-  destpath <- unique(dirname(dest_files))
+  # destpath <- unique(dirname(dest_files))
+  destpath <- "data"
   if (UU::is_legit(to_clean)) {
     if (remote) {
       .cleaned <- purrr::map(to_clean, rdrop2::drop_delete)
@@ -341,10 +342,10 @@ app_env <- R6::R6Class(
       purrr::map(dest_folder, UU::mkpath)
 
 
-
       # load app_deps
       if (.remote) {
         self$dropbox_auth()
+        # rdrop2::drop_auth()
         db_info <- rdrop2::drop_dir()
         db_files <- basename(db_info$path_display)
         db_updated <- rlang::set_names(db_info$client_modified, db_files)
@@ -387,6 +388,7 @@ app_env <- R6::R6Class(
         }
         # Check if it's an image as these should be overwritten
         .is_image <- o_info$ext %in% paste0(".", c("png", "jpg", "jpeg"))
+
         out <- purrr::map2_dfr(deps, dest_folder, ~{
           if (o_info$nm %in% .x) {
             fp <- file.path(.y, paste0(o_info$nm, o_info$ext))
