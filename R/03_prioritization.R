@@ -45,7 +45,7 @@ force(clarity_api)
 if (is_app_env(app_env))
   app_env$set_parent(missing_fmls())
 
-  co_currently_homeless <- co_clients_served |>
+co_currently_homeless <- co_clients_served |>
     dplyr::filter(is.na(ExitDate) |
                       ExitDate > lubridate::today())
   # get Services Only & Coordinated Entry clients with the most recent LivingSituation as homeless as per email guidance on 2021-12-16T17:58:50-04:00 title: FW: HMIS Data Analyst has invited you to access an application on shinyapps.io
