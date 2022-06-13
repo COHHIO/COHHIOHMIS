@@ -61,6 +61,7 @@ co_currently_homeless <- co_currently_homeless |>
     ProjectType %in% c(4, data_types$Project$ProjectType$lh, data_types$Project$ProjectType$ph) |
       PersonalID %in% PID_homeless
   ) |>
+  dplyr::filter(ProjectType != 12) |>
   dplyr::select(
     PersonalID,
     UniqueID,

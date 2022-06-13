@@ -94,7 +94,9 @@ load_export <- function(
 
   IncomeBenefits <-
     clarity_api$IncomeBenefits() |>
-    dplyr::mutate(dplyr::across(c(tidyselect::contains("Amount"), tidyselect::all_of("TotalMonthlyIncome")), as.numeric))
+    dplyr::mutate(dplyr::across(c(tidyselect::contains("Amount"), tidyselect::all_of("TotalMonthlyIncome")), as.numeric)) |>
+    dplyr::mutate(TotalMonthlyIncome = dplyr::if_else(IncomeFromAnySource == 0 & is.na(TotalMonthlyIncome),
+                                                      0, TotalMonthlyIncome))
 
   # Inventory ---------------------------------------------------------------
 
