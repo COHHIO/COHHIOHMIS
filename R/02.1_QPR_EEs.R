@@ -126,6 +126,8 @@ qpr_ees <- function(
     dplyr::select(IncomeFromAnySource, TotalMonthlyIncome, DataCollectionStage,
            EnrollmentID, InformationDate) |>
     dplyr::group_by(EnrollmentID) |>
+    dplyr::arrange(EnrollmentID, InformationDate) |>
+    tidyr::fill(TotalMonthlyIncome, .direction = "down") |>
     dplyr::slice(which.max(InformationDate)) |>
     dplyr::ungroup() |>
     dplyr::mutate(RecentIncome = TotalMonthlyIncome) |>
