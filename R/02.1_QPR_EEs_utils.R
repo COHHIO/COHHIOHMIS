@@ -124,13 +124,13 @@ qpr_path_to_rrhpsh <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, Referrals
     # needs to count individuals
     # needs to be individuals in, referred by, referred to
     dplyr::group_by(!!!rlang::syms(stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC$"))) |> unique())) |>
-    dplyr::filter(is.na(R_ReferralConnectedPTC) || R_ReferralConnectedPTC != 2) |>
+    dplyr::filter(is.na(R_ReferringPTC) || R_ReferringPTC != 2) |>
     dplyr::distinct(PersonalID, .keep_all = TRUE) |>
     dplyr::mutate(rrhpsh = dplyr::case_when(
       ProjectType %in% c(13) ~ "RRH",
       ProjectType %in% c(3) ~ "PSH",
-      R_ReferralConnectedPTC %in% c(3) ~ "PSH",
-      R_ReferralConnectedPTC %in% c(13) ~ "PSH",
+      R_ReferringPTC %in% c(3) ~ "PSH",
+      R_ReferringPTC %in% c(13) ~ "PSH",
     )) |>
     dplyr::group_by(rrhpsh) |>
     dplyr::summarise(n = dplyr::n(),

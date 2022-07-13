@@ -512,7 +512,6 @@ load_enrollment <- function(Enrollment,
     app_env$set_parent(missing_fmls())
   # getting EE-related data, joining both to En
 
-
   Enrollment_extra_Client_Exit_HH_CL_AaE <- dplyr::left_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
     # Add Exit
     Enrollment_add_Exit(Exit) |>
@@ -614,9 +613,9 @@ load_referrals <- function(Referrals,
                            app_env = get_app_env(e = rlang::caller_env())) {
   Referrals <- Referrals |>
     dplyr::rename_with(.cols = - dplyr::matches("(?:^PersonalID)|^(?:^UniqueID)"), rlang::as_function(~paste0("R_",.x))) |>
-    dplyr::mutate(R_ReferralConnectedPTC = stringr::str_remove(R_ReferralConnectedPTC, "\\s\\(disability required(?: for entry)?\\)$"),
-                  R_ReferralConnectedPTC = dplyr::if_else(R_ReferralConnectedPTC == "Homeless Prevention", "Homelessness Prevention", R_ReferralConnectedPTC),
-                  R_ReferralConnectedPTC = HMIS::hud_translations$`2.02.6 ProjectType`(R_ReferralConnectedPTC))
+    dplyr::mutate(R_ReferringPTC = stringr::str_remove(R_ReferringPTC, "\\s\\(disability required(?: for entry)?\\)$"),
+                  R_ReferringPTC = dplyr::if_else(R_ReferringPTC == "Homeless Prevention", "Homelessness Prevention", R_ReferringPTC),
+                  R_ReferringPTC = HMIS::hud_translations$`2.02.6 ProjectType`(R_ReferringPTC))
 
   # Full needed for dqu_aps
   Referrals_full <- Referrals
@@ -638,11 +637,12 @@ load_referrals <- function(Referrals,
                      !!referrals_expr$is_active,
                      !is.na(R_ReferralResult),
                      !!referrals_expr$housed & !!referrals_expr$accepted,
-                     key = PersonalID) |>
-    filter_dupe_last_EnrollmentID(key = PersonalID, R_ReferredEnrollmentID) |>
-    dplyr::arrange(dplyr::desc(R_ReferredEnrollmentID)) |>
-    dplyr::select(- R_ReferredEnrollmentID) |>
-    dplyr::distinct()
+                     key = PersonalID)
+    # Don't think this is needed with latest Clarity update, clients can only have one program connection
+    # filter_dupe_last_EnrollmentID(key = PersonalID, R_ReferredEnrollmentID) |>
+    # dplyr::arrange(dplyr::desc(R_ReferredEnrollmentID)) |>
+    # dplyr::select(- R_ReferredEnrollmentID) |>
+    # dplyr::distinct()
 
   app_env$gather_deps(Referrals, Referrals_full, referral_result_summarize)
 }
@@ -678,10 +678,10 @@ Enrollment_add_HousingStatus <-
       "PHTrack"
     ),
     ref = c(paste0(
-      "R_Referral",
+      "R_",
       c(
-        "ConnectedPTC",
-        "ConnectedProjectName",
+        "ReferringPTC",
+        "ReferringProjectName",
         "AcceptedDate",
         "CurrentlyOnQueue",
         "ConnectedMoveInDate"
@@ -699,7 +699,7 @@ Enrollment_add_HousingStatus <-
   if (!any(.cols$id %in% .nms) || !all(.cols$req %in% .nms))
     stop_with_instructions("data requires PersonalID or UniqueID & the following columns:\n", paste0(.cols$req, collapse = ",\n"))
 
-  # Get the Last enrollment
+    # Get the Last enrollment
   last_enroll <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
     dplyr::group_by(PersonalID) |>
     dplyr::summarise(EnrollmentID = recent_valid(EnrollmentID, as.numeric(EnrollmentID)))
@@ -724,6 +724,7 @@ Enrollment_add_HousingStatus <-
 
   # Create a summary of last referrals & whether they were accepted
   # Get housed
+  # Don't want queue status to determine if client shows up on prioritization / vets report
   .housed <- Referrals |>
     dplyr::group_by(!!.cols$sym) |>
     # summarise specific statuses: accepted, housed or currently on queue
@@ -753,10 +754,10 @@ Enrollment_add_HousingStatus <-
     ph_date_post = Sys.Date() > ExpectedPHDate,
     ptc_has_entry = PTCStatus == "PH",
     ptc_no_entry = PTCStatus == "LH",
-    is_ph = (R_ReferralConnectedPTC %|% ProjectType) %in% data_types$Project$ProjectType$ph,
-    is_lh = (R_ReferralConnectedPTC %|% ProjectType) %in% c(data_types$Project$ProjectType$lh, 4, 11),
+    is_ph = (R_ReferringPTC %|% ProjectType) %in% data_types$Project$ProjectType$ph,
+    is_lh = (R_ReferringPTC %|% ProjectType) %in% c(data_types$Project$ProjectType$lh, 4, 11),
     moved_in = !is.na(MoveInDateAdjust) & MoveInDateAdjust >= EntryDate,
-    referredproject = !is.na(R_ReferralConnectedProjectName),
+    referredproject = !is.na(R_ReferringProjectName),
     ph_track = !is.na(PHTrack) & PHTrack != "None"
   )
   # Referral Situation ----
@@ -764,12 +765,12 @@ Enrollment_add_HousingStatus <-
 
   out <- dplyr::mutate(
     out,
-    ExpectedPHDate = dplyr::if_else(is.na(ExpectedPHDate), R_ReferralConnectedMoveInDate, ExpectedPHDate),
+    # ExpectedPHDate = dplyr::if_else(is.na(ExpectedPHDate), R_ReferralConnectedMoveInDate, ExpectedPHDate),
     Situation = dplyr::case_when(
       housed ~ "Housed",
       (!!sit_expr$ptc_has_entry | !!sit_expr$is_ph) & !!sit_expr$moved_in ~ "Housed",
       (!!sit_expr$ptc_has_entry | !!sit_expr$is_ph) & !(!!sit_expr$moved_in) ~ paste("Entered RRH/PSH but has not moved in:",
-                                                                                     R_ReferralConnectedProjectName %|% ProjectName),
+                                                                                     R_ReferringProjectName %|% ProjectName),
       !!sit_expr$ph_track &
         !!sit_expr$ph_date &
         !!sit_expr$ph_date_pre ~ paste("Permanent Housing Track. Track:", PHTrack,"Expected Move-in:", ExpectedPHDate),
