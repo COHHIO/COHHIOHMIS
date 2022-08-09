@@ -333,10 +333,10 @@ vet_active <- function(
         ActiveDateDisplay = paste0(
           ActiveDate,
           "<br>(",
-          difftime(lubridate::today(), ActiveDate),
+          as.double(difftime(lubridate::today(), ActiveDate)),
           " days)"
         ),
-        DaysActive = difftime(lubridate::today(), ActiveDate),
+        DaysActive = as.double(difftime(lubridate::today(), ActiveDate)),
         Eligibility =
           dplyr::if_else(
             is.na(VAEligible) & is.na(SSVFIneligible),

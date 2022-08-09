@@ -53,7 +53,18 @@ project_evaluation_mahoning <- function(
                   EndDate) |>
     dplyr::mutate(AltProjectName = ProjectName,
                   AltProjectID = ProjectID) |>
-    dplyr::filter(stringr::str_starts(AltProjectName, "Mahoning"))
+    dplyr::filter(stringr::str_starts(AltProjectName, "Mahoning")) |>
+    dplyr::filter(AltProjectName %in%
+                    c("Mahoning - Beatitude House - Permanent Supportive Housing Program - PSH",
+                      "Mahoning - Help Network - PSH Rental Assistance Program - PSH",
+                      "Mahoning - Help Network - Shelter Plus Care - PSH",
+                      "Mahoning - Meridian Services - Phoenix Court - PSH",
+                      "Mahoning - Meridian Services - Samaritan Housing PRA - PSH",
+                      "Mahoning - Meridian Services - Homeless Solutions SRO II - PSH",
+                      "Mahoning - Ursuline Center - Merici - PSH",
+                      "Mahoning - YWCA Permanent Housing for Disabled Families - PSH",
+                      "Mahoning - YWCA Scattered Site Housing II - PSH"
+                    ))
   app_env$gather_deps(pe_coc_funded)
   vars <- list()
   vars$prep <- c(
@@ -170,7 +181,7 @@ project_evaluation_mahoning <- function(
 
 
 
-  pe_summary_validation <- rlang::set_names(pe, paste0("summary_", names(pe))) |>
+  pe_summary_validation_mahoning <- rlang::set_names(pe, paste0("summary_", names(pe))) |>
     purrr::imap(peval_summary, app_env = app_env) |>
     purrr::reduce(dplyr::full_join, by = "AltProjectID") |>
     dplyr::left_join(pe_coc_funded %>%
@@ -251,7 +262,7 @@ project_evaluation_mahoning <- function(
   # calculates whether the # of errors of whatever type actually throws a flag.
   # includes all alt-projects regardless of if they have errors
 
-  data_quality_flags <- pe_summary_validation %>%
+  data_quality_flags <- pe_summary_validation_mahoning %>%
     dplyr::left_join(dq_flags_staging, by = "AltProjectName") %>%
     dplyr::mutate(General_DQ = dplyr::if_else(GeneralFlagTotal/ClientsServed >= .02, 1, 0),
                   Benefits_DQ = dplyr::if_else(BenefitsFlagTotal/AdultsEntered >= .02, 1, 0),
@@ -415,7 +426,7 @@ project_evaluation_mahoning <- function(
     summary_pe$ExitsToPHMahoning <- pe$ExitsToPHMahoning %>%
     dplyr::group_by(ProjectType, AltProjectName, ExitsToPHDQ) %>%
     dplyr::summarise(ExitsToPH = sum(MeetsObjective), .groups = "drop") %>%
-    dplyr::right_join(pe_summary_validation, by = c("ProjectType", "AltProjectName")) %>%
+    dplyr::right_join(pe_summary_validation_mahoning, by = c("ProjectType", "AltProjectName")) %>%
     dplyr::mutate(
       ExitsToPHCohort = dplyr::if_else(ProjectType == 3, "HoHsServed", "HoHsServedLeavers"),
       HoHsServedLeavers = HoHsServedLeavers - HoHDeaths,
@@ -534,7 +545,7 @@ project_evaluation_mahoning <- function(
     dplyr::group_by(ProjectType, AltProjectName, BenefitsAtExitDQ) %>%
     dplyr::summarise(BenefitsAtExit = sum(MeetsObjective)) %>%
     dplyr::ungroup() %>%
-    dplyr::right_join(pe_summary_validation, by = c("ProjectType", "AltProjectName")) %>%
+    dplyr::right_join(pe_summary_validation_mahoning, by = c("ProjectType", "AltProjectName")) %>%
     dplyr::mutate(
       BenefitsAtExit = dplyr::if_else(is.na(BenefitsAtExit), 0, BenefitsAtExit),
       BenefitsAtExitPercent = BenefitsAtExit / AdultsMovedInLeavers,
@@ -615,7 +626,7 @@ project_evaluation_mahoning <- function(
       AverageDays = as.numeric(mean(DaysInProject))
     ) %>%
     dplyr::ungroup() %>%
-    dplyr::right_join(pe_summary_validation, by = c("ProjectType", "AltProjectName")) %>%
+    dplyr::right_join(pe_summary_validation_mahoning, by = c("ProjectType", "AltProjectName")) %>%
     dplyr::mutate(
       AverageDaysJoin = dplyr::if_else(is.na(AverageDays), 0, AverageDays)) %>%
     dplyr::right_join(scoring_rubric %>%
@@ -676,7 +687,7 @@ project_evaluation_mahoning <- function(
     dplyr::group_by(ProjectType, AltProjectName, LHResPriorDQ) %>%
     dplyr::summarise(LHResPrior = sum(MeetsObjective)) %>%
     dplyr::ungroup() %>%
-    dplyr::right_join(pe_summary_validation,
+    dplyr::right_join(pe_summary_validation_mahoning,
                       by = c("ProjectType",
                              "AltProjectName")) %>%
     dplyr::mutate(
@@ -756,7 +767,7 @@ project_evaluation_mahoning <- function(
     dplyr::group_by(ProjectType, AltProjectName, NoIncomeAtEntryDQ) %>%
     dplyr::summarise(NoIncomeAtEntry = sum(MeetsObjective)) %>%
     dplyr::ungroup() %>%
-    dplyr::right_join(pe_summary_validation, by = c("ProjectType", "AltProjectName")) %>%
+    dplyr::right_join(pe_summary_validation_mahoning, by = c("ProjectType", "AltProjectName")) %>%
     dplyr::mutate(
       NoIncomeAtEntry = dplyr::if_else(is.na(NoIncomeAtEntry),
                                        0,
@@ -872,7 +883,7 @@ project_evaluation_mahoning <- function(
     dplyr::group_by(ProjectType, AltProjectName, General_DQ) %>%
     dplyr::summarise(MedHHI = stats::median(HHI)) %>%
     dplyr::ungroup() %>%
-    dplyr::right_join(pe_summary_validation, by = c("ProjectType", "AltProjectName")) %>%
+    dplyr::right_join(pe_summary_validation_mahoning, by = c("ProjectType", "AltProjectName")) %>%
     dplyr::right_join(scoring_rubric %>%
                         dplyr::filter(metric == "homeless_history_index"),
                       by = "ProjectType") %>%
@@ -922,7 +933,7 @@ project_evaluation_mahoning <- function(
     dplyr::count() %>%
     dplyr::ungroup()
 
-  summary_pe$DQ <- pe_summary_validation %>%
+  summary_pe$DQ <- pe_summary_validation_mahoning %>%
     dplyr::select(AltProjectName, ProjectType, ClientsServed) %>%
     dplyr::left_join(summary_pe$DQ, by = c("ProjectType", "AltProjectName"))
 
@@ -985,7 +996,7 @@ project_evaluation_mahoning <- function(
     dplyr::group_by(ProjectType, AltProjectName, LTHomelessDQ) %>%
     dplyr::summarise(LongTermHomeless = sum(MeetsObjective)) %>%
     dplyr::ungroup() %>%
-    dplyr::right_join(pe_summary_validation, by = c("ProjectType", "AltProjectName")) %>%
+    dplyr::right_join(pe_summary_validation_mahoning, by = c("ProjectType", "AltProjectName")) %>%
     dplyr::mutate(
       LongTermHomeless = dplyr::if_else(is.na(LongTermHomeless),
                                         0,
@@ -1069,7 +1080,7 @@ project_evaluation_mahoning <- function(
     dplyr::group_by(ProjectType, AltProjectName, ScoredAtEntryDQ) %>%
     dplyr::summarise(ScoredAtEntry = sum(MeetsObjective)) %>%
     dplyr::ungroup() %>%
-    dplyr::right_join(pe_summary_validation, by = c("ProjectType", "AltProjectName")) %>%
+    dplyr::right_join(pe_summary_validation_mahoning, by = c("ProjectType", "AltProjectName")) %>%
     dplyr::mutate(
       ScoredAtEntry = dplyr::if_else(is.na(ScoredAtEntry),
                                      0,
@@ -1176,7 +1187,7 @@ project_evaluation_mahoning <- function(
     dplyr::left_join(Project[c("ProjectID", "OrganizationID")], by = "ProjectID") %>%
     dplyr::left_join(Organization[c("OrganizationID", "OrganizationName")],
                      by = "OrganizationID")
-  browser()
+
   final_scores <- pe_final_scores %>%
     dplyr::select(AltProjectName, TotalScore) %>%
     dplyr::left_join(project_and_alt_project, by = c("AltProjectName" = "AltProjectName")) %>%
@@ -1187,7 +1198,7 @@ project_evaluation_mahoning <- function(
   # commenting all this out since we don't want to overwrite these files after
   # the deadline
 
-  zero_divisors <- pe_summary_validation %>%
+  zero_divisors <- pe_summary_validation_mahoning %>%
     dplyr::filter(ClientsServed == 0 |
                     HoHsEntered == 0 |
                     HoHsServed == 0 |

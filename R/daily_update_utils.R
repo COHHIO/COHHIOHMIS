@@ -230,6 +230,7 @@ funs = rlang::set_names(c(
   "data_quality",
   "data_quality_summary",
   # "project_evaluation",
+  "project_evaluation_mahoning",
   "prioritization"
 
 )),
