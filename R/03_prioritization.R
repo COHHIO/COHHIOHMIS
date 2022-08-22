@@ -503,7 +503,7 @@ prioritization <- prioritization |>
   ) |>
   dplyr::mutate(ChronicStatus = factor(
     ChronicStatus,
-    levels = c("Chronic",
+    levels = c("Possibly Chronic",
                "Aged In",
                "Nearly Chronic",
                "Not Chronic")
