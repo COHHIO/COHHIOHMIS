@@ -188,6 +188,7 @@ prioritization <- co_currently_homeless |>
       ExitAdjust,
       MoveInDateAdjust,
       DateToStreetESSH,
+      TimesHomelessPastThreeYears,
       MonthsHomelessPastThreeYears,
       DisablingCondition
     ),
@@ -498,10 +499,18 @@ prioritization <- prioritization |>
       "EnrollmentID",
       "ChronicStatus",
       "DateToStreetESSH",
+      "TimesHomelessPastThreeYears",
       "MonthsHomelessPastThreeYears"
     ),
     by = c("PersonalID", "HouseholdID", "EnrollmentID")
   ) |>
+  dplyr::mutate(TimesHomelessPastThreeYears = dplyr::case_when(
+    TimesHomelessPastThreeYears == 4 ~ "Four or more times",
+    TimesHomelessPastThreeYears == 8 ~ "Client doesn't know",
+    TimesHomelessPastThreeYears == 9 ~ "Client refused",
+    TimesHomelessPastThreeYears == 99 ~ "Data not collected",
+    TRUE ~ as.character(TimesHomelessPastThreeYears)
+  )) |>
   dplyr::mutate(MonthsHomelessPastThreeYears = dplyr::case_when(
     MonthsHomelessPastThreeYears >= 113 ~ "More than 12 months",
     MonthsHomelessPastThreeYears == 8 ~ "Client doesn't know",
