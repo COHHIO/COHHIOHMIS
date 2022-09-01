@@ -187,6 +187,7 @@ prioritization <- co_currently_homeless |>
       TimesHomelessPastThreeYears,
       ExitAdjust,
       MoveInDateAdjust,
+      DateToStreetESSH,
       MonthsHomelessPastThreeYears,
       DisablingCondition
     ),
@@ -246,8 +247,6 @@ prioritization <- co_currently_homeless |>
     "DisabilityInHH",
     "ChronicStatus"
   )
-
-
 
 
 # correcting for bad hh data (while also flagging it) ---------------------
@@ -497,10 +496,22 @@ prioritization <- prioritization |>
       "PersonalID",
       "HouseholdID",
       "EnrollmentID",
-      "ChronicStatus"
+      "ChronicStatus",
+      "DateToStreetESSH",
+      "MonthsHomelessPastThreeYears"
     ),
     by = c("PersonalID", "HouseholdID", "EnrollmentID")
   ) |>
+  dplyr::mutate(MonthsHomelessPastThreeYears = dplyr::case_when(
+    MonthsHomelessPastThreeYears >= 113 ~ "More than 12 months",
+    MonthsHomelessPastThreeYears == 8 ~ "Client doesn't know",
+    MonthsHomelessPastThreeYears == 9 ~ "Client refused",
+    MonthsHomelessPastThreeYears == 99 ~ "Data not collected",
+    TRUE ~ as.character(MonthsHomelessPastThreeYears - 100)
+  )) |>
+  dplyr::mutate(ChronicStatus = dplyr::if_else(
+    ChronicStatus == "Chronic", "Possibly Chronic", ChronicStatus
+  )) |>
   dplyr::mutate(ChronicStatus = factor(
     ChronicStatus,
     levels = c("Possibly Chronic",

@@ -14,7 +14,7 @@ devtools::load_all()
 # 3. Extract the HUD Export zip
 clarity.looker::hud_export_extract()
 # 4. Run update
-daily_update(backup = TRUE, remote = TRUE)
+daily_update(backup = TRUE, remote = FALSE)
 beepr::beep(sound = 3)
 
 
