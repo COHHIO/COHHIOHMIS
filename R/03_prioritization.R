@@ -45,6 +45,7 @@ force(clarity_api)
 if (is_app_env(app_env))
   app_env$set_parent(missing_fmls())
 
+
 co_currently_homeless <- co_clients_served |>
     dplyr::filter(is.na(ExitDate) |
                       ExitDate > lubridate::today())
@@ -58,8 +59,8 @@ PID_homeless <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
 # clients currently entered into a homeless project in our system
 co_currently_homeless <- co_currently_homeless |>
   dplyr::filter(
-    ProjectType %in% c(4, data_types$Project$ProjectType$lh, data_types$Project$ProjectType$ph) |
-      PersonalID %in% PID_homeless
+    ProjectType %in% c(4, data_types$Project$ProjectType$lh, data_types$Project$ProjectType$ph)
+    | PersonalID %in% PID_homeless
   ) |>
   dplyr::filter(ProjectType != 12) |>
   dplyr::select(
@@ -187,6 +188,7 @@ prioritization <- co_currently_homeless |>
       TimesHomelessPastThreeYears,
       ExitAdjust,
       MoveInDateAdjust,
+      MoveInDate,
       DateToStreetESSH,
       TimesHomelessPastThreeYears,
       MonthsHomelessPastThreeYears,
@@ -241,6 +243,7 @@ prioritization <- co_currently_homeless |>
     "VeteranStatus",
     "EntryDate",
     "MoveInDateAdjust",
+    "MoveInDate",
     "AgeAtEntry",
     "DisablingCondition",
     "HouseholdSize",

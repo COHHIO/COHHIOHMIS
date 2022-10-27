@@ -105,7 +105,6 @@ Enrollment_add_Household = function(Enrollment, Project, rm_dates, app_env = get
   # getting HH information
   # only doing this for RRH and PSHs since Move In Date doesn't matter for ES, etc.
 
-
   small_project <- Project |>
     dplyr::select(ProjectID, ProjectType, ProjectName) |>
     dplyr::distinct()
@@ -510,8 +509,7 @@ load_enrollment <- function(Enrollment,
 
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  # getting EE-related data, joining both to En
-
+  # getting EE-related data, joining both to Enrollment
   Enrollment_extra_Client_Exit_HH_CL_AaE <- dplyr::left_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
     # Add Exit
     Enrollment_add_Exit(Exit) |>
@@ -519,9 +517,9 @@ load_enrollment <- function(Enrollment,
     Enrollment_add_Household(Project, rm_dates = rm_dates) |>
     # Add Veteran Coordinated Entry
     Enrollment_add_VeteranCE(VeteranCE = VeteranCE) |>
-    # Add Client Location from EnrollmentCoC
+    # # Add Client Location from EnrollmentCoC
     Enrollment_add_ClientLocation(EnrollmentCoC) |>
-    # Add Client AgeAtEntry
+    # # Add Client AgeAtEntry
     Enrollment_add_AgeAtEntry_UniqueID(Client) |>
     dplyr::left_join(dplyr::select(Client,-dplyr::any_of(
       c(

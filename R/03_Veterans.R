@@ -124,8 +124,13 @@ vets_current <- VeteranEngagement |>
   dplyr::group_by(ProjectName, ProjectType, ProjectRegion, EngagementStatus) |>
   dplyr::summarise(CurrentVeteranCount = dplyr::n(), .groups = "drop") |>
   tidyr::pivot_wider(names_from = EngagementStatus, values_from = CurrentVeteranCount) |>
-  dplyr::rename(HasCurrentHousingPlan = `Has Current Housing Plan`,
-                NoCurrentHousingPlan = `No Current Housing Plan`)
+  dplyr::rename(dplyr::any_of(c(HasCurrentHousingPlan = "Has Current Housing Plan",
+                NoCurrentHousingPlan = "No Current Housing Plan")))
+
+cols <- c(HasCurrentHousingPlan = NA_real_, NoCurrentHousingPlan = NA_real_)
+
+vets_current <- tibble::add_column(vets_current,
+                                   !!!cols[setdiff(names(cols), names(vets_current))])
 
 vets_current[is.na(vets_current)] <- 0
 
