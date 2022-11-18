@@ -610,6 +610,7 @@ load_services <- function(Services,
 load_referrals <- function(Referrals,
                            app_env = get_app_env(e = rlang::caller_env())) {
   Referrals <- Referrals |>
+    dplyr::rename(ReferralResult = "Coordinated Entry Event Referral Result") |>
     dplyr::rename_with(.cols = - dplyr::matches("(?:^PersonalID)|^(?:^UniqueID)"), rlang::as_function(~paste0("R_",.x))) |>
     dplyr::mutate(R_ReferringPTC = stringr::str_remove(R_ReferringPTC, "\\s\\(disability required(?: for entry)?\\)$"),
                   R_ReferringPTC = dplyr::if_else(R_ReferringPTC == "Homeless Prevention", "Homelessness Prevention", R_ReferringPTC),

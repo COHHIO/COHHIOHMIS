@@ -2155,8 +2155,10 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
 
   psh <- overlaps(p_types = data_types$Project$ProjectType$psh)
   rrh <- overlaps(p_types = data_types$Project$ProjectType$rrh)
+  psh_rrh <- overlaps(p_types = c(data_types$Project$ProjectType$psh,
+                                  data_types$Project$ProjectType$rrh))
   lh <- overlaps(p_types = data_types$Project$ProjectType$lh)
-  out <- dplyr::bind_rows(psh, rrh, lh, dq_movein_overlaps)
+  out <- dplyr::bind_rows(psh, rrh, lh, psh_rrh, dq_movein_overlaps)
 
   return(out)
 }
