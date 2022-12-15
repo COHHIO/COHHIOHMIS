@@ -2599,6 +2599,8 @@ dq_referrals_on_hh_members_ssvf <- function(served_in_date_range, Referrals, var
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
+  SSVF_Referrals <- Referrals |>
+    dplyr::filter(stringr::str_detect(R_ReferredProjectName, "SSVF"))
   served_in_date_range |>
     dplyr::select(dplyr::all_of(vars$prep),
                   RelationshipToHoH,
@@ -2606,7 +2608,7 @@ dq_referrals_on_hh_members_ssvf <- function(served_in_date_range, Referrals, var
                   GrantType) |>
     dplyr::filter(RelationshipToHoH != 1 &
                     GrantType == "SSVF") |>
-    dplyr::semi_join(Referrals, by = c("PersonalID")) |>
+    dplyr::semi_join(SSVF_Referrals, by = c("PersonalID")) |>
     dplyr::mutate(Issue = "Referral on a Non Head of Household (SSVF)",
                   Type = "Error",
                   Guidance = guidance$referral_ssvf_on_non_hoh) |>
