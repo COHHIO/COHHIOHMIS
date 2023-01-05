@@ -222,7 +222,7 @@ funs = rlang::set_names(c(
   "client_counts",
   "qpr_ees",
   "qpr_spdats",
-  "covid19",
+  # "covid19",
   # "covid19_plots",
   "vets",
   "vet_active",

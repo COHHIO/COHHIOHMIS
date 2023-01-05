@@ -2039,7 +2039,6 @@ overlaps_same_day <- function(served_in_date_range, vars, guidance, unsh = FALSE
 sum_enroll_overlap <- function(PersonalID, EnrollmentID, Stay) {
   PersonalID <- unique(PersonalID)
   .movein <- FALSE
-
   x <- data.frame(EnrollmentID, Stay)
   out <- character()
 
@@ -2152,11 +2151,11 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
       by = "EnrollmentID"
     )
 
-
+  # browser()
   psh <- overlaps(p_types = data_types$Project$ProjectType$psh)
   rrh <- overlaps(p_types = data_types$Project$ProjectType$rrh)
-  psh_rrh <- overlaps(p_types = c(data_types$Project$ProjectType$psh,
-                                  data_types$Project$ProjectType$rrh))
+  # psh_rrh <- overlaps(p_types = c(data_types$Project$ProjectType$psh,
+  #                                 data_types$Project$ProjectType$rrh))
   lh <- overlaps(p_types = data_types$Project$ProjectType$lh)
   out <- dplyr::bind_rows(psh, rrh, lh, dq_movein_overlaps)
 

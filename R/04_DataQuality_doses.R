@@ -7,92 +7,92 @@
 #' @inherit data_quality_tables params return
 #' @inheritParams served_in_date_range
 
-dq_vax <- function(served_in_date_range, mahoning_projects = NULL, Doses = NULL, rm_dates = NULL, vars, app_env = get_app_env(e = rlang::caller_env())) {
-  if (is_app_env(app_env))
-    app_env$set_parent(missing_fmls())
- dose_exp = rlang::exprs(
-   not_mp = !ProjectID %in% mahoning_projects,
-   na_ed = is.na(ExitDate),
-   ed_start = (
-     is.na(ExitDate) |
-       ExitDate >= rm_dates$hc$bos_start_vaccine_data
-   ),
-   vax_consent = (
-     C19ConsentToVaccine == "Data not collected" |
-       is.na(C19ConsentToVaccine)
-   ),
-   p_types = (ProjectType %in% c(1, 2, 4, 8) |
-                (
-                  ProjectType %in% c(3, 9, 13) &
-                    is.na(MoveInDateAdjust)
-                )),
-   vax_manu = stringr::str_starts(C19VaccineManufacturer, "Client doesn't know"),
-   vax_self_report = C19VaccineDocumentation == "Self-report",
-   age = AgeAtEntry >= 5
- )
-
-  served_in_date_range <- served_in_date_range |>
-    HMIS::served_between(rm_dates$hc$bos_start_vaccine_data, lubridate::today()) %>%
-    dplyr::filter(!!dose_exp$not_mp &
-                    !!dose_exp$age) |>
-    dplyr::left_join(Doses,
-                     by = c("PersonalID", "UniqueID", "EnrollmentID"))
-
-  out <- list()
-  out$missing_vax_exited <- dplyr::filter(
-    served_in_date_range,
-      !(!!dose_exp$na_ed) &
-      !!dose_exp$ed_start &
-      !!dose_exp$vax_consent &
-      !!dose_exp$p_types
-  ) |>
-    dplyr::mutate(
-      Type = "Warning",
-      Issue = "Vaccine consent data not collected and client has exited",
-      Guidance = guidance$vax_missing_exit
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  out$missing_vax_current <- dplyr::filter(served_in_date_range,
-      !!dose_exp$na_ed &
-      !!dose_exp$ed_start &
-      !!dose_exp$vax_consent &
-      !!dose_exp$p_types
-  ) %>%
-    dplyr::mutate(
-      Type = "Error",
-      Issue = "Vaccine consent data not collected on current client",
-      Guidance = guidance$vax_missing_current
-    ) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  out$vax_incorrect_date <- dplyr::filter(served_in_date_range,
-                C19AssessmentDate < rm_dates$hc$first_vaccine_administered_in_us & !is.na(C19VaccineManufacturer)) %>%
-    dplyr::mutate(Type = "Error",
-                  Issue = "Vaccine Date Incorrect",
-                  Guidance = guidance$vax_incorrect_date) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  out$vax_incorrect_manufacturer <-
-    dplyr::filter(served_in_date_range,
-                  !!dose_exp$vax_manu &
-                    !(!!dose_exp$vax_self_report)) %>%
-    dplyr::mutate(Type = "Error",
-                  Issue = "Incorrect Vaccine Manufacturer or Incorrect Documentation Type",
-                  Guidance = guidance$vax_incorrect_manufacturer) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  out$vax_unknown_manufacturer <-
-    dplyr::filter(served_in_date_range,
-                  !!dose_exp$vax_manu &
-                    !!dose_exp$vax_self_report) %>%
-    dplyr::mutate(Type = "Warning",
-                  Issue = "Unknown Vaccine Manufacturer",
-                  Guidance = guidance$vax_unknown_manufacturer) %>%
-    dplyr::select(dplyr::all_of(vars$we_want))
-
-  dplyr::bind_rows(out)
-}
+# dq_vax <- function(served_in_date_range, mahoning_projects = NULL, Doses = NULL, rm_dates = NULL, vars, app_env = get_app_env(e = rlang::caller_env())) {
+#   if (is_app_env(app_env))
+#     app_env$set_parent(missing_fmls())
+#  dose_exp = rlang::exprs(
+#    not_mp = !ProjectID %in% mahoning_projects,
+#    na_ed = is.na(ExitDate),
+#    ed_start = (
+#      is.na(ExitDate) |
+#        ExitDate >= rm_dates$hc$bos_start_vaccine_data
+#    ),
+#    vax_consent = (
+#      C19ConsentToVaccine == "Data not collected" |
+#        is.na(C19ConsentToVaccine)
+#    ),
+#    p_types = (ProjectType %in% c(1, 2, 4, 8) |
+#                 (
+#                   ProjectType %in% c(3, 9, 13) &
+#                     is.na(MoveInDateAdjust)
+#                 )),
+#    vax_manu = stringr::str_starts(C19VaccineManufacturer, "Client doesn't know"),
+#    vax_self_report = C19VaccineDocumentation == "Self-report",
+#    age = AgeAtEntry >= 5
+#  )
+#
+#   served_in_date_range <- served_in_date_range |>
+#     HMIS::served_between(rm_dates$hc$bos_start_vaccine_data, lubridate::today()) %>%
+#     dplyr::filter(!!dose_exp$not_mp &
+#                     !!dose_exp$age) |>
+#     dplyr::left_join(Doses,
+#                      by = c("PersonalID", "UniqueID", "EnrollmentID"))
+#
+#   out <- list()
+#   out$missing_vax_exited <- dplyr::filter(
+#     served_in_date_range,
+#       !(!!dose_exp$na_ed) &
+#       !!dose_exp$ed_start &
+#       !!dose_exp$vax_consent &
+#       !!dose_exp$p_types
+#   ) |>
+#     dplyr::mutate(
+#       Type = "Warning",
+#       Issue = "Vaccine consent data not collected and client has exited",
+#       Guidance = guidance$vax_missing_exit
+#     ) %>%
+#     dplyr::select(dplyr::all_of(vars$we_want))
+#
+#   out$missing_vax_current <- dplyr::filter(served_in_date_range,
+#       !!dose_exp$na_ed &
+#       !!dose_exp$ed_start &
+#       !!dose_exp$vax_consent &
+#       !!dose_exp$p_types
+#   ) %>%
+#     dplyr::mutate(
+#       Type = "Error",
+#       Issue = "Vaccine consent data not collected on current client",
+#       Guidance = guidance$vax_missing_current
+#     ) %>%
+#     dplyr::select(dplyr::all_of(vars$we_want))
+#
+#   out$vax_incorrect_date <- dplyr::filter(served_in_date_range,
+#                 C19AssessmentDate < rm_dates$hc$first_vaccine_administered_in_us & !is.na(C19VaccineManufacturer)) %>%
+#     dplyr::mutate(Type = "Error",
+#                   Issue = "Vaccine Date Incorrect",
+#                   Guidance = guidance$vax_incorrect_date) %>%
+#     dplyr::select(dplyr::all_of(vars$we_want))
+#
+#   out$vax_incorrect_manufacturer <-
+#     dplyr::filter(served_in_date_range,
+#                   !!dose_exp$vax_manu &
+#                     !(!!dose_exp$vax_self_report)) %>%
+#     dplyr::mutate(Type = "Error",
+#                   Issue = "Incorrect Vaccine Manufacturer or Incorrect Documentation Type",
+#                   Guidance = guidance$vax_incorrect_manufacturer) %>%
+#     dplyr::select(dplyr::all_of(vars$we_want))
+#
+#   out$vax_unknown_manufacturer <-
+#     dplyr::filter(served_in_date_range,
+#                   !!dose_exp$vax_manu &
+#                     !!dose_exp$vax_self_report) %>%
+#     dplyr::mutate(Type = "Warning",
+#                   Issue = "Unknown Vaccine Manufacturer",
+#                   Guidance = guidance$vax_unknown_manufacturer) %>%
+#     dplyr::select(dplyr::all_of(vars$we_want))
+#
+#   dplyr::bind_rows(out)
+# }
 
 
 

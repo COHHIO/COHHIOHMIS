@@ -140,7 +140,7 @@ dq_main |>
 
 cli::cli_progress_update(id = .pid,
                          status = "Overlapping Project Stays")
-dq_overlaps <- dq_overlaps()
+# dq_overlaps <- dq_overlaps()
 
 cli::cli_progress_update(id = .pid,
                          status = "Eligibility Checks")
@@ -352,5 +352,5 @@ dq_APs <- dqu_aps(Referrals = Referrals_full)
 
 
 
-app_env$gather_deps(dq_providers, dq_aps_no_referrals, dq_APs, dq_eligibility_detail, dq_overlaps)
+app_env$gather_deps(dq_providers, dq_aps_no_referrals, dq_APs, dq_eligibility_detail)
 }
