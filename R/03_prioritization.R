@@ -327,32 +327,32 @@ prioritization <- prioritization |>
 
 
 
-covid_hhs <- prioritization |>
-  dplyr::left_join(dplyr::select(c19priority, PersonalID, C19Priority), by = "PersonalID") |>
-  dplyr::mutate(
-    C19Priority = dplyr::if_else(
-      is.na(C19Priority),
-      "Not Assessed Recently", # "Not Assessed Recently"
-      as.character(C19Priority)
-    ),
-    C19Priority = factor(
-      C19Priority,
-      levels = c(
-        "No Known Risks or Exposure",
-        "Not Assessed Recently",
-        "Has Health Risk(s)",
-        "Needs Isolation/Quarantine"
-      ),
-      ordered = TRUE
-    )
-  ) |>
-  dplyr::group_by(PersonalID, HouseholdID) |>
-  dplyr::summarise(C19Priority = max(C19Priority), .groups = "drop") |>
-  dplyr::select(PersonalID, HouseholdID, C19Priority)
+# covid_hhs <- prioritization |>
+#   dplyr::left_join(dplyr::select(c19priority, PersonalID, C19Priority), by = "PersonalID") |>
+#   dplyr::mutate(
+#     C19Priority = dplyr::if_else(
+#       is.na(C19Priority),
+#       "Not Assessed Recently", # "Not Assessed Recently"
+#       as.character(C19Priority)
+#     ),
+#     C19Priority = factor(
+#       C19Priority,
+#       levels = c(
+#         "No Known Risks or Exposure",
+#         "Not Assessed Recently",
+#         "Has Health Risk(s)",
+#         "Needs Isolation/Quarantine"
+#       ),
+#       ordered = TRUE
+#     )
+#   ) |>
+#   dplyr::group_by(PersonalID, HouseholdID) |>
+#   dplyr::summarise(C19Priority = max(C19Priority), .groups = "drop") |>
+#   dplyr::select(PersonalID, HouseholdID, C19Priority)
 
 
 # adding COVID19Priority to active list
-prioritization <- dplyr::left_join(prioritization, covid_hhs, by = c("PersonalID", "HouseholdID"))
+# prioritization <- dplyr::left_join(prioritization, covid_hhs, by = c("PersonalID", "HouseholdID"))
 
 
 # Adding in TAY, County, PHTrack ----------------------
