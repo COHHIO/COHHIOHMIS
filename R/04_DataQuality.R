@@ -140,7 +140,7 @@ dq_main |>
 
 cli::cli_progress_update(id = .pid,
                          status = "Overlapping Project Stays")
-# dq_overlaps <- dq_overlaps()
+dq_overlaps <- dq_overlaps()
 
 cli::cli_progress_update(id = .pid,
                          status = "Eligibility Checks")
