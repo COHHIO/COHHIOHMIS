@@ -2107,7 +2107,7 @@ overlaps <- function(served_in_date_range, p_types = data_types$Project$ProjectT
 dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  p_types = data_types$Project$ProjectType$lh
+  p_types = data_types$Project$ProjectType$lh_hp
   overlap_staging <- served_in_date_range |>
     dplyr::select(!!vars$prep, ExitAdjust, EnrollmentID) |>
     dplyr::filter(EntryDate != ExitAdjust &
