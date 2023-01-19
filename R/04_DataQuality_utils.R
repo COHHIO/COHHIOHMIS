@@ -2167,9 +2167,9 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
     dplyr::mutate(Issue = "Overlapping Project Stay & Move-In",
                   Type = "High Priority",
                   Guidance = eval(parse(text = guidance$project_stays_eval))) |>
-    dplyr::mutate(Overlaps = paste0(clarity.looker::make_link(PersonalID, PreviousEnrollmentID, type = "enrollment"),
+    dplyr::mutate(Overlaps = paste0(clarity.looker::make_link(PersonalID, EnrollmentID, type = "enrollment"),
                                     " overlaps: ",
-                                    paste0(clarity.looker::make_link(PersonalID, EnrollmentID, type = "enrollment")))) |>
+                                    paste0(clarity.looker::make_link(PersonalID, PreviousEnrollmentID, type = "enrollment")))) |>
     dplyr::select(EnrollmentID, Overlaps, PreviousEnrollmentID, Issue, Type, Guidance) |>
     unique() |>
     dplyr::left_join(served_in_date_range |>
