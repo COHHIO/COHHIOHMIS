@@ -2127,7 +2127,7 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
       EnrollmentEnd =  as.Date(ExitAdjust)) |>
     dplyr::select(PersonalID, EnrollmentID, ProjectType, EnrollmentStart, EnrollmentEnd)
 
-  out <- overlap_staging |>
+  overlaps_enroll <- overlap_staging |>
     # sort enrollments for each person
     dplyr::group_by(PersonalID) |>
     dplyr::arrange(EnrollmentStart, EnrollmentEnd) |>
@@ -2166,7 +2166,15 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
   # label issue types
     dplyr::mutate(Issue = "Overlapping Project Stay & Move-In",
                   Type = "High Priority",
-                  Guidance = eval(parse(text = guidance$project_stays_eval))) |>
+                  Guidance = eval(parse(text = guidance$project_stays_eval)))
+
+  oldnames <- c( "PersonalID","EnrollmentID","ProjectType","EnrollmentStart",
+                 "EnrollmentEnd","PreviousEnrollmentID","PreviousProjectType",
+                 "PreviousEnrollmentStart","PreviousEnrollmentEnd","EnrollmentPeriod",
+                 "PreviousEnrollmentPeriod","IsOverlap","NumOverlaps","Issue","Type","Guidance")
+
+  overlaps_prev_enroll <- overlaps_enroll |>
+
     dplyr::mutate(Overlaps = paste0(clarity.looker::make_link(PersonalID, EnrollmentID, type = "enrollment"),
                                     " overlaps: ",
                                     paste0(clarity.looker::make_link(PersonalID, PreviousEnrollmentID, type = "enrollment")))) |>
