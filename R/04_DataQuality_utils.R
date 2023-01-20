@@ -2168,13 +2168,21 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
                   Type = "High Priority",
                   Guidance = eval(parse(text = guidance$project_stays_eval)))
 
-  oldnames <- c( "PersonalID","EnrollmentID","ProjectType","EnrollmentStart",
-                 "EnrollmentEnd","PreviousEnrollmentID","PreviousProjectType",
-                 "PreviousEnrollmentStart","PreviousEnrollmentEnd","EnrollmentPeriod",
-                 "PreviousEnrollmentPeriod","IsOverlap","NumOverlaps","Issue","Type","Guidance")
+  oldnames <- c("PersonalID","EnrollmentID","ProjectType","EnrollmentStart",
+                "EnrollmentEnd","PreviousEnrollmentID","PreviousProjectType",
+                "PreviousEnrollmentStart","PreviousEnrollmentEnd","EnrollmentPeriod",
+                "PreviousEnrollmentPeriod","IsOverlap","NumOverlaps","Issue","Type","Guidance")
+
+  newnames <- c("PersonalID","PreviousEnrollmentID","PreviousProjectType","PreviousEnrollmentStart",
+                "PreviousEnrollmentEnd","EnrollmentID","ProjectType",
+                "EnrollmentStart","EnrollmentEnd","PreviousEnrollmentPeriod",
+                "EnrollmentPeriod","IsOverlap","NumOverlaps","Issue","Type","Guidance")
 
   overlaps_prev_enroll <- overlaps_enroll |>
+    dplyr::rename_at(dplyr::vars(oldnames), ~ newnames) |>
+    dplyr::select(oldnames)
 
+  out <- rbind(overlaps_enroll, overlaps_prev_enroll) |>
     dplyr::mutate(Overlaps = paste0(clarity.looker::make_link(PersonalID, EnrollmentID, type = "enrollment"),
                                     " overlaps: ",
                                     paste0(clarity.looker::make_link(PersonalID, PreviousEnrollmentID, type = "enrollment")))) |>
@@ -2182,8 +2190,10 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
     unique() |>
     dplyr::left_join(served_in_date_range |>
                 dplyr::select(!!vars$prep, EnrollmentID), by = "EnrollmentID") |>
-    dplyr::select(PersonalID, Overlaps, Issue, Type, Guidance, EnrollmentID, ExitDate,
+    dplyr::select(PersonalID, UniqueID, Overlaps, Issue, Type, Guidance, EnrollmentID, ExitDate,
                   EntryDate, ProjectID, ProjectName, MoveInDateAdjust)
+
+  out <- clarity.looker::make_linked_df(out, UniqueID)
 
   return(out)
 }
