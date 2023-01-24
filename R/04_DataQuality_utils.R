@@ -2115,7 +2115,7 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
                       ProjectType %in% c(data_types$Project$ProjectType$ph, 10) &
                         !is.na(MoveInDateAdjust)
                     ) |
-                      ProjectType %in% c(data_types$Project$ProjectType$lh,
+                      ProjectType %in% c(p_types,
                                          0)
                     )) |>
     dplyr::mutate(
