@@ -35,7 +35,6 @@ beepr::beep(sound = 3)
 
 
 
-
 # WHEN NEW GEOCODES ARE ISSUED BY HUD, some projects may fail to match with their county in `pe_add_regions`.  ggmap is used to determine the missing county for these projects. ggmap and its dependencies are currently ignored in the renv/settings.dcf See ?ggmap::register_google for details on setting up ggmap.
 # 1. Set GGMAP_GOOGLE_API_KEY in .Renviron.
 # 2. Set this option to bypass errors in ggmap

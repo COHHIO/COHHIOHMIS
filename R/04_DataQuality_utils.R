@@ -2107,57 +2107,92 @@ overlaps <- function(served_in_date_range, p_types = data_types$Project$ProjectT
 dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  p_types <- data_types$Project$ProjectType$lh_hp
-  hasmovein <- served_in_date_range |>
-    dplyr::group_by(PersonalID) |>
-    dplyr::summarize(movedin = any(!is.na(MoveInDateAdjust), na.rm = TRUE)) |>
-    dplyr::filter(movedin)
-  dq_movein_overlaps <- served_in_date_range |>
-    dplyr::filter(PersonalID %in% hasmovein$PersonalID) |>
-    dplyr::select(dplyr::all_of(vars$prep), ExitAdjust, EnrollmentID) |>
-    dplyr::group_by(PersonalID) |>
-    dplyr::mutate(max_movein = valid_movein_max(MoveInDateAdjust, EntryDate),
-                  # The client should be exited by the day following move_in
-                  max_movein = dplyr::if_else(!is.na(max_movein), max_movein + lubridate::days(1), max_movein)) |>
-    dplyr::ungroup() |>
-    dplyr::filter(!is.na(max_movein) & max_movein <= ExitAdjust & # keep all the literally homeless project enrollments to see if the move-in date is within the enrollment
-                    ProjectType %in% p_types) |>
+  p_types = data_types$Project$ProjectType$lh_hp
+  overlap_staging <- served_in_date_range |>
+    dplyr::select(!!vars$prep, ExitAdjust, EnrollmentID) |>
+    dplyr::filter(EntryDate != ExitAdjust &
+                    ((
+                      ProjectType %in% c(data_types$Project$ProjectType$ph, 10) &
+                        !is.na(MoveInDateAdjust)
+                    ) |
+                      ProjectType %in% c(data_types$Project$ProjectType$lh, 0)
+                    )) |>
     dplyr::mutate(
-      LiterallyInProject = lubridate::interval(EntryAdjust, ExitAdjust - lubridate::days(1))
-    ) |>
-    dplyr::filter(!is.na(LiterallyInProject)) |>
-    janitor::get_dupes(PersonalID) |>
+      EnrollmentStart = dplyr::case_when(
+        ProjectType %in% c(data_types$Project$ProjectType$lh) ~ EntryDate,
+        ProjectType %in% c(data_types$Project$ProjectType$ph) ~ MoveInDateAdjust,
+        TRUE ~ EntryDate
+      ),
+      EnrollmentEnd =  as.Date(ExitAdjust)) |>
+    dplyr::select(PersonalID, EnrollmentID, ProjectType, EnrollmentStart, EnrollmentEnd)
+
+  overlaps_enroll <- overlap_staging |>
+    # sort enrollments for each person
     dplyr::group_by(PersonalID) |>
-    dplyr::arrange(EntryDate) |>
-    dplyr::summarise(
-      Overlaps = sum_enroll_overlap(PersonalID, EnrollmentID, LiterallyInProject),
-      .groups = "drop"
-    ) |>
+    dplyr::arrange(EnrollmentStart, EnrollmentEnd) |>
+    dplyr::mutate(
+      # pull in previous enrollment into current enrollment record so we can compare intervals
+      PreviousEnrollmentID = dplyr::lag(EnrollmentID)) |>
+    dplyr::ungroup() |>
+    dplyr::filter(!is.na(PreviousEnrollmentID))  |>
+    dplyr::left_join(overlap_staging |>
+                dplyr::select("PreviousEnrollmentID" = EnrollmentID,
+                       "PreviousProjectType" = ProjectType,
+                       "PreviousEnrollmentStart" = EnrollmentStart,
+                       "PreviousEnrollmentEnd" = EnrollmentEnd
+                ),
+              by = c("PreviousEnrollmentID")) |>
+    dplyr::filter(PreviousEnrollmentID != EnrollmentID &
+             !(
+               (ProjectType == data_types$Project$ProjectType$psh &
+                  PreviousProjectType %in% c(data_types$Project$ProjectType$rrh)) |
+                 (PreviousProjectType == data_types$Project$ProjectType$psh &
+                    ProjectType %in% c(data_types$Project$ProjectType$rrh))
+             )) |>
+    # flag overlaps
+    dplyr::mutate(
+      EnrollmentPeriod = lubridate::interval(EnrollmentStart, EnrollmentEnd),
+      PreviousEnrollmentPeriod =
+        lubridate::interval(PreviousEnrollmentStart, PreviousEnrollmentEnd),
+      IsOverlap = lubridate::int_overlaps(EnrollmentPeriod, PreviousEnrollmentPeriod) &
+        EnrollmentStart != PreviousEnrollmentEnd) |>
+    dplyr::filter(IsOverlap == TRUE)  |>
+    dplyr::group_by(PersonalID) |>
+    dplyr::mutate(NumOverlaps = sum(IsOverlap, na.rm = TRUE)) |>
+    dplyr::ungroup() |>
+    # keep overlaps
+    dplyr::filter(NumOverlaps > 0) |>
+  # label issue types
     dplyr::mutate(Issue = "Overlapping Project Stay & Move-In",
                   Type = "High Priority",
-                  Guidance = eval(parse(text = guidance$project_stays_eval)))  |>
-    clarity.looker::make_linked_df(Overlaps, unlink = TRUE, new_ID = EnrollmentID)
-  if (nrow(dq_movein_overlaps))
-    dq_movein_overlaps <- dq_movein_overlaps |>
-    dplyr::left_join(
-      dplyr::select(
-        served_in_date_range,
-        EnrollmentID,
-        ExitDate,
-        EntryDate,
-        ProjectID,
-        ProjectName
-      ),
-      by = "EnrollmentID"
-    )
+                  Guidance = eval(parse(text = guidance$project_stays_eval)))
 
-  # browser()
-  psh <- overlaps(p_types = data_types$Project$ProjectType$psh)
-  rrh <- overlaps(p_types = data_types$Project$ProjectType$rrh)
-  # psh_rrh <- overlaps(p_types = c(data_types$Project$ProjectType$psh,
-  #                                 data_types$Project$ProjectType$rrh))
-  lh <- overlaps(p_types = data_types$Project$ProjectType$lh)
-  out <- dplyr::bind_rows(psh, rrh, lh, dq_movein_overlaps)
+  oldnames <- c("PersonalID","EnrollmentID","ProjectType","EnrollmentStart",
+                "EnrollmentEnd","PreviousEnrollmentID","PreviousProjectType",
+                "PreviousEnrollmentStart","PreviousEnrollmentEnd","EnrollmentPeriod",
+                "PreviousEnrollmentPeriod","IsOverlap","NumOverlaps","Issue","Type","Guidance")
+
+  newnames <- c("PersonalID","PreviousEnrollmentID","PreviousProjectType","PreviousEnrollmentStart",
+                "PreviousEnrollmentEnd","EnrollmentID","ProjectType",
+                "EnrollmentStart","EnrollmentEnd","PreviousEnrollmentPeriod",
+                "EnrollmentPeriod","IsOverlap","NumOverlaps","Issue","Type","Guidance")
+
+  overlaps_prev_enroll <- overlaps_enroll |>
+    dplyr::rename_at(dplyr::vars(oldnames), ~ newnames) |>
+    dplyr::select(oldnames)
+
+  out <- rbind(overlaps_enroll, overlaps_prev_enroll) |>
+    dplyr::mutate(Overlaps = paste0(clarity.looker::make_link(PersonalID, EnrollmentID, type = "enrollment"),
+                                    " overlaps: ",
+                                    paste0(clarity.looker::make_link(PersonalID, PreviousEnrollmentID, type = "enrollment")))) |>
+    dplyr::select(EnrollmentID, Overlaps, PreviousEnrollmentID, Issue, Type, Guidance) |>
+    unique() |>
+    dplyr::left_join(served_in_date_range |>
+                dplyr::select(!!vars$prep, EnrollmentID), by = "EnrollmentID") |>
+    dplyr::select(PersonalID, UniqueID, Overlaps, Issue, Type, Guidance, EnrollmentID, ExitDate,
+                  EntryDate, ProjectID, ProjectName, MoveInDateAdjust)
+
+  out <- clarity.looker::make_linked_df(out, UniqueID)
 
   return(out)
 }
@@ -2567,24 +2602,24 @@ dq_referrals_outstanding <- function(served_in_date_range, Referrals, vars, app_
   # Using ProviderCreating instead. Either way, I feel this should go in the
   # Provider Dashboard, not the Data Quality report.
 
-  served_in_date_range %>%
+  served_in_date_range |>
     dplyr::semi_join(Referrals,
-                     by = c("PersonalID", "UniqueID")) %>%
+                     by = c("PersonalID", "UniqueID")) |>
     dplyr::left_join(Referrals, by = c("PersonalID", "UniqueID")) |>
     dplyr::select(dplyr::all_of(vars$prep),
                   R_ReferringProjectID,
                   R_ReferralDaysElapsed,
                   R_ReferringProjectName,
                   R_DaysInQueue,
-                  EnrollmentID) %>%
-    dplyr::filter(R_ReferralDaysElapsed %|% R_DaysInQueue > 14) %>%
+                  EnrollmentID) |>
+    dplyr::filter(R_ReferralDaysElapsed %|% R_DaysInQueue > 14) |>
     dplyr::mutate(
       ProjectName = R_ReferringProjectName,
       ProjectID = R_ReferringProjectID,
       Issue = "Old Outstanding Referral",
       Type = "Warning",
       Guidance = "Referrals should be closed in about 2 weeks. Please be sure you are following up with any referrals and helping the client to find permanent housing. Once a Referral is made, the receiving agency should be saving the 'Referral Outcome' once it is known. If you have Referrals that are legitimately still open after 2 weeks because there is a lot of follow up going on, no action is needed since the HMIS data is accurate."
-    ) %>%
+    ) |>
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 

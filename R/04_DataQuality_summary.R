@@ -113,7 +113,7 @@ client_summary <- dqu_summary(co_clients_served, distinct = FALSE) |>
   dq_summary$clients_without_spdat <- dqu_summary(dq_past_year, filter_exp = Type == "Warning" & Issue %in% c("Non-DV HoHs Entering PH or TH without SPDAT",
                                                                                              "HoHs in shelter for 8+ days without SPDAT"), join = client_summary)
 
-  # dq_summary$overlaps <- dqu_summary(HMIS::served_between(dq_overlaps, rm_dates$hc$check_dq_back_to, lubridate::today()), distinct = FALSE, join = client_summary)
+  dq_summary$overlaps <- dqu_summary(HMIS::served_between(dq_overlaps, rm_dates$hc$check_dq_back_to, lubridate::today()), distinct = FALSE, join = client_summary)
   dq_summary$long_stayer <- dqu_summary(dq_past_year, filter_exp = Type == "Warning" & Issue == "Extremely Long Stayer", join = client_summary)
 
   dq_summary$incorrect_destination <- dqu_summary(dq_past_year, filter_exp = stringr::str_detect(Issue, "Incorrect.*Destination"), join = client_summary)
