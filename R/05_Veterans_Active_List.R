@@ -297,7 +297,7 @@ vet_active <- function(
         ExitAdjust,
         ProjectType
       ) |>
-      dplyr::group_by(PersonalID, County) |>
+      dplyr::group_by(PersonalID) |>
       dplyr::arrange(dplyr::desc(EntryDate)) |>
       dplyr::slice(1L) |>
       dplyr::ungroup() |>
