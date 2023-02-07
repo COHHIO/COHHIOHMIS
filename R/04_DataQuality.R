@@ -82,19 +82,20 @@ data_quality <- function(check_fns = RmData::relevant_dq,
 
     .call <- rlang::call2(fn, !!!purrr::map(arg_names, ~rlang::expr(app_env$dependencies[[!!.x]])), app_env = NULL)
 
-    out <- rlang::eval_bare(.call)  |>
-      dplyr::distinct(PersonalID, Issue, .keep_all = TRUE)
+    out <- rlang::eval_bare(.call)|>
+      dplyr::distinct(PersonalID, EnrollmentID, Issue, .keep_all = TRUE)
     UU::join_check(out)
     out
   })
 
   cli::cli_progress_update(id = .pid,,
                            status = "Creating data quality table")
+
 dq_main <- do.call(rbind, dqs) |>
   unique() %>%
   dplyr::mutate(Type = factor(Type, levels = c("High Priority",
                                                "Error",
-                                               "Warning"))) %>%
+                                               "Warning"))) |>
   dplyr::filter(ProjectType != 14 |
                   (
                     ProjectType == 14 &

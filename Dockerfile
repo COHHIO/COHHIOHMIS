@@ -1,4 +1,4 @@
-# FROM r-base
+FROM r-base
 
 #### COPY method
 # COPY . /usr/local/src/myscripts
@@ -12,7 +12,7 @@
 # CMD ["Rscript", "/rtest/myscript.R"]
 
 # Base image
-FROM rocker/tidyverse
+# FROM rocker/tidyverse
 RUN apt-get update && apt-get install -y \
 	cmake \
 	git \
@@ -35,21 +35,24 @@ FROM rocker/tidyverse
 
 	&& rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /usr/local/lib/R/etc/ /usr/lib/R/etc/# clone the repository containing the script
-# RUN git clone https://github.com/COHHIO/RmData.gitCOPY RmData ./# install the necessary packages
-RUN installGithub.r rstudio/renv yogat3ch/UU yogat3ch/rdrop2 COHHIO/HMIS COHHIO/clarity.looker
+# RUN git clone https://github.com/COHHIO/RmData.git
+RUN install2.r -e remotes renv devtools
 
 COPY renv.lock renv.lock
 
 # RUN R -e 'options(timeout = max(1000, getOption("timeout")))'
 # RUN R -e 'options(renv.config.snapshot.timeout = 300)'
 
+RUN R -e 'Sys.setenv(RENV_DOWNLOAD_FILE_METHOD = "libcurl")'
+
 RUN mkdir -p renv
 COPY .Rprofile .Rprofile
 COPY renv/activate.R renv/activate.R
 COPY renv/settings.dcf renv/settings.dcf
 RUN R -e 'renv::update()'
-RUN R -e 'renv:::renv_download_file_method()'
 RUN R -e 'renv::restore()'
 
 # run the update
-CMD ["RScript", "/RmData/daily_update.R"]
+# CMD Rscript /RmData/daily_update.R
+
+COPY . ./
