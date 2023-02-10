@@ -1,18 +1,4 @@
-FROM r-base
-
-#### COPY method
-# COPY . /usr/local/src/myscripts
-# WORKDIR /usr/local/src/myscripts
-
-# RUN apt-get update && \
-#    apt-get install -y git
-
-#### GitHub method
-# RUN git clone https://github.com/trevinflick/rtest.git
-# CMD ["Rscript", "/rtest/myscript.R"]
-
-# Base image
-# FROM rocker/tidyverse
+FROM rhub/r-minimal
 RUN apt-get update && apt-get install -y \
 	cmake \
 	git \
@@ -36,12 +22,9 @@ FROM r-base
 	&& rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /usr/local/lib/R/etc/ /usr/lib/R/etc/# clone the repository containing the script
 # RUN git clone https://github.com/COHHIO/RmData.git
-RUN install2.r -e remotes renv devtools
+RUN install2.r -e remotes renv 
 
 COPY renv.lock renv.lock
-
-# RUN R -e 'options(timeout = max(1000, getOption("timeout")))'
-# RUN R -e 'options(renv.config.snapshot.timeout = 300)'
 
 RUN R -e 'Sys.setenv(RENV_DOWNLOAD_FILE_METHOD = "libcurl")'
 
@@ -51,8 +34,5 @@ COPY renv/activate.R renv/activate.R
 COPY renv/settings.dcf renv/settings.dcf
 RUN R -e 'renv::update()'
 RUN R -e 'renv::restore()'
-
-# run the update
-# CMD Rscript /RmData/daily_update.R
 
 COPY . ./
