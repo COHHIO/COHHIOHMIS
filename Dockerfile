@@ -37,11 +37,10 @@ COPY renv.lock renv.lock
 ADD renv/ /main/renv
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))"
 RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
-RUN R -e 'Sys.setenv(RENV_DOWNLOAD_FILE_METHOD = "libcurl")'
+RUN R -e 'options(renv.download.override = utils::download.file)'
 RUN R -e 'options(renv.config.connect.timeout = 300)'
 RUN R -e 'options(timeout=300)'
-RUN R -e 'renv:::renv_available_packages_entry("BH")'
-# RUN R -e "renv::restore(confirm = FALSE)"
-# RUN R -e "renv::snapshot(confirm = FALSE)"
+RUN R -e "renv::restore(confirm = FALSE)"
+RUN R -e "renv::snapshot(confirm = FALSE)"
 
-# COPY . ./
+COPY . /main

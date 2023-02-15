@@ -50,7 +50,6 @@ Imports:
     stringr,
     tibble,
     tidyr,
-    tsibble,
     tidyselect,
     utils,
     UU

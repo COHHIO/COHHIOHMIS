@@ -98,7 +98,7 @@ Priority = dplyr::case_when(
       ),
       C19Priority = factor(Priority, levels = c("No Known Risks or Exposure", "Has Health Risk(s)", "Needs Isolation/Quarantine"
       ), ordered = TRUE),
-      YM = tsibble::yearmonth(C19AssessmentDate)
+      # YM = tsibble::yearmonth(C19AssessmentDate)
     )
 rm(get_res_prior)
 

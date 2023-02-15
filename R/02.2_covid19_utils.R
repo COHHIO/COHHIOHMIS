@@ -26,7 +26,7 @@ c19_plot <-
       )) +
       ggplot2::geom_bar(stat = "identity",
                         position = "dodge") +
-      tsibble::scale_x_yearmonth(date_breaks = "2 months") +
+      # tsibble::scale_x_yearmonth(date_breaks = "2 months") +
       ggplot2::scale_y_continuous(breaks = rlang::as_function(~{seq(0, .x[2], by = 100)})) +
       ggplot2::scale_fill_brewer(palette = palette) +
       ggplot2::theme_minimal() +
