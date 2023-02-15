@@ -1,5 +1,6 @@
-FROM rhub/r-minimal
-RUN apt-get update && apt-get install -y \
+FROM rocker/r-ver:4.2.1
+
+RUN apt-get update && apt-get install -y \
 	cmake \
 	git \
 	libcurl4-openssl-dev \
@@ -20,19 +21,27 @@ FROM rhub/r-minimal
 	zlib1g-dev \
 
 	&& rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /usr/local/lib/R/etc/ /usr/lib/R/etc/# clone the repository containing the script
-# RUN git clone https://github.com/COHHIO/RmData.git
-RUN install2.r -e remotes renv 
 
+
+# clone the repository containing the script
+# RUN git clone https://github.com/COHHIO/RmData.git
+
+
+
+WORKDIR /main
+# renv and R packages
+ENV RENV_VERSION 0.16.0
+ENV RENV_PATHS_LIBRARY renv/library
+RUN echo "options(renv.consent = TRUE)" >> .Rprofile
 COPY renv.lock renv.lock
-
+ADD renv/ /main/renv
+RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))"
+RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 RUN R -e 'Sys.setenv(RENV_DOWNLOAD_FILE_METHOD = "libcurl")'
+RUN R -e 'options(renv.config.connect.timeout = 300)'
+RUN R -e 'options(timeout=300)'
+RUN R -e 'renv:::renv_available_packages_entry("BH")'
+# RUN R -e "renv::restore(confirm = FALSE)"
+# RUN R -e "renv::snapshot(confirm = FALSE)"
 
-RUN mkdir -p renv
-COPY .Rprofile .Rprofile
-COPY renv/activate.R renv/activate.R
-COPY renv/settings.dcf renv/settings.dcf
-RUN R -e 'renv::update()'
-RUN R -e 'renv::restore()'
-
-COPY . ./
+# COPY . ./

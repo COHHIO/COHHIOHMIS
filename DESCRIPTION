@@ -2,16 +2,29 @@ Package: RmData
 Title: Data munging dependencies for Rminor & Rminor_elevated
        Shiny apps
 Version: 0.0.2
-Authors@R: c(person(given = "Genelle", family = "Denzin", role
-       = c("aut"), email = "genelledenzin@cohhio.org"),
-       person(given = "COHHIO", family = "HMIS Data Analyst", role =
-       c("cre", "aut"), email =
-       "hmisdataanalyst@cohhio.org"), person(given = "Gwen",
-       family = "Beebe", email = "gwenbeebe@gmail.com", role =
-       "con"),
-       person(give = "Stephen", family = "Holsenbeck", role = "aut",
-       email = "sholsen@alumni.emory.edu"))
-Description: This provides workflows for munging and porting data dependencies to the open-source Homeless Management Information System (HMIS) custom reporting apps Rminor & Rminor_elevated
+Authors@R: c(person(given = "Genelle", 
+                    family = "Denzin",
+                    role = c("aut"), 
+                    email = "genelledenzin@cohhio.org"),
+             person(given = "COHHIO",
+                    family = "HMIS Data Analyst", 
+                    role = c("cre", "aut"), 
+                    email = "hmisdataanalyst@cohhio.org"), 
+             person(given = "Gwen",
+                    family = "Beebe", 
+                    email = "gwenbeebe@gmail.com", 
+                    role = "con"),
+             person(given = "Stephen", 
+                    family = "Holsenbeck", 
+                    role = "aut",
+                    email = "sholsen@alumni.emory.edu"),
+             person(given = "Trevin",
+                    family = "Flickinger",
+                    role = "aut",
+                    email = "trevinflickinger@cohhio.org"))
+Description: This provides workflows for munging and porting data dependencies 
+    to the open-source Homeless Management Information System (HMIS) custom 
+    reporting apps Rminor & Rminor_elevated
 License: AGPL-3
 Depends: R (>= 4.1.0)
 Imports: 

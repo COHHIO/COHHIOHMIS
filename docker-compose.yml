@@ -1,0 +1,10 @@
+version: "3.5"
+services:
+  rmdata:
+    platform: linux/amd64
+    build:
+      context: .
+    volumes:
+      - .:/main
+      - ./renv/cache/v5/R-4.2/aarch64-apple-darwin20:/main/renv/cache
+
