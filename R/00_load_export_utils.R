@@ -267,7 +267,6 @@ pe_add_regions <- function(provider_extras, Regions = clarity.looker::hud_load("
     dplyr::filter(!Geocode %in% c("000000", "429003", "399018"))
 
 
-
   out <- out |>
     dplyr::left_join(Regions |> dplyr::select(- RegionName), by = "County") |>
     dplyr::rename(ProjectRegion = "Region",
@@ -401,11 +400,12 @@ provider_extras_helpers <- list(
 #' @export
 
 load_program_lookup <- function(program_lookup) {
-
   program_lookup |>
     dplyr::mutate(dplyr::across(c(dplyr::ends_with("Active"), dplyr::matches("HMISParticipating")), ~dplyr::if_else(.x %in% c("Active", "Yes"), TRUE, FALSE))) |>
+    dplyr::rename(AgencyAdministrator = "Property Manager") |>
     clarity.looker::make_linked_df(ProgramName, type = "program_edit") |>
-    clarity.looker::make_linked_df(AgencyName, type = "agency_switch")
+    clarity.looker::make_linked_df(AgencyName, type = "agency_switch") |>
+    clarity.looker::make_linked_df(AgencyAdministrator, type = "admin")
 
 }
 
@@ -761,7 +761,6 @@ Enrollment_add_HousingStatus <-
   )
   # Referral Situation ----
   # Tue Nov 09 12:49:51 2021
-
   out <- dplyr::mutate(
     out,
     # ExpectedPHDate = dplyr::if_else(is.na(ExpectedPHDate), R_ReferralConnectedMoveInDate, ExpectedPHDate),
