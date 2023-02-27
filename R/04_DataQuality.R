@@ -92,7 +92,7 @@ data_quality <- function(check_fns = RmData::relevant_dq,
                            status = "Creating data quality table")
 
 dq_main <- do.call(rbind, dqs) |>
-  unique() %>%
+  unique() |>
   dplyr::mutate(Type = factor(Type, levels = c("High Priority",
                                                "Error",
                                                "Warning"))) |>

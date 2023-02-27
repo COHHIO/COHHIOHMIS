@@ -2189,8 +2189,7 @@ dq_overlaps <- function(served_in_date_range, vars, guidance, app_env = get_app_
     unique() |>
     dplyr::left_join(served_in_date_range |>
                 dplyr::select(!!vars$prep, EnrollmentID), by = "EnrollmentID") |>
-    dplyr::select(PersonalID, UniqueID, Overlaps, Issue, Type, Guidance, EnrollmentID, ExitDate,
-                  EntryDate, ProjectID, ProjectName, MoveInDateAdjust)
+    dplyr::select(vars$prep, "Issue", "Type", "Guidance")
 
   out <- clarity.looker::make_linked_df(out, UniqueID)
 
