@@ -3,9 +3,9 @@
 # devtools::load_all("../../lookr")
 # devtools::load_all("../hud.extract")
 
-
 #1. must load RmData
-devtools::load_all()
+# devtools::load_all()
+pkgload::load_all()
 
 #2. must set directories if using a directory structure differing from the default in clarity.looker:
 # dirs <- clarity.looker::dirs

@@ -1,5 +1,5 @@
 cl_api$get_folder_looks(cl_api$folders$`HUD Extras`, .write = TRUE, path = dirs$extras)
-devtools::load_all()
+pkgload::load_all()
 Rm_env <- dates(clarity_api = cl_api, app_env = Rm_env)
 Rm_env <- load_export(clarity_api = cl_api, app_env = Rm_env)
 Rm_env <- client_counts(app_env = Rm_env)

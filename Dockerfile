@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 	libpng-dev \
 	libssh2-1-dev \
 	libssl-dev \
-	libtiff-dev \
+	libtiff5-dev \
 	libxml2-dev \
 	make \
 	pandoc \
@@ -32,14 +32,16 @@ ENV RENV_PATHS_LIBRARY renv/library
 RUN echo "options(renv.consent = TRUE)" >> .Rprofile
 COPY renv.lock renv.lock
 ADD renv/ /main/renv
-WORKDIR /main
+ADD clarity.looker /main/clarity.looker
+WORKDIR /main/RmData
+COPY . /main/RmData
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))"
 RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 RUN R -e 'options(renv.download.override = utils::download.file)'
 RUN R -e 'options(renv.config.connect.timeout = 300)'
 RUN R -e 'options(timeout=300)'
 RUN R -e "renv::restore(confirm = FALSE)"
-
-COPY . /main
 RUN R -e "renv::snapshot(confirm = FALSE)"
+RUN R -e "install.packages('pkgload', repos = c(CRAN = 'https://cloud.r-project.org'))"
 
+# CMD ["Rscript", "daily_update.R"]

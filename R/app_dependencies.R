@@ -548,7 +548,7 @@ dependencies <- list()
 
 reset_Rm_env <- function(app_env = get_app_env(e = rlang::caller_env())) {
   deps <- purrr::compact(rlang::env_get_list(app_env$dependencies, ls(app_env$dependencies, all.names = TRUE), default = NULL))
-  devtools::load_all()
+  pkgload::load_all()
   rm("Rm_env", envir = .GlobalEnv)
   .GlobalEnv$Rm_env <- RmData::app_env$new()
 

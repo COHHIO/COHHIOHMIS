@@ -1,7 +1,7 @@
 #' @include app_dependencies.R
 if (file.exists("RmData.Rproj") && interactive()) {
   if (!exists("cl_api")) {
-    devtools::load_all("../clarity.looker")
+    pkgload::load_all("../clarity.looker")
     .GlobalEnv$cl_api <- clarity.looker::clarity_api$new(file.path("inst","vault","Looker.ini"))
   }
 

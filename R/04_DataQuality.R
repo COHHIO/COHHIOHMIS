@@ -113,7 +113,8 @@ dq_main <- do.call(rbind, dqs) |>
                         "Missing SSN",
                         "Missing Veteran Status",
                         "Don't Know/Refused Veteran Status",
-                        "Missing County Served"
+                        "Missing County Served",
+                        "Duplicate Entry Exits"
                       )
                   )) |>
   dplyr::filter(Issue != "Old Outstanding Referral")
