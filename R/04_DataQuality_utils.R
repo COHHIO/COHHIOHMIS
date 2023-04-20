@@ -1114,7 +1114,7 @@ dq_psh_missing_project_stay <- function(served_in_date_range, vars, guidance = N
     app_env$set_parent(missing_fmls())
   served_in_date_range |>
     dplyr::filter(Destination == 3) |>
-    dplyr::anti_join(enrolled_in(served_in_date_range, type = c(3,9), TRUE), by = "PersonalID", suffix = c("", "_psh")) |>
+    dplyr::anti_join(enrolled_in(served_in_date_range, type = c(3,9), TRUE), by = "PersonalID") |>
     dplyr::mutate(
       Issue = "Missing PSH Project Stay or Incorrect Destination",
       Type = "Warning",

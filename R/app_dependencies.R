@@ -58,8 +58,10 @@ app_deps <- list(
     "pe_entries_no_income",
     "pe_exits_to_ph",
     "pe_homeless_history_index",
+    "pe_increase_income",
     "pe_length_of_stay",
     "pe_long_term_homeless",
+    "pe_own_housing",
     "pe_users_info",
     "pe_res_prior",
     "pe_scored_at_ph_entry",
@@ -95,6 +97,7 @@ app_deps <- list(
     "veteran_active_list"
   ) |> rlang::set_names()
 )
+# browser()
 missing_args <-
   function(calling_function = rlang::caller_fn(2),
            include_null = TRUE,

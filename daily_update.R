@@ -29,7 +29,7 @@ clarity.looker::hud_export_extract(browser_dl_folder = "~/Documents/COHHIO/RmDat
 #                       region = "us-east-2")
 
 # 4. Run update
-daily_update(backup = TRUE, remote = FALSE)
+daily_update(backup = FALSE, remote = FALSE)
 
 beepr::beep(sound = 3)
 
