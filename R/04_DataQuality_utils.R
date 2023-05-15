@@ -534,6 +534,23 @@ dq_missing_prior_living_situation <- function(served_in_date_range, vars, guidan
 
 }
 
+#' Find enrollments without a referral
+#'
+#' @param served_in_date_range
+#' @param vars
+#' @param guidance
+#' @param app_env
+#'
+#' @return
+#' @export
+#'
+#' @examples
+# dq_missing_referral <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
+#   if (is_app_env(app_env))
+#     app_env$set_parent(missing_fmls())
+#
+# }
+
 #' @title Find Don't Know/Refused Prior Living Situation
 #' @inherit data_quality_tables params return
 #' @family Clarity Checks

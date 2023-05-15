@@ -456,19 +456,50 @@ vet_active <- function(
     dplyr::mutate(EntryAdj = dplyr::if_else(
       !is.na(DateVeteranIdentified) & DateVeteranIdentified < EntryDate,
       DateVeteranIdentified, EntryDate),
+      housed_in_last_90 = 1,
       time_to_house = difftime(lubridate::floor_date(ExitDate, unit = "day"),
                                lubridate::floor_date(EntryAdj, unit = "day"),
                                units = "days")) |>
     dplyr::select(
+      UniqueID,
       PersonalID,
       EntryAdj,
       ExitDate,
       County,
-      time_to_house
+      time_to_house,
+      housed_in_last_90
     ) |>
     unique()
 
-  # Entered in Past 90 Days -------------------------------------------------
+  # Enrolled in PSH/RRH with move-in date during last 90 days -------------------------------------------------
+
+
+  vets_move_in_past_90_days <- vet_ees |>
+    dplyr::filter(ProjectType %in% data_types$Project$ProjectType$ph & VeteranStatus == 1) |>
+    dplyr::filter(MoveInDateAdjust >= lubridate::today() - lubridate::days(90) &
+                    MoveInDateAdjust <= lubridate::today()) |>
+    dplyr::mutate(EntryAdj = dplyr::if_else(
+      !is.na(DateVeteranIdentified) & DateVeteranIdentified < EntryDate,
+      DateVeteranIdentified, EntryDate),
+      housed_in_last_90 = dplyr::if_else(
+        PersonalID %in% vets_permanently_housed$PersonalID, 1, 0
+      ),
+      time_to_house = difftime(lubridate::floor_date(ExitDate, unit = "day"),
+                               lubridate::floor_date(EntryAdj, unit = "day"),
+                               units = "days")) |>
+      dplyr::select(
+        UniqueID,
+        PersonalID,
+        EntryAdj,
+        ExitDate,
+        County,
+        time_to_house,
+        housed_in_last_90
+      )
+
+  vets_housed <- rbind(vets_permanently_housed, vets_move_in_past_90_days) |>
+    unique()
+
 
   vets_entered_past_90_days <- vet_ees |>
       {\(x) {
@@ -499,5 +530,5 @@ vet_active <- function(
     ) |>
     unique()
 
-    app_env$gather_deps(veteran_active_list)
+    app_env$gather_deps(veteran_active_list, vets_housed)
 }

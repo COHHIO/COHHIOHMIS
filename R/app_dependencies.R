@@ -94,7 +94,8 @@ app_deps <- list(
     "utilization_beds",
     "utilization_clients",
     "validation",
-    "veteran_active_list"
+    "veteran_active_list",
+    "vets_housed"
   ) |> rlang::set_names()
 )
 # browser()

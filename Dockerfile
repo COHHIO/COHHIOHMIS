@@ -1,14 +1,5 @@
 FROM rocker/r-ver:4.2.1
 
-ENV S6_VERSION=v2.1.0.2
-ENV RSTUDIO_VERSION=daily
-ENV DEFAULT_USER=rstudio
-ENV PANDOC_VERSION=default
-ENV PATH=/usr/lib/rstudio-server/bin:$PATH
-
-RUN /rocker_scripts/install_rstudio.sh
-RUN /rocker_scripts/install_pandoc.sh
-
 RUN apt-get update && apt-get install -y \
 	cmake \
 	git \
@@ -37,31 +28,36 @@ RUN apt-get update && apt-get install -y \
 
 # renv and R packages
 ENV RENV_VERSION 0.17.3
-ENV RENV_PATHS_LIBRARY renv/library
 
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))"
 RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 
 RUN mkdir /home/rmdata
 
-COPY renv.lock /home/rmdata/renv.lock
+WORKDIR /home/rmdata
 
-ADD clarity.looker /home/rmdata/clarity.looker
+COPY renv.lock renv.lock
+
+ENV RENV_PATHS_LIBRARY renv/library
+
+ADD clarity.looker /home/clarity.looker
 
 COPY . /home/rmdata
 
-RUN R -e 'options(timeout = max(800, getOption("timeout")))'
+RUN R -e 'options(timeout = max(5000, getOption("timeout")))'
 
-RUN R -e "install.packages('arrow', repos = c(CRAN = 'https://cloud.r-project.org'))"
+RUN R -e "install.packages('littler', dependencies = TRUE)"
 
-RUN R -e 'options(timeout = max(800, getOption("timeout")))'
+RUN R -e "renv::init();renv::restore(exclude=c('arrow','clarity.looker','HMIS','lookr')); renv::snapshot()"
 
-RUN R -e "setwd('/home/rmdata'); renv::init();renv::restore(exclude=c('arrow','clarity.looker','HMIS','lookr')); renv::snapshot()"
+RUN R -e "install.packages('pkgload', dependencies = TRUE, repos = c(CRAN = 'https://cloud.r-project.org'))"
 
-RUN R -e "install.packages('pkgload', repos = c(CRAN = 'https://cloud.r-project.org'))"
+RUN R -e "install.packages('aws.s3', dependencies = TRUE, repos = c(CRAN = 'https://cloud.r-project.org'))"
 
-RUN R -e "install.packages('aws.s3', repos = c(CRAN = 'https://cloud.r-project.org'))"
+RUN install2.r --error --deps TRUE arrow
 
-EXPOSE 8787
+RUN R -e "remotes::install_github('COHHIO/HMIS')"
+RUN R -e "remotes::install_github('COHHIO/lookr')"
+RUN R -e "remotes::install_github('COHHIO/clarity.looker')"
 
-CMD ["/init"]
+CMD ["R"]
