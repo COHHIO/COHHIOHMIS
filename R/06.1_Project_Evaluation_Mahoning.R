@@ -29,7 +29,19 @@ project_evaluation_mahoning <- function(
                                               col_types = c("metric" = "c", "ProjectType" = "n", "goal_type" = "c", "minimum" = "n", "maximum" = "n",
                                                                "points" = "n") |> paste0(collapse = ""))
 
+  merged_projects <-
+    list(
+        `Mahoning - Help Network - PSH - Combined` = list(c("Help Network - Shelter Plus Care - PSH"), c("PSH Rental Assistance Program - PSH"))
+    )
 
+  merged_projects <- purrr::map(merged_projects, ~{
+    reg <- purrr::map(.x, ~UU::regex_op(.x, "&"))
+    idx <- purrr::map_dbl(reg, ~stringr::str_which(Project$ProjectName, .x))
+
+    list(ProjectName = Project$ProjectName[idx],
+         ProjectID = Project$ProjectID[idx])
+  })
+  .merged <- rlang::set_names(purrr::map(merged_projects, "ProjectID") |> purrr::flatten_chr(), purrr::map(merged_projects, "ProjectName") |> purrr::flatten_chr())
 
   # consolidated projects
 
@@ -51,20 +63,21 @@ project_evaluation_mahoning <- function(
                   ProjectRegion,
                   StartDate,
                   EndDate) |>
-    dplyr::mutate(AltProjectName = ProjectName,
-                  AltProjectID = ProjectID) |>
+    dplyr::mutate(AltProjectName = merge_projects(ProjectName, merged_projects),
+                  AltProjectID = merge_projects(ProjectID, merged_projects)) |>
     dplyr::filter(stringr::str_starts(AltProjectName, "Mahoning")) |>
     dplyr::filter(AltProjectName %in%
                     c("Mahoning - Beatitude House - Permanent Supportive Housing Program - PSH",
-                      "Mahoning - Help Network - PSH Rental Assistance Program - PSH",
-                      "Mahoning - Help Network - Shelter Plus Care - PSH",
                       "Mahoning - Meridian Services - Phoenix Court - PSH",
                       "Mahoning - Meridian Services - Samaritan Housing PRA - PSH",
                       "Mahoning - Meridian Services - Homeless Solutions SRO II - PSH",
                       "Mahoning - Ursuline Center - Merici - PSH",
                       "Mahoning - YWCA Permanent Housing for Disabled Families - PSH",
-                      "Mahoning - YWCA Scattered Site Housing II - PSH"
+                      "Mahoning - YWCA Scattered Site Housing II - PSH",
+                      "Mahoning - Help Network - PSH - Combined"
                     ))
+
+
   app_env$gather_deps(pe_coc_funded)
   vars <- list()
   vars$prep <- c(
@@ -317,6 +330,7 @@ project_evaluation_mahoning <- function(
       ChronicPrioritizationScore,
       PrioritizationWorkgroupScore
     ) %>%
+    dplyr::filter(!ProjectID %in% purrr::map_chr(merged_projects, ~.x[[2]][2])) %>%
     dplyr::mutate(
       Submission_Math = peval_math(DateReceivedPPDocs, rm_dates$hc$project_eval_docs_due),
       PrioritizationWorkgroupPossible = 5,
@@ -492,6 +506,88 @@ project_evaluation_mahoning <- function(
       ExitsToPHCohort
     )
 
+    # # Housing Stability: Moved into Own Housing -------------------------------
+    # # RRH, PSH
+
+    pe$OwnHousingMahoning <- pe$HoHsMovedInLeavers %>%
+      dplyr::right_join(pe_coc_funded %>%
+                          dplyr::select(ProjectType, AltProjectID, AltProjectName) %>%
+                          unique(),
+                        by = c("AltProjectName", "ProjectType", "AltProjectID")) %>%
+      dplyr::left_join(data_quality_flags, by = "AltProjectName") %>%
+      dplyr::filter(ProjectType != 2) %>%
+      dplyr::mutate(DaysInProject = difftime(MoveInDateAdjust, EntryDate, units = "days")) %>%
+      dplyr::mutate(
+        MeetsObjective = dplyr::case_when(
+          (Destination %in% c(3, 10:11, 19:21, 28, 31, 33:34) &
+             lubridate::ymd(ExitAdjust) <= lubridate::ymd(rm_dates$hc$project_eval_end)) ~ 1,
+          TRUE ~ 0
+        ),
+        OwnHousingDQ = dplyr::case_when(
+          General_DQ == 1 ~ 1,
+          TRUE ~ 0
+        ),
+        DestinationGroup = dplyr::case_when(
+          is.na(Destination) | lubridate::ymd(ExitAdjust) > lubridate::ymd(rm_dates$hc$project_eval_end) ~
+            "Still in Program at Report End Date",
+          Destination %in% c(1, 2, 12, 13, 14, 16, 18, 27) ~ "Temporary",
+          Destination %in% c(3, 10:11, 19:21, 28, 31, 33:34) ~ "Household's Own Housing",
+          Destination %in% c(22:23) ~ "Shared Housing",
+          Destination %in% c(4:7, 15, 25:27, 29) ~ "Institutional",
+          Destination %in% c(8, 9, 17, 30, 99, 32) ~ "Other",
+          Destination == 24 ~ "Deceased"
+        ),
+        PersonalID = as.character(PersonalID)
+      ) %>%
+      dplyr::select(dplyr::all_of(vars$we_want),
+                    OwnHousingDQ, Destination, DestinationGroup, DaysInProject)
+
+    summary_pe$OwnHousingMahoning <- pe$OwnHousingMahoning %>%
+      dplyr::group_by(ProjectType, AltProjectName, OwnHousingDQ) %>%
+      dplyr::summarise(OwnHousing = sum(MeetsObjective),
+                       AverageDays = as.numeric(mean(DaysInProject[OwnHousing > 0], na.rm = TRUE))) %>%
+      dplyr::ungroup() %>%
+      dplyr::right_join(pe_summary_validation_mahoning, by = c("ProjectType", "AltProjectName")) %>%
+      dplyr::mutate(
+        AverageDaysJoin = dplyr::if_else(is.na(AverageDays), 0, AverageDays)
+      ) %>%
+      dplyr::right_join(scoring_rubric %>%
+                          dplyr::filter(metric == "own_housing"),
+                        by = "ProjectType") %>%
+      dplyr::group_by(ProjectType) %>%
+      dplyr::mutate(OwnHousingPossible = max(points)) %>%
+      dplyr::ungroup() %>%
+      dplyr::filter(dplyr::if_else(goal_type == "min",
+                                   minimum <= AverageDaysJoin &
+                                     maximum > AverageDaysJoin,
+                                   minimum < AverageDaysJoin &
+                                     maximum >= AverageDaysJoin)) %>%
+      dplyr::mutate(
+        OwnHousingMath = dplyr::case_when(
+          HoHsMovedInLeavers == 0 ~ "All points granted because this project had 0 Heads of Household Leavers who Moved into Housing",
+          HoHsMovedInLeavers != 0 & ProjectType != 2 ~ paste(as.integer(AverageDays), "average days"),
+          TRUE ~ ""
+        ),
+        OwnHousingPoints = dplyr::if_else(
+          HoHsMovedInLeavers == 0 & ProjectType != 2, OwnHousingPossible, points
+        ),
+        OwnHousingPoints = dplyr::case_when(OwnHousingDQ == 1 ~ 0,
+                                            is.na(OwnHousingDQ) |
+                                              OwnHousingDQ == 0 ~ OwnHousingPoints),
+        OwnHousingPoints = dplyr::if_else(is.na(OwnHousingPoints), 0, OwnHousingPoints),
+        OwnHousingPoints = dplyr::if_else(OwnHousing == 0, 0, OwnHousingPoints),
+        OwnHousingPossible = dplyr::if_else(ProjectType != 2, 5, NA),
+        OwnHousingCohort = "HoHsMovedInLeavers"
+      ) %>%
+      dplyr::select(ProjectType,
+                    AltProjectName,
+                    OwnHousingCohort,
+                    OwnHousing,
+                    OwnHousingMath,
+                    OwnHousingPoints,
+                    OwnHousingPossible,
+                    OwnHousingDQ)
+
 
   # Accessing Mainstream Resources: Benefits -----------------------------------
   # PSH, TH, SH, RRH
@@ -599,21 +695,21 @@ project_evaluation_mahoning <- function(
   # Accessing Mainstream Resources: Increase Total Income -------------------
   # PSH, TH, SH, RRH
 
-  income_staging2 <-  pe_adults_moved_in %>%
-    right_join(pe_coc_funded %>%
-                 select(ProjectType, AltProjectID, AltProjectName) %>%
+  income_staging2 <-  pe$AdultsMovedInLeavers %>%
+    dplyr::right_join(pe_coc_funded %>%
+                 dplyr::select(ProjectType, AltProjectID, AltProjectName) %>%
                  unique(),
                by = c("AltProjectName", "ProjectType", "AltProjectID")) %>%
-    left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
-    select(PersonalID,
+    dplyr::left_join(IncomeBenefits, by = c("PersonalID", "EnrollmentID")) %>%
+    dplyr::select(PersonalID,
            EnrollmentID,
            EntryDate,
            ExitDate,
            TotalMonthlyIncome,
            DateCreated,
            DataCollectionStage) %>%
-    mutate(
-      DataCollectionStage = case_when(
+    dplyr::mutate(
+      DataCollectionStage = dplyr::case_when(
         DataCollectionStage == 1 ~ "Entry",
         DataCollectionStage == 2 ~ "Update",
         DataCollectionStage == 3 ~ "Exit",
@@ -622,44 +718,44 @@ project_evaluation_mahoning <- function(
     )
 
   income_staging_fixed <- income_staging2 %>%
-    filter(DataCollectionStage == "Entry")
+    dplyr::filter(DataCollectionStage == "Entry")
 
   income_staging_variable <- income_staging2 %>%
-    filter(DataCollectionStage %in% c("Update", "Annual", "Exit")) %>%
-    group_by(EnrollmentID) %>%
-    mutate(MaxUpdate = max(ymd_hms(DateCreated))) %>%
-    filter(MaxUpdate == DateCreated) %>%
-    select(-MaxUpdate) %>%
-    distinct() %>%
-    ungroup()
+    dplyr::filter(DataCollectionStage %in% c("Update", "Annual", "Exit")) %>%
+    dplyr::group_by(EnrollmentID) %>%
+    dplyr::mutate(MaxUpdate = max(lubridate::ymd_hms(DateCreated))) %>%
+    dplyr::filter(MaxUpdate == DateCreated) %>%
+    dplyr::select(-MaxUpdate) %>%
+    dplyr::distinct() %>%
+    dplyr::ungroup()
 
   income_staging <- rbind(income_staging_fixed, income_staging_variable) %>%
-    select(PersonalID, EnrollmentID, TotalMonthlyIncome, DataCollectionStage) %>%
+    dplyr::select(PersonalID, EnrollmentID, TotalMonthlyIncome, DataCollectionStage) %>%
     unique()
 
-  pe$IncreaseIncome <- income_staging %>%
-    pivot_wider(names_from = DataCollectionStage,
+  pe$IncreaseIncomeMahoning <- income_staging %>%
+    tidyr::pivot_wider(names_from = DataCollectionStage,
                 values_from = TotalMonthlyIncome) %>%
-    left_join(pe_adults_moved_in, by = c("PersonalID", "EnrollmentID")) %>%
-    left_join(data_quality_flags, by = "AltProjectName") %>%
-    mutate(
-      MostRecentIncome = case_when(
+    dplyr::left_join(pe$AdultsMovedInLeavers, by = c("PersonalID", "EnrollmentID")) %>%
+    dplyr::left_join(data_quality_flags, by = "AltProjectName") %>%
+    dplyr::mutate(
+      MostRecentIncome = dplyr::case_when(
         !is.na(Exit) ~ Exit,
-        !is.na(Update) ~ Update,
+        # !is.na(Update) ~ Update,
         !is.na(Annual) ~ Annual
       ),
-      IncomeAtEntry = if_else(is.na(Entry), 0, Entry),
-      IncomeMostRecent = if_else(is.na(MostRecentIncome),
+      IncomeAtEntry = dplyr::if_else(is.na(Entry), 0, Entry),
+      IncomeMostRecent = dplyr::if_else(is.na(MostRecentIncome),
                                  IncomeAtEntry,
                                  MostRecentIncome),
-      MeetsObjective = case_when(
+      MeetsObjective = dplyr::case_when(
         IncomeMostRecent > IncomeAtEntry ~ 1,
         IncomeMostRecent <= IncomeAtEntry ~ 0),
-      IncreasedIncomeDQ = if_else(General_DQ == 1 |
+      IncreasedIncomeDQ = dplyr::if_else(General_DQ == 1 |
                                     Income_DQ == 1, 1, 0),
       PersonalID = as.character(PersonalID)
     ) %>%
-    select(
+    dplyr::select(
       all_of(vars$we_want),
       IncreasedIncomeDQ,
       IncomeAtEntry,
@@ -668,45 +764,51 @@ project_evaluation_mahoning <- function(
 
   rm(list = ls(pattern = "income_staging"))
 
-  summary_pe$IncreaseIncome <- pe_increase_income %>%
-    group_by(ProjectType, AltProjectName, IncreasedIncomeDQ) %>%
-    summarise(IncreasedIncome = sum(MeetsObjective)) %>%
-    ungroup() %>%
-    right_join(pe_summary_validation, by = c("ProjectType", "AltProjectName")) %>%
-    mutate(
-      IncreasedIncome = if_else(is.na(IncreasedIncome), 0, IncreasedIncome),
-      Structure = case_when(
-        ProjectType == 3 ~ "24_30_11",
-        ProjectType == 2 ~ "22_28_10",
-        ProjectType == 8 ~ "16_20_10",
-        ProjectType == 13 ~ "14_18_10"
-      ),
-      IncreasedIncomePercent = IncreasedIncome / AdultsMovedIn,
-      IncreasedIncomeMath = if_else(
-        AdultsMovedIn != 0,
+  summary_pe$IncreaseIncomeMahoning <- pe$IncreaseIncomeMahoning |>
+    dplyr::group_by(ProjectType, AltProjectName, IncreasedIncomeDQ) |>
+    dplyr::summarise(IncreasedIncome = sum(MeetsObjective)) |>
+    dplyr::ungroup() |>
+    dplyr::right_join(pe_summary_validation_mahoning, by = c("ProjectType", "AltProjectName")) %>%
+    dplyr::mutate(
+      IncreasedIncome = dplyr::if_else(is.na(IncreasedIncome), 0, IncreasedIncome),
+      IncreasedIncomeDQ = dplyr::if_else(is.na(IncreasedIncomeDQ), 0, IncreasedIncomeDQ),
+      IncreasedIncomePercent = IncreasedIncome / AdultsMovedInLeavers,
+      IncreasedIncomePercentJoin = dplyr::if_else(is.na(IncreasedIncomePercent), 0, IncreasedIncomePercent)
+    ) |>
+    dplyr::right_join(scoring_rubric |>
+                        dplyr::filter(metric == "increase_income"),
+                      by = "ProjectType") |>
+    dplyr::group_by(ProjectType) |>
+    dplyr::mutate(IncreasedIncomePossible = max(points)) |>
+    dplyr::ungroup() |>
+    dplyr::filter(dplyr::if_else(goal_type == "max",
+                                 minimum <= IncreasedIncomePercentJoin &
+                                   maximum > IncreasedIncomePercentJoin,
+                                 minimum < IncreasedIncomePercentJoin &
+                                   maximum >= IncreasedIncomePercentJoin)) %>%
+    dplyr::mutate(
+      IncreasedIncomeMath = dplyr::if_else(
+        AdultsMovedInLeavers != 0,
         paste(
           IncreasedIncome,
           "increased income during their stay /",
-          AdultsMovedIn,
+          AdultsMovedInLeavers,
           "adults who moved into the project's housing =",
-          percent(IncreasedIncomePercent, accuracy = 1)
+          scales::percent(IncreasedIncomePercent, accuracy = 0.1)
         ),
         "All points granted because 0 adults moved into the project's housing"
       ),
-      IncreasedIncomePoints = case_when(
+      IncreasedIncomePoints = dplyr::case_when(
+        AdultsMovedInLeavers == 0 ~ IncreasedIncomePossible,
+        TRUE ~ points),
+      IncreasedIncomePoints = dplyr::case_when(
         IncreasedIncomeDQ == 1 ~ 0,
-        AdultsMovedIn > 0 ~ pe_score(Structure, IncreasedIncomePercent),
-        ProjectType == 3 &
-          AdultsMovedIn == 0 &
-          (IncreasedIncomeDQ == 0 | is.na(IncreasedIncomeDQ)) ~ 11,
-        ProjectType != 3 &
-          AdultsMovedIn == 0 &
-          (IncreasedIncomeDQ == 0 | is.na(IncreasedIncomeDQ)) ~ 10
+        AdultsMovedInLeavers != 0 &
+          (IncreasedIncomeDQ == 0 | is.na(IncreasedIncomeDQ)) ~ IncreasedIncomePoints
       ),
-      IncreasedIncomePossible = if_else(ProjectType == 3, 11, 10),
-      IncreasedIncomeCohort = "AdultsMovedIn"
-    ) %>%
-    select(
+      IncreasedIncomeCohort = "AdultsMovedInLeavers"
+    ) |>
+    dplyr::select(
       ProjectType,
       AltProjectName,
       IncreasedIncome,
@@ -721,67 +823,67 @@ project_evaluation_mahoning <- function(
   # Housing Stability: Length of Time Homeless ------------------------------
   # TH, SH, RRH
 
-  pe$LengthOfStayMahoning <- pe$HoHsMovedInLeavers %>%
-    dplyr::right_join(pe_coc_funded %>%
-                        dplyr::select(ProjectType, AltProjectID, AltProjectName) %>%
-                        unique(),
-                      by = c("AltProjectName", "ProjectType", "AltProjectID")) %>%
-    dplyr::left_join(data_quality_flags, by = "AltProjectName") %>%
-    dplyr::mutate(DaysInProject = difftime(ExitAdjust, EntryDate, units = "days")) %>%
-    dplyr::select(ProjectType,
-                  AltProjectName,
-                  General_DQ,
-                  EntryDate,
-                  EntryAdjust,
-                  MoveInDateAdjust,
-                  ExitDate,
-                  DaysInProject,
-                  PersonalID,
-                  UniqueID,
-                  EnrollmentID,
-                  HouseholdID)
+  # pe$LengthOfStayMahoning <- pe$HoHsMovedInLeavers %>%
+  #   dplyr::right_join(pe_coc_funded %>%
+  #                       dplyr::select(ProjectType, AltProjectID, AltProjectName) %>%
+  #                       unique(),
+  #                     by = c("AltProjectName", "ProjectType", "AltProjectID")) %>%
+  #   dplyr::left_join(data_quality_flags, by = "AltProjectName") %>%
+  #   dplyr::mutate(DaysInProject = difftime(ExitAdjust, EntryDate, units = "days")) %>%
+  #   dplyr::select(ProjectType,
+  #                 AltProjectName,
+  #                 General_DQ,
+  #                 EntryDate,
+  #                 EntryAdjust,
+  #                 MoveInDateAdjust,
+  #                 ExitDate,
+  #                 DaysInProject,
+  #                 PersonalID,
+  #                 UniqueID,
+  #                 EnrollmentID,
+  #                 HouseholdID)
 
-  summary_pe$LengthOfStayMahoning <- pe$LengthOfStayMahoning %>%
-    dplyr::group_by(ProjectType, AltProjectName, General_DQ) %>%
-    dplyr::summarise(
-      AverageDays = as.numeric(mean(DaysInProject))
-    ) %>%
-    dplyr::ungroup() %>%
-    dplyr::right_join(pe_summary_validation_mahoning, by = c("ProjectType", "AltProjectName")) %>%
-    dplyr::mutate(
-      AverageDaysJoin = dplyr::if_else(is.na(AverageDays), 0, AverageDays)) %>%
-    dplyr::right_join(scoring_rubric %>%
-                        dplyr::filter(metric == "length_of_stay"),
-                      by = "ProjectType") %>%
-    dplyr::group_by(ProjectType) %>%
-    dplyr::mutate(AverageLoSPossible = max(points)) %>%
-    dplyr::ungroup() %>%
-    dplyr::filter(dplyr::if_else(goal_type == "max",
-                                 minimum <= AverageDaysJoin &
-                                   maximum > AverageDaysJoin,
-                                 minimum < AverageDaysJoin &
-                                   maximum >= AverageDaysJoin)) %>%
-    dplyr::mutate(
-      AverageLoSPoints = dplyr::case_when(
-        ClientsMovedInLeavers == 0 &
-          ProjectType != 3 ~ AverageLoSPossible,
-        TRUE ~ points
-      ),
-      AverageLoSMath = dplyr::if_else(
-        ClientsMovedInLeavers == 0,
-        "All points granted because this project had 0 leavers who moved into the project's housing",
-        paste(as.integer(AverageDays), "average days")
-      ),
-      AverageLoSDQ = dplyr::case_when(
-        ProjectType %in% c(2, 8, 13) ~ General_DQ),
-      AverageLoSPoints = dplyr::case_when(
-        AverageLoSDQ == 1 ~ 0,
-        AverageLoSDQ == 0 | is.na(AverageLoSDQ) ~ AverageLoSPoints),
-      AverageLoSPoints = dplyr::if_else(is.na(AverageLoSPoints), 0, AverageLoSPoints),
-      AverageLoSCohort = "ClientsMovedInLeavers"
-    ) %>%
-    dplyr::select(ProjectType, AltProjectName, AverageLoSMath, AverageLoSCohort,
-                  AverageLoSPoints, AverageLoSPossible, AverageLoSDQ)
+  # summary_pe$LengthOfStayMahoning <- pe$LengthOfStayMahoning %>%
+  #   dplyr::group_by(ProjectType, AltProjectName, General_DQ) %>%
+  #   dplyr::summarise(
+  #     AverageDays = as.numeric(mean(DaysInProject))
+  #   ) %>%
+  #   dplyr::ungroup() %>%
+  #   dplyr::right_join(pe_summary_validation_mahoning, by = c("ProjectType", "AltProjectName")) %>%
+  #   dplyr::mutate(
+  #     AverageDaysJoin = dplyr::if_else(is.na(AverageDays), 0, AverageDays)) %>%
+  #   dplyr::right_join(scoring_rubric %>%
+  #                       dplyr::filter(metric == "length_of_stay"),
+  #                     by = "ProjectType") %>%
+  #   dplyr::group_by(ProjectType) %>%
+  #   dplyr::mutate(AverageLoSPossible = max(points)) %>%
+  #   dplyr::ungroup() %>%
+  #   dplyr::filter(dplyr::if_else(goal_type == "max",
+  #                                minimum <= AverageDaysJoin &
+  #                                  maximum > AverageDaysJoin,
+  #                                minimum < AverageDaysJoin &
+  #                                  maximum >= AverageDaysJoin)) %>%
+  #   dplyr::mutate(
+  #     AverageLoSPoints = dplyr::case_when(
+  #       ClientsMovedInLeavers == 0 &
+  #         ProjectType != 3 ~ AverageLoSPossible,
+  #       TRUE ~ points
+  #     ),
+  #     AverageLoSMath = dplyr::if_else(
+  #       ClientsMovedInLeavers == 0,
+  #       "All points granted because this project had 0 leavers who moved into the project's housing",
+  #       paste(as.integer(AverageDays), "average days")
+  #     ),
+  #     AverageLoSDQ = dplyr::case_when(
+  #       ProjectType %in% c(2, 8, 13) ~ General_DQ),
+  #     AverageLoSPoints = dplyr::case_when(
+  #       AverageLoSDQ == 1 ~ 0,
+  #       AverageLoSDQ == 0 | is.na(AverageLoSDQ) ~ AverageLoSPoints),
+  #     AverageLoSPoints = dplyr::if_else(is.na(AverageLoSPoints), 0, AverageLoSPoints),
+  #     AverageLoSCohort = "ClientsMovedInLeavers"
+  #   ) %>%
+  #   dplyr::select(ProjectType, AltProjectName, AverageLoSMath, AverageLoSCohort,
+  #                 AverageLoSPoints, AverageLoSPossible, AverageLoSDQ)
 
   # Community Need: Res Prior = Streets or ESSH -----------------------------
   # PSH, TH, SH (Street only), RRH
@@ -1261,6 +1363,7 @@ project_evaluation_mahoning <- function(
 
   # all the alt-projects & score details & totals
   pe_summary <- purrr::reduce(summary_pe, ~dplyr::left_join(.x, .y, by = c("ProjectType", "AltProjectName")))
+
   pe_summary_final_scoring_mahoning <-
     pe_coc_funded[c("ProjectType", "AltProjectName")] %>%
     unique() %>%
@@ -1273,7 +1376,7 @@ project_evaluation_mahoning <- function(
   pe_final_scores$HousingFirstScore[is.na(pe_final_scores$HousingFirstScore)] <- 0
   pe_final_scores$ChronicPrioritizationScore[is.na(pe_final_scores$ChronicPrioritizationScore)] <- 0
   pe_final_scores$PrioritizationWorkgroupScore[is.na(pe_final_scores$PrioritizationWorkgroupScore)] <- 0
-  pe_final_scores$AverageLoSPoints[is.na(pe_final_scores$AverageLoSPoints)] <- 0
+  # pe_final_scores$AverageLoSPoints[is.na(pe_final_scores$AverageLoSPoints)] <- 0
   pe_final_scores$LongTermHomelessPoints[is.na(pe_final_scores$LongTermHomelessPoints)] <- 0
 
   pe_final_scores <- pe_final_scores %>%
@@ -1282,12 +1385,12 @@ project_evaluation_mahoning <- function(
         NoIncomeAtEntryPoints +
         ExitsToPHPoints +
         ScoredAtEntryPoints +
-        MedianHHIPoints +
-        # IncreasedIncomePoints +
-        AverageLoSPoints +
+        # MedianHHIPoints +
+        IncreasedIncomePoints +
+        # AverageLoSPoints +
         LongTermHomelessPoints +
         BenefitsAtExitPoints +
-        # OwnHousingPoints +
+        OwnHousingPoints +
         LHResPriorPoints +
         HousingFirstScore +
         ChronicPrioritizationScore +
@@ -1341,7 +1444,7 @@ project_evaluation_mahoning <- function(
 
   readr::write_csv(pe_final_scores, fs::path(dirs$random, "pe_final_all_mahoning.csv"))
 
-  exported_pe <- pe[c("ScoredAtPHEntryMahoning", "LongTermHomelessMahoning", "HomelessHistoryIndexMahoning", "LengthOfStayMahoning", "ResPriorMahoning", "BenefitsAtExitMahoning", "ExitsToPHMahoning", "EntriesNoIncomeMahoning")] |>
+  exported_pe <- pe[c("ScoredAtPHEntryMahoning", "LongTermHomelessMahoning", "HomelessHistoryIndexMahoning", "IncreaseIncomeMahoning", "OwnHousingMahoning", "ResPriorMahoning", "BenefitsAtExitMahoning", "ExitsToPHMahoning", "EntriesNoIncomeMahoning")] |>
     {\(x) {rlang::set_names(x, paste0("pe_", snakecase::to_snake_case(names(x))))}}()
 
   # saving old data to "current" image so it all carries to the apps

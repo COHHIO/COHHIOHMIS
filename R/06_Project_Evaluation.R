@@ -37,10 +37,11 @@ project_evaluation <- function(
       `GLCAP - PSH - Combined` = list(c("GLCAP", "Homenet", "PSH")),
       # `Springfield SPC1 - PSH - Combined` = list(c("Springfield - SPC1"), c("Springfield", "DePaul SPC")),
       `One Eighty Plus Care - PSH - Combined` = list(c("Ashland - One Eighty - PSH"), c("Wayne - One Eighty - PSH")),
-      `Licking Region 9 - RRH - Combined` = list(
-        c("Coalition for Housing - Region 9"),
-        c("Partners of Central Ohio - Region 9")
-      )
+      `Licking Region 9 - RRH - Combined` = list(c("Coalition for Housing - Region 9"), c("Partners of Central Ohio - Region 9"), c("Coshocton - Knohoco Ashland CAC - Region 9 RRH")),
+      `Athens - Integrated Services - Charles/Graham Combined` = list(c("Athens - Integrated Services - Charles Place - PSH"), c("Athens - Integrated Services - Graham Drive Family Housing - PSH")),
+      `Hocking - Hocking MHA - Region 17 PSH Combined` = list(c("Hocking MHA - Region 17 Tenant Based - PSH"), c(" Hocking MHA  - Hocking Shelter Plus Care - PSH")),
+      `Preble MHRB – Prestwick Square PSH – Combined` = list(c("Mental Health Recovery Board of Preble County - Prestwick Square - PSH"), c("Mental Health Recovery Board of Preble County - Prestwick Square II - PSH")),
+      `Tuscarawas – ADAMHS Board – Tuscarawas County TRA Combined` = list(c("Tuscarawas - ADAMHS Board Shelter Plus Care TRA - PSH"),c("Tuscarawas - ADAMHS Board - Recovery Begins at Home - PSH"))
     )
 
   merged_projects <- purrr::map(merged_projects, ~{
@@ -53,7 +54,6 @@ project_evaluation <- function(
   .merged <- rlang::set_names(purrr::map(merged_projects, "ProjectID") |> purrr::flatten_chr(), purrr::map(merged_projects, "ProjectName") |> purrr::flatten_chr())
 
   # consolidated projects
-
   pe_coc_funded <- Funder %>%
     dplyr::filter(Funder %in% c(1:7, 43, 44) &
                     (ProjectID %in% .merged |
@@ -1368,6 +1368,7 @@ project_evaluation <- function(
     unique() %>%
     dplyr::left_join(pe_summary, by = c("ProjectType", "AltProjectName")) |>
     dplyr::left_join(summary_pe_coc_scoring, by = c("ProjectType", "AltProjectName")) |>
+    dplyr::distinct(AltProjectName, .keep_all = TRUE) |>
     dplyr::rowwise() |>
     dplyr::mutate(
       TotalScore = sum(DQPoints,
