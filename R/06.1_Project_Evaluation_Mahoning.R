@@ -31,7 +31,8 @@ project_evaluation_mahoning <- function(
 
   merged_projects <-
     list(
-        `Mahoning - Help Network - PSH - Combined` = list(c("Help Network - Shelter Plus Care - PSH"), c("PSH Rental Assistance Program - PSH"))
+        `Mahoning - Help Network - PSH - Combined` = list(c("Help Network - Shelter Plus Care - PSH"), c("PSH Rental Assistance Program - PSH")),
+        `Mahoning - Samaritan Housing PRA` = list(c("Homeless Solutions SRO II"), c("Samaritan Housing PRA"))
     )
 
   merged_projects <- purrr::map(merged_projects, ~{
@@ -44,7 +45,6 @@ project_evaluation_mahoning <- function(
   .merged <- rlang::set_names(purrr::map(merged_projects, "ProjectID") |> purrr::flatten_chr(), purrr::map(merged_projects, "ProjectName") |> purrr::flatten_chr())
 
   # consolidated projects
-
   pe_coc_funded <- Funder %>%
     dplyr::filter(((StartDate <= rm_dates$hc$project_eval_end &(is.na(EndDate) | EndDate >= rm_dates$hc$project_eval_end)
                        ))) |>
@@ -69,12 +69,13 @@ project_evaluation_mahoning <- function(
     dplyr::filter(AltProjectName %in%
                     c("Mahoning - Beatitude House - Permanent Supportive Housing Program - PSH",
                       "Mahoning - Meridian Services - Phoenix Court - PSH",
-                      "Mahoning - Meridian Services - Samaritan Housing PRA - PSH",
-                      "Mahoning - Meridian Services - Homeless Solutions SRO II - PSH",
+                      # "Mahoning - Meridian Services - Samaritan Housing PRA - PSH",
+                      # "Mahoning - Meridian Services - Homeless Solutions SRO II - PSH",
                       "Mahoning - Ursuline Center - Merici - PSH",
                       "Mahoning - YWCA Permanent Housing for Disabled Families - PSH",
                       "Mahoning - YWCA Scattered Site Housing II - PSH",
-                      "Mahoning - Help Network - PSH - Combined"
+                      "Mahoning - Help Network - PSH - Combined",
+                      "Mahoning - Samaritan Housing PRA"
                     ))
 
 

@@ -48,7 +48,6 @@ data_quality <- function(check_fns = RmData::relevant_dq,
 
 
 
-
   # Providers to Check ------------------------------------------------------
   projects_current_hmis <- projects_current_hmis()
 

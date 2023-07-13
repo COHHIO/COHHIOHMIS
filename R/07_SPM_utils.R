@@ -2,7 +2,7 @@ seq_vec <- function(x) {
   purrr::map2(x[-length(x)], dplyr::lead(x)[-length(x)] - 1, `:`)
 }
 
-load_spm <- function(filename) {
+load_xlsx_spm <- function(filename) {
   spm <- readxl::read_xlsx(filename)
   # Get the DQ Section index
   dq_idx <- stringr::str_which(spm[[1]], "^Data Quality")
