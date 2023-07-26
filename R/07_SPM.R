@@ -13,10 +13,13 @@
 # <https://www.gnu.org/licenses/>.
 #' @include 07_SPM_utils.R
 
-spms <- function(spm_xlsx_file = clarity.looker::hud_filename("hudx-223-ad", dirs$spm)) {
+spms <- function() {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   #  Load SPM ----
   # Tue Dec 28 11:47:35 2021
-  spm <- load_xlsx_spm(spm_xlsx_file)
+  spm <- load_csv_spm()
+
+  spm <- spm |>
+    dplyr::mutate(FiscalYear = lubridate::year(ReportEndDate))
 }

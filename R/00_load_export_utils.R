@@ -737,7 +737,6 @@ Enrollment_add_HousingStatus <-
 
 
 
-
   if (!all(.cols$ref %in% .nms))
     out <- dplyr::left_join(out,
                             # Remove R_ReferralResult because the computation in Looker is bugged. A person can be simultaneously Accepted & Rejected
@@ -755,9 +754,11 @@ Enrollment_add_HousingStatus <-
     is_ph = (R_ReferringPTC %|% ProjectType) %in% data_types$Project$ProjectType$ph,
     is_lh = (R_ReferringPTC %|% ProjectType) %in% c(data_types$Project$ProjectType$lh, 4, 11),
     moved_in = !is.na(MoveInDateAdjust) & MoveInDateAdjust >= EntryDate,
-    referredproject = !is.na(R_ReferringProjectName),
+    referredproject = !is.na(R_ReferredProjectName),
     ph_track = !is.na(PHTrack) & PHTrack != "None"
   )
+
+
   # Referral Situation ----
   # Tue Nov 09 12:49:51 2021
   out <- dplyr::mutate(
