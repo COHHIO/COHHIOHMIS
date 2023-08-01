@@ -755,6 +755,7 @@ Enrollment_add_HousingStatus <-
     is_lh = (R_ReferringPTC %|% ProjectType) %in% c(data_types$Project$ProjectType$lh, 4, 11),
     moved_in = !is.na(MoveInDateAdjust) & MoveInDateAdjust >= EntryDate,
     referredproject = !is.na(R_ReferredProjectName),
+    referreddate = !is.na(R_ReferralAcceptedDate),
     ph_track = !is.na(PHTrack) & PHTrack != "None"
   )
 
@@ -776,13 +777,25 @@ Enrollment_add_HousingStatus <-
         !!sit_expr$ph_date &
         !!sit_expr$ph_date_post &
         !(!!sit_expr$moved_in) ~ paste("Follow-up needed on PH Track, client is not yet moved in:", PHTrack,"Expected Move-in:", ExpectedPHDate),
+      # Clients with an accepted referral but no entry in RRH/PSH
       !!sit_expr$ptc_no_entry &
-        !!sit_expr$referredproject ~
+        !!sit_expr$referredproject &
+        !!sit_expr$referreddate ~
         paste(
           "No current Entry into RRH or PSH but",
           R_ReferredProjectName,
           "accepted this household's referral on",
           R_ReferralAcceptedDate
+        ),
+      # Clients with a referral but no accepted date
+      !!sit_expr$ptc_no_entry &
+        !!sit_expr$referredproject &
+        !(!!sit_expr$referreddate) ~
+        paste(
+          "No current Entry into RRH or PSH but was referred to",
+          R_ReferredProjectName,
+          "on",
+          R_ReferredDate
         ),
       !R_ReferralCurrentlyOnQueue == "Yes" | is.na(R_ReferralCurrentlyOnQueue) ~ "Not referred to Community Queue, may need referral to CQ.",
       !!sit_expr$ptc_no_entry &
