@@ -231,7 +231,8 @@ funs = rlang::set_names(c(
   "data_quality_summary",
   # "project_evaluation",
   # "project_evaluation_mahoning",
-  "prioritization"
+  "prioritization",
+  "spms"
 
 )),
 remote = FALSE,
