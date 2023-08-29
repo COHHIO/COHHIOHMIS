@@ -101,6 +101,7 @@ qpr_ees <- function(
     dplyr::filter(RelationshipToHoH == 1) |>
     dplyr::left_join(smallMainstreamBenefits, by = "EnrollmentID") |>
     dplyr::select(
+      ProgramCoC,
       ProjectName,
       UniqueID,
       PersonalID,
@@ -150,6 +151,7 @@ qpr_ees <- function(
     dplyr::filter(RelationshipToHoH == 1) |>
     dplyr::left_join(smallIncomeDiff, by = "EnrollmentID") |>
     dplyr::select(
+      ProgramCoC,
       ProjectName,
       UniqueID,
       PersonalID,

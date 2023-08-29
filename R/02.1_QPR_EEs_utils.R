@@ -6,6 +6,7 @@ qpr_project_small <- function(Project, rm_dates, app_env = get_app_env(e = rlang
                   OrganizationName,
                   OperatingStartDate,
                   OperatingEndDate,
+                  ProgramCoC,
                   ProjectName,
                   ProjectType,
                   HMISParticipatingProject,
