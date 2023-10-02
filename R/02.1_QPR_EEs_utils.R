@@ -16,7 +16,7 @@ qpr_project_small <- function(Project, rm_dates, app_env = get_app_env(e = rlang
     HMIS::operating_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
     dplyr::filter(HMISParticipatingProject == 1 &
                     !is.na(ProjectRegion) &
-                    ProjectType %in% c(1:4, 8:9, 12:14))
+                    ProjectType %in% c(1:4, 6, 8:9, 12:14))
 }
 
 qpr_enrollment_small <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, app_env = get_app_env(e = rlang::caller_env())) {

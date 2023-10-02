@@ -30,7 +30,6 @@ aws.s3::delete_object(df_bucket_data$Contents$Key, bucket = "hud.csv-daily",
 
 # 4. Run update
 daily_update(backup = FALSE, remote = FALSE)
-
 beepr::beep(sound = 3)
 
 
