@@ -44,11 +44,11 @@ small_project <- Project |>
   HMIS::operating_between(rm_dates$calc$two_yrs_prior_start, rm_dates$calc$two_yrs_prior_end) |>
   dplyr::filter(ProjectType %in% data_types$Project$ProjectType$w_beds &
            is.na(GrantType) &
-           HMISParticipatingProject == 1) |>
+           HMISParticipationType == 1) |>
   dplyr::select(ProjectID,
                 ProjectName,
                 ProjectType,
-                HMISParticipatingProject)
+                HMISParticipationType)
 
 small_inventory <- Inventory |>
   dplyr::select(
@@ -304,7 +304,7 @@ small_project <- Project |>
          ProjectName,
          ProjectType,
          OrganizationName,
-         HMISParticipatingProject)
+         HMISParticipationType)
 
 # Current Bed Utilization -------------------------------------------------
 

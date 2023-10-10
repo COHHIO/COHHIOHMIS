@@ -458,17 +458,23 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
   # provider_extras
   # Thu Aug 12 14:23:50 2021
 
-
+  browser()
   provider_extras <- clarity_api$`HUD Extras`$Project_extras() |>
     dplyr::mutate(Geocode = as.character(Geocode))
   provider_extras <- pe_add_ProjectType(provider_extras) |>
     pe_add_regions(Regions, dirs = dirs) |>
     pe_add_GrantType()
 
+  # Add HMISParticipation (HMISParticipating column no longer in Project.csv)
+  HMISParticipation <- clarity.looker::hud_load("HMISParticipation", dirs$export)
+  HMISParticipation$ProjectID <- as.character(HMISParticipation$ProjectID)
+
+  provider_extras <- provider_extras |>
+    dplyr::left_join(HMISParticipation, by = "ProjectID")
+
   # Rminor: Coordinated Entry Access Points [CEAP]
   APs <- pe_create_APs(provider_extras, ProjectCoC, dirs = dirs)
 
-  browser()
 
   .Project <- clarity_api$Project()
   Project <- .Project |>
