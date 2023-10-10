@@ -451,7 +451,6 @@ load_client <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
 
 load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = rlang::caller_env()),
                          app_env = get_app_env(e = rlang::caller_env())) {
-
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   force(ProjectCoC)
@@ -469,7 +468,7 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
   # Rminor: Coordinated Entry Access Points [CEAP]
   APs <- pe_create_APs(provider_extras, ProjectCoC, dirs = dirs)
 
-
+  browser()
 
   .Project <- clarity_api$Project()
   Project <- .Project |>

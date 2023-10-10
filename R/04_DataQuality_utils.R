@@ -32,7 +32,7 @@ projects_current_hmis <- function (Project,
   Project |>
     dplyr::left_join(Inventory, by = "ProjectID") |>
     HMIS::operating_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
-    dplyr::filter(HMISParticipatingProject == 1 &
+    dplyr::filter(HMISParticipationType == 1 &
                     (GrantType != "HOPWA" | is.na(GrantType))) |>
     dplyr::select(
       ProjectID,
@@ -2995,11 +2995,11 @@ dqu_aps <- function(Project, Referrals, data_APs = TRUE, app_env = get_app_env(e
       OperatingStartDate,
       OperatingEndDate,
       ProjectName,
-      HMISParticipatingProject,
+      HMISParticipationType,
       ProjectCounty
     ) |>
     dplyr::distinct()
-  participating <- dplyr::filter(co_APs, as.logical(HMISParticipatingProject)) |>
+  participating <- dplyr::filter(co_APs, as.logical(HMISParticipationType)) |>
     unique() |>
     dplyr::pull(ProjectID)
   referring <- unique(Referrals$R_ReferringProjectID)

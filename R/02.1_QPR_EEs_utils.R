@@ -9,12 +9,12 @@ qpr_project_small <- function(Project, rm_dates, app_env = get_app_env(e = rlang
                   ProgramCoC,
                   ProjectName,
                   ProjectType,
-                  HMISParticipatingProject,
+                  HMISParticipationType,
                   GrantType,
                   ProjectCounty,
                   ProjectRegion) |>
     HMIS::operating_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
-    dplyr::filter(HMISParticipatingProject == 1 &
+    dplyr::filter(HMISParticipationType == 1 &
                     !is.na(ProjectRegion) &
                     ProjectType %in% c(1:4, 6, 8:9, 12:14))
 }

@@ -66,9 +66,9 @@ project_evaluation <- function(
     dplyr::left_join(Project[c("ProjectID",
                                "ProjectName",
                                "ProjectType",
-                               "HMISParticipatingProject",
+                               "HMISParticipationType",
                                "ProjectRegion")], by = "ProjectID") %>%
-    dplyr::filter(HMISParticipatingProject == 1 &
+    dplyr::filter(HMISParticipationType == 1 &
                     ProjectRegion != 0) %>%
     dplyr::mutate(
       AltProjectName = merge_projects(ProjectName, merged_projects),

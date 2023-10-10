@@ -52,14 +52,14 @@ project_evaluation_mahoning <- function(
     dplyr::left_join(Project[c("ProjectID",
                                "ProjectName",
                                "ProjectType",
-                               "HMISParticipatingProject",
+                               "HMISParticipationType",
                                "ProjectRegion")], by = "ProjectID") |>
     # dplyr::filter(HMISParticipatingProject == 1 &
     #                 ProjectRegion != 0) %>%
     dplyr::select(ProjectType,
                   ProjectName,
                   ProjectID,
-                  HMISParticipatingProject,
+                  HMISParticipationType,
                   ProjectRegion,
                   StartDate,
                   EndDate) |>
