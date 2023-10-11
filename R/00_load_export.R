@@ -75,7 +75,6 @@ load_export <- function(
 
 
   app_env <- load_enrollment(Enrollment = clarity_api$Enrollment(),
-                             EnrollmentCoC = clarity_api$EnrollmentCoC(),
                              Enrollment_extras = clarity_api$`HUD Extras`$Enrollment_extras(),
                              Exit = clarity_api$Exit())
 

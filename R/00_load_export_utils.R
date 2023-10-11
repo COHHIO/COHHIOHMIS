@@ -466,8 +466,10 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
     pe_add_GrantType()
 
   # Add HMISParticipation (HMISParticipating column no longer in Project.csv)
-  HMISParticipation <- clarity.looker::hud_load("HMISParticipation", dirs$export)
-  HMISParticipation$ProjectID <- as.character(HMISParticipation$ProjectID)
+  HMISParticipation <- clarity.looker::hud_load("HMISParticipation", dirs$export) |>
+    dplyr::select(HMISParticipationID, ProjectID, HMISParticipationType,
+                  HMISParticipationStatusStartDate, HMISParticipationStatusEndDate) |>
+    dplyr::mutate_all(as.character)
 
   provider_extras <- provider_extras |>
     dplyr::left_join(HMISParticipation, by = "ProjectID")
@@ -522,7 +524,7 @@ load_enrollment <- function(Enrollment,
     # Add Veteran Coordinated Entry
     Enrollment_add_VeteranCE(VeteranCE = VeteranCE) |>
     # # Add Client Location from EnrollmentCoC
-    Enrollment_add_ClientLocation(EnrollmentCoC) |>
+    # Enrollment_add_ClientLocation(EnrollmentCoC) |>
     # # Add Client AgeAtEntry
     Enrollment_add_AgeAtEntry_UniqueID(Client) |>
     dplyr::left_join(dplyr::select(Client,-dplyr::any_of(
