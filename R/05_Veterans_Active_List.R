@@ -41,7 +41,7 @@ vet_active <- function(
     c(
       "AgeAtEntry",
       "AnnualPercentAMI",
-      "ClientLocation",
+      # "ClientLocation",
       "County",
       "DateToStreetESSH",
       "DateVeteranIdentified",
@@ -79,7 +79,7 @@ vet_active <- function(
       "VAMCStation",
       "VeteranStatus"
     )
-
+  browser()
   vet_ees <- co_clients_served |>
     dplyr::filter(ProjectType %in% c(data_types$Project$ProjectType$lh_at_entry, data_types$Project$ProjectType$ap)) |>
     dplyr::mutate(VeteranStatus = dplyr::if_else(VeteranStatus == 1, 1, 0)) |>
