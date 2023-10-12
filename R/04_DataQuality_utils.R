@@ -96,44 +96,47 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Client_
     dplyr::select(
       dplyr::all_of(
       c(
+        "AdditionalRaceEthnicity",
         "AgeAtEntry",
         "AmIndAKNative",
         "Asian",
         "BlackAfAmerican",
         "ClientEnrolledInPATH",
-        "ClientLocation",
         "CountyPrior",
         "CountyServed",
+        "CulturallySpecific",
         "DateCreated",
         "DateOfEngagement",
         "DateOfPATHStatus",
         "DateToStreetESSH",
         "Destination",
+        "DifferentIdentity",
+        "DifferentIdentityText",
         "DisablingCondition",
         "DOB",
         "DOBDataQuality",
         "EnrollmentID",
         "EntryDate",
         "EntryAdjust",
-        "Ethnicity",
         "ExitAdjust",
         "ExitDate",
         "ExpectedPHDate",
-        "Female",
         "FirstName",
         "GenderNone",
+        "HispanicLatinaeo",
         "HouseholdID",
         "LengthOfStay",
         "LengthOfStay",
         "LivingSituation",
         "LOSUnderThreshold",
-        "Male",
+        "Man",
+        "MidEastNAfrican",
         "MonthsHomelessPastThreeYears",
         "MoveInDate",
         "MoveInDateAdjust",
         "NameDataQuality",
         "NativeHIPacific",
-        "NoSingleGender",
+        "NonBinary",
         "PersonalID",
         "PHTrack",
         "PreviousStreetESSH",
@@ -149,7 +152,8 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Client_
         "UniqueID",
         "UserCreating",
         "VeteranStatus",
-        "White"
+        "White",
+        "Woman"
       ))
       ) |>
     dplyr::inner_join(projects_current_hmis, by = "ProjectID") |>
@@ -159,7 +163,7 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Client_
         dplyr::filter(DataCollectionStage == 1)  |>
         dplyr::select(
           EnrollmentID,
-          DomesticViolenceVictim,
+          DomesticViolenceSurvivor,
           WhenOccurred,
           CurrentlyFleeing
         ),
@@ -1283,6 +1287,7 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
         )
     )
 
+  browser()
 
     out <- check_eligibility |>
       dplyr::mutate(
@@ -2286,19 +2291,18 @@ dq_conflicting_hi_ee <- function(served_in_date_range,  IncomeBenefits, vars, gu
       Medicaid,
       Medicare,
       SCHIP,
-      VAMedicalServices,
+      VHAServices,
       EmployerProvided,
       COBRA,
       PrivatePay,
       StateHealthIns,
       IndianHealthServices,
       OtherInsurance,
-      HIVAIDSAssistance,
       ADAP,
       UserCreating
     ) |>
     dplyr::mutate(
-      SourceCount = Medicaid + SCHIP + VAMedicalServices + EmployerProvided +
+      SourceCount = Medicaid + SCHIP + VHAServices + EmployerProvided +
         COBRA + PrivatePay + StateHealthIns + IndianHealthServices +
         OtherInsurance + Medicare
     )
@@ -2680,17 +2684,16 @@ ssvf_served_in_date_range <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, se
   Enrollment_extra_Client_Exit_HH_CL_AaE |>
       dplyr::select(dplyr::all_of(
         c(
-          "AddressDataQuality",
           "EnrollmentID",
           "EntryAdjust",
           "EntryDate",
           "ExitDate",
           "HouseholdID",
           "HPScreeningScore",
-          "LastPermanentCity",
-          "LastPermanentState",
-          "LastPermanentStreet",
-          "LastPermanentZIP",
+          # "LastPermanentCity",
+          # "LastPermanentState",
+          # "LastPermanentStreet",
+          # "LastPermanentZIP",
           "MoveInDateAdjust",
           "PercentAMI",
           "PersonalID",
