@@ -18,7 +18,7 @@
       "RemoteRepo": "HMIS",
       "RemoteUsername": "COHHIO",
       "RemoteRef": "HEAD",
-      "RemoteSha": "020b177b458278a68d0c5d9927c8b40e3cd66c19",
+      "RemoteSha": "ff5abf91438fe8377ed567fee7c41c1a38bc1d84",
       "Requirements": [
         "dplyr",
         "lubridate",
@@ -26,7 +26,7 @@
         "rlang",
         "stringr"
       ],
-      "Hash": "c5204caaf269acee141246ef1156fd8d"
+      "Hash": "8143de3205bf2e14875b4a2bc03fbbd7"
     },
     "MASS": {
       "Package": "MASS",
@@ -1989,7 +1989,7 @@
     },
     "vctrs": {
       "Package": "vctrs",
-      "Version": "0.6.3",
+      "Version": "0.6.4",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1999,7 +1999,7 @@
         "lifecycle",
         "rlang"
       ],
-      "Hash": "d0ef2856b83dc33ea6e255caf6229ee2"
+      "Hash": "266c1ca411266ba8f365fcc726444b87"
     },
     "viridisLite": {
       "Package": "viridisLite",

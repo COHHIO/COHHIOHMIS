@@ -144,7 +144,7 @@ vet_active <- function(
 
   # Not used in RME?
   # Entry Exits -------------------------------------------------------------
-  # browser()
+
   # small_ees <- vet_ees |>
   #   dplyr::filter(!PersonalID %in% currently_housed_in_psh_rrh &
   #                   VeteranStatus == 1 &

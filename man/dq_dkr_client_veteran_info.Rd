@@ -30,7 +30,6 @@ Check for Dont Know/Refused Wars/Branch/Discharge on clients who are Veterans
 }
 \seealso{
 Other DQ: SSVF Checks: 
-\code{\link{dq_ssvf_missing_address}()},
 \code{\link{dq_ssvf_missing_percent_ami}()},
 \code{\link{dq_veteran_missing_branch}()},
 \code{\link{dq_veteran_missing_discharge_status}()},
@@ -43,7 +42,6 @@ Other DQ: EE Checks:
 \code{\link{dq_future_ees}()},
 \code{\link{dq_future_exits}()},
 \code{\link{dq_missing_income}()},
-\code{\link{dq_ssvf_missing_address}()},
 \code{\link{dq_ssvf_missing_percent_ami}()},
 \code{\link{dq_veteran_missing_branch}()},
 \code{\link{dq_veteran_missing_discharge_status}()},

@@ -16,9 +16,6 @@ setup_RmData(
 
 \item{ServicePoint}{\code{(logical)} Does the CoC use ServicePoint HMIS? \strong{Default} \code{FALSE}}
 }
-\value{
-
-}
 \description{
 Setup RmData options
 }

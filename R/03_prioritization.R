@@ -596,7 +596,7 @@ prioritization <- prioritization |>
     )
   ) |>
   dplyr::select(-WhenOccurred)
-
+  browser()
 # Clean the House ---------------------------------------------------------
 prioritization <- prioritization |>
   dplyr::mutate(

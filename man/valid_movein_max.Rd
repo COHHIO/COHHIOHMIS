@@ -11,9 +11,6 @@ valid_movein_max(MoveInDateAdjust, EntryDate)
 
 \item{EntryDate}{\code{(Date)} Date of Entry for Enrollment}
 }
-\value{
-
-}
 \description{
 Return a valid Move-In Date
 }

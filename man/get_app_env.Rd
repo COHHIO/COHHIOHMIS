@@ -15,9 +15,6 @@ get_app_env(
 
 \item{e}{The environment in which to search}
 }
-\value{
-
-}
 \description{
 Find the \code{app_env} R6 object
 }

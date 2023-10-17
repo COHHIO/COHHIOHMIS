@@ -329,7 +329,7 @@ dq_eligibility_detail <- dq_check_eligibility()
 #   dkr_client_veteran_info <- dq_dkr_client_veteran_info()
 #
 #   ssvf_missing_percent_ami <- dq_ssvf_missing_percent_ami()
-#ssvf_missing_address <- dq_ssvf_missing_address()
+
 #
 # TEMPORARILY NOT REQUIRED FOR COVID-19 REASONS
 # ssvf_hp_screen <- ssvf_served_in_date_range %>%

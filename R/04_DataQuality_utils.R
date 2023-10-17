@@ -1261,7 +1261,6 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
         )
     )
 
-  browser()
 
     out <- check_eligibility |>
       dplyr::mutate(
