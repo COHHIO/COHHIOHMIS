@@ -125,7 +125,7 @@ utilization_clients <- Utilizers |>
         MoveInDateAdjust >= EntryDate &
         MoveInDateAdjust < ExitAdjust
     ) |
-      ProjectType %in% c(1, 2, 8)
+      ProjectType %in% c(0, 2, 8)
   ))
 
 # filtering Beds object to exclude any providers that served 0 hhs in date range
