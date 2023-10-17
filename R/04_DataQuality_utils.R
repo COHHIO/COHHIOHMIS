@@ -2928,36 +2928,6 @@ dq_ssvf_missing_percent_ami <- function(ssvf_served_in_date_range, vars, guidanc
 
 }
 
-#' @title Check for missing address on clients who are Veterans
-#'
-#' @inherit dq_veteran_missing_year_entered params return
-#' @family DQ: SSVF Checks
-#' @family DQ: EE Checks
-#' @export
-
-dq_ssvf_missing_address <-
-  function(ssvf_served_in_date_range,
-           vars,
-           guidance,
-           app_env = get_app_env(e = rlang::caller_env())) {
-    if (is_app_env(app_env))
-      app_env$set_parent(missing_fmls())
-
-    ssvf_served_in_date_range |>
-      dplyr::filter(RelationshipToHoH == 1 &
-                      (
-                        is.na(LastPermanentStreet) |
-                          is.na(LastPermanentCity) |
-                          # is.na(LastPermanentState) | # still not fixed in export
-                          is.na(LastPermanentZIP)
-                      )) |>
-      dplyr::mutate(
-        Issue = "Missing Some or All of Last Permanent Address",
-        Type = "Error",
-        Guidance = guidance$missing_at_entry
-      ) |>
-      dplyr::select(dplyr::all_of(vars$we_want))
-  }
 
 # AP No Recent Referrals --------------------------------------------------
 
