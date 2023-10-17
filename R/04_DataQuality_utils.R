@@ -1149,8 +1149,8 @@ dq_sh_missing_project_stay <- function(served_in_date_range, vars, guidance = NU
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   served_in_date_range |>
-    dplyr::filter(Destination == 18) |>
-    dplyr::anti_join(enrolled_in(served_in_date_range, type = 8), by = "PersonalID", suffix = c("", "_sh")) |>
+    dplyr::filter(Destination == 118) |>
+    dplyr::anti_join(enrolled_in(served_in_date_range, type = 8), by = "PersonalID") |>
     dplyr::mutate(
       Issue = "Missing Safe Haven Project Stay or Incorrect Destination",
       Type = "Warning",
