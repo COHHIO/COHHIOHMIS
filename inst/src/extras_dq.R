@@ -5,9 +5,8 @@ Rm_env <- load_export(clarity_api = cl_api, app_env = Rm_env)
 Rm_env <- client_counts(app_env = Rm_env)
 Rm_env <- cohorts(clarity_api = cl_api, app_env = Rm_env)
 Rm_env <- bed_unit_utilization(clarity_api = cl_api, app_env = Rm_env)
-#Rm_env <- prioritization(clarity_api = cl_api, app_env = Rm_env)
 Rm_env <- data_quality(clarity_api = cl_api, app_env = Rm_env)
 Rm_env$write_app_deps(objs = Rm_env$app_objs$RminorElevated, path = file.path("data", "db", "RminorElevated"), dep_nms = Rm_env$app_deps$RminorElevated)
+
 # Uses RminorElevated as the default
-# Rm_env$dropbox_auth()
 Rm_env$deps_to_apps(dropbox = FALSE)

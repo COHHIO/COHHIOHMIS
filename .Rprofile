@@ -1,6 +1,7 @@
 source("renv/activate.R")
 if (file.exists("~/.Rprofile"))
   source("~/.Rprofile")
+
 options(renv.settings.snapshot.type = "explicit",
         ggmap = list(google = list(second_limit = 50L,
                                    day_limit = 2500)),
