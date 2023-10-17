@@ -3,7 +3,7 @@
 # Thu Sep 30 15:04:13 2021
 assessment_custom <- list()
 assessment_custom$box <- clarity.looker::hud_load("Assessment_Custom_combined")
-assessment_custom$api = cl_api$api$runLook(
+assessment_custom$api <- cl_api$api$runLook(
   69576,
   resultFormat = "csv",
   queryParams = list(limit = -1, apply_vis = TRUE)
@@ -38,7 +38,8 @@ common_nms <- do.call(UU::common_names, assessment_custom[1:2]) |> stringr::str_
 type_differences <- purrr::map2_lgl(assessment_custom$box[common_nms], assessment_custom$api[common_nms], ~{
   !inherits(.x, class(.y))
 })
-num_lgl_nms <- common_nms[type_differences][purrr::map_lgl(assessment_custom$box[common_nms[type_differences]], ~{all(unique(.x) %in% c(0, 1, NA))})] |>
+num_lgl_nms <- common_nms[type_differences][purrr::map_lgl(assessment_custom$box[common_nms[type_differences]], ~{
+  all(unique(.x) %in% c(0, 1, NA))})] |>
   stringr::str_subset("^assessment", negate = TRUE)
 
 to_chr <- setdiff(common_nms[type_differences], c(num_lgl_nms, c("c_covid19_vaccine_documentation", "c_covid19_vaccine_manufacturer",

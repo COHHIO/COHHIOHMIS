@@ -1,5 +1,4 @@
-assessment_custom$data_match <- purrr::imap(
-  rlang::set_names(unique(assessment_custom$box$PersonalID)), ~{
+assessment_custom$data_match <- purrr::imap(rlang::set_names(unique(assessment_custom$box$PersonalID)), ~{
   message(.y)
   api <- dplyr::filter(assessment_custom$api, Alias == .x)
   box <- dplyr::filter(assessment_custom$box, PersonalID == .x)
