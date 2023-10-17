@@ -592,7 +592,7 @@ dq_missing_months_times_homeless <- function(served_in_date_range, vars, guidanc
     ) |>
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
                     EntryDate >= rm_dates$hc$prior_living_situation_required &
-                    ProjectType %in% c(0, 4, 8) &
+                    ProjectType %in% c(0, 1, 4, 8) &
                     (
                       is.na(MonthsHomelessPastThreeYears) |
                         is.na(TimesHomelessPastThreeYears) |
@@ -881,14 +881,14 @@ dq_th_stayers_bos <- function(served_in_date_range, mahoning_projects, vars, gui
   es_stayers_bos <- served_in_date_range |>
     dplyr::select(dplyr::all_of(vars$prep), ProjectID) |>
     dplyr::filter(is.na(ExitDate) &
-                    ProjectType == 0 &
+                    ProjectType %in% c(0,1) &
                     !ProjectID %in% c(mahoning_projects)) |>
     dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate)))
 
   es_stayers_mah <- served_in_date_range |>
     dplyr::select(dplyr::all_of(vars$prep), ProjectID) |>
     dplyr::filter(is.na(ExitDate) &
-                    ProjectType == 0 &
+                    ProjectType %in% c(0, 1) &
                     ProjectID %in% c(mahoning_projects)) |>
     dplyr::mutate(Days = as.numeric(difftime(lubridate::today(), EntryDate)))
 
@@ -1667,7 +1667,7 @@ dq_future_ees <- function(served_in_date_range, rm_dates, vars, app_env = get_ap
 
   served_in_date_range |>
     dplyr::filter(EntryDate > DateCreated &
-                    (ProjectType %in% c(0, 2, 4, 8, 13) |
+                    (ProjectType %in% c(0, 1, 2, 4, 8, 13) |
                        (
                          ProjectType %in% c(3, 9) &
                            EntryDate >= rm_dates$hc$psh_started_collecting_move_in_date
@@ -1771,7 +1771,7 @@ dq_without_spdats <- function(served_in_date_range, Funder, Scores, rm_dates, va
                     ExpectedPHDate < lubridate::today()) |>
     dplyr::anti_join(ees_with_spdats, by = "EnrollmentID") |>
     dplyr::filter(
-      ProjectType %in% c(0, 4, 8, 14) &
+      ProjectType %in% c(0, 1, 4, 8, 14) &
         VeteranStatus != 1 &
         RelationshipToHoH == 1 &
         EntryDate < lubridate::today() - lubridate::days(8) &

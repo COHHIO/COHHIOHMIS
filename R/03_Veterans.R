@@ -79,7 +79,7 @@ VeteranHHs <- VeteranHHs |>
   dplyr::left_join(VeteranCE, by = c("PersonalID", "EnrollmentID", "UniqueID"))
 
 CurrentVeterans <- VeteranHHs |>
-  dplyr::filter((ProjectType %in% c(0, 2, 4, 8, 12) & (
+  dplyr::filter((ProjectType %in% c(0, 1, 2, 4, 8, 12) & (
     EntryDate <= Sys.Date() &
       (is.na(ExitDate) | ExitDate > Sys.Date())
   )) |
@@ -93,12 +93,12 @@ CurrentVeterans <- VeteranHHs |>
                                                ProjectRegion))
 
 CurrentVeteranCounts <- CurrentVeterans |>
-  dplyr::filter(ProjectType %in% c(0, 2, 4, 8)) |>
+  dplyr::filter(ProjectType %in% c(0, 1, 2, 4, 8)) |>
   dplyr::group_by(ProjectName, ProjectRegion) |>
   dplyr::summarise(Veterans = dplyr::n(), .groups = "drop")
 
 VeteranEngagement <- CurrentVeterans |>
-  dplyr::filter(ProjectType %in% c(0, 2, 4, 8)) |>
+  dplyr::filter(ProjectType %in% c(0, 1, 2, 4, 8)) |>
   dplyr::mutate(
     EngagementStatus = dplyr::case_when(
       !is.na(PHTrack) & PHTrack != "None" &
@@ -166,7 +166,7 @@ vets_current <- vets_current |>
 current_tay_hohs <- tay |>
   dplyr::filter(RelationshipToHoH == 1 &
            is.na(ExitDate) &
-           ProjectType %in% c(0, 2, 4, 8))  |>
+           ProjectType %in% c(0, 1, 2, 4, 8))  |>
   {\(x) {
     dplyr::group_by(x, ProjectName, ProjectType) |>
       dplyr::summarise(TAYHHs = sum(TAY, na.rm = TRUE), .groups = "drop") |>

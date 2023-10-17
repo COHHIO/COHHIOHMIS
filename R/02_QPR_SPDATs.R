@@ -55,7 +55,7 @@ Entries <- enrollment_small %>%
 qpr_spdats_county <-
   dplyr::left_join(enrollment_small, Scores, by = UU::common_names(enrollment_small, Scores)) %>%
   dplyr::filter(
-    ProjectType %in% c(0, 2, 4, 8) &
+    ProjectType %in% c(0, 1, 2, 4, 8) &
       RelationshipToHoH == 1 &
       ScoreDate <= EntryDate &
       !is.na(Region)

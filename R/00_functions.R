@@ -463,7 +463,7 @@ chronic_determination <- function(.data, aged_in = FALSE) {
                           ) &
                             DisablingCondition == 1 &
                             !is.na(DisablingCondition) ~ "Chronic",
-                          ProjectType %in% c(0, 8) &
+                          ProjectType %in% c(0, 1, 8) &
                             lubridate::ymd(DateToStreetESSH) + lubridate::days(365) > lubridate::ymd(EntryDate) &
                             !is.na(DateToStreetESSH) &
                             DaysHomelessBeforeEntry + DaysHomelessInProject >= 365 ~ "Aged In",
@@ -531,7 +531,7 @@ long_term_homeless_determination <- function(.data) {
                                  !is.na(TimesHomelessPastThreeYears)
                              )
                           ) |
-                            ProjectType %in% c(0, 8) &
+                            ProjectType %in% c(0, 1, 8) &
                             lubridate::ymd(DateToStreetESSH) + lubridate::days(365) > lubridate::ymd(EntryDate) &
                             !is.na(DateToStreetESSH) &
                             DaysHomelessBeforeEntry + DaysHomelessInProject >= 365 ~ "Long Term",
