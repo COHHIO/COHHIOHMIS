@@ -43,20 +43,20 @@ col_cats = list(Client = list(
 #' @export
 
 data_types = list(Project = list(ProjectType = list( # formerly project_types
-  es = 1,
+  es = 0,
   th = 2,
   sh = 8,
   so = 6,
-  lh = c(1, 2, 8),
-  lh_hp = c(1, 2, 8, 12),
-  lh_so_hp = c(1, 2, 4, 8, 12),
-  lh_at_entry = c(1, 2, 3, 4, 8, 9, 13),
-  lh_ph_hp = c(1, 2, 3, 4, 8, 9, 12, 13),
+  lh = c(0, 2, 8),
+  lh_hp = c(0, 2, 8, 12),
+  lh_so_hp = c(0, 2, 4, 8, 12),
+  lh_at_entry = c(0, 2, 3, 4, 8, 9, 13),
+  lh_ph_hp = c(0, 2, 3, 4, 8, 9, 12, 13),
   ph = c(3, 9, 13),
   psh = 3,
   rrh = 13,
   coc_funded = c(2, 3, 13),
-  w_beds = c(1, 2, 3, 8, 9),
+  w_beds = c(0, 2, 3, 8, 9),
   ap = 14,
   ce = 14
 )),
