@@ -66,7 +66,7 @@ qpr_ees <- function(
 
   qpr_leavers <- project_enrollment_small |>
     HMIS::served_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
-    dplyr::filter((!is.na(ExitDate) | ProjectType %in% c(1:4, 8:9, 12:13)) &  RelationshipToHoH == 1) |>
+    dplyr::filter((!is.na(ExitDate) | ProjectType %in% c(0, 2:4, 8:9, 12:13)) &  RelationshipToHoH == 1) |>
     dplyr::mutate(
       DestinationGroup = dplyr::case_when(
         Destination %in% destinations$temp ~ "Temporary",

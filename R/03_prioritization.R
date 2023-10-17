@@ -456,7 +456,7 @@ agedIntoChronicity <- prioritization |>
                                        ),
                                        units = "days"),
     ChronicStatus = dplyr::if_else(
-      ProjectType %in% c(1, 8) &
+      ProjectType %in% c(0, 8) &
         ChronicStatus == "Not Chronic" &
         DateToStreetESSH + lubridate::days(365) > EntryDate &
         !is.na(DateToStreetESSH) &
