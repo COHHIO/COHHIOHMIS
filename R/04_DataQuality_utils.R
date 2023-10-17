@@ -342,32 +342,6 @@ dq_race <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env 
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
-#' @title Data quality report on Ethnicity data
-#' @family Clarity Checks
-#' @family DQ: Missing UDEs
-
-#' @inherit data_quality_tables params return
-
-dq_ethnicity <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
-  if (is_app_env(app_env))
-    app_env$set_parent(missing_fmls())
-  served_in_date_range |>
-    dplyr::mutate(
-      Issue = dplyr::case_when(
-        Ethnicity == 99 ~ "Missing Ethnicity",
-        Ethnicity %in% c(8, 9) ~ "Don't Know/Refused Ethnicity"
-      ),
-      Type = dplyr::case_when(
-        Issue == "Missing Ethnicity" ~ "Error",
-        Issue == "Don't Know/Refused Ethnicity" ~ "Warning"
-      ),
-      Guidance = dplyr::if_else(Type == "Warning",
-                                guidance$dkr_data,
-                                guidance$missing_at_entry)
-    ) |>
-    dplyr::filter(!is.na(Issue)) |>
-    dplyr::select(dplyr::all_of(vars$we_want))
-}
 
 gender_qs <- c("Questioning", "GenderNone", "Male", "Female", "NoSingleGender", "Transgender")
 #' @title Data quality report on Gender Data
