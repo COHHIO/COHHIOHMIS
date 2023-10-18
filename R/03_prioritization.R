@@ -509,14 +509,14 @@ prioritization <- prioritization |>
   dplyr::mutate(TimesHomelessPastThreeYears = dplyr::case_when(
     TimesHomelessPastThreeYears == 4 ~ "Four or more times",
     TimesHomelessPastThreeYears == 8 ~ "Client doesn't know",
-    TimesHomelessPastThreeYears == 9 ~ "Client refused",
+    TimesHomelessPastThreeYears == 9 ~ "Client prefers not to answer",
     TimesHomelessPastThreeYears == 99 ~ "Data not collected",
     TRUE ~ as.character(TimesHomelessPastThreeYears)
   )) |>
   dplyr::mutate(MonthsHomelessPastThreeYears = dplyr::case_when(
     MonthsHomelessPastThreeYears >= 113 ~ "More than 12 months",
     MonthsHomelessPastThreeYears == 8 ~ "Client doesn't know",
-    MonthsHomelessPastThreeYears == 9 ~ "Client refused",
+    MonthsHomelessPastThreeYears == 9 ~ "Client prefers not to answer",
     MonthsHomelessPastThreeYears == 99 ~ "Data not collected",
     TRUE ~ as.character(MonthsHomelessPastThreeYears - 100)
   )) |>

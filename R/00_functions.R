@@ -383,7 +383,7 @@ enhanced_yes_no_translator <- function(ReferenceNo) {
     ReferenceNo == 0 ~ "No",
     ReferenceNo == 1 ~ "Yes",
     ReferenceNo == 8 ~ "Client doesn't know",
-    ReferenceNo == 9 ~ "Client refused",
+    ReferenceNo == 9 ~ "Client prefers not to answer",
     ReferenceNo == 99 ~ "Data not collected"
   )
 }

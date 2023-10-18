@@ -228,11 +228,11 @@ dq_name <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env 
         FirstName == "Missing" ~
           "Missing Name Data Quality",
         FirstName %in% c("DKR", "Partial") ~
-          "Incomplete or Don't Know/Refused Name"
+          "Incomplete or Don't Know/Prefers Not to Answer Name"
       ),
       Type = dplyr::case_when(
         Issue == "Missing Name Data Quality" ~ "Error",
-        Issue == "Incomplete or Don't Know/Refused Name" ~ "Warning"
+        Issue == "Incomplete or Don't Know/Prefers Not to Answer Name" ~ "Warning"
       ),
       Guidance = dplyr::if_else(Type == "Warning",
                                 guidance$dkr_data,
@@ -256,7 +256,7 @@ dq_dob <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env =
       Issue = dplyr::case_when(
         is.na(DOB) & DOBDataQuality %in% c(1, 2) ~ "Missing DOB",
         DOBDataQuality == 99 ~ "Missing Date of Birth Data Quality",
-        DOBDataQuality %in% c(2, 8, 9) ~ "Don't Know/Refused or Approx. Date of Birth",
+        DOBDataQuality %in% c(2, 8, 9) ~ "Don't Know/Prefers Not to Answer Approx. Date of Birth",
         AgeAtEntry < 0 |
           AgeAtEntry > 95 ~ "Incorrect Date of Birth or Entry Date"
       ),
@@ -266,7 +266,7 @@ dq_dob <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env =
           "Incorrect Date of Birth or Entry Date",
           "Missing Date of Birth Data Quality"
         ) ~ "Error",
-        Issue ==  "Don't Know/Refused or Approx. Date of Birth" ~ "Warning"
+        Issue ==  "Don't Know/Prefers Not to Answer Approx. Date of Birth" ~ "Warning"
       ),
       Guidance = dplyr::case_when(
         Issue == "Incorrect Date of Birth or Entry Date" ~
@@ -275,7 +275,7 @@ dq_dob <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env =
       is incorrect.",
       Issue %in% c("Missing DOB", "Missing Date of Birth Data Quality") ~
         guidance$missing_at_entry,
-      Issue == "Don't Know/Refused or Approx. Date of Birth" ~
+      Issue == "Don't Know/Prefers Not to Answer Approx. Date of Birth" ~
         guidance$dkr_data
       )
     ) |>
@@ -298,15 +298,15 @@ dq_ssn <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env =
       Issue = dplyr::case_when(
         SSN == "Missing" ~ "Missing SSN",
         SSN == "Invalid" ~ "Invalid SSN",
-        SSN == "DKR" ~ "Don't Know/Refused SSN",
+        SSN == "DKR" ~ "Don't Know/Prefers Not to Answer SSN",
         SSN == "Incomplete" ~ "Invalid SSN"
       ),
       Type = dplyr::case_when(
         Issue %in% c("Missing SSN", "Invalid SSN") ~ "Error",
-        Issue == "Don't Know/Refused SSN" ~ "Warning"
+        Issue == "Don't Know/Prefers Not to Answer SSN" ~ "Warning"
       ),
       Guidance = dplyr::case_when(
-        Issue == "Don't Know/Refused SSN" ~ guidance$dkr_data,
+        Issue == "Don't Know/Prefers Not to Answer SSN" ~ guidance$dkr_data,
         Issue == "Missing SSN" ~ guidance$missing_pii,
         Issue == "Invalid SSN" ~ guidance$invalid_ssn
       )
@@ -328,11 +328,11 @@ dq_race <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env 
     dplyr::mutate(
       Issue = dplyr::case_when(
         RaceNone == 99 ~ "Missing Race",
-        RaceNone %in% c(8, 9) ~ "Don't Know/Refused Race"
+        RaceNone %in% c(8, 9) ~ "Don't Know/Prefers Not to Answer Race"
       ),
       Type = dplyr::case_when(
         Issue == "Missing Race" ~ "Error",
-        Issue == "Don't Know/Refused Race" ~ "Warning"
+        Issue == "Don't Know/Prefers Not to Answer Race" ~ "Warning"
       ),
       Guidance = dplyr::if_else(Type == "Warning",
                                 guidance$dkr_data,
@@ -356,7 +356,7 @@ dq_gender <- function(served_in_date_range, guidance = NULL, vars = NULL, app_en
     dplyr::mutate(
       Issue = dplyr::case_when(
         GenderNone == 99 ~ "Missing Gender",
-        GenderNone %in% c(8, 9) ~ "Don't Know/Refused Gender"
+        GenderNone %in% c(8, 9) ~ "Don't Know/Prefers Not to Answer Gender"
       ),
       Type = dplyr::case_when(
         GenderNone == 99 ~ "Error",
@@ -528,7 +528,7 @@ dq_missing_prior_living_situation <- function(served_in_date_range, vars, guidan
 #
 # }
 
-#' @title Find Don't Know/Refused Prior Living Situation
+#' @title Find Don't Know/Prefers Not to Answer Prior Living Situation
 #' @inherit data_quality_tables params return
 #' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
@@ -543,7 +543,7 @@ dq_dkr_prior_living_situation <- function(served_in_date_range, vars, guidance =
                   LivingSituation) |>
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
                     LivingSituation %in% c(8, 9)) |>
-    dplyr::mutate(Issue = "Don't Know/Refused Prior Living Situation",
+    dplyr::mutate(Issue = "Don't Know/Prefers Not to Answer Prior Living Situation",
                   Type = "Warning",
                   Guidance = guidance$dkr_data) |>
     dplyr::select(dplyr::all_of(vars$we_want))
@@ -551,7 +551,7 @@ dq_dkr_prior_living_situation <- function(served_in_date_range, vars, guidance =
 
 
 
-#' @title Find Don't Know/Refused Length of Stay
+#' @title Find Don't Know/Prefers Not to Answer Length of Stay
 #' @inherit data_quality_tables params return
 #' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
@@ -566,7 +566,7 @@ dq_dkr_LoS <- function(served_in_date_range, vars, guidance = NULL, app_env = ge
                   LengthOfStay) |>
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
                     LengthOfStay %in% c(8, 9)) |>
-    dplyr::mutate(Issue = "Don't Know/Refused Length of Stay",
+    dplyr::mutate(Issue = "Don't Know/Prefers Not to Answer Length of Stay",
                   Type = "Warning",
                   Guidance = guidance$dkr_data) |>
     dplyr::select(dplyr::all_of(vars$we_want))
@@ -712,7 +712,7 @@ dq_missing_living_situation <- function(served_in_date_range, vars, rm_dates = N
 }
 
 
-#' @title Find Don't Know/Refused Months or Times Homeless
+#' @title Find Don't Know/Prefers Not to Answer Months or Times Homeless
 #' @inherit data_quality_tables params return
 #' @family Clarity Checks
 #' @family DQ: Missing Data at Entry
@@ -736,7 +736,7 @@ dq_dkr_months_times_homeless <- function(served_in_date_range, vars, rm_dates = 
                         TimesHomelessPastThreeYears %in% c(8, 9)
                     )
     ) |>
-    dplyr::mutate(Issue = "Don't Know/Refused Months or Times Homeless",
+    dplyr::mutate(Issue = "Don't Know/Prefers Not to Answer Months or Times Homeless",
                   Type = "Warning",
                   Guidance = guidance$dkr_data) |>
     dplyr::select(dplyr::all_of(vars$we_want))
@@ -1324,7 +1324,7 @@ dq_missing_destination <- function(served_in_date_range,  mahoning_projects, var
   return(out)
 }
 
-#' @title Don't Know Refused Destination
+#' @title Don't Know Prefers Not to Answer Destination
 #' @family Clarity Checks
 #' @family DQ: Check Eligibility
 #' @inherit data_quality_tables params return
@@ -1336,7 +1336,7 @@ dq_dkr_destination <- function(served_in_date_range,
     app_env$set_parent(missing_fmls())
   served_in_date_range |>
     dplyr::filter(Destination %in% c(8, 9)) |>
-    dplyr::mutate(Issue = "Don't Know/Refused Destination",
+    dplyr::mutate(Issue = "Don't Know/Prefers Not to Answer Destination",
                   Type = "Warning",
                   Guidance = guidance$dkr_data) |>
     dplyr::select(dplyr::all_of(vars$we_want))
@@ -2736,20 +2736,20 @@ dq_veteran <- function(served_in_date_range, guidance = NULL, vars = NULL, app_e
     dplyr::mutate(
       Issue = dplyr::case_when(
         !!vet_expr$missing ~ "Missing Veteran Status",
-        !!vet_expr$dkr ~ "Don't Know/Refused Veteran Status",
+        !!vet_expr$dkr ~ "Don't Know/Prefers Not to Answer Veteran Status",
         !!vet_expr$check ~ "Check Veteran Status for Accuracy"
       ),
       Type = dplyr::case_when(
         Issue == "Missing Veteran Status" ~ "Error",
         Issue %in% c(
-          "Don't Know/Refused Veteran Status",
+          "Don't Know/Prefers Not to Answer Veteran Status",
           "Check Veteran Status for Accuracy"
         ) ~ "Warning"
       ),
       Guidance = dplyr::case_when(
         Issue == "Check Veteran Status for Accuracy" ~ guidance$check_vet_status,
         Issue == "Missing Veteran Status" ~ guidance$missing_pii,
-        Issue == "Don't Know/Refused Veteran Status" ~ guidance$dkr_data)
+        Issue == "Don't Know/Prefers Not to Answer Veteran Status" ~ guidance$dkr_data)
     ) |>
     dplyr::select(dplyr::all_of(vars$we_want))
 }
@@ -2864,7 +2864,7 @@ dq_veteran_missing_discharge_status <- function(ssvf_served_in_date_range, vars,
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
-#' @title Check for Dont Know/Refused Wars/Branch/Discharge on clients who are Veterans
+#' @title Check for Dont Know/Prefers Not to Answer Wars/Branch/Discharge on clients who are Veterans
 #'
 #' @inherit dq_veteran_missing_year_entered params return
 #' @family DQ: SSVF Checks
@@ -2886,7 +2886,7 @@ dq_dkr_client_veteran_info <- function(ssvf_served_in_date_range, vars, guidance
           AfghanistanOEF %in% c(8, 9) |
           IraqOIF %in% c(8, 9) |
           IraqOND %in% c(8, 9) |
-          OtherTheater  %in% c(8, 9)  ~ "Don't Know/Refused War(s)",
+          OtherTheater  %in% c(8, 9)  ~ "Don't Know/Prefers Not to Answer War(s)",
         MilitaryBranch %in% c(8, 9) ~ "Missing Military Branch",
         DischargeStatus %in% c(8, 9) ~ "Missing Discharge Status"
       ),
