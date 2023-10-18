@@ -343,7 +343,6 @@ dq_race <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env 
 }
 
 
-gender_qs <- c("Questioning", "GenderNone", "Male", "Female", "NoSingleGender", "Transgender")
 #' @title Data quality report on Gender Data
 #' @family Clarity Checks
 #' @family DQ: Missing UDEs

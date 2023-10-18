@@ -45,19 +45,6 @@ glue_skip_NA <- function(..., str_expr, na = "omit") {
     ""
 }
 
-gender_col <- function(Female, Male, NoSingleGender, Transgender, Questioning, GenderNone) {
-  .data <-
-    tibble::tibble(Female = Female,
-                   Male = Male,
-                   NoSingleGender = NoSingleGender,
-                   Transgender = Transgender,
-                   Questioning = Questioning,
-                   GenderNone = GenderNone)
-  nms <- names(.data)
-  apply(.data, 1, function (x) {
-    paste0(nms[which(as.numeric(x) > 0)], collapse = ", ")
-    })
-}
 
 # stop_with_instructions ----
 # Wed Mar 24 16:38:01 2021
