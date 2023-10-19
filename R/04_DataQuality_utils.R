@@ -293,10 +293,12 @@ dq_dob <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env =
 dq_ssn <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
 		app_env$set_parent(missing_fmls())
+
   served_in_date_range |>
     dplyr::mutate(
       Issue = dplyr::case_when(
         SSN == "Missing" ~ "Missing SSN",
+        SSN == "Four Digits Provided" & VeteranStatus == 1 ~ "Invalid SSN",
         SSN == "Invalid" ~ "Invalid SSN",
         SSN == "DKR" ~ "Don't Know/Prefers Not to Answer SSN",
         SSN == "Incomplete" ~ "Invalid SSN"

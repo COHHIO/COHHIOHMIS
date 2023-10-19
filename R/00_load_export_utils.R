@@ -29,7 +29,7 @@ Client_redact <- function(Client) {
         (is.na(SSN) & !SSNDataQuality %in% c(8, 9)) |
           is.na(SSNDataQuality) | SSNDataQuality == 99 ~ "Missing",
         SSNDataQuality %in% c(8, 9) ~ "DKR",
-        (nchar(SSN) != 9 & SSNDataQuality != 2) |
+        # (nchar(SSN) != 9 & SSNDataQuality != 2) |
           substr(SSN, 1, 3) %in% c("000", "666") |
           substr(SSN, 1, 1) == 9 |
           substr(SSN, 4, 5) == "00" |
@@ -45,7 +45,8 @@ Client_redact <- function(Client) {
             888888888,
             123456789
           ) ~ "Invalid",
-        SSNDataQuality == 2 & nchar(SSN) != 9 ~ "Incomplete"
+        # SSNDataQuality == 2 &
+          nchar(SSN) == 4 ~ "Four Digits Provided"
       )
     ) |>
     dplyr::mutate(SSN = dplyr::case_when(is.na(SSN) ~ "ok",!is.na(SSN) ~ SSN))
@@ -430,8 +431,9 @@ load_public <- function(app_env = get_app_env(e = rlang::caller_env())) {
 load_client <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
                         app_env = get_app_env(e = rlang::caller_env())) {
   Client <- clarity_api$Client()
+
   # this saves Client as a feather file with redacted PII as a security measure.
-  if (!all(Client$SSN %in% c("ok" ,"Invalid", "DKR", "Missing"))) {
+  if (!all(Client$SSN %in% c("ok" ,"Invalid", "DKR", "Four Digits Provided"))) {
     Client <- Client_redact(Client)
     clarity.looker::hud_feather(Client, dirs$export)
   }
