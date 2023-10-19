@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_DataQuality_utils.R
 \name{dq_dkr_prior_living_situation}
 \alias{dq_dkr_prior_living_situation}
-\title{Find Don't Know/Refused Prior Living Situation}
+\title{Find Don't Know/Prefers Not to Answer Prior Living Situation}
 \usage{
 dq_dkr_prior_living_situation(
   served_in_date_range,

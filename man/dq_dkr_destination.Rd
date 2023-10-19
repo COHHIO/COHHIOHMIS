@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_DataQuality_utils.R
 \name{dq_dkr_destination}
 \alias{dq_dkr_destination}
-\title{Don't Know Refused Destination}
+\title{Don't Know Prefers Not to Answer Destination}
 \usage{
 dq_dkr_destination(
   served_in_date_range,
@@ -23,7 +23,7 @@ dq_dkr_destination(
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
 }
 \description{
-Don't Know Refused Destination
+Don't Know Prefers Not to Answer Destination
 }
 \seealso{
 Other Clarity Checks: 

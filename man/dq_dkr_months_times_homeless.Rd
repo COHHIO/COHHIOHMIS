@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_DataQuality_utils.R
 \name{dq_dkr_months_times_homeless}
 \alias{dq_dkr_months_times_homeless}
-\title{Find Don't Know/Refused Months or Times Homeless}
+\title{Find Don't Know/Prefers Not to Answer Months or Times Homeless}
 \usage{
 dq_dkr_months_times_homeless(
   served_in_date_range,
@@ -29,7 +29,7 @@ dq_dkr_months_times_homeless(
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
 }
 \description{
-Find Don't Know/Refused Months or Times Homeless
+Find Don't Know/Prefers Not to Answer Months or Times Homeless
 }
 \seealso{
 Other Clarity Checks: 

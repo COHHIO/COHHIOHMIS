@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_DataQuality_utils.R
 \name{dq_dkr_LoS}
 \alias{dq_dkr_LoS}
-\title{Find Don't Know/Refused Length of Stay}
+\title{Find Don't Know/Prefers Not to Answer Length of Stay}
 \usage{
 dq_dkr_LoS(
   served_in_date_range,
@@ -26,7 +26,7 @@ dq_dkr_LoS(
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
 }
 \description{
-Find Don't Know/Refused Length of Stay
+Find Don't Know/Prefers Not to Answer Length of Stay
 }
 \seealso{
 Other Clarity Checks: 

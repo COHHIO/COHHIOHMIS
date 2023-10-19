@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_DataQuality_utils.R
 \name{dq_dkr_client_veteran_info}
 \alias{dq_dkr_client_veteran_info}
-\title{Check for Dont Know/Refused Wars/Branch/Discharge on clients who are Veterans}
+\title{Check for Dont Know/Prefers Not to Answer Wars/Branch/Discharge on clients who are Veterans}
 \usage{
 dq_dkr_client_veteran_info(
   ssvf_served_in_date_range,
@@ -26,7 +26,7 @@ dq_dkr_client_veteran_info(
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
 }
 \description{
-Check for Dont Know/Refused Wars/Branch/Discharge on clients who are Veterans
+Check for Dont Know/Prefers Not to Answer Wars/Branch/Discharge on clients who are Veterans
 }
 \seealso{
 Other DQ: SSVF Checks: 

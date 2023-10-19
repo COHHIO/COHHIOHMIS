@@ -401,7 +401,7 @@ provider_extras_helpers <- list(
 
 load_program_lookup <- function(program_lookup) {
   program_lookup |>
-    dplyr::mutate(dplyr::across(c(dplyr::ends_with("Active"), dplyr::matches("HMISParticipating")), ~dplyr::if_else(.x %in% c("Active", "Yes"), TRUE, FALSE))) |>
+    dplyr::mutate(dplyr::across(c(dplyr::ends_with("Active")), ~dplyr::if_else(.x %in% c("Active"), TRUE, FALSE))) |>
     dplyr::rename(AgencyAdministrator = "Property Manager") |>
     clarity.looker::make_linked_df(ProgramName, type = "program_edit") |>
     clarity.looker::make_linked_df(AgencyName, type = "agency_switch") |>
