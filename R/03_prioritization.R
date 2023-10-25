@@ -45,7 +45,6 @@ force(clarity_api)
 if (is_app_env(app_env))
   app_env$set_parent(missing_fmls())
 
-
 co_currently_homeless <- co_clients_served |>
     dplyr::filter(is.na(ExitDate) |
                       ExitDate > lubridate::today())

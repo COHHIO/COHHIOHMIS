@@ -373,6 +373,7 @@ app_env <- R6::R6Class(
                                     auto_terminate = TRUE,
                                     format = "{cli::pb_name}: {.path {cli::pb_status}} {cli::pb_current}/{cli::pb_total} [{cli::col_br_blue(cli::pb_elapsed)}]"
       )
+      # browser()
       maybe_write <- purrr::map_dfr(deps_flat, ~{
         cli::cli_progress_update(id = .pid, status = .x)
         o_info <- list(nm = .x)

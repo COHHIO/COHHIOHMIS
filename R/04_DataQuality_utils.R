@@ -329,12 +329,12 @@ dq_race <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env 
    served_in_date_range |>
     dplyr::mutate(
       Issue = dplyr::case_when(
-        RaceNone == 99 ~ "Missing Race",
-        RaceNone %in% c(8, 9) ~ "Don't Know/Prefers Not to Answer Race"
+        RaceNone == 99 ~ "Missing Race and Ethnicity",
+        RaceNone %in% c(8, 9) ~ "Don't Know/Prefers Not to Answer Race and Ethnicity"
       ),
       Type = dplyr::case_when(
-        Issue == "Missing Race" ~ "Error",
-        Issue == "Don't Know/Prefers Not to Answer Race" ~ "Warning"
+        Issue == "Missing Race and Ethnicity" ~ "Error",
+        Issue == "Don't Know/Prefers Not to Answer Race and Ethnicty" ~ "Warning"
       ),
       Guidance = dplyr::if_else(Type == "Warning",
                                 guidance$dkr_data,

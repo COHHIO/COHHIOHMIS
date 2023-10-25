@@ -277,12 +277,11 @@ e = rlang::caller_env()
     }
     pb_close(pb_fn, e = environment())
   }
-
+  # browser()
   if (backup) {
     cli::cli_inform(cli::col_grey("Backing up dependencies..."))
     app_env$deps_to_destination(clean = FALSE, deps =  "all", dest_folder = file.path("data", "backup"))
   }
-
   if ("send" %in% steps) {
     cli::cli_inform(cli::col_grey("Sending Dependencies to apps..."))
     app_env$deps_to_destination(clean = FALSE, dest_folder = if (clarity.looker::is_dev()) file.path("..",c("Rminor", "RminorElevated"),"data") else file.path("data", "db"), remote = remote)
