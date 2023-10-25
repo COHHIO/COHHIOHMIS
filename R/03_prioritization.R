@@ -45,7 +45,6 @@ force(clarity_api)
 if (is_app_env(app_env))
   app_env$set_parent(missing_fmls())
 
-
 co_currently_homeless <- co_clients_served |>
     dplyr::filter(is.na(ExitDate) |
                       ExitDate > lubridate::today())
@@ -456,7 +455,7 @@ agedIntoChronicity <- prioritization |>
                                        ),
                                        units = "days"),
     ChronicStatus = dplyr::if_else(
-      ProjectType %in% c(1, 8) &
+      ProjectType %in% c(0, 1, 8) &
         ChronicStatus == "Not Chronic" &
         DateToStreetESSH + lubridate::days(365) > EntryDate &
         !is.na(DateToStreetESSH) &
@@ -509,14 +508,14 @@ prioritization <- prioritization |>
   dplyr::mutate(TimesHomelessPastThreeYears = dplyr::case_when(
     TimesHomelessPastThreeYears == 4 ~ "Four or more times",
     TimesHomelessPastThreeYears == 8 ~ "Client doesn't know",
-    TimesHomelessPastThreeYears == 9 ~ "Client refused",
+    TimesHomelessPastThreeYears == 9 ~ "Client prefers not to answer",
     TimesHomelessPastThreeYears == 99 ~ "Data not collected",
     TRUE ~ as.character(TimesHomelessPastThreeYears)
   )) |>
   dplyr::mutate(MonthsHomelessPastThreeYears = dplyr::case_when(
     MonthsHomelessPastThreeYears >= 113 ~ "More than 12 months",
     MonthsHomelessPastThreeYears == 8 ~ "Client doesn't know",
-    MonthsHomelessPastThreeYears == 9 ~ "Client refused",
+    MonthsHomelessPastThreeYears == 9 ~ "Client prefers not to answer",
     MonthsHomelessPastThreeYears == 99 ~ "Data not collected",
     TRUE ~ as.character(MonthsHomelessPastThreeYears - 100)
   )) |>
@@ -600,8 +599,8 @@ prioritization <- prioritization |>
 # Clean the House ---------------------------------------------------------
 prioritization <- prioritization |>
   dplyr::mutate(
-    dplyr::across(dplyr::all_of(c("VeteranStatus", "DisabilityInHH")), HMIS::hud_translations$`1.8 No_Yes_Reasons for Missing Data`),
-    IncomeFromAnySource = HMIS::hud_translations$`1.8 No_Yes_Reasons for Missing Data`(IncomeInHH),
+    dplyr::across(dplyr::all_of(c("VeteranStatus", "DisabilityInHH")), HMIS::hud_translations$`1.8 NoYesReasons for Missing Data`),
+    IncomeFromAnySource = HMIS::hud_translations$`1.8 NoYesReasons for Missing Data`(IncomeInHH),
     TAY = dplyr::case_when(TAY == 1 ~ "Yes",
                     TAY == 0 ~ "No",
                     is.na(TAY) ~ "Unknown"),

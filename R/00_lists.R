@@ -14,21 +14,26 @@
 #' @export
 col_cats = list(Client = list(
   gender = c(
-    "Female",
-    "Male",
-    "NoSingleGender",
+    "Woman",
+    "Man",
+    "NonBinary",
+    "CulturallySpecific",
     "Transgender",
     "Questioning",
-    "GenderNone"
+    "DifferentIdentity",
+    "GenderNone",
+    "DifferentIdentityText"
   ),
   race = c(
     "AmIndAKNative",
     "Asian",
     "BlackAfAmerican",
+    "HispanicLatinaeo",
+    "MidEastNAfrican",
     "NativeHIPacific",
     "White",
     "RaceNone",
-    "Ethnicity"
+    "AdditionalRaceEthnicity"
   )
 ))
 
@@ -38,33 +43,33 @@ col_cats = list(Client = list(
 #' @export
 
 data_types = list(Project = list(ProjectType = list( # formerly project_types
-  es = 1,
+  es = c(0, 1),
   th = 2,
   sh = 8,
   so = 6,
-  lh = c(1, 2, 8),
-  lh_hp = c(1, 2, 8, 12),
-  lh_so_hp = c(1, 2, 4, 8, 12),
-  lh_at_entry = c(1, 2, 3, 4, 8, 9, 13),
-  lh_ph_hp = c(1, 2, 3, 4, 8, 9, 12, 13),
+  lh = c(0, 1, 2, 8),
+  lh_hp = c(0, 1, 2, 8, 12),
+  lh_so_hp = c(0, 1, 2, 4, 8, 12),
+  lh_at_entry = c(0, 1, 2, 3, 4, 8, 9, 13),
+  lh_ph_hp = c(0, 1, 2, 3, 4, 8, 9, 12, 13),
   ph = c(3, 9, 13),
   psh = 3,
   rrh = 13,
   coc_funded = c(2, 3, 13),
-  w_beds = c(1, 2, 3, 8, 9),
+  w_beds = c(0, 2, 3, 8, 9),
   ap = 14,
   ce = 14
 )),
 CurrentLivingSituation = list(CurrentLivingSituation = list( #formerly living_situations
-  homeless = c(16, 1, 18),
-  likely_homeless = c(16, 1, 18, 17, 7),
+  homeless = c(16, 1, 0, 18),
+  likely_homeless = c(16, 1, 0, 18, 17, 7),
   institutional = c(15, 6, 7, 25, 4, 5),
   temp_psh = c(29, 14, 2, 32, 13, 36, 12, 22, 35, 23, 26, 27, 28, 19, 13, 31, 33, 34, 10, 20, 21, 11),
   other = c(30, 17, 24, 37, 8, 9, 99)
 )),
 Exit = list(Destination = list( # formerly destinations
   perm = c(3, 10, 11, 19:23, 26, 28, 31, 33, 34, 36),
-  temp = c(1, 2, 12, 13, 14, 16, 18, 27, 32, 35),
+  temp = c(0, 1, 2, 12, 13, 14, 16, 18, 27, 32, 35),
   institutional = c(4:7, 15, 25, 27, 29),
   other = c(8, 9, 17, 24, 30, 37, 99)
 )))

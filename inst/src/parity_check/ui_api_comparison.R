@@ -17,7 +17,11 @@ jobs::jobscript({
     ui_dateupdated_max <- purrr::imap(export, ~{
       if (.y != "Export")
         c(max(.x$api$DateUpdated, na.rm = TRUE), max(.x$ui$DateUpdated, na.rm = TRUE))
-    }) |> purrr::map(2) |> unlist() |> max() |> lubridate::as_datetime()
+    }) |>
+      purrr::map(2) |>
+      unlist() |>
+      max() |>
+      lubridate::as_datetime()
 
     export <- purrr::imap(export, ~{
       if (.y != "Export")
@@ -41,4 +45,8 @@ jobs::jobscript({
 
 purrr::map(compares, ~{
   do.call(`-`, unname(.x$rows) |> as.list())
-}) |> unlist() |> {\(x) {paste0(names(x)," = ", x)}}() |> cat(sep = "\n")
+}) |>
+  unlist() |>
+  {\(x) {paste0(names(x)," = ", x)}}() |
+  > cat(sep = "\n")
+

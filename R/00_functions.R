@@ -45,19 +45,6 @@ glue_skip_NA <- function(..., str_expr, na = "omit") {
     ""
 }
 
-gender_col <- function(Female, Male, NoSingleGender, Transgender, Questioning, GenderNone) {
-  .data <-
-    tibble::tibble(Female = Female,
-                   Male = Male,
-                   NoSingleGender = NoSingleGender,
-                   Transgender = Transgender,
-                   Questioning = Questioning,
-                   GenderNone = GenderNone)
-  nms <- names(.data)
-  apply(.data, 1, function (x) {
-    paste0(nms[which(as.numeric(x) > 0)], collapse = ", ")
-    })
-}
 
 # stop_with_instructions ----
 # Wed Mar 24 16:38:01 2021
@@ -219,64 +206,6 @@ freeze_pe <- function(dir, overwrite = FALSE) {
 
 
 
-# Deprecated, use HMIS::hud_translations$`3.12.1 Living Situation Option List` instead
-# living_situation <- function(ReferenceNo) {
-#   dplyr::case_when(
-#     ReferenceNo == 1 ~ "Emergency shelter/ h/motel paid for by a third party/Host Home shelter",
-#     ReferenceNo == 2 ~ "Transitional housing",
-#     ReferenceNo == 3 ~ "Permanent housing (other than RRH) for formerly homeless persons",
-#     ReferenceNo == 4 ~ "Psychiatric hospital/ other psychiatric facility",
-#     ReferenceNo == 5 ~ "Substance abuse treatment facility or detox center",
-#     ReferenceNo == 6 ~ "Hospital or other residential non-psychiatric medical facility",
-#     ReferenceNo == 7 ~ "Jail/prison/juvenile detention",
-#     ReferenceNo == 8 ~ "Client doesn't know",
-#     ReferenceNo == 9 ~ "Client refused",
-#     ReferenceNo == 32 ~ "Host Home (non-crisis)",
-#     ReferenceNo == 13 ~ "Staying or living with friends, temporary tenure",
-#     ReferenceNo == 36 ~ "Staying or living in a friend's room, apartment or house",
-#     ReferenceNo == 18 ~ "Safe Haven",
-#     ReferenceNo == 15 ~ "Foster care home of foster care group home",
-#     ReferenceNo == 12 ~ "Staying or living with family, temporary tenure",
-#     ReferenceNo == 25 ~ "Long-term care facility or nursing home",
-#     ReferenceNo == 22 ~ "Staying or living with family, permanent tenure",
-#     ReferenceNo == 35 ~ "Staying or living in a family member's room, apartment, or house",
-#     ReferenceNo == 16 ~ "Place not meant for habitation",
-#     ReferenceNo == 23 ~ "Staying or living with friends, permanent tenure",
-#     ReferenceNo == 29 ~ "Residential project or halfway house with no homeless criteria",
-#     ReferenceNo == 14 ~ "H/Motel paid for by household",
-#     ReferenceNo == 26 ~ "Moved from one HOPWA funded project to HOPWA PH",
-#     ReferenceNo == 27 ~ "Moved from HOPWA funded project to HOPWA TH",
-#     ReferenceNo == 28 ~ "Rental by client, with GPD TIP housing subsidy",
-#     ReferenceNo == 19 ~ "Rental by client, with VASH housing subsidy",
-#     ReferenceNo == 31 ~ "Rental by client, with RRH or equivalent subsidy",
-#     ReferenceNo == 33 ~ "Rental by client, with HCV voucher",
-#     ReferenceNo == 34 ~ "Rental by client in a public housing unit",
-#     ReferenceNo == 10 ~ "Rental by client, no ongoing housing subsidy",
-#     ReferenceNo == 20 ~ "Rental by client, with other ongoing housing subsidy",
-#     ReferenceNo == 21 ~ "Owned by client, with ongoing housing subsidy",
-#     ReferenceNo == 11 ~ "Owned by client, no ongoing housing subsidy",
-#     ReferenceNo == 30 ~ "No exit interview completed",
-#     ReferenceNo == 17 ~ "Other",
-#     ReferenceNo == 24 ~ "Deceased",
-#     ReferenceNo == 37 ~ "Worker unable to determine",
-#     ReferenceNo == 99 ~ "Data not collected"
-#   )
-# }
-# Deprecated, use HMIS::hud_translations$`2.02.6 ProjectType` instead
-# project_type <- function(ReferenceNo){
-#   dplyr::case_when(
-#     ReferenceNo == 1 ~ "Emergency Shelter",
-#     ReferenceNo == 2 ~ "Transitional Housing",
-#     ReferenceNo == 3 ~ "Permanent Supportive Housing",
-#     ReferenceNo == 4 ~ "Street Outreach",
-#     ReferenceNo == 6 ~ "Services Only",
-#     ReferenceNo == 8 ~ "Safe Haven",
-#     ReferenceNo == 12 ~ "Prevention",
-#     ReferenceNo == 13 ~ "Rapid Rehousing",
-#     ReferenceNo == 14 ~ "Coordinated Entry"
-#   )
-# }
-
 
 #' @title replace "yes"/"no" character vector
 #'
@@ -396,7 +325,7 @@ enhanced_yes_no_translator <- function(ReferenceNo) {
     ReferenceNo == 0 ~ "No",
     ReferenceNo == 1 ~ "Yes",
     ReferenceNo == 8 ~ "Client doesn't know",
-    ReferenceNo == 9 ~ "Client refused",
+    ReferenceNo == 9 ~ "Client prefers not to answer",
     ReferenceNo == 99 ~ "Data not collected"
   )
 }
@@ -463,7 +392,7 @@ chronic_determination <- function(.data, aged_in = FALSE) {
                           ) &
                             DisablingCondition == 1 &
                             !is.na(DisablingCondition) ~ "Chronic",
-                          ProjectType %in% c(1, 8) &
+                          ProjectType %in% c(0, 1, 8) &
                             lubridate::ymd(DateToStreetESSH) + lubridate::days(365) > lubridate::ymd(EntryDate) &
                             !is.na(DateToStreetESSH) &
                             DaysHomelessBeforeEntry + DaysHomelessInProject >= 365 ~ "Aged In",
@@ -531,7 +460,7 @@ long_term_homeless_determination <- function(.data) {
                                  !is.na(TimesHomelessPastThreeYears)
                              )
                           ) |
-                            ProjectType %in% c(1, 8) &
+                            ProjectType %in% c(0, 1, 8) &
                             lubridate::ymd(DateToStreetESSH) + lubridate::days(365) > lubridate::ymd(EntryDate) &
                             !is.na(DateToStreetESSH) &
                             DaysHomelessBeforeEntry + DaysHomelessInProject >= 365 ~ "Long Term",

@@ -29,7 +29,7 @@ Client_redact <- function(Client) {
         (is.na(SSN) & !SSNDataQuality %in% c(8, 9)) |
           is.na(SSNDataQuality) | SSNDataQuality == 99 ~ "Missing",
         SSNDataQuality %in% c(8, 9) ~ "DKR",
-        (nchar(SSN) != 9 & SSNDataQuality != 2) |
+        # (nchar(SSN) != 9 & SSNDataQuality != 2) |
           substr(SSN, 1, 3) %in% c("000", "666") |
           substr(SSN, 1, 1) == 9 |
           substr(SSN, 4, 5) == "00" |
@@ -45,7 +45,8 @@ Client_redact <- function(Client) {
             888888888,
             123456789
           ) ~ "Invalid",
-        SSNDataQuality == 2 & nchar(SSN) != 9 ~ "Incomplete"
+        # SSNDataQuality == 2 &
+          nchar(SSN) == 4 ~ "Four Digits Provided"
       )
     ) |>
     dplyr::mutate(SSN = dplyr::case_when(is.na(SSN) ~ "ok",!is.na(SSN) ~ SSN))
@@ -400,7 +401,7 @@ provider_extras_helpers <- list(
 
 load_program_lookup <- function(program_lookup) {
   program_lookup |>
-    dplyr::mutate(dplyr::across(c(dplyr::ends_with("Active"), dplyr::matches("HMISParticipating")), ~dplyr::if_else(.x %in% c("Active", "Yes"), TRUE, FALSE))) |>
+    dplyr::mutate(dplyr::across(c(dplyr::ends_with("Active")), ~dplyr::if_else(.x %in% c("Active"), TRUE, FALSE))) |>
     dplyr::rename(AgencyAdministrator = "Property Manager") |>
     clarity.looker::make_linked_df(ProgramName, type = "program_edit") |>
     clarity.looker::make_linked_df(AgencyName, type = "agency_switch") |>
@@ -430,8 +431,9 @@ load_public <- function(app_env = get_app_env(e = rlang::caller_env())) {
 load_client <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
                         app_env = get_app_env(e = rlang::caller_env())) {
   Client <- clarity_api$Client()
+
   # this saves Client as a feather file with redacted PII as a security measure.
-  if (!all(Client$SSN %in% c("ok" ,"Invalid", "DKR", "Missing"))) {
+  if (!all(Client$SSN %in% c("ok" ,"Invalid", "DKR", "Four Digits Provided"))) {
     Client <- Client_redact(Client)
     clarity.looker::hud_feather(Client, dirs$export)
   }
@@ -451,7 +453,6 @@ load_client <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
 
 load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = rlang::caller_env()),
                          app_env = get_app_env(e = rlang::caller_env())) {
-
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   force(ProjectCoC)
@@ -466,9 +467,17 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
     pe_add_regions(Regions, dirs = dirs) |>
     pe_add_GrantType()
 
+  # Add HMISParticipation (HMISParticipating column no longer in Project.csv)
+  HMISParticipation <- clarity.looker::hud_load("HMISParticipation", dirs$export) |>
+    dplyr::select(HMISParticipationID, ProjectID, HMISParticipationType,
+                  HMISParticipationStatusStartDate, HMISParticipationStatusEndDate) |>
+    dplyr::mutate_all(as.character)
+
+  provider_extras <- provider_extras |>
+    dplyr::left_join(HMISParticipation, by = "ProjectID")
+
   # Rminor: Coordinated Entry Access Points [CEAP]
   APs <- pe_create_APs(provider_extras, ProjectCoC, dirs = dirs)
-
 
 
   .Project <- clarity_api$Project()
@@ -517,7 +526,7 @@ load_enrollment <- function(Enrollment,
     # Add Veteran Coordinated Entry
     Enrollment_add_VeteranCE(VeteranCE = VeteranCE) |>
     # # Add Client Location from EnrollmentCoC
-    Enrollment_add_ClientLocation(EnrollmentCoC) |>
+    # Enrollment_add_ClientLocation(EnrollmentCoC) |>
     # # Add Client AgeAtEntry
     Enrollment_add_AgeAtEntry_UniqueID(Client) |>
     dplyr::left_join(dplyr::select(Client,-dplyr::any_of(

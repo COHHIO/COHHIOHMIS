@@ -13,7 +13,8 @@ c19_plot(x, y_col, date_breaks = "2 months", palette = "GnBu")
 
 \item{date_breaks}{A string giving the distance between breaks like "2
 weeks", or "10 years". If both \code{breaks} and \code{date_breaks} are
-specified, \code{date_breaks} wins.}
+specified, \code{date_breaks} wins. Valid specifications are 'sec', 'min',
+'hour', 'day', 'week', 'month' or 'year', optionally followed by 's'.}
 
 \item{palette}{If a string, will use that named palette. If a number, will index into
 the list of palettes of appropriate \code{type}. The list of available palettes can found

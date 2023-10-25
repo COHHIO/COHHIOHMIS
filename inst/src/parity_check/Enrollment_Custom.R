@@ -12,7 +12,7 @@ Enrollment_Custom <-
       queryParams = list(limit = -1, apply_vis = TRUE)
     ))
 # Load the file from box
-Enrollment_Custom$box = hud_load("Enrollment_Custom", "data") |>
+Enrollment_Custom$box <- hud_load("Enrollment_Custom", "data") |>
   dplyr::filter(
     DataCollectionStage == 1 &
       !PersonalID %in% c(5L,

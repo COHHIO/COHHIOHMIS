@@ -234,7 +234,6 @@ if (is_sp()) {
                  "dq_dkr_prior_living_situation",
                  "dq_dkr_LoS",
                  "dq_dob",
-                 "dq_ethnicity",
                  "dq_race",
                  "dq_gender",
                  "dq_name",

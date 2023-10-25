@@ -18,19 +18,19 @@ Save dependencies for future functions in an environment and put app dependencie
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-merge_deps_to_env}{\code{app_env$merge_deps_to_env()}}
-\item \href{#method-gather_deps}{\code{app_env$gather_deps()}}
-\item \href{#method-set_parent}{\code{app_env$set_parent()}}
-\item \href{#method-load_deps}{\code{app_env$load_deps()}}
-\item \href{#method-deps_to_destination}{\code{app_env$deps_to_destination()}}
-\item \href{#method-dropbox_auth}{\code{app_env$dropbox_auth()}}
-\item \href{#method-new}{\code{app_env$new()}}
-\item \href{#method-clone}{\code{app_env$clone()}}
+\item \href{#method-app_env-merge_deps_to_env}{\code{app_env$merge_deps_to_env()}}
+\item \href{#method-app_env-gather_deps}{\code{app_env$gather_deps()}}
+\item \href{#method-app_env-set_parent}{\code{app_env$set_parent()}}
+\item \href{#method-app_env-load_deps}{\code{app_env$load_deps()}}
+\item \href{#method-app_env-deps_to_destination}{\code{app_env$deps_to_destination()}}
+\item \href{#method-app_env-dropbox_auth}{\code{app_env$dropbox_auth()}}
+\item \href{#method-app_env-new}{\code{app_env$new()}}
+\item \href{#method-app_env-clone}{\code{app_env$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-merge_deps_to_env"></a>}}
-\if{latex}{\out{\hypertarget{method-merge_deps_to_env}{}}}
+\if{html}{\out{<a id="method-app_env-merge_deps_to_env"></a>}}
+\if{latex}{\out{\hypertarget{method-app_env-merge_deps_to_env}{}}}
 \subsection{Method \code{merge_deps_to_env()}}{
 Pass all dependencies saved from previous functions to an environment for use
 \subsection{Usage}{
@@ -50,8 +50,8 @@ Pass all dependencies saved from previous functions to an environment for use
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-gather_deps"></a>}}
-\if{latex}{\out{\hypertarget{method-gather_deps}{}}}
+\if{html}{\out{<a id="method-app_env-gather_deps"></a>}}
+\if{latex}{\out{\hypertarget{method-app_env-gather_deps}{}}}
 \subsection{Method \code{gather_deps()}}{
 Gather the objects passed to \code{app_env}s internal environment to be passed to subsequent functions. Save app dependencies into a list.
 \subsection{Usage}{
@@ -74,8 +74,8 @@ Gather the objects passed to \code{app_env}s internal environment to be passed t
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-set_parent"></a>}}
-\if{latex}{\out{\hypertarget{method-set_parent}{}}}
+\if{html}{\out{<a id="method-app_env-set_parent"></a>}}
+\if{latex}{\out{\hypertarget{method-app_env-set_parent}{}}}
 \subsection{Method \code{set_parent()}}{
 Set the given environment to inherit from the internal 'global' environment
 \subsection{Usage}{
@@ -93,8 +93,8 @@ Set the given environment to inherit from the internal 'global' environment
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-load_deps"></a>}}
-\if{latex}{\out{\hypertarget{method-load_deps}{}}}
+\if{html}{\out{<a id="method-app_env-load_deps"></a>}}
+\if{latex}{\out{\hypertarget{method-app_env-load_deps}{}}}
 \subsection{Method \code{load_deps()}}{
 Load backed up dependencies from path
 \subsection{Usage}{
@@ -112,8 +112,8 @@ Load backed up dependencies from path
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-deps_to_destination"></a>}}
-\if{latex}{\out{\hypertarget{method-deps_to_destination}{}}}
+\if{html}{\out{<a id="method-app_env-deps_to_destination"></a>}}
+\if{latex}{\out{\hypertarget{method-app_env-deps_to_destination}{}}}
 \subsection{Method \code{deps_to_destination()}}{
 Write \code{deps} to a folder via \code{file.copy} or to dropbox. If using dropbox, requires an authorized token to dropbox. See \code{dropbox_auth}.
 \subsection{Usage}{
@@ -138,13 +138,10 @@ Write \code{deps} to a folder via \code{file.copy} or to dropbox. If using dropb
 }
 \if{html}{\out{</div>}}
 }
-\subsection{Returns}{
-
-}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-dropbox_auth"></a>}}
-\if{latex}{\out{\hypertarget{method-dropbox_auth}{}}}
+\if{html}{\out{<a id="method-app_env-dropbox_auth"></a>}}
+\if{latex}{\out{\hypertarget{method-app_env-dropbox_auth}{}}}
 \subsection{Method \code{dropbox_auth()}}{
 Authorize Dropbox
 \subsection{Usage}{
@@ -162,8 +159,8 @@ Authorize Dropbox
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-app_env-new"></a>}}
+\if{latex}{\out{\hypertarget{method-app_env-new}{}}}
 \subsection{Method \code{new()}}{
 Instantiate with default app dependencies to be collected (if they exist) each time \code{\$gather_deps} is called
 \subsection{Usage}{
@@ -185,8 +182,8 @@ Instantiate with default app dependencies to be collected (if they exist) each t
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-app_env-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-app_env-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

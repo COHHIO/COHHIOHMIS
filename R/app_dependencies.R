@@ -373,6 +373,7 @@ app_env <- R6::R6Class(
                                     auto_terminate = TRUE,
                                     format = "{cli::pb_name}: {.path {cli::pb_status}} {cli::pb_current}/{cli::pb_total} [{cli::col_br_blue(cli::pb_elapsed)}]"
       )
+      # browser()
       maybe_write <- purrr::map_dfr(deps_flat, ~{
         cli::cli_progress_update(id = .pid, status = .x)
         o_info <- list(nm = .x)
@@ -544,15 +545,15 @@ app_env <- R6::R6Class(
 
 dependencies <- list()
 
-reset_Rm_env <- function(app_env = get_app_env(e = rlang::caller_env())) {
+reset_rm_env <- function(app_env = get_app_env(e = rlang::caller_env())) {
   deps <- purrr::compact(rlang::env_get_list(app_env$dependencies, ls(app_env$dependencies, all.names = TRUE), default = NULL))
   pkgload::load_all()
-  rm("Rm_env", envir = .GlobalEnv)
-  .GlobalEnv$Rm_env <- RmData::app_env$new()
+  rm("rm_env", envir = .GlobalEnv)
+  .GlobalEnv$rm_env <- RmData::app_env$new()
 
-  rlang::env_bind(.GlobalEnv$Rm_env$dependencies, !!!deps)
-  deps <- ls(.GlobalEnv$Rm_env$dependencies, all.names = TRUE)
-  cli::cli_alert_success(paste0("Rm_env reset and deps re-added: {.emph {paste0(deps, collapse = ', ')}}"))
+  rlang::env_bind(.GlobalEnv$rm_env$dependencies, !!!deps)
+  deps <- ls(.GlobalEnv$rm_env$dependencies, all.names = TRUE)
+  cli::cli_alert_success(paste0("rm_env reset and deps re-added: {.emph {paste0(deps, collapse = ', ')}}"))
   invisible(deps)
 }
 

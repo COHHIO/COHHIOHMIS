@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_DataQuality_utils.R
 \name{dq_dkr_client_veteran_info}
 \alias{dq_dkr_client_veteran_info}
-\title{Check for Dont Know/Refused Wars/Branch/Discharge on clients who are Veterans}
+\title{Check for Dont Know/Prefers Not to Answer Wars/Branch/Discharge on clients who are Veterans}
 \usage{
 dq_dkr_client_veteran_info(
   ssvf_served_in_date_range,
@@ -26,11 +26,10 @@ dq_dkr_client_veteran_info(
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
 }
 \description{
-Check for Dont Know/Refused Wars/Branch/Discharge on clients who are Veterans
+Check for Dont Know/Prefers Not to Answer Wars/Branch/Discharge on clients who are Veterans
 }
 \seealso{
 Other DQ: SSVF Checks: 
-\code{\link{dq_ssvf_missing_address}()},
 \code{\link{dq_ssvf_missing_percent_ami}()},
 \code{\link{dq_veteran_missing_branch}()},
 \code{\link{dq_veteran_missing_discharge_status}()},
@@ -43,7 +42,6 @@ Other DQ: EE Checks:
 \code{\link{dq_future_ees}()},
 \code{\link{dq_future_exits}()},
 \code{\link{dq_missing_income}()},
-\code{\link{dq_ssvf_missing_address}()},
 \code{\link{dq_ssvf_missing_percent_ami}()},
 \code{\link{dq_veteran_missing_branch}()},
 \code{\link{dq_veteran_missing_discharge_status}()},

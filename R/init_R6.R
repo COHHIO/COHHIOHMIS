@@ -5,8 +5,8 @@ if (file.exists("RmData.Rproj") && interactive()) {
     .GlobalEnv$cl_api <- clarity.looker::clarity_api$new(file.path("inst","vault","Looker.ini"))
   }
 
-  if (!exists("Rm_env"))
-    .GlobalEnv$Rm_env <- app_env$new()
+  if (!exists("rm_env"))
+    .GlobalEnv$rm_env <- app_env$new()
 }
 
 
@@ -61,7 +61,7 @@ get_clarity_api <- function(nm = "cl_api", e = rlang::caller_env(), ifnotfound =
 #' @return
 #' @export
 
-get_app_env <- function(nm = "Rm_env", e = rlang::caller_env(), ifnotfound = stop("app_env object not found")) {
+get_app_env <- function(nm = "rm_env", e = rlang::caller_env(), ifnotfound = stop("app_env object not found")) {
   from_ns(nm, "RmData") %||% by_class("app_env", e) %||% by_class("app_env", .GlobalEnv) %||% ifnotfound
 }
 

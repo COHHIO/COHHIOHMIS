@@ -15,9 +15,6 @@ get_clarity_api(
 
 \item{e}{The environment in which to search}
 }
-\value{
-
-}
 \description{
 Find the \code{clarity_api} R6 object
 }

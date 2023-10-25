@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_DataQuality_utils.R
 \name{dq_dkr_destination}
 \alias{dq_dkr_destination}
-\title{Don't Know Refused Destination}
+\title{Don't Know Prefers Not to Answer Destination}
 \usage{
 dq_dkr_destination(
   served_in_date_range,
@@ -23,7 +23,7 @@ dq_dkr_destination(
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
 }
 \description{
-Don't Know Refused Destination
+Don't Know Prefers Not to Answer Destination
 }
 \seealso{
 Other Clarity Checks: 
@@ -39,7 +39,6 @@ Other Clarity Checks:
 \code{\link{dq_dkr_prior_living_situation}()},
 \code{\link{dq_dob}()},
 \code{\link{dq_duplicate_ees}()},
-\code{\link{dq_ethnicity}()},
 \code{\link{dq_future_ees}()},
 \code{\link{dq_future_exits}()},
 \code{\link{dq_gender}()},
@@ -83,7 +82,6 @@ Other Clarity Checks:
 \code{\link{dq_th_check_exit_destination}()},
 \code{\link{dq_th_missing_project_stay}()},
 \code{\link{dq_th_stayers_bos}()},
-\code{\link{dq_vax}()},
 \code{\link{dq_veteran}()},
 \code{\link{dq_without_spdats}()},
 \code{\link{dqu_project_small}()},

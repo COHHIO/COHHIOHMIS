@@ -1,7 +1,7 @@
 Package: RmData
 Title: Data munging dependencies for Rminor & Rminor_elevated
        Shiny apps
-Version: 0.0.2
+Version: 0.0.2.9000
 Authors@R: c(person(given = "Genelle", 
                     family = "Denzin",
                     role = c("aut"), 
@@ -56,7 +56,7 @@ Imports:
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
 URL: https://github.com/COHHIO/Rm_data
 BugReports: https://github.com/COHHIO/Rm_data/issues
 Remotes: COHHIO/hud.extract, COHHIO/clarity.looker, COHHIO/HMIS, yogat3ch/UU
@@ -94,6 +94,7 @@ Collate:
     '04_Guidance.R'
     '05_Veterans_Active_List.R'
     '06_Project_Evaluation_utils.R'
+    '06.1_Project_Evaluation_Mahoning.R'
     '06_Project_Evaluation.R'
     '07_SPM_utils.R'
     '07_SPM.R'
@@ -101,4 +102,6 @@ Collate:
     'convenience_funs.R'
     'daily_update_utils.R'
     'data.R'
-    'ohfa_utils.R'
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

@@ -44,11 +44,11 @@ small_project <- Project |>
   HMIS::operating_between(rm_dates$calc$two_yrs_prior_start, rm_dates$calc$two_yrs_prior_end) |>
   dplyr::filter(ProjectType %in% data_types$Project$ProjectType$w_beds &
            is.na(GrantType) &
-           HMISParticipatingProject == 1) |>
+           HMISParticipationType == 1) |>
   dplyr::select(ProjectID,
                 ProjectName,
                 ProjectType,
-                HMISParticipatingProject)
+                HMISParticipationType)
 
 small_inventory <- Inventory |>
   dplyr::select(
@@ -125,7 +125,7 @@ utilization_clients <- Utilizers |>
         MoveInDateAdjust >= EntryDate &
         MoveInDateAdjust < ExitAdjust
     ) |
-      ProjectType %in% c(1, 2, 8)
+      ProjectType %in% c(0, 1, 2, 8)
   ))
 
 # filtering Beds object to exclude any providers that served 0 hhs in date range
@@ -304,7 +304,7 @@ small_project <- Project |>
          ProjectName,
          ProjectType,
          OrganizationName,
-         HMISParticipatingProject)
+         HMISParticipationType)
 
 # Current Bed Utilization -------------------------------------------------
 
@@ -381,19 +381,6 @@ rm(Households, Clients, Capacity, small_inventory, small_project, providerids)
 # removing all the Value objects we created as those are not used in the apps
 
 
-
-# Find Outliers for HIC Purposes ------------------------------------------
-
-# utilization_unit_overall <- utilization_unit |>
-#   select(ProjectID, ProjectName, ProjectType, rm_dates$calc$two_yrs_prior_range)
-#
-# outliers_hi <- subset(utilization_unit_overall,
-#                       rm_dates$calc$two_yrs_prior_range > quantile(rm_dates$calc$two_yrs_prior_range, prob = 0.90))
-#
-# outliers_lo <- subset(utilization_unit_overall,
-#                       rm_dates$calc$two_yrs_prior_range < quantile(rm_dates$calc$two_yrs_prior_range, prob = 0.03))
-#
-# outliers <- rbind(outliers_hi, outliers_lo)
 
 # WARNING save.image does not save the environment properly, save must be used.
 app_env$gather_deps(utilization, utilization_unit, utilization_bed, utilization_beds)

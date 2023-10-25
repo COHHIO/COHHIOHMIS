@@ -102,16 +102,16 @@ dq_main <- do.call(rbind, dqs) |>
                         "60 Days in Mahoning Coordinated Entry",
                         "Access Point with Entry Exits",
                         "Missing Date of Birth Data Quality",
-                        "Don't Know/Refused or Approx. Date of Birth",
+                        "Don't Know/Prefers Not to Answer Approx. Date of Birth",
                         "Missing DOB",
                         "Missing Name Data Quality",
-                        "Incomplete or Don't Know/Refused Name",
+                        "Incomplete or Don't Know/Prefers Not to Answer Name",
                         "Rent Payment Made, No Move-In Date",
                         "Invalid SSN",
-                        "Don't Know/Refused SSN",
+                        "Don't Know/Prefers Not to Answer SSN",
                         "Missing SSN",
                         "Missing Veteran Status",
-                        "Don't Know/Refused Veteran Status",
+                        "Don't Know/Prefers Not to Answer Veteran Status",
                         "Missing County Served",
                         "Duplicate Entry Exits"
                       )
@@ -329,7 +329,7 @@ dq_eligibility_detail <- dq_check_eligibility()
 #   dkr_client_veteran_info <- dq_dkr_client_veteran_info()
 #
 #   ssvf_missing_percent_ami <- dq_ssvf_missing_percent_ami()
-#ssvf_missing_address <- dq_ssvf_missing_address()
+
 #
 # TEMPORARILY NOT REQUIRED FOR COVID-19 REASONS
 # ssvf_hp_screen <- ssvf_served_in_date_range %>%

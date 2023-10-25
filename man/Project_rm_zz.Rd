@@ -9,9 +9,6 @@ Project_rm_zz(Project)
 \arguments{
 \item{Project}{\code{(data.frame)} From the HUD CSV Export}
 }
-\value{
-
-}
 \description{
 Filter Projects that have been retired (\code{zz}'d)
 }

@@ -9,14 +9,14 @@ qpr_project_small <- function(Project, rm_dates, app_env = get_app_env(e = rlang
                   ProgramCoC,
                   ProjectName,
                   ProjectType,
-                  HMISParticipatingProject,
+                  HMISParticipationType,
                   GrantType,
                   ProjectCounty,
                   ProjectRegion) |>
     HMIS::operating_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
-    dplyr::filter(HMISParticipatingProject == 1 &
+    dplyr::filter(HMISParticipationType == 1 &
                     !is.na(ProjectRegion) &
-                    ProjectType %in% c(1:4, 6, 8:9, 12:14))
+                    ProjectType %in% c(0:4, 6, 8:9, 12:14))
 }
 
 qpr_enrollment_small <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, app_env = get_app_env(e = rlang::caller_env())) {
@@ -94,11 +94,7 @@ qpr_mental_health <- function(validation, Disabilities, app_env = get_app_env(e 
 qpr_path_to_rrhpsh <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, Referrals, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  # referred_from_PATH <- prioritization |>
-  #   dplyr::filter(stringr::str_detect(ProjectName, "\\sPATH\\s"))|>
-  #   dplyr::group_by(Situation_col) |>
-  #   dplyr::summarise(n = dplyr::n(), .groups = "drop") |>
-  #   dplyr::mutate(p = scales::percent(n / sum(n), accuracy = .01))
+
   rrh_psh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC$"))) |>
     paste("%in% c(3, 13)") |> #RRH or PSH Respectively
     purrr::map(rlang::parse_expr)

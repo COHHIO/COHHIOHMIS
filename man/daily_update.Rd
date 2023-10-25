@@ -5,11 +5,11 @@
 \title{Update the Rminor apps}
 \usage{
 daily_update(
-  steps = c(`Update Data` = "update", `Run RmData functions` = "funs", `Send
-    Dependencies to Dropbox` = "send"),
+  steps = c(`Update Data` = "update", `Run RmData functions` = "funs",
+    `Send Dependencies to Dropbox` = "send"),
   funs = rlang::set_names(c("dates", "load_export", "cohorts", "client_counts",
-    "qpr_ees", "qpr_spdats", "vets", "vet_active", "prioritization",
-    "bed_unit_utilization", "data_quality", "data_quality_summary")),
+    "qpr_ees", "qpr_spdats", "vets", "vet_active", "bed_unit_utilization",
+    "data_quality", "data_quality_summary", "prioritization", "spms")),
   remote = FALSE,
   backup = FALSE,
   app_env,
