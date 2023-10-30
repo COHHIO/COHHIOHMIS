@@ -61,16 +61,16 @@ data_types = list(Project = list(ProjectType = list( # formerly project_types
   ce = 14
 )),
 CurrentLivingSituation = list(CurrentLivingSituation = list( #formerly living_situations
-  homeless = c(16, 1, 0, 18),
-  likely_homeless = c(16, 1, 0, 18, 17, 7),
-  institutional = c(15, 6, 7, 25, 4, 5),
-  temp_psh = c(29, 14, 2, 32, 13, 36, 12, 22, 35, 23, 26, 27, 28, 19, 13, 31, 33, 34, 10, 20, 21, 11),
+  homeless = c(0, 116, 101, 118),
+  likely_homeless = c(0, 161, 101, 118, 17, 207),
+  institutional = c(215, 206, 207, 225, 204, 205),
+  temp_psh = c(329, 314, 302, 332, 313, 336, 312, 422, 435, 423, 426, 327, 428, 419, 431, 433, 434, 410, 420, 421, 411),
   other = c(30, 17, 24, 37, 8, 9, 99)
 )),
 Exit = list(Destination = list( # formerly destinations
-  perm = c(3, 10, 11, 19:23, 26, 28, 31, 33, 34, 36),
-  temp = c(0, 1, 2, 12, 13, 14, 16, 18, 27, 32, 35),
-  institutional = c(4:7, 15, 25, 27, 29),
+  perm = c(3, 410, 411, 419:423, 426, 428, 431, 433, 434, 436),
+  temp = c(0, 1, 2, 312, 313, 314, 116, 118, 327, 332, 335),
+  institutional = c(204:207, 215, 225, 327, 329),
   other = c(8, 9, 17, 24, 30, 37, 99)
 )))
 
