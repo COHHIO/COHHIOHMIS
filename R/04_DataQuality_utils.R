@@ -400,6 +400,25 @@ dq_hh_children_only <- function(served_in_date_range, vars, guidance = NULL, app
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
+#' @title Find Households with Missing Relationship to Head of Household
+#' @inherit data_quality_tables params return
+#' @family Clarity Checks
+#' @family DQ: Household Checks
+#' @export
+dq_hh_missing_rel_to_hoh <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
+) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  hh_no_hoh <- dq_hh_no_hoh(served_in_date_range, vars, guidance, app_env = NULL)
+  served_in_date_range |>
+    dplyr::filter(RelationshipToHoH == 99) |>
+    dplyr::anti_join(hh_no_hoh["HouseholdID"], by = "HouseholdID") |>
+    dplyr::mutate(Issue = "Missing Relationship to Head of Household",
+                  Type = "High Priority",
+                  Guidance = guidance$hh_missing_rel_to_hoh) |>
+    dplyr::select(dplyr::all_of(vars$we_want))
+}
+
 #' @title Find Households with no Head of Household
 #' @inherit data_quality_tables params return
 #' @family Clarity Checks
