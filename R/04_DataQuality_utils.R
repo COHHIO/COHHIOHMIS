@@ -1254,7 +1254,7 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
              )) |
             (
               ProjectType == 12 &
-                (!LivingSituation %in% c(3, 410, 411, 312:314, 419:423, 428, 431, 435, 436) |
+                (!LivingSituation %in% c(3, 410, 411, 335, 336, 314, 419:423, 428, 431, 435, 436) |
                    PreviousStreetESSH != 0 )
             ) |
             (ProjectType %in% c(8, 4) & # Safe Haven and Outreach

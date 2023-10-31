@@ -517,6 +517,7 @@ load_enrollment <- function(Enrollment,
 
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
+
   # getting EE-related data, joining both to Enrollment
   Enrollment_extra_Client_Exit_HH_CL_AaE <- dplyr::left_join(Enrollment, Enrollment_extras, by = UU::common_names(Enrollment, Enrollment_extras)) |>
     # Add Exit
