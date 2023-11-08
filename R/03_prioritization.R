@@ -55,6 +55,9 @@ PID_homeless <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
   dplyr::summarize(LivingSituation = recent_valid(DateUpdated, LivingSituation), .groups = "drop") |>
   dplyr::pull(PersonalID)
 
+# create a ranking of most secure to least secure project type
+importance_ranking <- data.frame(ProjectType = c(3, 10, 9, 13, 7, 2, 0, 1, 8, 11, 14, 4))
+
 # clients currently entered into a homeless project in our system
 co_currently_homeless <- co_currently_homeless |>
   dplyr::filter(
@@ -74,6 +77,13 @@ co_currently_homeless <- co_currently_homeless |>
     EntryDate,
     AgeAtEntry
   )
+
+# filter so that result only shows client's most secure project type
+co_currently_homeless <- co_currently_homeless |>
+  dplyr::group_by(UniqueID) |>
+  dplyr::arrange(match(ProjectType, importance_ranking$ProjectType), .by_group = TRUE) |>
+  dplyr::slice(1) |>
+  dplyr::ungroup()
 
 # Check Whether Each Client Has Income ---------------------------------
 
@@ -320,37 +330,6 @@ prioritization <- prioritization |>
          HH_DQ_Issue = as.logical(max(correctedhoh))) |>
   dplyr::ungroup() |>
   dplyr::filter(correctedhoh == 1 | RelationshipToHoH == 1 | NewlyHomeless)
-
-# COVID-19 ----------------------------------------------------------------
-
-
-
-# covid_hhs <- prioritization |>
-#   dplyr::left_join(dplyr::select(c19priority, PersonalID, C19Priority), by = "PersonalID") |>
-#   dplyr::mutate(
-#     C19Priority = dplyr::if_else(
-#       is.na(C19Priority),
-#       "Not Assessed Recently", # "Not Assessed Recently"
-#       as.character(C19Priority)
-#     ),
-#     C19Priority = factor(
-#       C19Priority,
-#       levels = c(
-#         "No Known Risks or Exposure",
-#         "Not Assessed Recently",
-#         "Has Health Risk(s)",
-#         "Needs Isolation/Quarantine"
-#       ),
-#       ordered = TRUE
-#     )
-#   ) |>
-#   dplyr::group_by(PersonalID, HouseholdID) |>
-#   dplyr::summarise(C19Priority = max(C19Priority), .groups = "drop") |>
-#   dplyr::select(PersonalID, HouseholdID, C19Priority)
-
-
-# adding COVID19Priority to active list
-# prioritization <- dplyr::left_join(prioritization, covid_hhs, by = c("PersonalID", "HouseholdID"))
 
 
 # Adding in TAY, County, PHTrack ----------------------

@@ -660,11 +660,11 @@ dq_invalid_months_times_homeless <- function(served_in_date_range, vars, rm_date
                                    # under a month is considered 101, less than a month
                                    dplyr::between(MonthDiff, 0, 1) ~ 1,
                                    # add 100 so it matches the 3.917.5 standards
-                                  TRUE  ~ MonthDiff) + 100,
-                                  # IF there's more than a month discrepancy, raise a warning. (Less than 1 month error could be simply due to difference in the way the person counts months, or the way Clarity computes it)
+                                   TRUE  ~ MonthDiff) + 100,
+      # IF there's more than a month discrepancy, raise a warning. (Less than 1 month error could be simply due to difference in the way the person counts months, or the way Clarity computes it)
       DateMonthsMismatch = abs(MonthsHomelessPastThreeYears - MonthDiff) > 1.1 | MonthsHomelessPastThreeYears == 99,
       Issue = dplyr::case_when(
-        MonthDiff <= 0 ~
+        EntryDate < DateToStreetESSH ~
           "Homelessness Start Date Later Than Entry",
         MonthsHomelessPastThreeYears < 100 & TimesHomelessPastThreeYears == 1 ~
           "Number of Months Homeless Can Be Determined",

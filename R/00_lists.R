@@ -68,8 +68,8 @@ CurrentLivingSituation = list(CurrentLivingSituation = list( #formerly living_si
   other = c(30, 17, 24, 37, 8, 9, 99)
 )),
 Exit = list(Destination = list( # formerly destinations
-  perm = c(3, 410, 411, 419:423, 426, 428, 431, 433, 434, 436),
-  temp = c(0, 1, 2, 312, 313, 314, 116, 118, 327, 332, 335),
+  perm = c(3, 411, 421, 435, 410, 426, 423, 422),
+  temp = c(0, 1, 2, 312, 313, 314, 116, 101, 118, 327, 332, 335),
   institutional = c(204:207, 215, 225, 327, 329),
   other = c(8, 9, 17, 24, 30, 37, 99)
 )))
