@@ -627,6 +627,71 @@ dq_missing_months_times_homeless <- function(served_in_date_range, vars, guidanc
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
+#' @title Find Where Client is Homeless After Entry
+#' @inherit data_quality_tables params return
+#' @family Clarity Checks
+#' @family DQ: Missing Data at Entry
+#' @export
+dq_date_homeless_after_entry <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
+) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  out <- served_in_date_range |>
+    dplyr::select(
+      dplyr::all_of(vars$prep),
+      AgeAtEntry,
+      RelationshipToHoH,
+      MonthsHomelessPastThreeYears,
+      TimesHomelessPastThreeYears,
+      DateToStreetESSH
+    ) |>
+    dplyr::filter(
+      ProjectType != 12 &
+        (RelationshipToHoH == 1 | AgeAtEntry > 17) &
+        EntryDate >= rm_dates$hc$prior_living_situation_required &
+        !is.na(DateToStreetESSH)
+    ) |>
+    dplyr::filter(EntryDate < DateToStreetESSH) |>
+    dplyr::mutate(Issue = "Homelessness Start Date Later Than Entry",
+                  Type = "Warning",
+                  Guidance = guidance$date_homeless_after_entry) |>
+    dplyr::filter(!is.na(Guidance)) |>
+    dplyr::select(dplyr::all_of(vars$we_want))
+  return(out)
+}
+
+#' @title Find Number of Months Homeless Can Be Determined
+#' @inherit data_quality_tables params return
+#' @family Clarity Checks
+#' @family DQ: Missing Data at Entry
+#' @export
+dq_months_homeless_tbd <- function(served_in_date_range, vars, rm_dates = NULL, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
+) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  out <- served_in_date_range |>
+    dplyr::select(
+      dplyr::all_of(vars$prep),
+      AgeAtEntry,
+      RelationshipToHoH,
+      MonthsHomelessPastThreeYears,
+      TimesHomelessPastThreeYears,
+      DateToStreetESSH
+    ) |>
+    dplyr::filter(
+      ProjectType != 12 &
+        (RelationshipToHoH == 1 | AgeAtEntry > 17) &
+        EntryDate >= rm_dates$hc$prior_living_situation_required &
+        !is.na(DateToStreetESSH)
+    ) |>
+    dplyr::filter(MonthsHomelessPastThreeYears < 100 & TimesHomelessPastThreeYears == 1) |>
+    dplyr::mutate(Issue = "Number of Months Homeless Can Be Determined",
+                  Type = "Warning",
+                  Guidance = guidance$months_homeless_tbd) |>
+    dplyr::filter(!is.na(Guidance)) |>
+    dplyr::select(dplyr::all_of(vars$we_want))
+  return(out)
+}
 
 #' @title Find Invalid Months or Times Homeless Entries
 #' @inherit data_quality_tables params return
@@ -655,30 +720,16 @@ dq_invalid_months_times_homeless <- function(served_in_date_range, vars, rm_date
     dplyr::mutate(
       MonthHomelessnessBegan = lubridate::floor_date(DateToStreetESSH, "month"),
       MonthEnteredProgram = lubridate::floor_date(EntryDate, "month"),
-      # Months is deprecated from dplyr, use new time_length
-      MonthDiff = lubridate::time_length(lubridate::interval(MonthHomelessnessBegan, MonthEnteredProgram), "months"),
-      MonthDiff = dplyr::case_when(MonthDiff >= 13 ~ 13,
-                                   # under a month is considered 101, less than a month
-                                   dplyr::between(MonthDiff, 0, 1) ~ 1,
-                                   # add 100 so it matches the 3.917.5 standards
-                                   TRUE  ~ MonthDiff) + 100,
-      # IF there's more than a month discrepancy, raise a warning. (Less than 1 month error could be simply due to difference in the way the person counts months, or the way Clarity computes it)
-      DateMonthsMismatch = abs(MonthsHomelessPastThreeYears - MonthDiff) > 1.1 | MonthsHomelessPastThreeYears == 99,
-      Issue = dplyr::case_when(
-        EntryDate < DateToStreetESSH ~
-          "Homelessness Start Date Later Than Entry",
-        MonthsHomelessPastThreeYears < 100 & TimesHomelessPastThreeYears == 1 ~
-          "Number of Months Homeless Can Be Determined",
-        DateMonthsMismatch & TimesHomelessPastThreeYears == 1 ~
-          "Invalid Homelessness Start Date/Number of Months Homeless"),
-      Type = "Warning",
-      Guidance = dplyr::case_when(
-        MonthDiff <= 0 ~
-          guidance$date_homeless_after_entry,
-        MonthsHomelessPastThreeYears < 100 & TimesHomelessPastThreeYears == 1 ~
-          guidance$months_homeless_tbd,
-        DateMonthsMismatch == 1 & TimesHomelessPastThreeYears == 1 ~
-          guidance$months_homeless_inconsistent)) |>
+      MonthDiff = lubridate::time_length(lubridate::interval(MonthHomelessnessBegan, MonthEnteredProgram), "months") + 1,
+      MonthDiff = dplyr::if_else(MonthDiff >= 13, 13, MonthDiff) + 100,
+      DateMonthsMismatch = dplyr::if_else(MonthsHomelessPastThreeYears - MonthDiff != 0 & TimesHomelessPastThreeYears == 1,
+                                          1,
+                                          0
+      )) |>
+    dplyr::filter(DateMonthsMismatch == 1 & TimesHomelessPastThreeYears == 1) |>
+    dplyr::mutate(Issue = "Invalid Homelessness Start Date/Number of Months Homeless",
+                  Type = "Warning",
+                  Guidance = guidance$months_homeless_inconsistent) |>
     dplyr::filter(!is.na(Guidance)) |>
     dplyr::select(dplyr::all_of(vars$we_want))
   return(out)
@@ -2967,7 +3018,7 @@ dqu_aps <- function(Project, Referrals, data_APs = TRUE, app_env = get_app_env(e
       ProjectCounty
     ) |>
     dplyr::distinct()
-  participating <- dplyr::filter(co_APs, as.logical(HMISParticipationType)) |>
+  participating <- dplyr::filter(co_APs, HMISParticipationType == 1) |>
     unique() |>
     dplyr::pull(ProjectID)
   referring <- unique(Referrals$R_ReferringProjectID)
