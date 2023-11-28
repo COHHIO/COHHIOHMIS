@@ -1092,10 +1092,10 @@ dq_psh_incorrect_destination <- function(served_in_date_range, vars, guidance = 
     dplyr::left_join(enrolled_in_type, by = "PersonalID", suffix = c("", "_psh")) |>
     dplyr::filter(!ProjectType %in% c(3, 9) &
                     ExitDate == MoveInDateAdjust_psh  &
-                    !Destination %in% c(3, 410, 411, 421, 422, 423, 426, 435)) |>
+                    (Destination != 426 | (!RentalSubsidyType %in% c(419, 439, 440)))
+    ) |>
     dplyr::mutate(
-      Issue = "Incorrect Exit Destination (should be \"Permanent housing (other
-    than RRH)...\")",
+      Issue = "Incorrect Exit Destination (should be \"Permanent Supportive Housing\")",
     Type = "Error",
     Guidance = guidance$psh_incorrect_destination) |>
     dplyr::select(dplyr::all_of(vars$we_want))
