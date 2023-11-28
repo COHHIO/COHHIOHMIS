@@ -1087,13 +1087,12 @@ dq_psh_incorrect_destination <- function(served_in_date_range, vars, guidance = 
 ) {
   if (is_app_env(app_env))
 		app_env$set_parent(missing_fmls())
-  enrolled_in_type <- enrolled_in(served_in_date_range, type = c(3,9), TRUE)
-
+  enrolled_in_type <- enrolled_in(served_in_date_range, type = c(3, 9), TRUE)
   served_in_date_range |>
     dplyr::left_join(enrolled_in_type, by = "PersonalID", suffix = c("", "_psh")) |>
     dplyr::filter(!ProjectType %in% c(3, 9) &
                     ExitDate == MoveInDateAdjust_psh  &
-                    !Destination %in% c(3, 19, 26)) |>
+                    !Destination %in% c(3, 410, 411, 421, 422, 423, 426, 435)) |>
     dplyr::mutate(
       Issue = "Incorrect Exit Destination (should be \"Permanent housing (other
     than RRH)...\")",
