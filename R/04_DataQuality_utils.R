@@ -111,6 +111,7 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Client_
         "DateOfPATHStatus",
         "DateToStreetESSH",
         "Destination",
+        "DestinationSubsidyType",
         "DifferentIdentity",
         "DifferentIdentityText",
         "DisablingCondition",
@@ -1092,7 +1093,8 @@ dq_psh_incorrect_destination <- function(served_in_date_range, vars, guidance = 
     dplyr::left_join(enrolled_in_type, by = "PersonalID", suffix = c("", "_psh")) |>
     dplyr::filter(!ProjectType %in% c(3, 9) &
                     ExitDate == MoveInDateAdjust_psh  &
-                    (Destination != 426 | (!RentalSubsidyType %in% c(419, 439, 440)))
+                    (!DestinationSubsidyType %in% c(419, 439, 440)) &
+                    Destination != 426
     ) |>
     dplyr::mutate(
       Issue = "Incorrect Exit Destination (should be \"Permanent Supportive Housing\")",

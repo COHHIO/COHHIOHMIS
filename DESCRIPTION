@@ -30,7 +30,6 @@ Depends: R (>= 4.1.0)
 Imports: 
     clarity.looker,
     cli,
-    devtools,
     dplyr,
     ggplot2,
     glue,

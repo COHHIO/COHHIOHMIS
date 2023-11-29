@@ -82,6 +82,7 @@ Enrollment_add_Exit <- function(Enrollment, Exit) {
   out <- dplyr::left_join(Enrollment, Exit |> dplyr::select(EnrollmentID,
                                                      ExitDate,
                                                      Destination,
+                                                     DestinationSubsidyType,
                                                      OtherDestination), by = "EnrollmentID")  |>
     dplyr::mutate(ExitAdjust = dplyr::if_else(is.na(ExitDate) |
                                   ExitDate > Sys.Date(),
