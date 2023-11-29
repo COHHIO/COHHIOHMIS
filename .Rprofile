@@ -1,3 +1,7 @@
+if (interactive()) {
+  suppressMessages(require(devtools))
+}
+
 source("renv/activate.R")
 # if (file.exists("~/.Rprofile"))
 #   source("~/.Rprofile")
