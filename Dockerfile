@@ -54,8 +54,6 @@ RUN R -e "install.packages('pkgload', dependencies = TRUE, repos = c(CRAN = 'htt
 
 RUN R -e "install.packages('aws.s3', dependencies = TRUE, repos = c(CRAN = 'https://cloud.r-project.org'))"
 
-RUN install2.r --error --deps TRUE arrow
-
 RUN R -e "remotes::install_github('COHHIO/HMIS')"
 RUN R -e "remotes::install_github('COHHIO/lookr')"
 RUN R -e "remotes::install_github('COHHIO/clarity.looker')"

@@ -404,6 +404,9 @@ load_program_lookup <- function(program_lookup) {
   program_lookup |>
     dplyr::mutate(dplyr::across(c(dplyr::ends_with("Active")), ~dplyr::if_else(.x %in% c("Active"), TRUE, FALSE))) |>
     dplyr::rename(AgencyAdministrator = "Property Manager") |>
+    dplyr::group_by(ProgramName) |>
+    dplyr::filter(`Start Date` == max(`Start Date`)) |>
+    dplyr::ungroup() |>
     clarity.looker::make_linked_df(ProgramName, type = "program_edit") |>
     clarity.looker::make_linked_df(AgencyName, type = "agency_switch") |>
     clarity.looker::make_linked_df(AgencyAdministrator, type = "admin")
