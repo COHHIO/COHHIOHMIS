@@ -162,7 +162,8 @@ Enrollment_add_Household = function(Enrollment, Project, rm_dates, app_env = get
       # Fri Jan 28 21:05:08 2022
       # Puts EntryDate as MoveInDate for projects that don't use a MoveInDate
       MoveInDateAdjust = dplyr::case_when(
-        !is.na(HHMoveIn) & HHMoveIn <= ExitAdjust & EntryDate <= HHMoveIn ~ HHMoveIn,
+        !is.na(HHMoveIn) & HHMoveIn <= ExitAdjust ~ HHMoveIn,
+        EntryDate >= HHMoveIn ~ EntryDate,
         TRUE ~ NA),
       # EntryAdjust = dplyr::case_when(
       #   ProjectType %in% c(1, 2, 4, 8, 12) ~ EntryDate,
@@ -407,6 +408,8 @@ load_program_lookup <- function(program_lookup) {
     dplyr::group_by(ProgramName) |>
     dplyr::filter(`Start Date` == max(`Start Date`)) |>
     dplyr::ungroup() |>
+    dplyr::arrange(is.na(AgencyAdministrator)) |>
+    dplyr::distinct(ProgramID, ProgramName, .keep_all = TRUE) |>
     clarity.looker::make_linked_df(ProgramName, type = "program_edit") |>
     clarity.looker::make_linked_df(AgencyName, type = "agency_switch") |>
     clarity.looker::make_linked_df(AgencyAdministrator, type = "admin")

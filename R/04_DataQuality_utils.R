@@ -1064,16 +1064,17 @@ dq_psh_check_exit_destination <- function(served_in_date_range, vars, guidance =
 ) {
   if (is_app_env(app_env))
 		app_env$set_parent(missing_fmls())
-  enrolled_in_type <- enrolled_in(served_in_date_range, type = c(3,9), TRUE)
+  enrolled_in_type <- enrolled_in(served_in_date_range, type = c(3, 9), TRUE)
 
   served_in_date_range |>
     dplyr::left_join(enrolled_in_type, by = "PersonalID", suffix = c("", "_psh")) |>
     dplyr::filter(!ProjectType %in% c(3, 9) &
                     lubridate::`%within%`(ExitAdjust, TimeInterval)  &
-                    !Destination %in% c(3, 19, 26)) |>
+                    (!DestinationSubsidyType %in% c(419, 439, 440)) &
+                    Destination != 426
+    ) |>
     dplyr::mutate(
-      Issue = "Check Exit Destination (may be \"Permanent housing (other
-      than RRH)...\")",
+      Issue = "Check Exit Destination",
       Type = "Warning",
       Guidance = guidance$psh_check_exit) |>
     dplyr::select(dplyr::all_of(vars$we_want))
@@ -1097,7 +1098,7 @@ dq_psh_incorrect_destination <- function(served_in_date_range, vars, guidance = 
                     Destination != 426
     ) |>
     dplyr::mutate(
-      Issue = "Incorrect Exit Destination (should be \"Permanent Supportive Housing\")",
+      Issue = "Incorrect Exit Destination",
     Type = "Error",
     Guidance = guidance$psh_incorrect_destination) |>
     dplyr::select(dplyr::all_of(vars$we_want))
