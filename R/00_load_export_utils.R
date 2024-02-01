@@ -26,6 +26,7 @@ Client_redact <- function(Client) {
       MiddleName = NULL,
       NameSuffix = NULL,
       SSN = dplyr::case_when(
+        substr(SSN, 1, 5) == "00000" ~ "Four Digits Provided",
         (is.na(SSN) & !SSNDataQuality %in% c(8, 9)) |
           is.na(SSNDataQuality) | SSNDataQuality == 99 ~ "Missing",
         SSNDataQuality %in% c(8, 9) ~ "DKR",
@@ -34,7 +35,6 @@ Client_redact <- function(Client) {
           substr(SSN, 1, 1) == 9 |
           substr(SSN, 4, 5) == "00" |
           substr(SSN, 6, 9) == "0000" |
-          SSNDataQuality == 2 |
           SSN %in% c(
             111111111,
             222222222,
@@ -44,9 +44,7 @@ Client_redact <- function(Client) {
             777777777,
             888888888,
             123456789
-          ) ~ "Invalid",
-        # SSNDataQuality == 2 &
-          nchar(SSN) == 4 ~ "Four Digits Provided"
+          ) ~ "Invalid"
       )
     ) |>
     dplyr::mutate(SSN = dplyr::case_when(is.na(SSN) ~ "ok",!is.na(SSN) ~ SSN))
@@ -108,7 +106,8 @@ Enrollment_add_Household = function(Enrollment, Project, rm_dates, app_env = get
   # only doing this for RRH and PSHs since Move In Date doesn't matter for ES, etc.
 
   small_project <- Project |>
-    dplyr::select(ProjectID, ProjectType, ProjectName) |>
+    dplyr::select(ProjectID, ProjectType, ProjectName, FundingSourceCode,
+                  NonFederalFundingSourceCode) |>
     dplyr::distinct()
   # TODO Check to see if Enrollment data has the MoveInDate
   # TODO Does Move-in Date in Clarity auto-populate from previous enrollments?

@@ -124,6 +124,7 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Client_
         "ExitDate",
         "ExpectedPHDate",
         "FirstName",
+        "FundingSourceCode",
         "GenderNone",
         "HispanicLatinaeo",
         "HouseholdID",
@@ -139,6 +140,7 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Client_
         "NameDataQuality",
         "NativeHIPacific",
         "NonBinary",
+        "NonFederalFundingSourceCode",
         "PersonalID",
         "PHTrack",
         "PreviousStreetESSH",
@@ -302,7 +304,7 @@ dq_ssn <- function(served_in_date_range, guidance = NULL, vars = NULL, app_env =
     dplyr::mutate(
       Issue = dplyr::case_when(
         SSN == "Missing" ~ "Missing SSN",
-        SSN == "Four Digits Provided" & VeteranStatus == 1 ~ "Invalid SSN",
+        SSN == "Four Digits Provided" & (FundingSourceCode == 33 | NonFederalFundingSourceCode == 5) ~ "Invalid SSN",
         SSN == "Invalid" ~ "Invalid SSN",
         SSN == "DKR" ~ "Don't Know/Prefers Not to Answer SSN",
         SSN == "Incomplete" ~ "Invalid SSN"
