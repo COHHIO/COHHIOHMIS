@@ -40,6 +40,7 @@ cohorts <- function(
     "PersonalID",
     "UniqueID",
     "EnrollmentID",
+    "DOB",
     "CountyServed",
     "ProjectName",
     "ProjectID",

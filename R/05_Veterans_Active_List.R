@@ -47,6 +47,7 @@ vet_active <- function(
       "DateVeteranIdentified",
       "Destination",
       "DisablingCondition",
+      "DOB",
       "EnrollmentID",
       "EntryAdjust",
       "EntryDate",
@@ -290,6 +291,7 @@ vet_active <- function(
         ListStatus,
         EntryDate,
         AgeAtEntry,
+        DOB,
         DisablingCondition,
         DateToStreetESSH,
         TimesHomelessPastThreeYears,
@@ -337,6 +339,7 @@ vet_active <- function(
           " days)"
         ),
         DaysActive = as.double(difftime(lubridate::today(), ActiveDate)),
+        Age = floor(lubridate::decimal_date(lubridate::today()) - lubridate::decimal_date(DOB)),
         Eligibility =
           dplyr::if_else(
             is.na(VAEligible) & is.na(SSVFIneligible),

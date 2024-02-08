@@ -47,6 +47,7 @@ app_deps <- list(
     "dq_summary",
     "dq_unsheltered",
     "guidance",
+    "mental_health_unsheltered",
     "path_referrals",
     "pe_benefits_at_exit",
     "pe_entries_no_income",
