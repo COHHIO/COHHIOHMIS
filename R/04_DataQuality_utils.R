@@ -478,8 +478,7 @@ dq_missing_approx_date_homeless <- function(served_in_date_range, vars, guidance
     dplyr::filter((RelationshipToHoH == 1 | AgeAtEntry > 17) &
                     EntryDate >= rm_dates$hc$prior_living_situation_required &
                     is.na(DateToStreetESSH) &
-                    LOSUnderThreshold == 1 &
-                    PreviousStreetESSH == 1
+                    ((LOSUnderThreshold == 1 & PreviousStreetESSH == 1 & ProjectType %in% c(2, 3, 6, 7, 9:14)) | ProjectType %in% c(0, 1, 4, 8))
     ) |>
     dplyr::mutate(Issue = "Missing Approximate Date Homeless",
                   Type = "Error",

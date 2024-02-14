@@ -95,16 +95,8 @@ qpr_path_to_rrhpsh <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, Referrals
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
 
-  rrh_psh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC$"))) |>
-    paste("%in% c(3, 13)") |> #RRH or PSH Respectively
-    purrr::map(rlang::parse_expr)
-
-  rrh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC$"))) |>
-    paste("%in% c(3)") |> #RRH or PSH Respectively
-    purrr::map(rlang::parse_expr)
-
-  psh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC$"))) |>
-    paste("%in% c(13)") |> #RRH or PSH Respectively
+  rrh_psh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "ReferringPTC$"))) |>
+    paste("%in% c(3, 13, 'PH – Rapid Re-Housing', 'PH – Permanent Supportive Housing (disability required for entry)')") |> #RRH or PSH Respectively
     purrr::map(rlang::parse_expr)
 
   in_path <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
@@ -121,7 +113,7 @@ qpr_path_to_rrhpsh <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, Referrals
     # needs to count individuals
     # needs to be individuals in, referred by, referred to
     dplyr::group_by(!!!rlang::syms(stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "PTC$"))) |> unique())) |>
-    dplyr::filter(is.na(R_ReferringPTC) || R_ReferringPTC != 2) |>
+    dplyr::filter(is.na(R_ReferringPTC) | R_ReferringPTC != 2) |>
     dplyr::distinct(PersonalID, .keep_all = TRUE) |>
     dplyr::mutate(rrhpsh = dplyr::case_when(
       ProjectType %in% c(13) ~ "RRH",
