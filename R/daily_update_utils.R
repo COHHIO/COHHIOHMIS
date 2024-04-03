@@ -158,15 +158,23 @@ data_ready <- function(dir = clarity.looker::dirs$export) {
 update_data <- function(clarity_api = RmData::get_clarity_api(e = rlang::caller_env())) {
   .export_ready <- data_ready(clarity_api$dirs$export)
 
-  # if (any(UU::`%|0|%`(.export_ready$needs_update, TRUE))) {
-  #   cli::cli_inform(message = cli::col_grey("Updating export..."))
-  #   clarity_api$get_export()
-  # }
+
+  if (any(UU::`%|0|%`(.export_ready$needs_update, TRUE))) {
+    # browser()
+    cli::cli_inform(message = cli::col_grey("Updating export..."))
+    clarity_api$get_export()
+  }
 
   .extras_ready <- data_ready(clarity_api$dirs$extras)
+
+  cli::cli_inform(message = cli::col_grey("Updating extras..."))
+  clarity_api$get_folder_looks(clarity_api$folders,
+                               .write = TRUE,
+                               path = clarity_api$dirs$extras)
+
   if (any(UU::`%|0|%`(.extras_ready$needs_update, TRUE))) {
     cli::cli_inform(message = cli::col_grey("Updating extras..."))
-    clarity_api$get_folder_looks(clarity_api$folders$`HUD Extras`,
+    clarity_api$get_folder_looks(clarity_api$folders,
                                  .write = TRUE,
                                  path = clarity_api$dirs$extras)
   }

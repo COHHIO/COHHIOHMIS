@@ -68,14 +68,15 @@ load_export <- function(
 
 
   # Referrals ---------------------------------------------------------------
-  app_env <- load_referrals(Referrals = clarity_api$`HUD Extras`$CE_Referrals_new_extras(col_types = list(ReferringPTC = "c", DeniedByType = "c")))
+  app_env <- load_referrals(Referrals = clarity_api$CE_Referrals_new_extras(col_types = list(ReferringPTC = "c", DeniedByType = "c")))
 
 
   # Enrollment --------------------------------------------------------------
 
 
   app_env <- load_enrollment(Enrollment = clarity_api$Enrollment(),
-                             Enrollment_extras = clarity_api$`HUD Extras`$Enrollment_extras(),
+                             Enrollment_extras = clarity_api$Enrollment_extras() |>
+                               dplyr::mutate_all(as.character),
                              Exit = clarity_api$Exit())
 
   # Funder ------------------------------------------------------------------
@@ -109,11 +110,11 @@ load_export <- function(
   # Contacts ----------------------------------------------------------------
   # only pulling in contacts made between an Entry Date and an Exit Date
 
-  Contacts <- clarity_api$`HUD Extras`$Contact_extras()
+  Contacts <- clarity_api$Contact_extras()
 
   # Scores ------------------------------------------------------------------
 
-  Scores <-  clarity_api$`HUD Extras`$Client_SPDAT_extras() |>
+  Scores <-  clarity_api$Client_SPDAT_extras() |>
     dplyr::filter(Deleted == "No") |>
     dplyr::mutate(Score = dplyr::if_else(is.na(Score), CustomScore, Score),
                   CustomScore = NULL)
@@ -121,23 +122,23 @@ load_export <- function(
   # Offers -----------------------------------------------------------------
 # Only used in vet_active. Moved There
 
-  Doses <- clarity_api$`HUD Extras`$Client_Doses_extras() |>
+  Doses <- clarity_api$Client_Doses_extras() |>
     dplyr::filter(Deleted == "No")
 
 
   # Users ----
   # Thu Sep 23 14:38:19 2021
   Users <- clarity_api$User()
-  Users_link <- clarity_api$`HUD Extras`$UserNamesIDs_extras() |>
+  Users_link <- clarity_api$UserNamesIDs_extras() |>
     dplyr::mutate(UserCreated = as.character(UserCreated))
   Users <- dplyr::left_join(Users, Users_link, by = c(UserID = "UserCreated"))
 
   # Services ----------------------------------------------------------------
   app_env <- load_services(Services = clarity_api$Services(),
-                Services_extras = clarity_api$`HUD Extras`$Services_extras()
+                Services_extras = clarity_api$Services_extras()
                 )
 
-  program_lookup <- load_program_lookup(clarity_api$`HUD Extras`$Program_lookup_extras())
+  program_lookup <- load_program_lookup(clarity_api$Program_lookup_extras())
 
 
 

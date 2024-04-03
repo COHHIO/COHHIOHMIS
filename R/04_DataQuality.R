@@ -82,7 +82,8 @@ data_quality <- function(check_fns = RmData::relevant_dq,
     .call <- rlang::call2(fn, !!!purrr::map(arg_names, ~rlang::expr(app_env$dependencies[[!!.x]])), app_env = NULL)
 
     out <- rlang::eval_bare(.call)|>
-      dplyr::distinct(PersonalID, EnrollmentID, Issue, .keep_all = TRUE)
+      dplyr::distinct(PersonalID, EnrollmentID, Issue, .keep_all = TRUE) |>
+      dplyr::mutate_all(as.character)
     UU::join_check(out)
     out
   })

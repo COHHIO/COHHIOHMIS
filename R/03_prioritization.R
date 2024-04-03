@@ -388,10 +388,11 @@ prioritization <- prioritization |>
 
 # taking the most recent score on the client, but this score cannot be over a
 # year old.
-
   prioritization <- prioritization |>
   dplyr::left_join(
     Scores |>
+      dplyr::mutate(PersonalID = as.character(PersonalID),
+                    ScoreDate = as.Date(ScoreDate)) |>
       dplyr::filter(ScoreDate > lubridate::today() - lubridate::years(1)) |>
       dplyr::group_by(PersonalID) |>
       dplyr::arrange(dplyr::desc(ScoreDate)) |>

@@ -41,9 +41,7 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
   ))
 
 
-
   # Dates from Metadata -----------------------------------------------------
-
 
   Export <- clarity_api$Export()
 
@@ -54,7 +52,8 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
   )
 
   # Calculated Dates --------------------------------------------------------
-  Exit <- clarity_api$Exit()
+  Exit <- clarity_api$Exit() |>
+    dplyr::mutate(EnrollmentID = as.character(EnrollmentID))
   rm_dates$calc <- list(data_goes_back_to =
                           Exit %>%
                           dplyr::arrange(ExitDate) %>%

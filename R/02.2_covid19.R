@@ -14,7 +14,7 @@ covid19 <- function(
     app_env$set_parent(missing_fmls())
   # COVID-19 ----------------------------------------------------------------
 
-  covid19 <- clarity_api$`HUD Extras`$Client_COVID_extras() |>
+  covid19 <- clarity_api$Client_COVID_extras() |>
     dplyr::filter(Deleted == "No") |>
     dplyr::mutate(dplyr::across(
       .cols = dplyr::all_of(c(dplyr::matches("^C19Tested$"),

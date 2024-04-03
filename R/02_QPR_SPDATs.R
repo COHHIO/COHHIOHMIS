@@ -53,7 +53,8 @@ Entries <- enrollment_small %>%
 # long to run.
 
 qpr_spdats_county <-
-  dplyr::left_join(enrollment_small, Scores, by = UU::common_names(enrollment_small, Scores)) %>%
+  dplyr::left_join(enrollment_small, Scores |> dplyr::mutate(PersonalID = as.character(PersonalID)),
+                   by = UU::common_names(enrollment_small, Scores)) %>%
   dplyr::filter(
     ProjectType %in% c(0, 1, 2, 4, 8) &
       RelationshipToHoH == 1 &
@@ -94,12 +95,14 @@ qpr_spdats_county <-
 
 
 # this pulls all entries into PSH or RRH
-entry_scores <- dplyr::left_join(Entries, Scores, by = UU::common_names(Entries, Scores))
+entry_scores <- dplyr::left_join(Entries, Scores |> dplyr::mutate(PersonalID = as.character(PersonalID)),
+                                                                  by = UU::common_names(Entries, Scores))
 
 qpr_spdats_project <- entry_scores %>%
   dplyr::select(-ProjectType,
          -OperatingStartDate,
          -OperatingEndDate) %>%
+  dplyr::mutate(ScoreDate = as.Date(ScoreDate)) |>
   dplyr::filter(
     RelationshipToHoH == 1 &
       (ScoreDate <= EntryDate | is.na(ScoreDate)) &

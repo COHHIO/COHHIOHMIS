@@ -76,7 +76,9 @@ VeteranHHs <- Project |>
   dplyr::right_join(VeteranHHs, by = "ProjectID")
 
 VeteranHHs <- VeteranHHs |>
-  dplyr::left_join(VeteranCE, by = c("PersonalID", "EnrollmentID", "UniqueID"))
+  dplyr::left_join(VeteranCE |>
+                     dplyr::mutate_at(dplyr::vars("PersonalID", "EnrollmentID", "UniqueID"), as.character),
+                   by = c("PersonalID", "EnrollmentID", "UniqueID"))
 
 CurrentVeterans <- VeteranHHs |>
   dplyr::filter((ProjectType %in% c(0, 1, 2, 4, 8, 12) & (
@@ -179,6 +181,7 @@ current_tay_hohs <- tay |>
          TAYHHs) |>
   dplyr::left_join(
     VeteranCE |>
+      dplyr::mutate_at(dplyr::vars(PersonalID, EnrollmentID), as.character) |>
       dplyr::select(PersonalID,
              EnrollmentID,
              PHTrack,

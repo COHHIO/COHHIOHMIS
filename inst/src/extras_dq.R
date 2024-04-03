@@ -1,4 +1,4 @@
-cl_api$get_folder_looks(cl_api$folders$`HUD Extras`, .write = TRUE,
+cl_api$get_folder_looks(cl_api$folders, .write = TRUE,
                         path = dirs$extras)
 pkgload::load_all()
 rm_env <- dates(clarity_api = cl_api, app_env = rm_env)

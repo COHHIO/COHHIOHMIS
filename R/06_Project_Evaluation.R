@@ -300,7 +300,7 @@ project_evaluation <- function(
     dplyr::left_join(pe_coc_funded %>%
                        dplyr::distinct(ProjectID, AltProjectID), by = "AltProjectID") %>%
     dplyr::mutate(ProjectID = dplyr::if_else(is.na(ProjectID), AltProjectID, ProjectID)) %>%
-    dplyr::left_join(clarity_api$`HUD Extras`$User_extras() |>
+    dplyr::left_join(clarity_api$User_extras() |>
                        dplyr::filter(!is.na(ProjectID) & Deleted == "No") |>
                        dplyr::select(UserID, ProjectID), by = "ProjectID")
 

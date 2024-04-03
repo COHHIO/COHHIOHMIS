@@ -1626,6 +1626,7 @@ dq_missing_path_contact <- function(served_in_date_range, Contacts, rm_dates, va
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
   small_contacts <-  Contacts |>
+    dplyr::mutate_at(dplyr::vars("UniqueID", "PersonalID", "EnrollmentID"), as.character) |>
     dplyr::left_join(served_in_date_range, by = UU::common_names(Contacts, served_in_date_range)) |>
     dplyr::filter(
       ContactDate >= EntryDate &
@@ -1658,7 +1659,7 @@ dq_missing_path_contact <- function(served_in_date_range, Contacts, rm_dates, va
 #' @family DQ: Path Checks
 #' @description Every adult or head of household should have a Living Situation contact record where the Contact Date matches the Entry Date. This would represent the initial contact made with the client.
 #' @inherit data_quality_tables params return
-#' @param Contacts \code{(data.frame)} From the HUD CSV Export
+#' @param |> \code{(data.frame)} From the HUD CSV Export
 #' @details client is adult/hoh, has a contact record, and the first record in the EE does not equal the Entry Date ->  error
 #' @export
 
@@ -1668,7 +1669,9 @@ dq_incorrect_path_contact_date <- function(served_in_date_range, Contacts, rm_da
 
   first_contact <- Contacts |>
     dplyr::filter(ContactDate < rm_dates$hc$outreach_to_cls) |>
-    dplyr::left_join(served_in_date_range, by = "PersonalID") |>
+    dplyr::mutate(PersonalID = as.character(PersonalID)) |>
+    dplyr::left_join(served_in_date_range |> dplyr::mutate(PersonalID = as.character(PersonalID)),
+                     by = "PersonalID") |>
     dplyr::select(PersonalID, EntryDate, ExitAdjust, ExitDate, ContactDate, ProjectName,
                   EntryDate, ExitAdjust) |>
     dplyr::filter(ContactDate >= EntryDate &
@@ -1692,6 +1695,7 @@ dq_incorrect_path_contact_date <- function(served_in_date_range, Contacts, rm_da
       Type = "Error",
       Guidance = guidance$incorrect_path_contact_date
     ) |>
+    dplyr::mutate(PersonalID = as.character(PersonalID)) |>
     dplyr::select(dplyr::all_of(vars$we_want))
 
 }
@@ -1788,7 +1792,10 @@ dq_without_spdats <- function(served_in_date_range, Funder, Scores, rm_dates, va
     dplyr::anti_join(va_funded, by = "ProjectID")
   ees_with_spdats <- no_va |>
     dplyr::left_join(Scores  |>
-                       dplyr::mutate(ScoreAdjusted = dplyr::if_else(is.na(Score), 0, Score)), by = c("UniqueID", "PersonalID")) |>
+                       dplyr::mutate(ScoreAdjusted = dplyr::if_else(is.na(Score), 0, Score),
+                                     PersonalID = as.character(PersonalID),
+                                     UniqueID = as.character(UniqueID)),
+                     by = c("UniqueID", "PersonalID")) |>
     dplyr::ungroup() |>
     dplyr::select(PersonalID,
                   UniqueID,
@@ -1798,6 +1805,7 @@ dq_without_spdats <- function(served_in_date_range, Funder, Scores, rm_dates, va
                   ExitAdjust,
                   ScoreDate,
                   ScoreAdjusted) |>
+    dplyr::mutate(ScoreDate = as.Date(ScoreDate)) |>
     dplyr::filter(!is.na(ScoreDate) &
                     ScoreDate + lubridate::days(365) > EntryDate &
                     # score is < 1 yr old
@@ -2656,7 +2664,8 @@ dq_referrals_outstanding <- function(served_in_date_range, Referrals, vars, app_
   # CW says ProviderCreating should work instead of Referred-From Provider
   # Using ProviderCreating instead. Either way, I feel this should go in the
   # Provider Dashboard, not the Data Quality report.
-
+  Referrals <- Referrals |>
+    dplyr::mutate_at(dplyr::vars("PersonalID", "UniqueID"), as.character)
   served_in_date_range |>
     dplyr::semi_join(Referrals,
                      by = c("PersonalID", "UniqueID")) |>
@@ -2689,7 +2698,8 @@ dq_referrals_on_hh_members_ssvf <- function(served_in_date_range, Referrals, var
     app_env$set_parent(missing_fmls())
 
   SSVF_Referrals <- Referrals |>
-    dplyr::filter(stringr::str_detect(R_ReferredProjectName, "SSVF"))
+    dplyr::filter(stringr::str_detect(R_ReferredProjectName, "SSVF")) |>
+    dplyr::mutate(PersonalID = as.character(PersonalID))
   served_in_date_range |>
     dplyr::select(dplyr::all_of(vars$prep),
                   RelationshipToHoH,

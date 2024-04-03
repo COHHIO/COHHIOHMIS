@@ -63,6 +63,8 @@ Client_redact <- function(Client) {
 Client_add_UniqueID <- function(Client, Client_UniqueIDs, app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
+  names(Client_UniqueIDs) <- c("UniqueID", "PersonalID")
+  Client_UniqueIDs$PersonalID <- as.character(Client_UniqueIDs$PersonalID)
   out <- dplyr::left_join(Client, dplyr::distinct(Client_UniqueIDs, PersonalID, UniqueID), by = "PersonalID")
   UU::join_check(Client, out)
   out
@@ -77,11 +79,13 @@ Client_add_UniqueID <- function(Client, Client_UniqueIDs, app_env = get_app_env(
 #' @export
 
 Enrollment_add_Exit <- function(Enrollment, Exit) {
-  out <- dplyr::left_join(Enrollment, Exit |> dplyr::select(EnrollmentID,
-                                                     ExitDate,
-                                                     Destination,
-                                                     DestinationSubsidyType,
-                                                     OtherDestination), by = "EnrollmentID")  |>
+  out <- Enrollment |>
+    dplyr::mutate(EnrollmentID = as.character(EnrollmentID)) |>
+    dplyr::left_join(
+      Exit |>
+        dplyr::mutate(EnrollmentID = as.character(EnrollmentID)) |>
+        dplyr::select(EnrollmentID, ExitDate, Destination, DestinationSubsidyType,
+                      OtherDestination), by = "EnrollmentID")  |>
     dplyr::mutate(ExitAdjust = dplyr::if_else(is.na(ExitDate) |
                                   ExitDate > Sys.Date(),
                                 Sys.Date(), ExitDate))
@@ -186,7 +190,10 @@ Enrollment_add_VeteranCE = function(Enrollment, VeteranCE) {
 
   Enrollment |>
     # Join Veteran data
-    dplyr::left_join(VeteranCE  |>  dplyr::select(EnrollmentID, PHTrack, ExpectedPHDate) |> dplyr::distinct(EnrollmentID, .keep_all = TRUE), by = "EnrollmentID") |>
+    dplyr::left_join(VeteranCE  |>
+                       dplyr::mutate(EnrollmentID = as.character(EnrollmentID)) |>
+                       dplyr::select(EnrollmentID, PHTrack, ExpectedPHDate) |>
+                       dplyr::distinct(EnrollmentID, .keep_all = TRUE), by = "EnrollmentID") |>
     dplyr::mutate(
       ExitAdjust = dplyr::if_else(
         is.na(ExitDate) |
@@ -321,14 +328,31 @@ pe_create_APs = function(provider_extras, ProjectCoC, dirs, app_env = get_app_en
 
   # Programs serve multiple Counties which may fall into multiple regions. This creates a row for each Region served by a Program such that Coordinated Entry Access Points will show all the appropriate programs when filtering by Region.
   # @Rm
-  APs <- purrr::pmap_dfr(APs, ~{
-    .x <- tibble::tibble(...)
-    .counties <- trimws(stringr::str_split(.x$CountiesServed, ",\\s")[[1]])
+  APs <-
+    if (nrow(APs) == 0) {
+      # Return an empty dataframe with desired column names
+      APs <- tibble::tibble(
+        ProjectID = integer(),
+        OrganizationName = character(),
+        ProjectName = character(),
+        TargetPop = character(),
+        ProjectCountyServed = character(),
+        Hours = character(),
+        Phone = character(),
+        OrgLink = character(),
+        CoCCode = character(),
+        Addresses = character(),
+        City = character()
+      )
+    } else {
+      purrr::pmap_dfr(APs, ~{
+        .x <- tibble::tibble(...)
+        .counties <- trimws(stringr::str_split(.x$CountiesServed, ",\\s")[[1]])
 
-    .x |>
-      dplyr::select(- ProjectRegion) |>
-      dplyr::bind_cols(Region = unique(Regions$Region[Regions$County %in% .counties]))
-  }) |>
+      .x |>
+        dplyr::select(- ProjectRegion) |>
+        dplyr::bind_cols(Region = unique(Regions$Region[Regions$County %in% .counties]))
+    }) |>
     dplyr::distinct_all() |>
     dplyr::mutate(OrgLink = dplyr::if_else(!is.na(Website), paste0(
       "<a href='",
@@ -347,6 +371,7 @@ pe_create_APs = function(provider_extras, ProjectCoC, dirs, app_env = get_app_en
                   "ProjectCountyServed" = CountiesServed
                   #, ProjectAreaServed
                   , Hours, Phone, OrgLink, CoCCode, Addresses, City)
+    }
 
   APs
 }
@@ -403,9 +428,9 @@ provider_extras_helpers <- list(
 load_program_lookup <- function(program_lookup) {
   program_lookup |>
     dplyr::mutate(dplyr::across(c(dplyr::ends_with("Active")), ~dplyr::if_else(.x %in% c("Active"), TRUE, FALSE))) |>
-    dplyr::rename(AgencyAdministrator = "Property Manager") |>
+    dplyr::rename(AgencyAdministrator = "PropertyManager") |>
     dplyr::group_by(ProgramName) |>
-    dplyr::filter(`Start Date` == max(`Start Date`)) |>
+    dplyr::filter(StartDate == max(StartDate)) |>
     dplyr::ungroup() |>
     dplyr::arrange(is.na(AgencyAdministrator)) |>
     dplyr::distinct(ProgramID, ProgramName, .keep_all = TRUE) |>
@@ -444,9 +469,9 @@ load_client <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
     clarity.looker::hud_feather(Client, dirs$export)
   }
   # Veteran Client_extras ----
-  VeteranCE <- clarity_api$`HUD Extras`$Client_extras()
+  VeteranCE <- clarity_api$Client_extras()
 
-  Client <- Client_add_UniqueID(Client, clarity_api$`HUD Extras`$Client_UniqueID_extras())
+  Client <- Client_add_UniqueID(Client, clarity_api$Client_UniqueID_extras())
   app_env$gather_deps("everything")
 }
 
@@ -465,8 +490,9 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
   # Project_extras -----------------------------------------------------------------
   # provider_extras
   # Thu Aug 12 14:23:50 2021
-  provider_extras <- clarity_api$`HUD Extras`$Project_extras() |>
-    dplyr::mutate(Geocode = as.character(Geocode))
+
+  provider_extras <- clarity_api$Project_extras()
+
   provider_extras <- pe_add_ProjectType(provider_extras) |>
     pe_add_regions(Regions, dirs = dirs) |>
     pe_add_GrantType()
@@ -474,11 +500,11 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
   # Add HMISParticipation (HMISParticipating column no longer in Project.csv)
   HMISParticipation <- clarity.looker::hud_load("HMISParticipation", dirs$export) |>
     dplyr::select(HMISParticipationID, ProjectID, HMISParticipationType,
-                  HMISParticipationStatusStartDate, HMISParticipationStatusEndDate) |>
-    dplyr::mutate_all(as.character)
+                  HMISParticipationStatusStartDate, HMISParticipationStatusEndDate)
 
   provider_extras <- provider_extras |>
-    dplyr::left_join(HMISParticipation, by = "ProjectID")
+    dplyr::left_join(HMISParticipation, by = "ProjectID") |>
+    dplyr::mutate(ProjectID = as.character(ProjectID))
 
   # Rminor: Coordinated Entry Access Points [CEAP]
   APs <- pe_create_APs(provider_extras, ProjectCoC, dirs = dirs)
@@ -563,8 +589,13 @@ load_services <- function(Services,
                           app_env = get_app_env(e = rlang::caller_env())) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
+
   Services_enroll_extras  <- dplyr::left_join(Services,
-                                              Services_extras,
+                                              Services_extras |> dplyr::mutate(EnrollmentID = as.character(EnrollmentID),
+                                                                               PersonalID = as.character(PersonalID),
+                                                                               HouseholdID = as.character(HouseholdID),
+                                                                               ServiceEndDate = as.Date(ServiceEndDate),
+                                                                               ServiceStartDate = as.Date(ServiceStartDate)),
                                               by = UU::common_names(Services, Services_extras)) |>
     dplyr::left_join(dplyr::select(Enrollment_extra_Client_Exit_HH_CL_AaE, dplyr::all_of(
       c(
@@ -623,7 +654,6 @@ load_services <- function(Services,
 load_referrals <- function(Referrals,
                            app_env = get_app_env(e = rlang::caller_env())) {
   Referrals <- Referrals |>
-    dplyr::rename(ReferralResult = "Coordinated Entry Event Referral Result") |>
     dplyr::rename_with(.cols = - dplyr::matches("(?:^PersonalID)|^(?:^UniqueID)"), rlang::as_function(~paste0("R_",.x))) |>
     dplyr::mutate(R_ReferringPTC = stringr::str_remove(R_ReferringPTC, "\\s\\(disability required(?: for entry)?\\)$"),
                   R_ReferringPTC = dplyr::if_else(R_ReferringPTC == "Homeless Prevention", "Homelessness Prevention", R_ReferringPTC),
@@ -754,7 +784,9 @@ Enrollment_add_HousingStatus <-
   if (!all(.cols$ref %in% .nms))
     out <- dplyr::left_join(out,
                             # Remove R_ReferralResult because the computation in Looker is bugged. A person can be simultaneously Accepted & Rejected
-                            Referrals |> dplyr::select( - R_ReferralResult) |> dplyr::distinct(R_ReferralID, .keep_all = TRUE),
+                            Referrals |> dplyr::mutate_all(as.character) |>
+                              dplyr::select( - R_ReferralResult) |>
+                              dplyr::distinct(R_ReferralID, .keep_all = TRUE),
                             by = UU::common_names(out, Referrals))
 
 
@@ -773,11 +805,32 @@ Enrollment_add_HousingStatus <-
     ph_track = !is.na(PHTrack) & PHTrack != "None"
   )
 
-
   # Referral Situation ----
   # Tue Nov 09 12:49:51 2021
+
+
+  if ("R_EnrollmentID" %in% colnames(out)) {
+    # Rename the column
+    colnames(out)[colnames(out) == "R_EnrollmentID"] <- "R_ReferringEnrollmentID"
+  }
+
+  if ("R_DateReferralAccepted" %in% colnames(out)) {
+    # Rename the column
+    colnames(out)[colnames(out) == "R_DateReferralAccepted"] <- "R_ReferralAcceptedDate"
+  }
+
+  if ("R_DateReferred" %in% colnames(out)) {
+    # Rename the column
+    colnames(out)[colnames(out) == "R_DateReferred"] <- "R_ReferredDate"
+  }
+
+  if ("R_IsCurrentlyOnQueue" %in% colnames(out)) {
+    # Rename the column
+    colnames(out)[colnames(out) == "R_IsCurrentlyOnQueue"] <- "R_ReferralCurrentlyOnQueue"
+  }
+
   out <- dplyr::mutate(
-    out,
+    out |> dplyr::mutate(ProjectType = as.character(ProjectType)),
     # ExpectedPHDate = dplyr::if_else(is.na(ExpectedPHDate), R_ReferralConnectedMoveInDate, ExpectedPHDate),
     Situation = dplyr::case_when(
       housed ~ "Housed",

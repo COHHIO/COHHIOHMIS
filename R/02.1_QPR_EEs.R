@@ -176,6 +176,7 @@ qpr_ees <- function(
 
   qpr_spending <- Services_enroll_extras |>
     dplyr::filter(!is.na(ServiceAmount)) |>
+    dplyr::mutate_at(dplyr::vars(ServiceID, PersonalID, EnrollmentID, HouseholdID), as.character) |>
     dplyr::distinct(ServiceID, PersonalID, EnrollmentID, ServiceStartDate, ServiceEndDate, FundName, ServiceAmount, .keep_all = TRUE) |>
     dplyr::left_join(Enrollment_extra_Client_Exit_HH_CL_AaE,
               by = UU::common_names(Services_enroll_extras, Enrollment_extra_Client_Exit_HH_CL_AaE)) |>

@@ -32,7 +32,7 @@ vet_active <- function(
   app_env$set_parent(missing_fmls())
 
 
-  Offers <- clarity_api$`HUD Extras`$Client_Offer_extras()
+  Offers <- clarity_api$Client_Offer_extras()
   # Get all veterans and associated hh members ------------------------------
 
   responsible_providers <- ServiceAreas |>
@@ -92,8 +92,10 @@ vet_active <- function(
       .vet_ees_cols, "CountyServed"
     ))),
     by = "HouseholdID") |>
-    dplyr::left_join(Project[c("ProjectID", "ProjectCounty")], by = "ProjectID") |>
-    dplyr::left_join(VeteranCE,
+    dplyr::left_join(Project[c("ProjectID", "ProjectCounty")] |>
+                       dplyr::mutate(ProjectID = as.character(ProjectID)), by = "ProjectID") |>
+    dplyr::left_join(VeteranCE |>
+                       dplyr::mutate_at(dplyr::vars("PersonalID", "UniqueID", "EnrollmentID", "ExpectedPHDate"), as.character),
                      by = c("PersonalID", "UniqueID", "EnrollmentID", "ExpectedPHDate", "PHTrack")) |>
 
     dplyr::mutate(County = dplyr::if_else(is.na(CountyServed), ProjectCounty, CountyServed)) |>
@@ -128,7 +130,8 @@ vet_active <- function(
     unique()
 
   declined <- vet_ees |>
-    dplyr::left_join(most_recent_offer, by = "PersonalID") |>
+    dplyr::left_join(most_recent_offer |>
+                       dplyr::mutate(PersonalID = as.character(PersonalID)), by = "PersonalID") |>
     dplyr::filter(OfferAccepted == "No" &
                     OfferDate >= lubridate::today() - lubridate::days(14) &
                     VeteranStatus == 1) |>
@@ -306,6 +309,7 @@ vet_active <- function(
       chronic_determination() |>
       long_term_homeless_determination() |>
       dplyr::mutate(
+        DateVeteranIdentified = as.Date(DateVeteranIdentified),
         ActiveDate = dplyr::case_when(
           is.na(DateVeteranIdentified) ~ EntryDate,
           DateVeteranIdentified < EntryDate ~ DateVeteranIdentified,
@@ -322,8 +326,11 @@ vet_active <- function(
         )
       ) |>
       dplyr::left_join(combined, by = "PersonalID") |>
-      dplyr::left_join(dplyr::select(most_recent_offer, - UniqueID), by = "PersonalID") |>
-      dplyr::left_join(small_CLS, by = "PersonalID") |>
+      dplyr::left_join(dplyr::select(most_recent_offer |>
+                                       dplyr::mutate(PersonalID = as.character(PersonalID)),
+                                     - UniqueID), by = "PersonalID") |>
+      dplyr::left_join(small_CLS |> dplyr::mutate(PersonalID = as.character(PersonalID)),
+                       by = "PersonalID") |>
       dplyr::left_join(hoh_chronicity, by = "PersonalID") |>
       dplyr::mutate(
         ChronicStatus = dplyr::if_else(
@@ -456,7 +463,8 @@ vet_active <- function(
     dplyr::filter(VeteranStatus == 1 &
                     Destination %in% c(destinations$perm) &
                     ExitDate >= lubridate::today() - lubridate::days(90)) |>
-    dplyr::mutate(EntryAdj = dplyr::if_else(
+    dplyr::mutate(DateVeteranIdentified = as.Date(DateVeteranIdentified),
+      EntryAdj = dplyr::if_else(
       !is.na(DateVeteranIdentified) & DateVeteranIdentified < EntryDate,
       DateVeteranIdentified, EntryDate),
       housed_in_last_90 = 1,
@@ -481,7 +489,8 @@ vet_active <- function(
     dplyr::filter(ProjectType %in% data_types$Project$ProjectType$ph & VeteranStatus == 1) |>
     dplyr::filter(MoveInDateAdjust >= lubridate::today() - lubridate::days(90) &
                     MoveInDateAdjust <= lubridate::today()) |>
-    dplyr::mutate(EntryAdj = dplyr::if_else(
+    dplyr::mutate(DateVeteranIdentified = as.Date(DateVeteranIdentified),
+                  EntryAdj = dplyr::if_else(
       !is.na(DateVeteranIdentified) & DateVeteranIdentified < EntryDate,
       DateVeteranIdentified, EntryDate),
       housed_in_last_90 = dplyr::if_else(
