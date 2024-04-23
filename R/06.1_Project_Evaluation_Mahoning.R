@@ -27,7 +27,8 @@ project_evaluation_mahoning <- function(
   scoring_rubric <- googlesheets4::read_sheet("1lLsNI8A2E-dDE8O2EHmCP9stSImxZkYJTGx-Oxs1W74",
                                               sheet = "Sheet1",
                                               col_types = c("metric" = "c", "ProjectType" = "n", "goal_type" = "c", "minimum" = "n", "maximum" = "n",
-                                                               "points" = "n") |> paste0(collapse = ""))
+                                                               "points" = "n") |> paste0(collapse = "")) |>
+    dplyr::mutate(ProjectType = as.character(ProjectType))
 
   merged_projects <-
     list(

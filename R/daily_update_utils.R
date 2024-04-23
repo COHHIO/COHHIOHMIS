@@ -167,10 +167,6 @@ update_data <- function(clarity_api = RmData::get_clarity_api(e = rlang::caller_
 
   .extras_ready <- data_ready(clarity_api$dirs$extras)
 
-  cli::cli_inform(message = cli::col_grey("Updating extras..."))
-  clarity_api$get_folder_looks(clarity_api$folders,
-                               .write = TRUE,
-                               path = clarity_api$dirs$extras)
 
   if (any(UU::`%|0|%`(.extras_ready$needs_update, TRUE))) {
     cli::cli_inform(message = cli::col_grey("Updating extras..."))
@@ -235,7 +231,7 @@ funs = rlang::set_names(c(
   "bed_unit_utilization",
   "data_quality",
   "data_quality_summary",
-  # "project_evaluation",
+  "project_evaluation",
   # "project_evaluation_mahoning",
   "prioritization",
   "spms"

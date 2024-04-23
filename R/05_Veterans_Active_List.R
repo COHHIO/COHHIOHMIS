@@ -94,10 +94,10 @@ vet_active <- function(
     by = "HouseholdID") |>
     dplyr::left_join(Project[c("ProjectID", "ProjectCounty")] |>
                        dplyr::mutate(ProjectID = as.character(ProjectID)), by = "ProjectID") |>
+    dplyr::mutate(ExpectedPHDate = as.character(ExpectedPHDate)) |>
     dplyr::left_join(VeteranCE |>
                        dplyr::mutate_at(dplyr::vars("PersonalID", "UniqueID", "EnrollmentID", "ExpectedPHDate"), as.character),
                      by = c("PersonalID", "UniqueID", "EnrollmentID", "ExpectedPHDate", "PHTrack")) |>
-
     dplyr::mutate(County = dplyr::if_else(is.na(CountyServed), ProjectCounty, CountyServed)) |>
     dplyr::filter(County %in% bos_counties |
                      County == "Mahoning") |>

@@ -25,8 +25,8 @@ aws.s3::save_object(df_bucket_data$Contents$Key, bucket = "hud.csv-daily",
 clarity.looker::hud_export_extract(browser_dl_folder = "~/Documents/COHHIO/RmData")
 
   # Delete the zip from AWS
-aws.s3::delete_object(df_bucket_data$Contents$Key, bucket = "hud.csv-daily",
-                      region = "us-east-2")
+# aws.s3::delete_object(df_bucket_data$Contents$Key, bucket = "hud.csv-daily",
+#                       region = "us-east-2")
 
 # 4. Run update
 daily_update(backup = FALSE, remote = FALSE)

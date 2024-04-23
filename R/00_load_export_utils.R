@@ -193,6 +193,8 @@ Enrollment_add_VeteranCE = function(Enrollment, VeteranCE) {
     dplyr::left_join(VeteranCE  |>
                        dplyr::mutate(EnrollmentID = as.character(EnrollmentID)) |>
                        dplyr::select(EnrollmentID, PHTrack, ExpectedPHDate) |>
+                       dplyr::mutate(ExpectedPHDate = dplyr::if_else(ExpectedPHDate == "0000-00-00", NA, ExpectedPHDate),
+                                     ExpectedPHDate = as.Date(ExpectedPHDate)) |>
                        dplyr::distinct(EnrollmentID, .keep_all = TRUE), by = "EnrollmentID") |>
     dplyr::mutate(
       ExitAdjust = dplyr::if_else(
@@ -432,7 +434,7 @@ load_program_lookup <- function(program_lookup) {
     dplyr::group_by(ProgramName) |>
     dplyr::filter(StartDate == max(StartDate)) |>
     dplyr::ungroup() |>
-    dplyr::arrange(is.na(AgencyAdministrator)) |>
+    dplyr::arrange(dplyr::desc(AgencyAdministrator)) |>
     dplyr::distinct(ProgramID, ProgramName, .keep_all = TRUE) |>
     clarity.looker::make_linked_df(ProgramName, type = "program_edit") |>
     clarity.looker::make_linked_df(AgencyName, type = "agency_switch") |>
@@ -831,6 +833,9 @@ Enrollment_add_HousingStatus <-
 
   out <- dplyr::mutate(
     out |> dplyr::mutate(ProjectType = as.character(ProjectType)),
+    MoveInDateAdjust = as.Date(MoveInDateAdjust),
+    EntryDate = as.Date(EntryDate),
+    R_ReferralAcceptedDate = as.Date(R_ReferralAcceptedDate),
     # ExpectedPHDate = dplyr::if_else(is.na(ExpectedPHDate), R_ReferralConnectedMoveInDate, ExpectedPHDate),
     Situation = dplyr::case_when(
       housed ~ "Housed",

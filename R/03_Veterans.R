@@ -182,6 +182,7 @@ current_tay_hohs <- tay |>
   dplyr::left_join(
     VeteranCE |>
       dplyr::mutate_at(dplyr::vars(PersonalID, EnrollmentID), as.character) |>
+      dplyr::mutate(ExpectedPHDate = as.Date(ExpectedPHDate)) |>
       dplyr::select(PersonalID,
              EnrollmentID,
              PHTrack,

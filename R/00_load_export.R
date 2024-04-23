@@ -113,7 +113,6 @@ load_export <- function(
   Contacts <- clarity_api$Contact_extras()
 
   # Scores ------------------------------------------------------------------
-
   Scores <-  clarity_api$Client_SPDAT_extras() |>
     dplyr::filter(Deleted == "No") |>
     dplyr::mutate(Score = dplyr::if_else(is.na(Score), CustomScore, Score),

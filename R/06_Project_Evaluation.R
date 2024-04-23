@@ -26,16 +26,16 @@ project_evaluation <- function(
   scoring_rubric <- googlesheets4::read_sheet("1lLsNI8A2E-dDE8O2EHmCP9stSImxZkYJTGx-Oxs1W74",
                                               sheet = "Sheet1",
                                               col_types = c("metric" = "c", "ProjectType" = "n", "goal_type" = "c", "minimum" = "n", "maximum" = "n",
-                                                               "points" = "n") |> paste0(collapse = ""))
+                                                               "points" = "n") |> paste0(collapse = "")) |>
+    dplyr::mutate(AltProjectType = as.character(AltProjectType))
 
   # scoring_rubric <- clarity.looker::hud_load("scoring_rubric", dirs$public) |>
-
   # Staging
   # COMBAK These will likely need updating in the future
   merged_projects <-
     list(
       `GLCAP - PSH - Combined` = list(c("GLCAP", "Homenet", "PSH")),
-      # `Springfield SPC1 - PSH - Combined` = list(c("Springfield - SPC1"), c("Springfield", "DePaul SPC")),
+      `Integrated Services - YDHP - RRH` = list(c("Athens - Integrated Services - YHDP RRH"), c("Vinton - Integrated Services - YHDP RRH"), c("Meigs - Integrated Services - YHDP RRH"), c("Jackson - Integrated Services - YHDP RRH"), c("Gallia - Integrated Services - YHDP RRH")),
       `One Eighty Plus Care - PSH - Combined` = list(c("Ashland - One Eighty - PSH"), c("Wayne - One Eighty - PSH")),
       `Licking Region 9 - RRH - Combined` = list(c("Coalition for Housing - Region 9"), c("Partners of Central Ohio - Region 9"), c("Coshocton - Knohoco Ashland CAC - Region 9 RRH")),
       `Athens - Integrated Services - Charles/Graham Combined` = list(c("Athens - Integrated Services - Charles Place - PSH"), c("Athens - Integrated Services - Graham Drive Family Housing - PSH")),
@@ -72,7 +72,8 @@ project_evaluation <- function(
                     ProjectRegion != 0) %>%
     dplyr::mutate(
       AltProjectName = merge_projects(ProjectName, merged_projects),
-      AltProjectID = merge_projects(ProjectID, merged_projects)
+      AltProjectID = merge_projects(ProjectID, merged_projects),
+      ProjectType = as.character(ProjectType)
     ) |>
     dplyr::select(ProjectType,
                   ProjectName,
@@ -105,6 +106,7 @@ project_evaluation <- function(
     "MoveInDateAdjust",
     "ExitDate",
     "Destination",
+    "DestinationSubsidyType",
     "EntryAdjust",
     "ExitAdjust"
   )
@@ -128,7 +130,7 @@ project_evaluation <- function(
   # data to the 'vars$prep', then dedupes in case there are multiple stays in
   # that project during the date range.
 
-  # clients served during date range
+  # clients served during date ranged
 
    # no dupes w/in a project
   pe <- list()
@@ -217,6 +219,7 @@ project_evaluation <- function(
   # returns the providers with any qualifying errors.
 
   dq_flags_staging <- dq_for_pe %>%
+    dplyr::mutate(ProjectType = as.character(ProjectType)) %>%
     dplyr::right_join(pe_coc_funded, by = c("ProjectType", "ProjectID", "ProjectName")) %>%
     dplyr::mutate(
       GeneralFlag =
@@ -301,6 +304,7 @@ project_evaluation <- function(
                        dplyr::distinct(ProjectID, AltProjectID), by = "AltProjectID") %>%
     dplyr::mutate(ProjectID = dplyr::if_else(is.na(ProjectID), AltProjectID, ProjectID)) %>%
     dplyr::left_join(clarity_api$User_extras() |>
+                       dplyr::mutate(ProjectID = as.character(ProjectID)) |>
                        dplyr::filter(!is.na(ProjectID) & Deleted == "No") |>
                        dplyr::select(UserID, ProjectID), by = "ProjectID")
 
@@ -318,7 +322,6 @@ project_evaluation <- function(
   coc_scoring <- arrow::read_feather(file.path(dirs$public, "coc_scoring.feather")) |>
     dplyr::mutate(DateReceivedPPDocs = as.Date(DateReceivedPPDocs, origin = "1899-12-30"),
                   ProjectID = as.character(ProjectID))
-
 
 
 
@@ -406,7 +409,6 @@ project_evaluation <- function(
   # adds a score
 
   # PSH (includes stayers tho), TH, SH, RRH
-
   pe$ExitsToPH <- pe$HoHsServed %>%
     dplyr::right_join(pe_coc_funded %>%
                         dplyr::select(ProjectType, AltProjectID, AltProjectName) %>%
@@ -455,10 +457,14 @@ project_evaluation <- function(
         ExitsToPH / HoHsServedLeavers
       ),
       ExitsToPHPercentJoin = dplyr::if_else(is.na(ExitsToPHPercent), 0, ExitsToPHPercent)) %>%
+    dplyr::mutate(AltProjectType = dplyr::if_else(stringr::str_detect(AltProjectName, "Integrated Services - YDHP - RRH"), "113",
+                                   dplyr::if_else(AltProjectName == "Vinton - Sojourners Care Network - YHDP Crisis TH", "102", ProjectType))
+                  ) |>
     dplyr::right_join(scoring_rubric %>%
+                        dplyr::mutate(AltProjectType = as.character(AltProjectType)) |>
                         dplyr::filter(metric == "exits_to_ph"),
-                      by = "ProjectType") %>%
-    dplyr::group_by(ProjectType) %>%
+                      by = "AltProjectType") %>%
+    dplyr::group_by(AltProjectType) %>%
     dplyr::mutate(ExitsToPHPossible = max(points)) %>%
     dplyr::ungroup() %>%
     dplyr::filter(dplyr::if_else(goal_type == "max",
@@ -522,7 +528,7 @@ project_evaluation <- function(
     dplyr::mutate(DaysInProject = difftime(MoveInDateAdjust, EntryDate, units = "days")) %>%
     dplyr::mutate(
       MeetsObjective = dplyr::case_when(
-        (Destination %in% c(3, 10:11, 19:21, 28, 31, 33:34) &
+        ((Destination %in% c(3, 410:411, 421) | DestinationSubsidyType %in% c(419:420, 428, 431, 433:434)) &
           lubridate::ymd(ExitAdjust) <= lubridate::ymd(rm_dates$hc$project_eval_end)) ~ 1,
         TRUE ~ 0
       ),
@@ -533,17 +539,17 @@ project_evaluation <- function(
       DestinationGroup = dplyr::case_when(
         is.na(Destination) | lubridate::ymd(ExitAdjust) > lubridate::ymd(rm_dates$hc$project_eval_end) ~
           "Still in Program at Report End Date",
-        Destination %in% c(1, 2, 12, 13, 14, 16, 18, 27) ~ "Temporary",
-        Destination %in% c(3, 10:11, 19:21, 28, 31, 33:34) ~ "Household's Own Housing",
-        Destination %in% c(22:23) ~ "Shared Housing",
-        Destination %in% c(4:7, 15, 25:27, 29) ~ "Institutional",
-        Destination %in% c(8, 9, 17, 30, 99, 32) ~ "Other",
+        Destination %in% c(101, 302, 312, 313, 314, 116, 118, 327) ~ "Temporary", # 1, 2, 12, 13, 14, 16, 18, 27
+        (Destination %in% c(410:411) | DestinationSubsidyType %in% c(419:421, 428, 431, 433:434)) ~ "Household's Own Housing", # 3, 10:11, 19:21, 28, 31, 33:34
+        Destination %in% c(422:423) ~ "Shared Housing", # 22, 23
+        Destination %in% c(204:207, 215, 225, 327, 426, 329) ~ "Institutional",
+        Destination %in% c(8, 9, 17, 30, 99, 37) ~ "Other",
         Destination == 24 ~ "Deceased"
       ),
       PersonalID = as.character(PersonalID)
     ) %>%
     dplyr::select(dplyr::all_of(vars$we_want),
-                  OwnHousingDQ, Destination, DestinationGroup, DaysInProject)
+                  OwnHousingDQ, Destination, DestinationSubsidyType, DestinationGroup, DaysInProject)
 
   summary_pe$OwnHousing <- pe$OwnHousing %>%
     dplyr::group_by(ProjectType, AltProjectName, OwnHousingDQ) %>%
@@ -554,10 +560,13 @@ project_evaluation <- function(
     dplyr::mutate(
       AverageDaysJoin = dplyr::if_else(is.na(AverageDays), 0, AverageDays)
       ) %>%
+    dplyr::mutate(AltProjectType = dplyr::if_else(stringr::str_detect(AltProjectName, "Integrated Services - YDHP - RRH"), "113",
+                                                  dplyr::if_else(AltProjectName == "Vinton - Sojourners Care Network - YHDP Crisis TH", "102", ProjectType))
+    ) |>
     dplyr::right_join(scoring_rubric %>%
                         dplyr::filter(metric == "own_housing"),
-                      by = "ProjectType") %>%
-    dplyr::group_by(ProjectType) %>%
+                      by = "AltProjectType") %>%
+    dplyr::group_by(AltProjectType) %>%
     dplyr::mutate(OwnHousingPossible = max(points)) %>%
     dplyr::ungroup() %>%
     dplyr::filter(dplyr::if_else(goal_type == "min",
@@ -647,10 +656,13 @@ project_evaluation <- function(
       BenefitsAtExit = dplyr::if_else(is.na(BenefitsAtExit), 0, BenefitsAtExit),
       BenefitsAtExitPercent = BenefitsAtExit / AdultsMovedInLeavers,
       BenefitsAtExitPercentJoin = dplyr::if_else(is.na(BenefitsAtExitPercent), 0, BenefitsAtExitPercent)) %>%
+    dplyr::mutate(AltProjectType = dplyr::if_else(stringr::str_detect(AltProjectName, "Integrated Services - YDHP - RRH"), "113",
+                                                  dplyr::if_else(AltProjectName == "Vinton - Sojourners Care Network - YHDP Crisis TH", "102", ProjectType))
+    ) |>
     dplyr::right_join(scoring_rubric %>%
                         dplyr::filter(metric == "benefits_at_exit"),
-                      by = "ProjectType") %>%
-    dplyr::group_by(ProjectType) %>%
+                      by = "AltProjectType") %>%
+    dplyr::group_by(AltProjectType) %>%
     dplyr::mutate(BenefitsAtExitPossible = max(points)) %>%
     dplyr::ungroup() %>%
     dplyr::filter(dplyr::if_else(goal_type == "max",
@@ -777,10 +789,13 @@ project_evaluation <- function(
       IncreasedIncomePercent = IncreasedIncome / AdultsMovedInLeavers,
       IncreasedIncomePercentJoin = dplyr::if_else(is.na(IncreasedIncomePercent), 0, IncreasedIncomePercent)
     ) %>%
+    dplyr::mutate(AltProjectType = dplyr::if_else(stringr::str_detect(AltProjectName, "Integrated Services - YDHP - RRH"), "113",
+                                                  dplyr::if_else(AltProjectName == "Vinton - Sojourners Care Network - YHDP Crisis TH", "102", ProjectType))
+    ) |>
     dplyr::right_join(scoring_rubric %>%
                         dplyr::filter(metric == "increase_income"),
-                      by = "ProjectType") %>%
-    dplyr::group_by(ProjectType) %>%
+                      by = "AltProjectType") %>%
+    dplyr::group_by(AltProjectType) %>%
     dplyr::mutate(IncreasedIncomePossible = max(points)) %>%
     dplyr::ungroup() %>%
     dplyr::filter(dplyr::if_else(goal_type == "max",
@@ -852,10 +867,13 @@ project_evaluation <- function(
     dplyr::right_join(pe_summary_validation, by = c("ProjectType", "AltProjectName")) %>%
     dplyr::mutate(
       AverageDaysJoin = dplyr::if_else(is.na(AverageDays), 0, AverageDays)) %>%
+    dplyr::mutate(AltProjectType = dplyr::if_else(stringr::str_detect(AltProjectName, "Integrated Services - YDHP - RRH"), "113",
+                                                  dplyr::if_else(AltProjectName == "Vinton - Sojourners Care Network - YHDP Crisis TH", "102", ProjectType))
+    ) |>
     dplyr::right_join(scoring_rubric %>%
                         dplyr::filter(metric == "length_of_stay"),
-                      by = "ProjectType") %>%
-    dplyr::group_by(ProjectType) %>%
+                      by = "AltProjectType") %>%
+    dplyr::group_by(AltProjectType) %>%
     dplyr::mutate(AverageLoSPossible = max(points)) %>%
     dplyr::ungroup() %>%
     dplyr::filter(dplyr::if_else(goal_type == "min",
@@ -898,9 +916,9 @@ project_evaluation <- function(
     dplyr::mutate(LHResPriorDQ = dplyr::if_else(General_DQ == 1, 1, 0),
                   MeetsObjective = dplyr::if_else(
                     (ProjectType %in% c(2, 3, 13) &
-                       LivingSituation %in% c(1, 16, 18)) |
+                       LivingSituation %in% c(101, 116, 118)) |
                       (ProjectType == 8 &
-                         LivingSituation == 16),
+                         LivingSituation == 116),
                     1,
                     0
                   )) %>%
@@ -917,10 +935,13 @@ project_evaluation <- function(
       LHResPrior = dplyr::if_else(is.na(LHResPrior), 0, LHResPrior),
       LHResPriorPercent = LHResPrior / AdultsEntered,
       LHResPriorPercentJoin = dplyr::if_else(is.na(LHResPriorPercent), 0, LHResPriorPercent)) %>%
+    dplyr::mutate(AltProjectType = dplyr::if_else(stringr::str_detect(AltProjectName, "Integrated Services - YDHP - RRH"), "113",
+                                                  dplyr::if_else(AltProjectName == "Vinton - Sojourners Care Network - YHDP Crisis TH", "102", ProjectType))
+    ) |>
     dplyr::right_join(scoring_rubric %>%
                         dplyr::filter(metric == "res_prior"),
-                      by = "ProjectType") %>%
-    dplyr::group_by(ProjectType) %>%
+                      by = "AltProjectType") %>%
+    dplyr::group_by(AltProjectType) %>%
     dplyr::mutate(LHResPriorPossible = max(points)) %>%
     dplyr::ungroup() %>%
     dplyr::filter(dplyr::if_else(goal_type == "max",
@@ -998,10 +1019,13 @@ project_evaluation <- function(
       NoIncomeAtEntryDQ = dplyr::if_else(is.na(NoIncomeAtEntryDQ), 0, NoIncomeAtEntryDQ),
       NoIncomeAtEntryPercent = NoIncomeAtEntry / AdultsEntered,
       NoIncomeAtEntryPercentJoin = dplyr::if_else(is.na(NoIncomeAtEntryPercent), 0, NoIncomeAtEntryPercent)) %>%
+    dplyr::mutate(AltProjectType = dplyr::if_else(stringr::str_detect(AltProjectName, "Integrated Services - YDHP - RRH"), "113",
+                                                  dplyr::if_else(AltProjectName == "Vinton - Sojourners Care Network - YHDP Crisis TH", "102", ProjectType))
+    ) |>
     dplyr::right_join(scoring_rubric %>%
                         dplyr::filter(metric == "entries_no_income"),
-                      by = "ProjectType") %>%
-    dplyr::group_by(ProjectType) %>%
+                      by = "AltProjectType") %>%
+    dplyr::group_by(AltProjectType) %>%
     dplyr::mutate(NoIncomeAtEntryPossible = max(points)) %>%
     dplyr::ungroup() %>%
     dplyr::filter(dplyr::if_else(goal_type == "max",
@@ -1107,10 +1131,13 @@ project_evaluation <- function(
     dplyr::summarise(MedHHI = stats::median(HHI)) %>%
     dplyr::ungroup() %>%
     dplyr::right_join(pe_summary_validation, by = c("ProjectType", "AltProjectName")) %>%
+    dplyr::mutate(AltProjectType = dplyr::if_else(stringr::str_detect(AltProjectName, "Integrated Services - YDHP - RRH"), "113",
+                                                  dplyr::if_else(AltProjectName == "Vinton - Sojourners Care Network - YHDP Crisis TH", "102", ProjectType))
+    ) |>
     dplyr::right_join(scoring_rubric %>%
                         dplyr::filter(metric == "homeless_history_index"),
-                      by = "ProjectType") %>%
-    dplyr::group_by(ProjectType) %>%
+                      by = "AltProjectType") %>%
+    dplyr::group_by(AltProjectType) %>%
     dplyr::mutate(MedianHHIPossible = max(points),
                   MedHHIJoin = dplyr::if_else(is.na(MedHHI), 0, MedHHI)) %>%
     dplyr::ungroup() %>%
@@ -1228,10 +1255,13 @@ project_evaluation <- function(
                                                LongTermHomeless / AdultsEntered,
                                                NA),
       LongTermHomelessPercentJoin = dplyr::if_else(is.na(LongTermHomelessPercent), 0, LongTermHomelessPercent)) %>%
+    dplyr::mutate(AltProjectType = dplyr::if_else(stringr::str_detect(AltProjectName, "Integrated Services - YDHP - RRH"), "113",
+                                                  dplyr::if_else(AltProjectName == "Vinton - Sojourners Care Network - YHDP Crisis TH", "102", ProjectType))
+    ) |>
     dplyr::right_join(scoring_rubric %>%
                         dplyr::filter(metric == "long_term_homeless"),
-                      by = "ProjectType") %>%
-    dplyr::group_by(ProjectType) %>%
+                      by = "AltProjectType") %>%
+    dplyr::group_by(AltProjectType) %>%
     dplyr::mutate(LongTermHomelessPossible = max(points)) %>%
     dplyr::ungroup() %>%
     dplyr::filter(dplyr::if_else(goal_type == "max",
@@ -1312,10 +1342,13 @@ project_evaluation <- function(
                                             ScoredAtEntry / HoHsEntered,
                                             NA),
       ScoredAtEntryPercentJoin = dplyr::if_else(is.na(ScoredAtEntryPercent), 0, ScoredAtEntryPercent)) %>%
+    dplyr::mutate(AltProjectType = dplyr::if_else(stringr::str_detect(AltProjectName, "Integrated Services - YDHP - RRH"), "113",
+                                                  dplyr::if_else(AltProjectName == "Vinton - Sojourners Care Network - YHDP Crisis TH", "102", ProjectType))
+    ) |>
     dplyr::right_join(scoring_rubric %>%
                         dplyr::filter(metric == "scored_at_ph_entry"),
-                      by = "ProjectType") %>%
-    dplyr::group_by(ProjectType) %>%
+                      by = "AltProjectType") %>%
+    dplyr::group_by(AltProjectType) %>%
     dplyr::mutate(ScoredAtEntryPossible = max(points)) %>%
     dplyr::ungroup() %>%
     dplyr::filter(dplyr::if_else(goal_type == "max",
@@ -1360,7 +1393,6 @@ project_evaluation <- function(
     )
 
   # Final Scoring -----------------------------------------------------------
-
   # all the alt-projects & score details & totals
   pe_summary <- purrr::reduce(summary_pe, ~dplyr::full_join(.x, .y, by = c("ProjectType", "AltProjectName")))
   pe_summary_final_scoring <-
