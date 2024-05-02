@@ -96,6 +96,7 @@ vet_active <- function(
                        dplyr::mutate(ProjectID = as.character(ProjectID)), by = "ProjectID") |>
     dplyr::mutate(ExpectedPHDate = as.character(ExpectedPHDate)) |>
     dplyr::left_join(VeteranCE |>
+                       dplyr::mutate(ExpectedPHDate = dplyr::if_else(ExpectedPHDate == "0000-00-00", NA, ExpectedPHDate)) |>
                        dplyr::mutate_at(dplyr::vars("PersonalID", "UniqueID", "EnrollmentID", "ExpectedPHDate"), as.character),
                      by = c("PersonalID", "UniqueID", "EnrollmentID", "ExpectedPHDate", "PHTrack")) |>
     dplyr::mutate(County = dplyr::if_else(is.na(CountyServed), ProjectCounty, CountyServed)) |>
@@ -278,7 +279,6 @@ vet_active <- function(
                        dplyr::rename_with(.cols = - PersonalID, .fn = ~{paste0(.x,"_O")}),
                      by = "PersonalID") |>
     dplyr::select(!dplyr::contains(c("ProjectType", "EntryDate")))
-
 
     veteran_active_list <- veteran_active_list_enrollments |>
       dplyr::select(

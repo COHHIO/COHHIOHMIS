@@ -354,11 +354,10 @@ app_env <- R6::R6Class(
 
       # load app_deps
       if (.remote) {
-        self$dropbox_auth()
-        # rdrop2::drop_auth()
-        db_info <- rdrop2::drop_dir()
-        db_files <- basename(db_info$path_display)
-        db_updated <- rlang::set_names(db_info$client_modified, db_files)
+        # authenticate
+        # get info
+        # get file names
+        # last updated
       }
 
 
@@ -513,20 +512,6 @@ app_env <- R6::R6Class(
           cli::cli_inform()
       },
 
-#' @description Authorize Dropbox
-#' @param db_auth_token \code{(character)} path to the Dropbox authorization token. See \link[rdrop2]{drop_auth}
-    dropbox_auth = function(db_auth_token = file.path("inst", "vault", "db_token.rds")) {
-      db_auth_token <- path.expand(db_auth_token)
-      # Dropbox Auth
-      if (!file.exists(db_auth_token)) {
-        token <- rdrop2::drop_auth(key = Sys.getenv("db_key"),
-                                   secret = Sys.getenv("db_secret"),
-                                   cache = FALSE)
-        saveRDS(token, db_auth_token)
-      } else {
-        rdrop2::drop_auth(rdstoken = db_auth_token)
-      }
-    },
     #' @description Instantiate with default app dependencies to be collected (if they exist) each time \code{\$gather_deps} is called
     #' @param app_deps \code{(list)} with each app and it's dependencies as a character vector. See `app_deps` for formatting.
     #' @param dirs \code{(list)} See \link[clarity.looker]{dirs}
