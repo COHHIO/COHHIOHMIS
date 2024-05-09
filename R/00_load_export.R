@@ -116,7 +116,8 @@ load_export <- function(
   Scores <-  clarity_api$Client_SPDAT_extras() |>
     dplyr::filter(Deleted == "No") |>
     dplyr::mutate(Score = dplyr::if_else(is.na(Score), CustomScore, Score),
-                  CustomScore = NULL)
+                  CustomScore = NULL) |>
+    dplyr::mutate(Score = dplyr::if_else(stringr::str_detect(Assessment, "B-PAT"), Total, Score))
 
   # Offers -----------------------------------------------------------------
 # Only used in vet_active. Moved There
