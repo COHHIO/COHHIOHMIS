@@ -83,41 +83,27 @@ qpr_ees <- function(
   # QPR Returns to Homelessness
 
   # identify latest HP stay that ended in permanent housing
-  # latest_permanent_project_hp <- project_enrollment_small |>
-  #   HMIS::served_between(Export_Start, Export_End) |>
-  #   dplyr::mutate(
-  #     DestinationGroup = dplyr::case_when(
-  #       Destination %in% destinations$temp ~ "Temporary",
-  #       Destination %in% destinations$perm ~ "Permanent",
-  #       Destination %in% destinations$institutional ~ "Institutional",
-  #       Destination %in% destinations$other ~ "Other",
-  #       is.na(Destination) ~ "Still in Program"
-  #     ),
-  #     DaysinProject = as.numeric(difftime(ExitAdjust, EntryDate, units = "days"))
-  #   ) |>
-  #   dplyr::filter(DestinationGroup == "Permanent", ProjectType == 12, RelationshipToHoH == 1) |>
-  #   dplyr::group_by(UniqueID) |>
-  #   dplyr::summarise(LatestPermanentProjectHP = max(ExitDate, na.rm = TRUE))
+  latest_permanent_project_12 <- qpr_leavers %>%
+    dplyr::filter(DestinationGroup == "Permanent", ProjectType == 12) %>%
+    dplyr::group_by(UniqueID) %>%
+    dplyr::mutate(LatestPermanentProject12 = max(ExitDate, na.rm = TRUE),
+                  ExitingHP = ProjectName) %>%
+    dplyr::ungroup() %>%
+    dplyr::filter(LatestPermanentProject12 == ExitDate) %>%
+    dplyr::select(ExitingHP, UniqueID, LatestPermanentProject12) %>%
+    dplyr::distinct()
 
   # Check if any subsequent "Other" entry occurs within one year of the identified latest stay
-  # qpr_reentries <- project_enrollment_small |>
-  #   HMIS::served_between(Export_Start, Export_End) |>
-  #   dplyr::filter(RelationshipToHoH == 1) |>
-  #   dplyr::left_join(latest_permanent_project_hp, by = "UniqueID") |>
-  #   dplyr::mutate(
-  #     DestinationGroup = dplyr::case_when(
-  #       Destination %in% destinations$temp ~ "Temporary",
-  #       Destination %in% destinations$perm ~ "Permanent",
-  #       Destination %in% destinations$institutional ~ "Institutional",
-  #       Destination %in% destinations$other ~ "Other",
-  #       is.na(Destination) ~ "Still in Program"
-  #     ),
-  #     DaysinProject = as.numeric(difftime(ExitAdjust, EntryDate, units = "days"))
-  #   ) |>
-  #   dplyr::mutate(ReturnWithin12Months = EntryDate > LatestPermanentProjectHP &  # EntryDate is after the latest "Permanent" exit date
-  #                   EntryDate <= (LatestPermanentProjectHP + lubridate::days(365)) &  # EntryDate is within one year
-  #                   ProjectType %in% c(0, 2, 4, 8)) |>
-  #     dplyr::filter(ReturnWithin12Months | (DestinationGroup == "Permanent" & ProjectType == 12))
+  qpr_reentries <- qpr_leavers %>%
+    dplyr::left_join(latest_permanent_project_12, by = "UniqueID") %>%
+    dplyr::filter(EntryDate > LatestPermanentProject12 &  # EntryDate is after the latest "Permanent" exit date
+                    EntryDate <= LatestPermanentProject12 + lubridate::days(365) &  # EntryDate is within one year
+                    ProjectType %in% c(0,2, 4, 8)) %>%  # DestinationGroup is "Other"
+    dplyr::distinct(ExitingHP, EntryDate, ExitDate, UniqueID) %>%
+    dplyr::right_join(latest_permanent_project_12) %>%
+    dplyr::mutate(is_reentry = dplyr::if_else(is.na(EntryDate), FALSE, TRUE))
+
+  qpr_reentries
 
   qpr_rrh_enterers <- project_enrollment_small |>
     HMIS::entered_between(rm_dates$calc$data_goes_back_to, rm_dates$meta_HUDCSV$Export_End) |>
