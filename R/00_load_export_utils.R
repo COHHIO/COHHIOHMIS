@@ -313,6 +313,7 @@ pe_add_regions <- function(provider_extras, Regions = clarity.looker::hud_load("
 pe_create_APs = function(provider_extras, ProjectCoC, dirs, app_env = get_app_env(e = rlang::caller_env())) {
 
   Regions <- clarity.looker::hud_load("Regions", dirs$public)
+
   APs <- provider_extras |>
     dplyr::select( !tidyselect::starts_with("CoCComp") & !Geocode:ZIP) |>
     dplyr::filter(ProjectTypeCode == "Coordinated Entry") |>
@@ -492,7 +493,6 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
   # Project_extras -----------------------------------------------------------------
   # provider_extras
   # Thu Aug 12 14:23:50 2021
-
   provider_extras <- clarity_api$Project_extras()
 
   provider_extras <- pe_add_ProjectType(provider_extras) |>

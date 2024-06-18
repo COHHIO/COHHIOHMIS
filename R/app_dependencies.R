@@ -2,7 +2,7 @@
 app_deps <- list(
   ## to Rm:
   Rminor = c(
-    # "APs",
+    "APs",
     "bos_counties",
     "BoS_PIT",
     "rm_dates",

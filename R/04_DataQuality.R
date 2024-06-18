@@ -102,6 +102,7 @@ dq_main <- do.call(rbind, dqs) |>
                       Issue %in% c(
                         "60 Days in Mahoning Coordinated Entry",
                         "Access Point with Entry Exits",
+                        "No Head of Household",
                         "Missing Date of Birth Data Quality",
                         "Don't Know/Prefers Not to Answer Approx. Date of Birth",
                         "Missing DOB",
@@ -113,6 +114,7 @@ dq_main <- do.call(rbind, dqs) |>
                         "Missing Gender",
                         "Missing SSN",
                         "Missing Race and Ethnicity",
+                        "Missing Relationship to Head of Household",
                         "Missing Veteran Status",
                         "Don't Know/Prefers Not to Answer Veteran Status",
                         "Missing County Served",

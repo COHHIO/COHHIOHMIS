@@ -231,7 +231,7 @@ funs = rlang::set_names(c(
   "bed_unit_utilization",
   "data_quality",
   "data_quality_summary",
-  "project_evaluation",
+  # "project_evaluation",
   # "project_evaluation_mahoning",
   "prioritization",
   "spms"
@@ -256,8 +256,6 @@ e = rlang::caller_env()
     .shiny = FALSE
 
   # Prepare Progress bar
-
-
   pbar <- pb_start(total = length(steps), type = "tasks", is_shiny = .shiny, auto_terminate = FALSE)
   if ("update" %in% steps) {
     update_data(clarity_api = clarity_api)
