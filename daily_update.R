@@ -17,7 +17,8 @@ pkgload::load_all()
 df_bucket_data <- aws.s3::get_bucket("hud.csv-daily", prefix = "HMIS",
                                      region = "us-east-2")
 
-  # Save the zip file
+
+# Save the zip file
 aws.s3::save_object(df_bucket_data$Contents$Key, bucket = "hud.csv-daily",
                     file = "hudx-111.zip", region = "us-east-2")
 
