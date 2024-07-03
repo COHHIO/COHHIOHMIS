@@ -1031,7 +1031,7 @@ dq_rrh_check_exit_destination <- function(served_in_date_range, vars, guidance =
     dplyr::left_join(enrolled_in_type, by = "PersonalID", suffix = c("", "_rrh")) |>
     dplyr::filter(ProjectType != 13 &
                     ExitDate == MoveInDateAdjust_rrh &
-                    RentalSubsidyType != 431) |>
+                    !(Destination == 435 & RentalSubsidyType == 431)) |>
     dplyr::mutate(
       Issue = "Maybe Incorrect Exit Destination (did you mean 'Rental by client, with RRH...'?)",
       Type = "Warning",
@@ -1150,7 +1150,7 @@ dq_rrh_missing_project_stay <- function(served_in_date_range, vars, guidance = N
 		app_env$set_parent(missing_fmls())
 
   served_in_date_range |>
-    dplyr::filter(RentalSubsidyType == 431) |>
+    dplyr::filter((Destination == 435 & RentalSubsidyType == 431)) |>
     dplyr::anti_join(enrolled_in(served_in_date_range, type = 13), by = "PersonalID") |>
     dplyr::mutate(
       Issue = "Missing RRH Project Stay or Incorrect Destination",
