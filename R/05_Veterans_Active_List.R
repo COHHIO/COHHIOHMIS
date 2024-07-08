@@ -147,60 +147,6 @@ vet_active <- function(
     dplyr::select(PersonalID, Notes) |>
     dplyr::summarise(Notes = paste0(Notes, collapse = "\n"), .groups = "drop")
 
-  # Not used in RME?
-  # Entry Exits -------------------------------------------------------------
-
-  # small_ees <- vet_ees |>
-  #   dplyr::filter(!PersonalID %in% currently_housed_in_psh_rrh &
-  #                   VeteranStatus == 1 &
-  #                   (is.na(ExitDate) |
-  #                      (
-  #                        !Destination %in% destinations$perm &
-  #                          ExitDate >= lubridate::today() - lubridate::days(90)
-  #                      ))) |>
-  #   dplyr::select(
-  #     PersonalID,
-  #     EnrollmentID,
-  #     ProjectID,
-  #     ProjectType,
-  #     ProjectName,
-  #     EntryDate,
-  #     MoveInDateAdjust,
-  #     ExitDate,
-  #     Destination
-  #   ) |>
-  #   unique() |>
-  #   dplyr::group_by(PersonalID) |>
-  #   dplyr::arrange(dplyr::desc(EntryDate)) |>
-  #   dplyr::mutate(
-  #     Entries = paste(
-  #       "Entered",
-  #       ProjectName,
-  #       "on",
-  #       EntryDate,
-  #       dplyr::case_when(
-  #         is.na(MoveInDateAdjust) & is.na(ExitDate) ~  dplyr::if_else(
-  #           ProjectType %in% data_types$Project$ProjectType$lh, "to present", "awaiting housing"),
-  #         !is.na(MoveInDateAdjust) & !is.na(ExitDate) ~
-  #           paste(
-  #             "Moved In on",
-  #             MoveInDateAdjust,
-  #             "and Exited on",
-  #             ExitDate,
-  #             "to",
-  #             HMIS::hud_translations$`3.12.1 Living Situation Option List`(Destination) |> stringr::str_remove("\\(.*\\)")
-  #           ),
-  #         !is.na(MoveInDateAdjust) & is.na(ExitDate) ~ # should never happen but eh
-  #           paste("Moved In on",
-  #                 MoveInDateAdjust,
-  #                 "and is current"),
-  #         is.na(MoveInDateAdjust) & !is.na(ExitDate) ~
-  #           paste("Exited on", ExitDate,
-  #                 "to", HMIS::hud_translations$`3.12.1 Living Situation Option List`(Destination) |> stringr::str_remove("\\(.*\\)"))
-  #       )
-  #     )
-  #   ) |>
-  #   dplyr::summarise(Entries = paste0(Entries, collapse = "\n"), .groups = "drop")
 
   # Active List -------------------------------------------------------------
 
