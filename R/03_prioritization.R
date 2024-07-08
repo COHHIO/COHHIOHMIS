@@ -385,7 +385,6 @@ prioritization <- prioritization |>
 
 
 # Add in Score ------------------------------------------------------------
-
 # taking the most recent score on the client, but this score cannot be over a
 # year old.
   prioritization <- prioritization |>
