@@ -12,7 +12,16 @@ some reports here, this repository’s most important function is getting
 data from HMIS to a tidy form that can be used in other projects (and
 repositories). Think of it like a staging area for other projects.
 
-### Data Sources
+## Installation
+
+You can install `{RmData}` with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("COHHIO/RmData")
+```
+
+## Data Sources
 
 1.  The [HUD CSV
     export](https://files.hudexchange.info/resources/documents/HMIS-CSV-Format-Specifications-2024.pdf) -

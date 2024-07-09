@@ -18,8 +18,16 @@ An open-source Homeless Management Information System (HMIS) custom reporting pr
 
 This repository would be helpful to any HUD-designated Continuum of Care looking for a way to get more out of their HMIS data. While there are some reports here, this repository's most important function is getting data from HMIS to a tidy form that can be used in other projects (and repositories). Think of it like a staging area for other projects.
 
+## Installation
 
-### Data Sources
+You can install `{RmData}` with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("COHHIO/RmData")
+```
+
+## Data Sources
 
 1. The [HUD CSV export](https://files.hudexchange.info/resources/documents/HMIS-CSV-Format-Specifications-2024.pdf) - Every HMIS should be able to export this regardless of HMIS vendor.
 2. Other data as necessary, to supplement what is available in the Export.  
