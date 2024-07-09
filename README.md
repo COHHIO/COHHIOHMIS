@@ -12,20 +12,10 @@ some reports here, this repository’s most important function is getting
 data from HMIS to a tidy form that can be used in other projects (and
 repositories). Think of it like a staging area for other projects.
 
-### About
-
-This is an open source project released under the GNU AGPLv3 license.
-See LICENSE for more details or visit the official GNU page at
-<http://www.gnu.org/licenses/agpl-3.0.html>.
-
-All the code in this repository is written using R in R Studio. Please
-consult the book [R for Data Science](https://r4ds.had.co.nz/) for help
-getting started with R and R Studio.
-
 ### Data Sources
 
 1.  The [HUD CSV
-    export](https://hudhdx.info/Resources/Vendors/HMIS%20CSV%20Specifications%20FY2020%20v1.6.pdf) -
+    export](https://files.hudexchange.info/resources/documents/HMIS-CSV-Format-Specifications-2024.pdf) -
     Every HMIS should be able to export this regardless of HMIS vendor.
 2.  Other data as necessary, to supplement what is available in the
     Export.
@@ -34,14 +24,14 @@ While your reporting needs may be different, this report contains data
 we need for our reporting that is not included in the HUD CSVs. These
 include but are not limited to:
 
--   SPDAT Scores
--   County (Enrollment level)
--   Entry Exit Type (specific to ServicePoint)
--   Users’ Default Providers
--   Full Provider and Organization Names (beyond the 50 character limit)
--   Grant Type (specific to ServicePoint)
--   Veteran data for Coordinated Entry (Custom fields)
--   Housing Offers (Custom fields for Veteran Active List)
+- SPDAT Scores
+- County (Enrollment level)
+- Entry Exit Type (specific to ServicePoint)
+- Users’ Default Providers
+- Full Provider and Organization Names (beyond the 50 character limit)
+- Grant Type (specific to ServicePoint)
+- Veteran data for Coordinated Entry (Custom fields)
+- Housing Offers (Custom fields for Veteran Active List)
 
 You may not need to supplement the data in your HUD CSV export, so
 whatever you use from this repository will need to be adjusted to leave
