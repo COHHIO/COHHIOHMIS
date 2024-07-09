@@ -19,8 +19,6 @@ dependencies$DataQuality <-
     "Contacts",
     "covid19",
     "Disabilities",
-    "dose_counts",
-    "doses",
     "Enrollment_extra_Client_Exit_HH_CL_AaE",
     "Funder",
     "guidance",
