@@ -105,12 +105,6 @@ load_export <- function(
                   CustomScore = NULL) |>
     dplyr::mutate(Score = dplyr::if_else(stringr::str_detect(Assessment, "B-PAT"), Total, Score))
 
-  # Offers -----------------------------------------------------------------
-# Only used in vet_active. Moved There
-
-  Doses <- clarity_api$Client_Doses_extras() |>
-    dplyr::filter(Deleted == "No")
-
 
   # Users ----
   # Thu Sep 23 14:38:19 2021

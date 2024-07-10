@@ -160,7 +160,6 @@ update_data <- function(clarity_api = RmData::get_clarity_api(e = rlang::caller_
 
 
   if (any(UU::`%|0|%`(.export_ready$needs_update, TRUE))) {
-    # browser()
     cli::cli_inform(message = cli::col_grey("Updating export..."))
     clarity_api$get_export()
   }
@@ -279,7 +278,7 @@ e = rlang::caller_env()
     }
     pb_close(pb_fn, e = environment())
   }
-  # browser()
+
   if (backup) {
     cli::cli_inform(cli::col_grey("Backing up dependencies..."))
     app_env$deps_to_destination(clean = FALSE, deps =  "all", dest_folder = file.path("data", "backup"))
