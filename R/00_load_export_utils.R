@@ -620,14 +620,6 @@ load_services <- function(Services,
         ServiceEndDate
       )
     ) |>
-    # stray_service logic (not currently in use)
-    # dplyr::mutate(
-    #   service_interval = lubridate::interval(start = ServiceStartDate, end = ServiceEndAdjust),
-    #   ee_interval = lubridate::interval(start = EntryDate, end = ExitAdjust),
-    #   intersect_tf = lubridate::int_overlaps(service_interval, ee_interval),
-    #   stray_service = is.na(intersect_tf) |
-    #     intersect_tf == FALSE
-    # ) |>
     dplyr::select(
       UniqueID,
       PersonalID,
@@ -642,7 +634,6 @@ load_services <- function(Services,
       FundName,
       FundingSourceID,
       ServiceAmount
-      #, stray_service
     )
   app_env$gather_deps(Services_enroll_extras, Services_extras)
 }

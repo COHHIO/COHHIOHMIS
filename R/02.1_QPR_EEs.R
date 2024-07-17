@@ -85,7 +85,7 @@ qpr_ees <- function(
     dplyr::filter(EntryDate > LatestPermanentProject12 &  # EntryDate is after the latest "Permanent" exit date
                     EntryDate <= LatestPermanentProject12 + lubridate::days(365) &  # EntryDate is within one year
                     ProjectType %in% c(0,2, 4, 8)) %>%  # DestinationGroup is "Other"
-    dplyr::distinct(ExitingHP, EntryDate, ExitDate, UniqueID) %>%
+    dplyr::distinct(ExitingHP, EntryDate, ExitDate, UniqueID, ProgramCoC) %>%
     dplyr::right_join(latest_permanent_project_12) %>%
     dplyr::mutate(is_reentry = dplyr::if_else(is.na(EntryDate), FALSE, TRUE))
 
@@ -191,7 +191,8 @@ qpr_ees <- function(
     dplyr::distinct(ServiceID, PersonalID, EnrollmentID, ServiceStartDate, ServiceEndDate, FundName, ServiceAmount, .keep_all = TRUE) |>
     dplyr::left_join(Enrollment_extra_Client_Exit_HH_CL_AaE,
               by = UU::common_names(Services_enroll_extras, Enrollment_extra_Client_Exit_HH_CL_AaE)) |>
-    dplyr::left_join(project_small, by = c("ProjectID", "ProjectType", "ProjectName")) |>
+    dplyr::left_join(project_enrollment_small, by = c("ProjectID", "ProjectType", "ProjectName"),
+                     suffix = c("", ".y")) |>
     dplyr::select(
       UniqueID,
       PersonalID,
@@ -199,6 +200,7 @@ qpr_ees <- function(
       ProjectName,
       ProjectRegion,
       ProjectType,
+      ProgramCoC,
       ServiceAmount,
       ServiceItemName,
       RelationshipToHoH,
