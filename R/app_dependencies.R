@@ -4,7 +4,6 @@ app_deps <- list(
   Rminor = c(
     "APs",
     "bos_counties",
-    "BoS_PIT",
     "rm_dates",
     "covid19",
     "covid19_priority_plot",
@@ -12,7 +11,6 @@ app_deps <- list(
     "current_tay_hohs",
     # "FileEnd",
     "goals",
-    "Mah_PIT",
     "pe_summary_validation",
     "data_types",
     "qpr_benefits",

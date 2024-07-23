@@ -128,28 +128,6 @@ cohorts <- function(
     dplyr::full_join(chrt_hoh_count(co_hohs_served_leavers_died), by = "ProjectName")
 
 
-
-
-
-  # PIT Counts --------------------------------------------------------------
-
-  BoS_PIT <- dplyr::tribble(
-    ~Population, ~January2020Count, ~January2021Count,
-    "Total", 3577, 2334,
-    "Sheltered", 2591, 2334,
-    "Veterans", 162, 87,
-    "Chronic", 192, 196
-  )
-
-  Mah_PIT <- dplyr::tribble(
-    ~Population, ~January2020Count, ~January2021Count,
-    "Total", 100, 62,
-    "Sheltered", 78, 62,
-    "Veterans", 2, 6,
-    "Chronic", 6, 3
-  )
-
-
   # Counties ----------------------------------------------------------------
 
   bos_counties <- ServiceAreas |>
