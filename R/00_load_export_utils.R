@@ -683,8 +683,6 @@ load_referrals <- function(Referrals,
 }
 
 
-
-26065
 #' Add HousingStatus indicating the client's current housing status and Situation with details on that status.
 #' @inheritParams data_quality_tables
 #' @param PH ProjectType codes considered Permanently Housed.  See `HMIS::hud_translations$ProjectType(table = TRUE)` & `?data_types`

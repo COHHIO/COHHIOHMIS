@@ -127,7 +127,6 @@ cohorts <- function(
     dplyr::full_join(chrt_hoh_count(co_adults_entered), by = "ProjectName") |>
     dplyr::full_join(chrt_hoh_count(co_hohs_served_leavers_died), by = "ProjectName")
 
-
   # Counties ----------------------------------------------------------------
 
   bos_counties <- ServiceAreas |>

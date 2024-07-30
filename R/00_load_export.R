@@ -21,6 +21,7 @@ load_export <- function(
 
   # Public data
   app_env <- load_public()
+
   # Client
   app_env <- load_client()
 
@@ -32,25 +33,10 @@ load_export <- function(
   app_env <- load_project(ProjectCoC = clarity_api$ProjectCoC(), app_env = app_env)
 
 
-  # Affiliation -------------------------------------------------------------
-  #Unused
-  #Affiliation <- clarity_api$Affiliation()
-
-
   # Disabilities ------------------------------------------------------------
 
   Disabilities <- clarity_api$Disabilities()
 
-
-  # EmploymentEducation -----------------------------------------------------
-  #Unused
-  #EmploymentEducation <- clarity_api$EmploymentEducation()
-
-
-
-  # EnrollmentCoC -----------------------------------------------------------
-
-  # Used in load_enrollment
 
 
   # Referrals ---------------------------------------------------------------
@@ -86,11 +72,6 @@ load_export <- function(
   # Inventory ---------------------------------------------------------------
 
   Inventory <- clarity_api$Inventory()
-
-
-  # Organization ------------------------------------------------------------
-
-  # Only used in PE - load moved there to unburden RAM
 
 
   # Contacts ----------------------------------------------------------------

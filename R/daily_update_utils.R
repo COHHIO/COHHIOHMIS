@@ -223,15 +223,13 @@ funs = rlang::set_names(c(
   "client_counts",
   "qpr_ees",
   "qpr_spdats",
-  # "covid19",
-  # "covid19_plots",
   "vets",
   "vet_active",
   "bed_unit_utilization",
   "data_quality",
   "data_quality_summary",
   # "project_evaluation",
-  # "project_evaluation_mahoning",
+  "project_evaluation_mahoning",
   "prioritization",
   "spms"
 
@@ -253,7 +251,7 @@ e = rlang::caller_env()
     .shiny = UU::is_legit(session)
   } else
     .shiny = FALSE
-
+  browser()
   # Prepare Progress bar
   pbar <- pb_start(total = length(steps), type = "tasks", is_shiny = .shiny, auto_terminate = FALSE)
   if ("update" %in% steps) {

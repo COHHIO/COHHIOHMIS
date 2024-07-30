@@ -188,7 +188,7 @@ utilization_bed <- bu_month_proportion(BedNights, BedCapacity)
 # %NaN means there were no beds and no clients served that month.
 
 rm(BedCapacity, BedNights)
-
+gc()
 
 
 # HH Utilization of Units -------------------------------------------------
@@ -240,7 +240,7 @@ HHNights <- bu_sum_months(HHUtilizers, "_HN")
 # detail should be good enough for R minor elevated
 
 rm(HHUtilizers)
-
+gc()
 
 # Unit Capacity -----------------------------------------------------------
 
@@ -277,7 +277,7 @@ utilization_unit <- bu_month_proportion(HHNights,
 
 
 rm(UnitCapacity, HHNights, Utilizers)
-
+gc()
 
 small_project <- Project |>
   dplyr::filter(ProjectType %in% c(data_types$Project$ProjectType$w_beds) &
@@ -357,7 +357,7 @@ utilization <-
 
 
 rm(Households, Clients, Capacity, small_inventory, small_project, providerids)
-
+gc()
 # notes moved to Rminor: notes.R
 
 

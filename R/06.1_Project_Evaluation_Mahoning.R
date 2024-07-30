@@ -11,12 +11,13 @@ project_evaluation_mahoning <- function(
   # NOTE Dependency needs to be fetched from cloud location
   # read scoring rubric from google sheets
   # different scoring rubric for Mahoning
+
   googlesheets4::gs4_auth(path = "inst/vault/rminor@rminor-333915.iam.gserviceaccount.com.json")
   scoring_rubric <- googlesheets4::read_sheet("1lLsNI8A2E-dDE8O2EHmCP9stSImxZkYJTGx-Oxs1W74",
                                               sheet = "Sheet1",
-                                              col_types = c("metric" = "c", "ProjectType" = "n", "goal_type" = "c", "minimum" = "n", "maximum" = "n",
+                                              col_types = c("metric" = "c", "AltProjectType" = "n", "goal_type" = "c", "minimum" = "n", "maximum" = "n",
                                                                "points" = "n") |> paste0(collapse = "")) |>
-    dplyr::mutate(ProjectType = as.character(ProjectType))
+    dplyr::mutate(ProjectType = AltProjectType)
 
   merged_projects <-
     list(
@@ -58,6 +59,7 @@ project_evaluation_mahoning <- function(
     dplyr::filter(AltProjectName %in%
                     c("Mahoning - Beatitude House - Permanent Supportive Housing Program - PSH",
                       "Mahoning - Meridian Services - Phoenix Court - PSH",
+                      "Mahoning - MCMHRB - Shelter Plus Care - PSH",
                       # "Mahoning - Meridian Services - Samaritan Housing PRA - PSH",
                       # "Mahoning - Meridian Services - Homeless Solutions SRO II - PSH",
                       "Mahoning - Ursuline Center - Merici - PSH",
@@ -94,6 +96,7 @@ project_evaluation_mahoning <- function(
     "MoveInDateAdjust",
     "ExitDate",
     "Destination",
+    "DestinationSubsidyType",
     "EntryAdjust",
     "ExitAdjust"
   )
@@ -204,6 +207,8 @@ project_evaluation_mahoning <- function(
 
   # calculates how many clients have a qualifying error of whatever type. only
   # returns the providers with any qualifying errors.
+  dq_for_pe <- dq_for_pe |> dplyr::mutate(ProjectType = as.numeric(ProjectType))
+
 
   dq_flags_staging <- dq_for_pe %>%
     dplyr::right_join(pe_coc_funded, by = c("ProjectType", "ProjectID", "ProjectName")) %>%
@@ -289,6 +294,7 @@ project_evaluation_mahoning <- function(
                        dplyr::distinct(ProjectID, AltProjectID), by = "AltProjectID") %>%
     dplyr::mutate(AltProjectID = dplyr::if_else(is.na(ProjectID), AltProjectID, ProjectID)) %>%
     dplyr::left_join(clarity_api$User_extras() |>
+                       dplyr::mutate(ProjectID = as.character(ProjectID)) |>
                        dplyr::filter(!is.na(ProjectID) & Deleted == "No") |>
                        dplyr::select(UserID, ProjectID), by = "ProjectID")
 
@@ -399,10 +405,15 @@ project_evaluation_mahoning <- function(
                         dplyr::select(ProjectType, AltProjectID, AltProjectName) %>%
                         unique(),
                       by = c("AltProjectName", "ProjectType", "AltProjectID")) %>%
-    dplyr::left_join(data_quality_flags, by = "AltProjectName") |>
-    {\(x) {dplyr::filter(x, (ProjectType %in% c(2, 8, 13) &
-                            HMIS::exited_between(x, rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end, lgl = TRUE)) |
-                           ProjectType == 3)}}() |> # filtering out non-PSH stayers
+dplyr::left_join(data_quality_flags, by = "AltProjectName") %>%
+  (\(x) {
+    dplyr::filter(
+      x,
+      (ProjectType %in% c(2, 8, 13) &
+       HMIS::exited_between(x, rm_dates$hc$project_eval_start, rm_dates$hc$project_eval_end, lgl = TRUE)) |
+       ProjectType == 3
+    )
+  })() |> # filtering out non-PSH stayers
     dplyr::mutate(
       DestinationGroup = dplyr::case_when(
         is.na(Destination) | ExitAdjust > rm_dates$hc$project_eval_end ~
@@ -509,7 +520,7 @@ project_evaluation_mahoning <- function(
       dplyr::mutate(DaysInProject = difftime(MoveInDateAdjust, EntryDate, units = "days")) %>%
       dplyr::mutate(
         MeetsObjective = dplyr::case_when(
-          (Destination %in% c(3, 10:11, 19:21, 28, 31, 33:34) &
+          ((Destination %in% c(3, 410:411, 421) | DestinationSubsidyType %in% c(419:420, 428, 431, 433:434)) &
              lubridate::ymd(ExitAdjust) <= lubridate::ymd(rm_dates$hc$project_eval_end)) ~ 1,
           TRUE ~ 0
         ),
@@ -520,11 +531,11 @@ project_evaluation_mahoning <- function(
         DestinationGroup = dplyr::case_when(
           is.na(Destination) | lubridate::ymd(ExitAdjust) > lubridate::ymd(rm_dates$hc$project_eval_end) ~
             "Still in Program at Report End Date",
-          Destination %in% c(1, 2, 12, 13, 14, 16, 18, 27) ~ "Temporary",
-          Destination %in% c(3, 10:11, 19:21, 28, 31, 33:34) ~ "Household's Own Housing",
-          Destination %in% c(22:23) ~ "Shared Housing",
-          Destination %in% c(4:7, 15, 25:27, 29) ~ "Institutional",
-          Destination %in% c(8, 9, 17, 30, 99, 32) ~ "Other",
+          Destination %in% c(101, 302, 312, 313, 314, 116, 118, 327) ~ "Temporary", # 1, 2, 12, 13, 14, 16, 18, 27
+          (Destination %in% c(410:411) | DestinationSubsidyType %in% c(419:421, 428, 431, 433:434)) ~ "Household's Own Housing", # 3, 10:11, 19:21, 28, 31, 33:34
+          Destination %in% c(422:423) ~ "Shared Housing", # 22, 23
+          Destination %in% c(204:207, 215, 225, 327, 426, 329) ~ "Institutional",
+          Destination %in% c(8, 9, 17, 30, 99, 37) ~ "Other",
           Destination == 24 ~ "Deceased"
         ),
         PersonalID = as.character(PersonalID)
@@ -555,7 +566,7 @@ project_evaluation_mahoning <- function(
       dplyr::mutate(
         OwnHousingMath = dplyr::case_when(
           HoHsMovedInLeavers == 0 ~ "All points granted because this project had 0 Heads of Household Leavers who Moved into Housing",
-          HoHsMovedInLeavers != 0 & ProjectType != 2 ~ paste(as.integer(AverageDays), "average days"),
+          HoHsMovedInLeavers != 0 & ProjectType != 2 ~ paste(as.integer(AverageDaysJoin), "average days"),
           TRUE ~ ""
         ),
         OwnHousingPoints = dplyr::if_else(
@@ -732,7 +743,7 @@ project_evaluation_mahoning <- function(
       MostRecentIncome = dplyr::case_when(
         !is.na(Exit) ~ Exit,
         # !is.na(Update) ~ Update,
-        !is.na(Annual) ~ Annual
+        # !is.na(Annual) ~ Annual
       ),
       IncomeAtEntry = dplyr::if_else(is.na(Entry), 0, Entry),
       IncomeMostRecent = dplyr::if_else(is.na(MostRecentIncome),
@@ -888,9 +899,9 @@ project_evaluation_mahoning <- function(
     dplyr::mutate(LHResPriorDQ = dplyr::if_else(General_DQ == 1, 1, 0),
                   MeetsObjective = dplyr::if_else(
                     (ProjectType %in% c(2, 3, 13) &
-                       LivingSituation %in% c(1, 16, 18)) |
+                       LivingSituation %in% c(101, 116, 118)) |
                       (ProjectType == 8 &
-                         LivingSituation == 16),
+                         LivingSituation == 116),
                     1,
                     0
                   )) %>%
