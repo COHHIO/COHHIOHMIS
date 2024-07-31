@@ -44,7 +44,6 @@ app_deps <- list(
     "dq_past_year",
     "dq_providers",
     "dq_summary",
-    "dq_unsheltered",
     "guidance",
     "mental_health_unsheltered",
     "path_referrals",

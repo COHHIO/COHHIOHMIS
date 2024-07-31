@@ -49,29 +49,6 @@ client_summary <- dqu_summary(co_clients_served, distinct = FALSE) |>
   dq_summary$warning_types <- dqu_summary(dq_past_year, filter_exp = Type %in% c("Warning"), groups = "Issue", distinct = FALSE)
 
 
-
-  # Deprecated in Clarity
-  # dq_data_unsheltered_high <- dq_unsheltered %>%
-  #   dplyr::filter(Type == "High Priority",
-  #                 HMIS::served_between(., rm_dates$hc$unsheltered_data_start, rm_dates$meta_HUDCSV$Export_End)) %>%
-  #   dplyr::select(PersonalID, HouseholdID, DefaultProvider) %>%
-  #   unique() %>%
-  #   dplyr::group_by(DefaultProvider) %>%
-  #   dplyr::summarise(clientsWithErrors = dplyr::n()) %>%
-  #   dplyr::ungroup() %>%
-  #   dplyr::arrange(dplyr::desc(clientsWithErrors))
-  #
-  # dq_plot_unsheltered_high <-
-  #   ggplot2::ggplot(
-  #     utils::head(dq_data_unsheltered_high, 20L),
-  #     ggplot2::aes(
-  #       x = stats::reorder(DefaultProvider, clientsWithErrors),
-  #       y = clientsWithErrors,
-  #       fill = clientsWithErrors
-  #     )
-  #   ) +
-  #   dqu_summary_theme_labs(x = "",
-  #                                y = "Clients")
   dq_summary$hh_issues <- dqu_summary(dq_past_year, filter_exp = Type %in% c("Error", "High Priority") &
                                         Issue %in% c(
                                           "No Head of Household",
@@ -80,29 +57,6 @@ client_summary <- dqu_summary(co_clients_served, distinct = FALSE) |>
                                           "Children Only Household"
                                         ), join = client_summary)
 
-
-
-  # Deprecated - using progress bar in conjunction with table data as it's much easier
-  # dq_plot_aps_referrals <-
-  #   ggplot2::ggplot(data_APs, ggplot2::aes(fill = category, x = providertype, y = percent)) +
-  #   ggplot2::geom_bar(position = "fill",
-  #                     stat = "identity",
-  #                     width = .1) +
-  #   ggplot2::geom_label(
-  #     ggplot2::aes(label = paste(
-  #       category,
-  #       "\n",
-  #       prettypercent
-  #     )),
-  #     vjust = -1,
-  #     hjust = "outward",
-  #     fill = "white",
-  #     colour = "black",
-  #     fontface = "bold"
-  #   ) +
-  #   ggplot2::scale_fill_manual(values = c("#a11207", "#00952e"), guide = FALSE) +
-  #   ggplot2::coord_flip()+
-  #   ggplot2::theme_void()
 
 
   dq_summary$outstanding_referrals <- dqu_summary(dq_past_year, filter_exp = Issue == "Old Outstanding Referral", distinct = FALSE, join = client_summary)
