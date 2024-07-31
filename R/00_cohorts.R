@@ -68,37 +68,11 @@ cohorts <- function(
   co_adults_served <-  co_clients_served |>
     dplyr::filter(AgeAtEntry > 17)
 
-  #	Leavers and Stayers	who	Entered During Reporting Period	Adults
-
-  co_entered <-  Enrollment_extra_Client_Exit_HH_CL_AaE |>
-    chrt_filter_select(entered = TRUE,
-                       vars = vars$we_want)
-
-  co_adults_entered <- co_entered |>
-    dplyr::filter(AgeAtEntry > 17)
-
   #	Leavers and Stayers	who	Entered During Reporting Period	HoHs
-  co_hohs_entered <- co_entered |>
+  co_hohs_entered <-  Enrollment_extra_Client_Exit_HH_CL_AaE |>
+    chrt_filter_select(entered = TRUE,
+                       vars = vars$we_want) |>
     dplyr::filter(RelationshipToHoH == 1)
-
-  #	Leavers and Stayers	who were Served During Reporting Period (and Moved In)	All
-  co_clients_moved_in <-  Enrollment_extra_Client_Exit_HH_CL_AaE |>
-    chrt_filter_select(stayed = TRUE,
-                       vars = vars$we_want)
-
-  #	Leavers and Stayers	who were Served During Reporting Period (and Moved In)	Adults
-  co_adults_moved_in <-  co_clients_moved_in |>
-    dplyr::filter(AgeAtEntry > 17)
-
-  # Leaver HoHs served during the reporting period
-  co_hohs_served_leavers <-  Enrollment_extra_Client_Exit_HH_CL_AaE  |>
-    chrt_filter_select(exited = TRUE,
-                       RelationshipToHoH == 1,
-                       vars = vars$we_want)
-
-  #	Leavers	who were Served During Reporting Period	Deaths
-  co_hohs_served_leavers_died <- co_hohs_served_leavers |>
-    dplyr::filter(Destination == 24)
 
   #	Leavers	who were Served During Reporting Period (and Moved In)	All
   co_clients_moved_in_leavers <-  Enrollment_extra_Client_Exit_HH_CL_AaE |>
@@ -114,18 +88,7 @@ cohorts <- function(
   co_adults_moved_in_leavers <-  co_clients_moved_in_leavers |>
     dplyr::filter(AgeAtEntry > 17)
 
-  summary <- chrt_hoh_count(co_clients_served) |>
-    dplyr::full_join(chrt_hoh_count(co_clients_moved_in), by = "ProjectName") |>
-    dplyr::full_join(chrt_hoh_count(co_hohs_moved_in_leavers), by = "ProjectName") |>
-    dplyr::full_join(chrt_hoh_count(co_adults_served), by = "ProjectName") |>
-    dplyr::full_join(chrt_hoh_count(co_adults_moved_in), by = "ProjectName") |>
-    dplyr::full_join(chrt_hoh_count(co_clients_moved_in_leavers), by = "ProjectName") |>
-    dplyr::full_join(chrt_hoh_count(co_adults_moved_in_leavers), by = "ProjectName") |>
-    dplyr::full_join(chrt_hoh_count(co_hohs_served), by = "ProjectName") |>
-    dplyr::full_join(chrt_hoh_count(co_hohs_entered), by = "ProjectName") |>
-    dplyr::full_join(chrt_hoh_count(co_hohs_served_leavers), by= "ProjectName") |>
-    dplyr::full_join(chrt_hoh_count(co_adults_entered), by = "ProjectName") |>
-    dplyr::full_join(chrt_hoh_count(co_hohs_served_leavers_died), by = "ProjectName")
+
 
   # Counties ----------------------------------------------------------------
 

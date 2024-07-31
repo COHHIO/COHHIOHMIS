@@ -251,7 +251,7 @@ e = rlang::caller_env()
     .shiny = UU::is_legit(session)
   } else
     .shiny = FALSE
-  browser()
+
   # Prepare Progress bar
   pbar <- pb_start(total = length(steps), type = "tasks", is_shiny = .shiny, auto_terminate = FALSE)
   if ("update" %in% steps) {

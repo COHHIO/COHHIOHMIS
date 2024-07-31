@@ -40,6 +40,7 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
     lubridate::mdy
   ))
 
+  rm(hc)
 
   # Dates from Metadata -----------------------------------------------------
 
@@ -51,6 +52,8 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
     Export_End = Export[["ExportEndDate"]][1]
   )
 
+  rm(Export)
+
   # Calculated Dates --------------------------------------------------------
   Exit <- clarity_api$Exit() |>
     dplyr::mutate(EnrollmentID = as.character(EnrollmentID))
@@ -61,7 +64,7 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
                           dplyr::pull(ExitDate))
 
 
-
+  rm(Exit)
 
   rm_dates$calc$full_date_range <-
     lubridate::interval(rm_dates$meta_HUDCSV$Export_End,
@@ -100,6 +103,6 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
   })
   # Gather Dependencies ----
   # Mon Aug 09 17:09:52 2021
-
+  gc()
   app_env$gather_deps(rm_dates)
 }
