@@ -15,7 +15,7 @@ if (file.exists("RmData.Rproj") && interactive()) {
 #' @param Clarity \code{(logical)} Does the CoC use Clarity HMIS? **Default** \code{TRUE}
 #' @param ServicePoint \code{(logical)} Does the CoC use ServicePoint HMIS? **Default** \code{FALSE}
 #'
-#' @return
+#' @return Function creates .Rprofile or will modify it in place.
 #' @export
 #'
 #' @examples
@@ -47,7 +47,7 @@ by_class <- function(class, e) {
 #' @param nm The name of the instantiated object
 #' @param e The environment in which to search
 #' @details Searches the `RmData` package environment and then the environment specified
-#' @return
+#' @return `clarity_api` R6 object
 #' @export
 get_clarity_api <- function(nm = "cl_api", e = rlang::caller_env(), ifnotfound = stop("Clarity API object not found")) {
   from_ns(nm, "RmData") %||% by_class("clarity_api", e) %||% by_class("clarity_api", .GlobalEnv) %||% ifnotfound
@@ -58,7 +58,7 @@ get_clarity_api <- function(nm = "cl_api", e = rlang::caller_env(), ifnotfound =
 #' @param nm The name of the instantiated object
 #' @param e The environment in which to search
 #' @details Searches the `RmData` package environment and then the environment specified
-#' @return
+#' @return `app_env` R6 object
 #' @export
 
 get_app_env <- function(nm = "rm_env", e = rlang::caller_env(), ifnotfound = stop("app_env object not found")) {

@@ -16,6 +16,9 @@ setup_RmData(
 
 \item{ServicePoint}{\code{(logical)} Does the CoC use ServicePoint HMIS? \strong{Default} \code{FALSE}}
 }
+\value{
+Function creates .Rprofile or will modify it in place.
+}
 \description{
 Setup RmData options
 }

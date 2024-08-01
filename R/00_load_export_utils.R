@@ -254,7 +254,7 @@ EnrollmentCoC_RemoveCoCCodes <- function(EnrollmentCoC, codes_to_remove = c("Def
 #'
 #' @inheritParams data_quality_tables
 #'
-#' @return
+#' @return A data frame containing projects that don't start with "zz".
 #' @export
 Project_rm_zz <- function(Project) {
   dplyr::filter(Project, stringr::str_detect(ProjectName, "^zz", negate = TRUE))
@@ -398,7 +398,7 @@ pe_add_ProjectType <- function(provider_extras) {
 #'
 #' @inheritParams pe_create_APs
 #'
-#' @return
+#' @return A data frame containing providers with numeric codes replaced.
 #' @export
 pe_add_GrantType <- function(provider_extras) {
   hash <- HMIS::hud_translations$`2.06.1 FundingSource`(table = TRUE)

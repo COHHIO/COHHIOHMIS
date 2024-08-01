@@ -28,7 +28,7 @@ valid_max = function(x) {
 #' @param MoveInDateAdjust \code{(Date)} See `Enrollment_add_Household`
 #' @param EntryDate \code{(Date)} Date of Entry for Enrollment
 #'
-#' @return
+#' @return A data frame with valid Move-In Dates
 #' @export
 
 valid_movein_max = function(MoveInDateAdjust, EntryDate) {

@@ -9,6 +9,9 @@ Project_rm_zz(Project)
 \arguments{
 \item{Project}{\code{(data.frame)} From the HUD CSV Export}
 }
+\value{
+A data frame containing projects that don't start with "zz".
+}
 \description{
 Filter Projects that have been retired (\code{zz}'d)
 }

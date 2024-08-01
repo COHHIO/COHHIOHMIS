@@ -55,7 +55,7 @@ Imports:
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 URL: https://github.com/COHHIO/Rm_data
 BugReports: https://github.com/COHHIO/Rm_data/issues
 Remotes: COHHIO/hud.extract, COHHIO/clarity.looker, COHHIO/HMIS, yogat3ch/UU
@@ -75,15 +75,11 @@ Collate:
     '01_Bed_Unit_Utilization.R'
     '02.1_QPR_EEs.R'
     '02.1_QPR_EEs_utils.R'
-    '02.2_covid19_utils.R'
-    '02.2_covid19.R'
-    '02.3_covid19_plots.R'
     '02_QPR_SPDATs.R'
     '02_QPR_client_counts.R'
     '03_Veterans.R'
     '03_prioritization_utils.R'
     '03_prioritization.R'
-    '04_DataQuality_doses.R'
     '04_DataQuality_utils.R'
     '04_DataQuality.R'
     '04_DataQuality_summary_utils.R'
@@ -97,8 +93,6 @@ Collate:
     '06_Project_Evaluation.R'
     '07_SPM_utils.R'
     '07_SPM.R'
-    '09_covid.R'
-    'convenience_funs.R'
     'daily_update_utils.R'
     'data.R'
 Suggests: 

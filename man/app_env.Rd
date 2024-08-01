@@ -23,7 +23,6 @@ Save dependencies for future functions in an environment and put app dependencie
 \item \href{#method-app_env-set_parent}{\code{app_env$set_parent()}}
 \item \href{#method-app_env-load_deps}{\code{app_env$load_deps()}}
 \item \href{#method-app_env-deps_to_destination}{\code{app_env$deps_to_destination()}}
-\item \href{#method-app_env-dropbox_auth}{\code{app_env$dropbox_auth()}}
 \item \href{#method-app_env-new}{\code{app_env$new()}}
 \item \href{#method-app_env-clone}{\code{app_env$clone()}}
 }
@@ -138,24 +137,8 @@ Write \code{deps} to a folder via \code{file.copy} or to dropbox. If using dropb
 }
 \if{html}{\out{</div>}}
 }
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-app_env-dropbox_auth"></a>}}
-\if{latex}{\out{\hypertarget{method-app_env-dropbox_auth}{}}}
-\subsection{Method \code{dropbox_auth()}}{
-Authorize Dropbox
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{app_env$dropbox_auth(
-  db_auth_token = file.path("inst", "vault", "db_token.rds")
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{db_auth_token}}{\code{(character)} path to the Dropbox authorization token. See \link[rdrop2]{drop_auth}}
-}
-\if{html}{\out{</div>}}
+\subsection{Returns}{
+None. This function is called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}

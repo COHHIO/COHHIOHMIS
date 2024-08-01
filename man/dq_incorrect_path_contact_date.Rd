@@ -15,8 +15,6 @@ dq_incorrect_path_contact_date(
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
 
-\item{Contacts}{\code{(data.frame)} From the HUD CSV Export}
-
 \item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
 
 \item{vars}{\code{(named list)}
@@ -24,6 +22,8 @@ dq_incorrect_path_contact_date(
 \item{\code{prep}}{ Column names for Prep}
 \item{\code{we_want}}{ Column names for output}
 }}
+
+\item{|>}{\code{(data.frame)} From the HUD CSV Export}
 }
 \value{
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)
@@ -42,6 +42,7 @@ Other Clarity Checks:
 \code{\link{dq_conflicting_hi_ee}()},
 \code{\link{dq_conflicting_income}()},
 \code{\link{dq_conflicting_unlikely_ncbs}()},
+\code{\link{dq_date_homeless_after_entry}()},
 \code{\link{dq_detail_missing_disabilities}()},
 \code{\link{dq_dkr_LoS}()},
 \code{\link{dq_dkr_destination}()},
@@ -53,6 +54,7 @@ Other Clarity Checks:
 \code{\link{dq_future_exits}()},
 \code{\link{dq_gender}()},
 \code{\link{dq_hh_children_only}()},
+\code{\link{dq_hh_missing_rel_to_hoh}()},
 \code{\link{dq_hh_no_hoh}()},
 \code{\link{dq_invalid_months_times_homeless}()},
 \code{\link{dq_mahoning_ce_60_days}()},
@@ -68,6 +70,7 @@ Other Clarity Checks:
 \code{\link{dq_missing_path_contact}()},
 \code{\link{dq_missing_previous_street_ESSH}()},
 \code{\link{dq_missing_prior_living_situation}()},
+\code{\link{dq_months_homeless_tbd}()},
 \code{\link{dq_name}()},
 \code{\link{dq_overlaps}()},
 \code{\link{dq_path_enrolled_missing}()},
@@ -94,8 +97,8 @@ Other Clarity Checks:
 \code{\link{dq_veteran}()},
 \code{\link{dq_without_spdats}()},
 \code{\link{dqu_project_small}()},
-\code{\link{overlaps_same_day}()},
-\code{\link{overlaps}()}
+\code{\link{overlaps}()},
+\code{\link{overlaps_same_day}()}
 
 Other DQ: Path Checks: 
 \code{\link{dq_SOAR_missing_at_exit}()},

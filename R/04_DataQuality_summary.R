@@ -14,7 +14,7 @@
 #' @param dq_eligibility_detail \code{(data.frame)} See `data_quality`
 #' @param data_APs \code{(data.frame)} See `data_APs`
 #'
-#' @return
+#' @return A data frame of data quality summary.
 #' @export
 #' @include 04_DataQuality.R 04_DataQuality_utils.R 04_DataQuality_summary_utils.R
 

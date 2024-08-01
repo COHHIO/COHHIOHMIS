@@ -6,8 +6,6 @@
 \usage{
 prioritization(
   co_clients_served,
-  covid19,
-  c19priority,
   Disabilities,
   Enrollment_extra_Client_Exit_HH_CL_AaE,
   HealthAndDV,
@@ -22,11 +20,7 @@ prioritization(
 \arguments{
 \item{co_clients_served}{\code{(data.frame)} See \code{cohorts}}
 
-\item{covid19}{\code{(data.frame)} See \code{covid19}}
-
-\item{c19priority}{\code{(data.frame)} See \code{covid19}}
-
-\item{Disabilities}{\code{(data.frame)} See \code{covid19}}
+\item{Disabilities}{\code{(data.frame)} From the HUD CSV Export}
 
 \item{Enrollment_extra_Client_Exit_HH_CL_AaE}{\code{(data.frame)} See \code{load_export}}
 
@@ -48,5 +42,5 @@ prioritization(
 Create the prioritization list
 }
 \seealso{
-load_export, covid19, cohorts
+load_export, cohorts
 }

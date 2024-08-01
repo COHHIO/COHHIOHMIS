@@ -38,6 +38,9 @@ data_quality_summary(
 \item{\code{we_want}}{ Column names for output}
 }}
 }
+\value{
+A data frame of data quality summary.
+}
 \description{
 Render Data Quality plots & tables for RminorElevated dq_system_wide
 }

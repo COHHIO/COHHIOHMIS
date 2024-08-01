@@ -9,7 +9,8 @@ daily_update(
     `Send Dependencies to Dropbox` = "send"),
   funs = rlang::set_names(c("dates", "load_export", "cohorts", "client_counts",
     "qpr_ees", "qpr_spdats", "vets", "vet_active", "bed_unit_utilization",
-    "data_quality", "data_quality_summary", "prioritization", "spms")),
+    "data_quality", "data_quality_summary", "project_evaluation_mahoning",
+    "prioritization", "spms")),
   remote = FALSE,
   backup = FALSE,
   app_env,
@@ -34,8 +35,6 @@ daily_update(
 \item{\code{ client_counts }}
 \item{\code{ qpr_ees }}
 \item{\code{ qpr_spdats }}
-\item{\code{ covid19 }}
-\item{\code{ covid19_plots }}
 \item{\code{ vets }}
 \item{\code{ vet_active }}
 \item{\code{ prioritization }}

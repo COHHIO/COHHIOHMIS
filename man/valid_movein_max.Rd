@@ -11,6 +11,9 @@ valid_movein_max(MoveInDateAdjust, EntryDate)
 
 \item{EntryDate}{\code{(Date)} Date of Entry for Enrollment}
 }
+\value{
+A data frame with valid Move-In Dates
+}
 \description{
 Return a valid Move-In Date
 }

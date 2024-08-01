@@ -2999,17 +2999,17 @@ dq_ssvf_missing_percent_ami <- function(ssvf_served_in_date_range, vars, guidanc
 
 }
 
-#' Find enrollments without a referral
-#'
-#' @param served_in_date_range
-#' @param vars
-#' @param guidance
-#' @param app_env
-#'
-#' @return
-#' @export
-#'
-#' @examples
+# #' Find enrollments without a referral
+# #'
+# #' @param served_in_date_range
+# #' @param vars
+# #' @param guidance
+# #' @param app_env
+# #'
+# #' @return
+# #' @export
+# #'
+# #' @examples
 # dq_missing_referral <- function(served_in_date_range, Referrals, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())) {
 #   if (is_app_env(app_env))
 #     app_env$set_parent(missing_fmls())
