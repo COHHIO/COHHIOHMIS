@@ -653,7 +653,7 @@
     },
     "gert": {
       "Package": "gert",
-      "Version": "2.0.1",
+      "Version": "2.1.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -664,7 +664,7 @@
         "sys",
         "zip"
       ],
-      "Hash": "f70d3fe2d9e7654213a946963d1591eb"
+      "Hash": "bdc909d9f16e2478d615b0e6a7330435"
     },
     "ggplot2": {
       "Package": "ggplot2",
@@ -855,7 +855,7 @@
     },
     "httr2": {
       "Package": "httr2",
-      "Version": "1.0.1",
+      "Version": "1.0.2",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -872,7 +872,7 @@
         "vctrs",
         "withr"
       ],
-      "Hash": "03d741c92fda96d98c3a3f22494e3b4a"
+      "Hash": "320c8fe23fcb25a6690ef7bdb6a3a705"
     },
     "ini": {
       "Package": "ini",
