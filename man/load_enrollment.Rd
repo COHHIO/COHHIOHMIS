@@ -17,7 +17,21 @@ load_enrollment(
 )
 }
 \arguments{
+\item{Enrollment}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{EnrollmentCoC}{\code{(data.frame)} From the HUD CSV Export}
+
 \item{Enrollment_extras}{From Clarity Looker API Extras}
+
+\item{Exit}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{Client}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{Project}{\code{(data.frame)} From the HUD CSV Export}
+
+\item{Referrals}{\code{(data.frame)} From the Clarity Looker API Extras}
+
+\item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
 }
 \description{
 Load Enrollment as Enrollment_extra_Client_Exit_HH_CL_AaE

@@ -531,7 +531,7 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
 
 #' @title Load Enrollment as Enrollment_extra_Client_Exit_HH_CL_AaE
 #'
-#' @inheritParams data_quality_tables params return
+#' @inheritParams data_quality_tables
 #' @param Enrollment_extras From Clarity Looker API Extras
 #'
 #' @export
