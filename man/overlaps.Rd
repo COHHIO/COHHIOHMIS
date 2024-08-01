@@ -99,11 +99,7 @@ Other Clarity Checks:
 \code{\link{overlaps_same_day}()}
 
 Other ServicePoint Checks: 
-\code{\link{dq_overlaps}()},
-\code{\link{dq_sp_hh_missing_rel_to_hoh}()},
-\code{\link{dq_sp_hh_too_many_hohs}()},
-\code{\link{dq_sp_missing_LoS}()},
-\code{\link{dq_sp_missing_client_location}()}
+\code{\link{dq_overlaps}()}
 
 Other DQ: Overlapping Enrollment/Move-In Dates: 
 \code{\link{dq_overlaps}()},

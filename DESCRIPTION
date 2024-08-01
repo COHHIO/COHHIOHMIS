@@ -84,7 +84,6 @@ Collate:
     '04_DataQuality.R'
     '04_DataQuality_summary_utils.R'
     '04_DataQuality_summary.R'
-    '04_DataQuality_utils_ServicePoint.R'
     'relevant_dq.R'
     '04_Guidance.R'
     '05_Veterans_Active_List.R'

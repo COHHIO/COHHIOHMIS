@@ -108,8 +108,7 @@ Other DQ: Missing Data at Entry:
 \code{\link{dq_missing_living_situation}()},
 \code{\link{dq_missing_months_times_homeless}()},
 \code{\link{dq_missing_prior_living_situation}()},
-\code{\link{dq_months_homeless_tbd}()},
-\code{\link{dq_sp_missing_LoS}()}
+\code{\link{dq_months_homeless_tbd}()}
 }
 \concept{Clarity Checks}
 \concept{DQ: Missing Data at Entry}

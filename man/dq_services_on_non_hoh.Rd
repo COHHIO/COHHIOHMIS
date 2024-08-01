@@ -103,9 +103,7 @@ Other DQ: Household Checks:
 \code{\link{dq_hh_missing_rel_to_hoh}()},
 \code{\link{dq_hh_no_hoh}()},
 \code{\link{dq_referrals_on_hh_members_ssvf}()},
-\code{\link{dq_services_on_hh_members_ssvf}()},
-\code{\link{dq_sp_hh_missing_rel_to_hoh}()},
-\code{\link{dq_sp_hh_too_many_hohs}()}
+\code{\link{dq_services_on_hh_members_ssvf}()}
 }
 \concept{Clarity Checks}
 \concept{DQ: Household Checks}
