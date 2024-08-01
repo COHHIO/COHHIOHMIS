@@ -192,8 +192,6 @@ update_data <- function(clarity_api = RmData::get_clarity_api(e = rlang::caller_
 #'   \item{\code{ client_counts }}
 #'   \item{\code{ qpr_ees }}
 #'   \item{\code{ qpr_spdats }}
-#'   \item{\code{ covid19 }}
-#'   \item{\code{ covid19_plots }}
 #'   \item{\code{ vets }}
 #'   \item{\code{ vet_active }}
 #'   \item{\code{ prioritization }}

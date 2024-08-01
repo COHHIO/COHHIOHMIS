@@ -1,13 +1,10 @@
 #' @title Create the prioritization list
 #'
 #' @param co_clients_served \code{(data.frame)} See `cohorts`
-#' @param covid19 \code{(data.frame)} See `covid19`
-#' @param c19priority \code{(data.frame)} See `covid19`
-#' @param Disabilities \code{(data.frame)} See `covid19`
 #' @param Enrollment_extra_Client_Exit_HH_CL_AaE \code{(data.frame)} See `load_export`
 #' @param Referrals \code{(data.frame)} See `load_export`
 #' @param Scores \code{(data.frame)} See `load_export`
-#' @seealso load_export, covid19, cohorts
+#' @seealso load_export, cohorts
 #' @inheritParams R6Classes
 #' @inheritParams data_quality_tables
 #' @export
@@ -15,8 +12,6 @@
 #' @include 03_prioritization_utils.R
 prioritization <- function(
   co_clients_served,
-  covid19,
-  c19priority,
   Disabilities,
   Enrollment_extra_Client_Exit_HH_CL_AaE,
   HealthAndDV,
@@ -580,44 +575,6 @@ prioritization <- prioritization |>
   dplyr::select(-IncomeInHH) |>
     dplyr::ungroup()
 
-# landing_data <- prioritization |>
-#   select(PersonalID, CountyServed, COVID19Priority, ShortSituation) |>
-#   # filter(CountyServed == "Lorain") |>
-#   # mutate(COVID19Priority = as.character(COVID19Priority),
-#   #        ShortSituation = as.character(ShortSituation)) |>
-#   group_by(COVID19Priority, ShortSituation) |>
-#   summarise(HHs = n()) |>
-#   ungroup() |>
-#   as.data.frame()
-#
-# landing <- treemap(
-#   landing_data,
-#   title = "Currently Literally Homeless Households",
-#   index = c("ShortSituation", "COVID19Priority"),
-#   border.lwds = c(4, .5),
-#   border.col = c("#FFFFFF", "#D2B48C"),
-#   palette = "RdBu",
-#   vSize = "HHs",
-#   vColor = "COVID19Priority",
-#   type = "categorical",
-#   position.legend = "bottom",
-#   fontsize.labels = c(17, 12),
-#   fontcolor.labels = c("white", "black"),
-#   fontface.labels = c(2, 1),
-#   bg.labels = "transparent",
-#   # position.legend = "none",
-#   align.labels = list(c("center", "center"),
-#                       c("left", "top"))
-# )
 
-# rowsum(plotly_attempt$HHs, group = plotly_attempt$COVID19Priority)
-
-# plot_ly(
-#   b,
-#   parents = ~ COVID19Priority,
-#   labels = ~ ShortSituation,
-#   values = ~ HHs,
-#   type = 'treemap'
-# )
 app_env$gather_deps(prioritization)
 }
