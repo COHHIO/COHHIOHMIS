@@ -47,6 +47,10 @@ daily_update(
 
 \item{backup}{\code{(logical)} Whether to back up all raw dependencies in the dependencies environment.}
 
+\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
+
+\item{clarity_api}{\code{(clarity_api)} R6 Object containing the connection to the Clarity Looker instance.}
+
 \item{session}{\code{(shiny session object)}}
 
 \item{e}{\code{(calling environment)}}

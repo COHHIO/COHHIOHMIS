@@ -16,6 +16,8 @@ Enrollment_add_HousingStatus(
 \item{PH}{ProjectType codes considered Permanently Housed.  See \code{HMIS::hud_translations$ProjectType(table = TRUE)} & \code{?data_types}}
 
 \item{Referrals}{\code{(data.frame)} From the Clarity Looker API Extras}
+
+\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \value{
 Input data with HousingStatus & Situation column

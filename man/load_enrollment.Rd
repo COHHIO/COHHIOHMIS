@@ -32,6 +32,8 @@ load_enrollment(
 \item{Referrals}{\code{(data.frame)} From the Clarity Looker API Extras}
 
 \item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
+
+\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \description{
 Load Enrollment as Enrollment_extra_Client_Exit_HH_CL_AaE

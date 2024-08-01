@@ -43,6 +43,10 @@
 }}
 
 \item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
+
+\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
+
+\item{clarity_api}{\code{(clarity_api)} R6 Object containing the connection to the Clarity Looker instance.}
 }
 \value{
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)

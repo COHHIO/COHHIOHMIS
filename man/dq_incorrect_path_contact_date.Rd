@@ -23,6 +23,8 @@ dq_incorrect_path_contact_date(
 \item{\code{we_want}}{ Column names for output}
 }}
 
+\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
+
 \item{|>}{\code{(data.frame)} From the HUD CSV Export}
 }
 \value{

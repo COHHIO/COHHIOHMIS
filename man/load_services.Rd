@@ -15,6 +15,8 @@ load_services(
 \item{Services}{\code{(data.frame)} From the HUD CSV Export}
 
 \item{Services_extras}{\code{(data.frame)} From the Clarity Looker API Extras}
+
+\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \value{
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)

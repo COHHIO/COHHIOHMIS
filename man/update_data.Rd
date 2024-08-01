@@ -6,6 +6,9 @@
 \usage{
 update_data(clarity_api = RmData::get_clarity_api(e = rlang::caller_env()))
 }
+\arguments{
+\item{clarity_api}{\code{(clarity_api)} R6 Object containing the connection to the Clarity Looker instance.}
+}
 \value{
 \code{(none)} retrieves and saves Export CSVs via \code{clarity.looker} if not up to date. See \code{\link[clarity.looker]{clarity_api}$get_export} & \code{$get_folder_looks} for details.
 }
