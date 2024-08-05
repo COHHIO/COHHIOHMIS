@@ -96,7 +96,7 @@ qpr_path_to_rrhpsh <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, Referrals
     app_env$set_parent(missing_fmls())
 
   rrh_psh_expr <- stringr::str_subset(c(names(Enrollment_extra_Client_Exit_HH_CL_AaE), names(Referrals)), UU::regex_or(c("ProjectType", "ReferringPTC$"))) |>
-    paste("%in% c(3, 13, 'PH – Rapid Re-Housing', 'PH – Permanent Supportive Housing (disability required for entry)')") |> #RRH or PSH Respectively
+    paste("%in% c(3, 13, 'PH \u2013 Rapid Re-Housing', 'PH \u2013 Permanent Supportive Housing (disability required for entry)')") |> #RRH or PSH Respectively
     purrr::map(rlang::parse_expr)
 
   in_path <- Enrollment_extra_Client_Exit_HH_CL_AaE |>

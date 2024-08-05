@@ -28,8 +28,8 @@ project_evaluation <- function(
       `Licking Region 9 - RRH - Combined` = list(c("Coalition for Housing - Region 9"), c("Partners of Central Ohio - Region 9"), c("Coshocton - Knohoco Ashland CAC - Region 9 RRH")),
       `Athens - Integrated Services - Charles/Graham Combined` = list(c("Athens - Integrated Services - Charles Place - PSH"), c("Athens - Integrated Services - Graham Drive Family Housing - PSH")),
       `Hocking - Hocking MHA - Region 17 PSH Combined` = list(c("Hocking MHA - Region 17 Tenant Based - PSH"), c(" Hocking MHA  - Hocking Shelter Plus Care - PSH")),
-      `Preble MHRB – Prestwick Square PSH – Combined` = list(c("Mental Health Recovery Board of Preble County - Prestwick Square - PSH"), c("Mental Health Recovery Board of Preble County - Prestwick Square II - PSH")),
-      `Tuscarawas – ADAMHS Board – Tuscarawas County TRA Combined` = list(c("Tuscarawas - ADAMHS Board Shelter Plus Care TRA - PSH"),c("Tuscarawas - ADAMHS Board - Recovery Begins at Home - PSH"))
+      `Preble MHRB \u2013 Prestwick Square PSH \u2013 Combined` = list(c("Mental Health Recovery Board of Preble County - Prestwick Square - PSH"), c("Mental Health Recovery Board of Preble County - Prestwick Square II - PSH")),
+      `Tuscarawas \u2013 ADAMHS Board \u2013 Tuscarawas County TRA Combined` = list(c("Tuscarawas - ADAMHS Board Shelter Plus Care TRA - PSH"),c("Tuscarawas - ADAMHS Board - Recovery Begins at Home - PSH"))
     )
 
   merged_projects <- purrr::map(merged_projects, ~{
