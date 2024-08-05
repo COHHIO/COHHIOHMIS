@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.1.0",
+    "Version": "4.3.2",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -108,9 +108,9 @@
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteRepo": "UU",
       "RemoteUsername": "yogat3ch",
-      "RemoteRef": "HEAD",
+      "RemoteRepo": "UU",
+      "RemoteRef": "main",
       "RemoteSha": "bab19ed0a5b881f39996e2e1dcf47575671035c4",
       "Requirements": [
         "cli",
@@ -131,7 +131,7 @@
         "usethis",
         "utils"
       ],
-      "Hash": "e6723449b21cec4fa112b65159ae8c84"
+      "Hash": "f69870b186956c7741b820e12219d870"
     },
     "askpass": {
       "Package": "askpass",
@@ -142,215 +142,6 @@
         "sys"
       ],
       "Hash": "cad6cf7f1d5f6e906700b9d3e718c796"
-    },
-    "assertive": {
-      "Package": "assertive",
-      "Version": "0.3-6",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base",
-        "assertive.code",
-        "assertive.data",
-        "assertive.data.uk",
-        "assertive.data.us",
-        "assertive.datetimes",
-        "assertive.files",
-        "assertive.matrices",
-        "assertive.models",
-        "assertive.numbers",
-        "assertive.properties",
-        "assertive.reflection",
-        "assertive.sets",
-        "assertive.strings",
-        "assertive.types",
-        "knitr"
-      ],
-      "Hash": "03ec33ffb1b1d80deba944f4a6e50610"
-    },
-    "assertive.base": {
-      "Package": "assertive.base",
-      "Version": "0.0-9",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "methods",
-        "utils"
-      ],
-      "Hash": "b13489d382536049f19cd7b205fbc12a"
-    },
-    "assertive.code": {
-      "Package": "assertive.code",
-      "Version": "0.0-4",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base",
-        "assertive.properties",
-        "assertive.types",
-        "methods"
-      ],
-      "Hash": "8b090d27c9cf686ce442e3e480f9e06c"
-    },
-    "assertive.data": {
-      "Package": "assertive.data",
-      "Version": "0.0-3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base",
-        "assertive.strings"
-      ],
-      "Hash": "de2b0e46f52103fadb61d9e8468323aa"
-    },
-    "assertive.data.uk": {
-      "Package": "assertive.data.uk",
-      "Version": "0.0-2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base",
-        "assertive.strings"
-      ],
-      "Hash": "7a2c08260806e39370aa0b62fd2ab00f"
-    },
-    "assertive.data.us": {
-      "Package": "assertive.data.us",
-      "Version": "0.0-2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base",
-        "assertive.strings"
-      ],
-      "Hash": "c694a3bf0c58a6827d58de53710ef889"
-    },
-    "assertive.datetimes": {
-      "Package": "assertive.datetimes",
-      "Version": "0.0-3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base",
-        "assertive.types"
-      ],
-      "Hash": "f221ead87778e6081e2767c74d6e0f75"
-    },
-    "assertive.files": {
-      "Package": "assertive.files",
-      "Version": "0.0-2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base",
-        "assertive.numbers"
-      ],
-      "Hash": "946a8b6f9951bc8e4931eb5b892ae56e"
-    },
-    "assertive.matrices": {
-      "Package": "assertive.matrices",
-      "Version": "0.0-2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base"
-      ],
-      "Hash": "04e0d9bb4e0a89a632c2e89b6e681a95"
-    },
-    "assertive.models": {
-      "Package": "assertive.models",
-      "Version": "0.0-2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base",
-        "stats"
-      ],
-      "Hash": "0039faf687147d63758ad0126a0f917c"
-    },
-    "assertive.numbers": {
-      "Package": "assertive.numbers",
-      "Version": "0.0-2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base"
-      ],
-      "Hash": "cf44804c431986c64dfd2f577031c9f4"
-    },
-    "assertive.properties": {
-      "Package": "assertive.properties",
-      "Version": "0.0-5",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base",
-        "methods"
-      ],
-      "Hash": "78281e9da959f070ee617331ba876fde"
-    },
-    "assertive.reflection": {
-      "Package": "assertive.reflection",
-      "Version": "0.0-5",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base",
-        "utils"
-      ],
-      "Hash": "4eb9e99fa4cd2b04439f0a080d5a90c9"
-    },
-    "assertive.sets": {
-      "Package": "assertive.sets",
-      "Version": "0.0-3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base"
-      ],
-      "Hash": "7e10f191b5d6f423fb0e056096e4cc96"
-    },
-    "assertive.strings": {
-      "Package": "assertive.strings",
-      "Version": "0.0-3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base",
-        "assertive.types",
-        "stringi"
-      ],
-      "Hash": "562f6445125dad322cb8f57c26286713"
-    },
-    "assertive.types": {
-      "Package": "assertive.types",
-      "Version": "0.0-3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "assertive.base",
-        "assertive.properties",
-        "codetools",
-        "methods",
-        "stats"
-      ],
-      "Hash": "c4837a5ed530b4327914b54a2644990e"
     },
     "bit": {
       "Package": "bit",
@@ -405,13 +196,13 @@
       "Package": "clarity.looker",
       "Version": "0.0.1",
       "Source": "GitHub",
-      "Remotes": "yogat3ch/UU, COHHIO/lookr",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteRepo": "clarity.looker",
       "RemoteUsername": "COHHIO",
-      "RemoteRef": "HEAD",
+      "RemoteRepo": "clarity.looker",
+      "RemoteRef": "main",
       "RemoteSha": "710cd3e286ebf184bada6086914c343213c54aed",
+      "Remotes": "yogat3ch/UU, COHHIO/lookr",
       "Requirements": [
         "UU",
         "cli",
@@ -423,7 +214,7 @@
         "rlang",
         "stringr"
       ],
-      "Hash": "67336ab397182d39c5d95abda2a97e0b"
+      "Hash": "e3bf2230a3287db75210a59f05eee00a"
     },
     "cli": {
       "Package": "cli",
@@ -436,15 +227,15 @@
       ],
       "Hash": "b21916dd77a27642b447374a5d30ecf3"
     },
-    "codetools": {
-      "Package": "codetools",
-      "Version": "0.2-20",
+    "clipr": {
+      "Package": "clipr",
+      "Version": "0.8.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
-        "R"
+        "utils"
       ],
-      "Hash": "61e097f35917d342622f21cdc79c256e"
+      "Hash": "3f038e5ac7f41d4ac41ce658c85e3042"
     },
     "colorspace": {
       "Package": "colorspace",
@@ -535,17 +326,6 @@
         "utils"
       ],
       "Hash": "99b79fcbd6c4d1ce087f5c5c758b384f"
-    },
-    "digest": {
-      "Package": "digest",
-      "Version": "0.6.36",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "utils"
-      ],
-      "Hash": "fd6824ad91ede64151e93af67df6376b"
     },
     "dplyr": {
       "Package": "dplyr",
@@ -874,6 +654,17 @@
       ],
       "Hash": "320c8fe23fcb25a6690ef7bdb6a3a705"
     },
+    "ids": {
+      "Package": "ids",
+      "Version": "1.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "openssl",
+        "uuid"
+      ],
+      "Hash": "99df65cfef20e525ed38c3d2577f7190"
+    },
     "ini": {
       "Package": "ini",
       "Version": "0.3.1",
@@ -951,6 +742,17 @@
       ],
       "Hash": "b64ec208ac5bc1852b285f665d6368b3"
     },
+    "later": {
+      "Package": "later",
+      "Version": "1.3.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "Rcpp",
+        "rlang"
+      ],
+      "Hash": "a3e051d405326b8b0012377434c62b37"
+    },
     "lattice": {
       "Package": "lattice",
       "Version": "0.22-6",
@@ -985,9 +787,9 @@
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
+      "RemoteUsername": "COHHIO",
       "RemoteRepo": "lookr",
-      "RemoteUsername": "cohhio",
-      "RemoteRef": "HEAD",
+      "RemoteRef": "main",
       "RemoteSha": "df80e1f2b0c5e687b8358ca14c0cfbfe063dcc05",
       "Requirements": [
         "R",
@@ -996,7 +798,7 @@
         "httr",
         "jsonlite"
       ],
-      "Hash": "eb0c75500834f90416d75ff80707758c"
+      "Hash": "d70532ce6006eb1d48a201c88257d6fc"
     },
     "lubridate": {
       "Package": "lubridate",
@@ -1147,6 +949,17 @@
       ],
       "Hash": "2ec30ffbeec83da57655b850cf2d3e0e"
     },
+    "plyr": {
+      "Package": "plyr",
+      "Version": "1.8.9",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "Rcpp"
+      ],
+      "Hash": "6b8177fd19982f0020743fadbfdbd933"
+    },
     "prettyunits": {
       "Package": "prettyunits",
       "Version": "1.2.0",
@@ -1235,28 +1048,6 @@
         "R"
       ],
       "Hash": "5e3c5dc0b071b21fa128676560dbe94d"
-    },
-    "rdrop2": {
-      "Package": "rdrop2",
-      "Version": "0.8.2.1",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "rdrop2",
-      "RemoteUsername": "karthik",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "7fcad602f8975506e4da11e3e1cd2aecd17526c3",
-      "Requirements": [
-        "R",
-        "assertive",
-        "digest",
-        "dplyr",
-        "httr",
-        "jsonlite",
-        "magrittr",
-        "purrr"
-      ],
-      "Hash": "3c58539e487f6ed30972ff0d933f0402"
     },
     "readr": {
       "Package": "readr",
@@ -1355,6 +1146,18 @@
         "viridisLite"
       ],
       "Hash": "c19df082ba346b0ffa6f833e92de34d1"
+    },
+    "snakecase": {
+      "Package": "snakecase",
+      "Version": "0.11.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "stringi",
+        "stringr"
+      ],
+      "Hash": "58767e44739b76965332e8a4fe3f91f1"
     },
     "stringi": {
       "Package": "stringi",

@@ -41,7 +41,6 @@ Imports:
     lubridate,
     purrr,
     R6,
-    rdrop2,
     readr,
     rlang,
     scales,

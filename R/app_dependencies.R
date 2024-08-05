@@ -144,9 +144,7 @@ folder_clean <- function(files, dest_files, remote = FALSE) {
   destpath <- "data"
   if (UU::is_legit(to_clean)) {
     if (remote) {
-      .cleaned <- purrr::map(to_clean, rdrop2::drop_delete)
-      .cleaned <- purrr::map_chr(.cleaned, ~basename(.x$metadata$path_display))
-      .cleaned <- intersect(to_clean, .cleaned)
+
     } else {
       .cleaned <- purrr::map_lgl(to_clean, ~file.remove(file.path(destpath, .x)))
       .cleaned <- to_clean[.cleaned]
@@ -461,18 +459,7 @@ app_env <- R6::R6Class(
           })
 
         if (.remote) {
-          if (clean)
-            folder_clean(unique(basename(maybe_write$filepath)), db_files, remote = .remote)
 
-          to_upload <- dplyr::mutate(maybe_write,
-                                     filename = basename(filepath),
-                                     updated = file.info(filepath)$mtime,
-                                     db_updated = db_updated[filename],
-                                     needs_update = (updated > db_updated) %|% TRUE) |>
-            dplyr::filter(needs_update) |>
-            dplyr::distinct(nm, .keep_all = TRUE)
-
-          purrr::walk(to_upload$filepath, rdrop2::drop_upload)
         }
       }
 
