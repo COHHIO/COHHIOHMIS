@@ -28,9 +28,11 @@ Description: This provides workflows for munging and porting data dependencies
 License: AGPL-3
 Depends: R (>= 4.1.0)
 Imports: 
+    arrow,
     clarity.looker,
     cli,
     dplyr,
+    fs,
     ggplot2,
     glue,
     googlesheets4,
@@ -39,11 +41,14 @@ Imports:
     janitor,
     knitr,
     lubridate,
+    pkgload,
     purrr,
     R6,
     readr,
     rlang,
     scales,
+    shiny,
+    snakecase,
     stats,
     stringr,
     tibble,
