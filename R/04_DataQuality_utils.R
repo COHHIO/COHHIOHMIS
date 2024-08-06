@@ -2165,7 +2165,7 @@ overlaps <- function(served_in_date_range, p_types = data_types$Project$ProjectT
 #' @family Clarity Checks
 #' @family ServicePoint Checks
 #' @family DQ: Overlapping Enrollment/Move-In Dates
-#' @description A client cannot reside in an ES, TH, or Safe Haven at the same time. Nor can they have a Move-In Date into a PSH or RRH project while they are still in an ES, TH, or Safe Haven. Further, they cannot be in any two RRH's or any two PSH's simultaneously, housed or not. Please look the client(s) up in HMIS and determine which project stay's Entry/Move-In/or Exit Date is incorrect. PLEASE NOTE: It may be the 'Previous Provider's' mistake, but if you are seeing clients here, it means your project stay was entered last. If the overlap is not your project's mistake, please work with the project that has the incorrect Entry/Move-In/or Exit Date to get this corrected or send an email to \href{mailto:hmis\@cohhio.org}{hmis\@cohhio.org} if you cannot get it resolved. These clients will NOT show on their Data Quality app. If YOUR dates are definitely correct, it is fine to continue with other data corrections as needed.
+#' @description This function returns a data frame of clients that have overlapping project stays
 #' @inherit data_quality_tables params return
 #' @export
 
