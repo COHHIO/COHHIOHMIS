@@ -162,6 +162,7 @@ folder_clean <- function(files, dest_files, remote = FALSE) {
 #' @title Easily extract dependencies and pass them between functions
 #' @description Save dependencies for future functions in an environment and put app dependencies into lists
 #' @param app_deps \code{(named list)} with items for each app that contain character vectors of the objects each app depends on to be saved.
+#' @import R6
 #' @export
 
 app_env <- R6::R6Class(
@@ -296,6 +297,7 @@ app_env <- R6::R6Class(
 #' @param dest_folder \code{(character)} folder(s) to transfer deps to - must be same length as `deps` or length 1 and will be recycled if `deps` is a list. When **dropbox = TRUE** th(is/ese) folder(s) will be used to stage files for upload.
 #' @param remote \code{(logical/character)} Transfer `deps` to the root folder assigned by the API key (**HMIS Apps** at COHHIO) on Dropbox.
 #' @param clean \code{(logical)}  clean unused dependencies from folder. **Default** `FALSE` to preserve unused dependencies in `dest_folder`
+#' @import knitr
 #' @return None. This function is called for its side effects.
 
     deps_to_destination = function(deps = TRUE, dest_folder = file.path("..",c("Rminor", "RminorElevated"),"data"), remote = FALSE, clean = FALSE) {

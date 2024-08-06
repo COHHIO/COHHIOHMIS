@@ -108,7 +108,7 @@ pb_update.character <- function(pbar, message = NULL, inc = NULL, set = NULL, ..
 #' @export
 pb_update.Progress <- function(pbar, message = NULL, inc = NULL, set = NULL, ..., e = rlang::caller_env()) {
   .is_set <- UU::is_legit(set)
-  .is_inc <- UU::is_inc(inc)
+  .is_inc <- is_inc(inc)
   .dots <- rlang::dots_list(..., .named = TRUE)
   .dots <- .dots[names(.dots) %in% "detail"]
   if (.is_set && .is_inc)

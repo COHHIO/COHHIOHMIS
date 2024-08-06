@@ -37,7 +37,6 @@ Imports:
     glue,
     googlesheets4,
     HMIS,
-    httr,
     janitor,
     knitr,
     lubridate,

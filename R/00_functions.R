@@ -9,6 +9,15 @@ is_zero <- function(x) {
   UseMethod("is_zero")
 }
 
+#' Check if a value is valid for increment
+#'
+#' @param inc The value to check
+#' @return TRUE if the value is non-null and numeric, FALSE otherwise
+#' @export
+is_inc <- function(inc) {
+  !is.null(inc) && is.numeric(inc)
+}
+
 #' @export
 is_zero.data.frame <- function(x) {
   nrow(x) == 0
