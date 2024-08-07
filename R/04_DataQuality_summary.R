@@ -12,6 +12,7 @@
 #' @inheritParams data_quality_tables
 #' @param dq_past_year \code{(data.frame)} See `data_quality`
 #' @param dq_eligibility_detail \code{(data.frame)} See `data_quality`
+#' @param dq_overlaps \code{(data.frame)} See `data_quality`
 #' @param data_APs \code{(data.frame)} See `data_APs`
 #'
 #' @return A data frame of data quality summary.

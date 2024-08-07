@@ -12,6 +12,8 @@ bu_add_month_counts(x, n = 24, fn = bed_nights_per_ee, ...)
 \item{n}{\code{(numeric)} Vector of how many months previous to create summaries for with \code{fn}}
 
 \item{fn}{\code{(function)} with which to summarise months. One of \code{bed_nights_per_ee} or \code{unit_capacity}}
+
+\item{...}{Additional arguments passed to \code{fn}}
 }
 \value{
 \code{(data.frame)} with columns containing the days the client was enrolled for the month. Columns are named with a three letter month abbreviation followed by a four digit year. IE \code{Jun2020}

@@ -13,11 +13,13 @@ Enrollment_add_HousingStatus(
 )
 }
 \arguments{
+\item{Enrollment_extra_Client_Exit_HH_CL_AaE}{Custom Enrollment data frame}
+
 \item{PH}{ProjectType codes considered Permanently Housed.  See \code{HMIS::hud_translations$ProjectType(table = TRUE)} & \code{?data_types}}
 
-\item{Referrals}{\code{(data.frame)} From the Clarity Looker API Extras}
+\item{Referrals}{Referrals data frame}
 
-\item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
+\item{prioritization_colors}{Custom data frame of prioritization colors}
 }
 \value{
 Input data with HousingStatus & Situation column

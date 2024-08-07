@@ -684,8 +684,10 @@ load_referrals <- function(Referrals,
 
 
 #' Add HousingStatus indicating the client's current housing status and Situation with details on that status.
-#' @inheritParams data_quality_tables
+#' @param Enrollment_extra_Client_Exit_HH_CL_AaE Custom Enrollment data frame
 #' @param PH ProjectType codes considered Permanently Housed.  See `HMIS::hud_translations$ProjectType(table = TRUE)` & `?data_types`
+#' @param Referrals Referrals data frame
+#' @param prioritization_colors Custom data frame of prioritization colors
 #' @return Input data with HousingStatus & Situation column
 #' @export
 

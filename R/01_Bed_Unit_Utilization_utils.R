@@ -70,6 +70,7 @@ nth_Month <- function(n) {
 #' @param x \code{(data.frame)} with necessary functions for `fn` to work.
 #' @param n \code{(numeric)} Vector of how many months previous to create summaries for with `fn`
 #' @param fn \code{(function)} with which to summarise months. One of `bed_nights_per_ee` or `unit_capacity`
+#' @param ... Additional arguments passed to `fn`
 #'
 #' @return \code{(data.frame)} with columns containing the days the client was enrolled for the month. Columns are named with a three letter month abbreviation followed by a four digit year. IE `Jun2020`
 #' @export

@@ -28,6 +28,8 @@ data_quality_summary(
 
 \item{dq_eligibility_detail}{\code{(data.frame)} See \code{data_quality}}
 
+\item{dq_overlaps}{\code{(data.frame)} See \code{data_quality}}
+
 \item{data_APs}{\code{(data.frame)} See \code{data_APs}}
 
 \item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
