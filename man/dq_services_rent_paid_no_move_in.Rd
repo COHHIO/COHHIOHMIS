@@ -14,6 +14,8 @@ dq_services_rent_paid_no_move_in(
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
 
+\item{Services_enroll_extras}{Custom data frame with Services and Enrollments}
+
 \item{vars}{\code{(named list)}
 \itemize{
 \item{\code{prep}}{ Column names for Prep}

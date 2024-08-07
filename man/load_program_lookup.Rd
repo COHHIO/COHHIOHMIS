@@ -6,6 +6,9 @@
 \usage{
 load_program_lookup(program_lookup)
 }
+\arguments{
+\item{program_lookup}{Custom program data frame}
+}
 \value{
 \code{(tbl)}
 }

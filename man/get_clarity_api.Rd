@@ -14,6 +14,8 @@ get_clarity_api(
 \item{nm}{The name of the instantiated object}
 
 \item{e}{The environment in which to search}
+
+\item{ifnotfound}{Warning message if env not found}
 }
 \value{
 \code{clarity_api} R6 object

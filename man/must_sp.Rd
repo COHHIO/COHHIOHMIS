@@ -6,13 +6,12 @@
 \usage{
 must_sp(.call = match.call()[[1]])
 }
+\arguments{
+\item{.call}{The function call to display in the error message. Defaults to the current function call.}
+}
 \value{
 \code{(logical)}
 }
 \description{
-Set an option in \code{.Rprofile} using \code{usethis::edit_r_profile('project')} called HMIS which is a list containing two logical values:
-\itemize{
-\item{\code{Clarity}}{ A logical to indicate whether Clarity is (or has been) used by this CoC}
-\item{\code{ServicePoint}}{ A logical to indicate whether Servicepoint is (or has been) used by this CoC}
-}
+Checks if the instance is using ServicePoint. If not, throws an error.
 }

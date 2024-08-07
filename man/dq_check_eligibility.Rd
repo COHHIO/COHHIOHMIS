@@ -26,8 +26,6 @@ dq_check_eligibility(
 \item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
 
 \item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
-
-\item{detail}{\code{(logical)} Whether to return eligibility detail}
 }
 \value{
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)

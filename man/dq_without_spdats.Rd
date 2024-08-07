@@ -19,6 +19,8 @@ dq_without_spdats(
 
 \item{Funder}{\code{(data.frame)} From the HUD CSV Export}
 
+\item{Scores}{HUD Export data frame}
+
 \item{rm_dates}{\code{(named list)} with all dates specified or calculated in \code{dates}}
 
 \item{vars}{\code{(named list)}
@@ -28,6 +30,8 @@ dq_without_spdats(
 }}
 
 \item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
+
+\item{unsh}{Flag for counting unsheltered clients without SPDATs}
 }
 \value{
 \code{(data.frame)} \code{vars$we_want} and \code{Issue} (Issue Name), \code{Type} (Error or Warning), and \code{Guidance} (How to correct the issue)

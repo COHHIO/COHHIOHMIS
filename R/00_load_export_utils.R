@@ -423,7 +423,7 @@ provider_extras_helpers <- list(
 
 #' @title Fetch Program Lookup table
 #'
-#' @inheritParams data_quality_tables
+#' @param program_lookup Custom program data frame
 #'
 #' @return \code{(tbl)}
 #' @export
@@ -482,6 +482,7 @@ load_client <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
 #'
 #' @inheritParams data_quality_tables
 #' @param Regions From public data. See `load_public`
+#' @param ProjectCoC From HUD CSV export
 #' @inherit load_export return
 #' @export
 
@@ -583,6 +584,7 @@ load_enrollment <- function(Enrollment,
 #' @title Load Services as Services_enroll_extras
 #'
 #' @inherit data_quality_tables params return
+#' @param Enrollment_extra_Client_Exit_HH_CL_AaE Custom Enrollment data frame
 #'
 #' @export
 load_services <- function(Services,
@@ -688,6 +690,7 @@ load_referrals <- function(Referrals,
 #' @param PH ProjectType codes considered Permanently Housed.  See `HMIS::hud_translations$ProjectType(table = TRUE)` & `?data_types`
 #' @param Referrals Referrals data frame
 #' @param prioritization_colors Custom data frame of prioritization colors
+#' @param app_env app environment
 #' @return Input data with HousingStatus & Situation column
 #' @export
 

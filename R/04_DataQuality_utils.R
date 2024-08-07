@@ -183,6 +183,7 @@ served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Client_
 #'
 #' @param served_in_date_range \code{(data.frame)} See `served_in_date_range`
 #' @param type \code{(numeric)} ProjectType. For full project type names see `HMIS::hud_translations$[["2.02.6 ProjectType"]](table = TRUE)`
+#' @param has_movein Flag for whether of not client has a move in date
 #'
 #' @return \code{(data.frame)} with `PersonalID` for all Enrollees in the ProjectType, their `MoveInDateAdjust`, the `TimeInterval` for which they were in the Project, and the `ProjectName`
 #' @export
@@ -1265,7 +1266,6 @@ dq_missing_county_prior <- function(served_in_date_range, mahoning_projects, var
 #' @family Clarity Checks
 #' @family DQ: Check Eligibility
 #' @inherit data_quality_tables params return
-#' @param detail \code{(logical)} Whether to return eligibility detail
 #'
 #' @export
 dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, rm_dates, app_env = get_app_env(e = rlang::caller_env())) {
@@ -1342,6 +1342,7 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
 #' @title Rent Payment Made, No Move-In Date
 #' @description This client does not have a valid Move-In Date, but there is at least one rent/deposit payment Service Transaction recorded for this program.  Until a Move-In Date is entered, this client will continue to be counted as literally homeless while in your program. Move-in dates must be on or after the Entry Date. If a client is housed then returns to homelessness while in your program, they need to be exited from their original Entry and re-entered in a new one that has no Move-In Date until they are re-housed.
 #' @inherit data_quality_tables params return
+#' @param Services_enroll_extras Custom data frame with Services and Enrollments
 #' @family Clarity Checks
 #' @family DQ: Check Eligibility
 #' @export
@@ -1659,7 +1660,7 @@ dq_missing_path_contact <- function(served_in_date_range, Contacts, rm_dates, va
 #' @family DQ: Path Checks
 #' @description Every adult or head of household should have a Living Situation contact record where the Contact Date matches the Entry Date. This would represent the initial contact made with the client.
 #' @inherit data_quality_tables params return
-#' @param |> \code{(data.frame)} From the HUD CSV Export
+#' @param Contacts \code{(data.frame)} From the HUD CSV Export
 #' @details client is adult/hoh, has a contact record, and the first record in the EE does not equal the Entry Date ->  error
 #' @export
 
@@ -1779,6 +1780,8 @@ dq_future_exits <- function(served_in_date_range, vars, app_env = get_app_env(e 
 #'   \item{SPDAT Created on a Non-Head-of-Household}{ It is very important to be sure that the VI-SPDAT score goes on the Head of Household of a given program stay because otherwise that score may not pull into any reporting. It is possible a Non Head of Household was a Head of Household in a past program stay, and in that situation, this should not be corrected unless the Head of Household of your program stay is missing their score. To correct this, you would need to completely re-enter the score on the correct client's record.}
 #' }
 #' @inherit data_quality_tables params return
+#' @param Scores HUD Export data frame
+#' @param unsh Flag for counting unsheltered clients without SPDATs
 #' @export
 
 dq_without_spdats <- function(served_in_date_range, Funder, Scores, rm_dates, vars, app_env = get_app_env(e = rlang::caller_env()), unsh = FALSE) {
@@ -2054,6 +2057,7 @@ dq_missing_income <- function(served_in_date_range, IncomeBenefits, vars, guidan
 #' @title Find Overlapping Project Stays on the Same Day
 #' @family Clarity Checks
 #' @family DQ: Overlapping Enrollment/Move-In Dates
+#' @param unsh Flag to check unsheltered clients
 #' @inherit dq_overlaps params return description
 #' @export
 overlaps_same_day <- function(served_in_date_range, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
@@ -2131,6 +2135,7 @@ sum_enroll_overlap <- function(PersonalID, EnrollmentID, Stay) {
 #' @family Unsheltered Checks
 #' @family ServicePoint Checks
 #' @family DQ: Overlapping Enrollment/Move-In Dates
+#' @param unsh Flag for if clients are unsheltered or not
 #' @inherit dq_overlaps params return description
 #' @export
 overlaps <- function(served_in_date_range, p_types = data_types$Project$ProjectType$ph, vars, guidance, unsh = FALSE, app_env = get_app_env(e = rlang::caller_env())) {
@@ -2602,6 +2607,7 @@ dq_check_disability_ssi <- function(served_in_date_range, IncomeBenefits, vars, 
 #' @description `r guidance$services_on_non_hoh`
 #' @family DQ: Household Checks
 #' @inherit data_quality_tables params return
+#' @param Services_enroll_extras Custom Services and Enrollment data frame
 #' @export
 
 dq_services_on_non_hoh <- function(served_in_date_range, Services_enroll_extras, vars, rm_dates, guidance, app_env = get_app_env(e = rlang::caller_env())) {
@@ -2630,6 +2636,7 @@ dq_services_on_non_hoh <- function(served_in_date_range, Services_enroll_extras,
 #' @description `r guidance$services_on_non_hoh`
 #' @family DQ: Household Checks
 #' @inherit data_quality_tables params return
+#' @param Services_enroll_extras Customs Services and Enrollment data frame
 #' @export
 
 dq_services_on_hh_members_ssvf <- function(served_in_date_range, Services_enroll_extras, vars, guidance, app_env = get_app_env(e = rlang::caller_env())) {

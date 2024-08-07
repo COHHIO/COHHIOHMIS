@@ -15,6 +15,8 @@ enrolled_in(
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
 
 \item{type}{\code{(numeric)} ProjectType. For full project type names see \verb{HMIS::hud_translations$[["2.02.6 ProjectType"]](table = TRUE)}}
+
+\item{has_movein}{Flag for whether of not client has a move in date}
 }
 \value{
 \code{(data.frame)} with \code{PersonalID} for all Enrollees in the ProjectType, their \code{MoveInDateAdjust}, the \code{TimeInterval} for which they were in the Project, and the \code{ProjectName}

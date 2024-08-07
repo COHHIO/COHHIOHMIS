@@ -47,13 +47,13 @@ NULL
 #' @inheritParams base::getOption
 #'
 
-hmis_option <- function(x, default = FALSE) {
+hmis_option <- function(opt, default = FALSE) {
 
-  .w <- glue::glue("HMIS option `{x}`")
+  .w <- glue::glue("HMIS option `{opt}`")
   .msg <- " not setup, please see ?setup_RmData to fix this."
 
   opts <- getOption("HMIS")
-  out <- opts[[x]]
+  out <- opts[[opt]]
   if (!UU::is_legit(out)) {
     warning(glue::glue("{.w}{.msg}"))
     out <- default
@@ -92,6 +92,8 @@ clarity_url <- function() {
 }
 
 #' @title This instance must be using ServicePoint, otherwise throw an error.
+#' @description Checks if the instance is using ServicePoint. If not, throws an error.
+#' @param .call The function call to display in the error message. Defaults to the current function call.
 #' @inherit is_clarity description return
 
 must_sp <- function(.call = match.call()[[1]]) {

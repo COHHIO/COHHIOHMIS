@@ -46,6 +46,7 @@ by_class <- function(class, e) {
 #' @family Get R6 Classes
 #' @param nm The name of the instantiated object
 #' @param e The environment in which to search
+#' @param ifnotfound Warning message if env not found
 #' @details Searches the `RmData` package environment and then the environment specified
 #' @return `clarity_api` R6 object
 #' @export
@@ -57,6 +58,7 @@ get_clarity_api <- function(nm = "cl_api", e = rlang::caller_env(), ifnotfound =
 #' @family Get R6 Classes
 #' @param nm The name of the instantiated object
 #' @param e The environment in which to search
+#' @param ifnotfound Warning message if env not found
 #' @details Searches the `RmData` package environment and then the environment specified
 #' @return `app_env` R6 object
 #' @export

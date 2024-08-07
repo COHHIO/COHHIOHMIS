@@ -15,6 +15,8 @@ dq_services_on_hh_members_ssvf(
 \arguments{
 \item{served_in_date_range}{\code{(data.frame)} See \code{served_in_date_range}}
 
+\item{Services_enroll_extras}{Customs Services and Enrollment data frame}
+
 \item{vars}{\code{(named list)}
 \itemize{
 \item{\code{prep}}{ Column names for Prep}

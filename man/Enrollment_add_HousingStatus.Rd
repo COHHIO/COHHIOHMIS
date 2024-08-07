@@ -20,6 +20,8 @@ Enrollment_add_HousingStatus(
 \item{Referrals}{Referrals data frame}
 
 \item{prioritization_colors}{Custom data frame of prioritization colors}
+
+\item{app_env}{app environment}
 }
 \value{
 Input data with HousingStatus & Situation column

@@ -16,6 +16,8 @@ load_services(
 
 \item{Services_extras}{\code{(data.frame)} From the Clarity Looker API Extras}
 
+\item{Enrollment_extra_Client_Exit_HH_CL_AaE}{Custom Enrollment data frame}
+
 \item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \value{

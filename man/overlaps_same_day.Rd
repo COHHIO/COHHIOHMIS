@@ -23,6 +23,8 @@ overlaps_same_day(
 
 \item{guidance}{\code{(list)} See \code{guidance}}
 
+\item{unsh}{Flag to check unsheltered clients}
+
 \item{app_env}{\code{(app_env)} R6 Object containing dependencies. If all arguments to this function are saved in the \code{app_env}, then they will be called from there and arguments do not need to be specified.}
 }
 \value{
