@@ -25,7 +25,7 @@ chrt_hoh_count <- function(served) {
 #' @inheritParams data_quality_tables
 #' @param vars \code{(character)} vector of column names to retrain
 #' @inheritParams HMIS::between_df
-#' @param app_env
+#' @param app_env \code{(environment)} The application environment, defaults to the result of `get_app_env(e = rlang::caller_env())`.
 #'
 #' @return \code{(data.frame)} Output with filter and select applied.
 #' @export

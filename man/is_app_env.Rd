@@ -7,11 +7,11 @@
 is_app_env(x)
 }
 \arguments{
-\item{x}{}
+\item{x}{\code{(any)} The object to check.}
 }
 \value{
-\code{(logical)}
+\code{(logical)} Returns \code{TRUE} if \code{x} is of class \code{"app_env"}, otherwise \code{FALSE}.
 }
 \description{
-Is object of class \code{app_env}
+Check if the provided object is of class \code{app_env}.
 }

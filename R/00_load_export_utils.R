@@ -55,7 +55,7 @@ Client_redact <- function(Client) {
 #'
 #' @param Client \code{(data.frame)} A data frame containing client information
 #' @param Client_UniqueIDs \code{(data.frame)} A custom look linking PersonalID & UniqueID
-#' @param app_env
+#' @param app_env \code{(environment)} The application environment, defaults to the result of `get_app_env(e = rlang::caller_env())`.
 #'
 #' @return \code{(data.frame)} with UniqueID column
 #' @export

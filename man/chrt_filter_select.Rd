@@ -45,7 +45,7 @@ Characters in format mdY, Ymd, dmY acceptable. Will be automatically
 retrieved from parent environments if not specified. If end is named other
 than ReportEnd, it must be specified.}
 
-\item{app_env}{}
+\item{app_env}{\code{(environment)} The application environment, defaults to the result of \code{get_app_env(e = rlang::caller_env())}.}
 }
 \value{
 \code{(data.frame)} Output with filter and select applied.

@@ -15,7 +15,7 @@ Client_add_UniqueID(
 
 \item{Client_UniqueIDs}{\code{(data.frame)} A custom look linking PersonalID & UniqueID}
 
-\item{app_env}{}
+\item{app_env}{\code{(environment)} The application environment, defaults to the result of \code{get_app_env(e = rlang::caller_env())}.}
 }
 \value{
 \code{(data.frame)} with UniqueID column

@@ -74,9 +74,11 @@ get_app_env <- function(nm = "rm_env", e = rlang::caller_env(), ifnotfound = sto
 
 #' @title Is object of class `app_env`
 #'
-#' @param x
+#' @description Check if the provided object is of class `app_env`.
 #'
-#' @return \code{(logical)}
+#' @param x \code{(any)} The object to check.
+#'
+#' @return \code{(logical)} Returns \code{TRUE} if \code{x} is of class \code{"app_env"}, otherwise \code{FALSE}.
 #' @export
 
 is_app_env <- function(x) {
@@ -85,9 +87,11 @@ is_app_env <- function(x) {
 
 #' @title Is object of class `clarity_api`
 #'
-#' @param x
+#' @description Check if the provided object is of class `clarity_api`.
 #'
-#' @return \code{(logical)}
+#' @param x \code{(any)} The object to check.
+#'
+#' @return \code{(logical)} Returns \code{TRUE} if \code{x} is of class \code{"clarity_api"}, otherwise \code{FALSE}.
 #' @export
 
 is_clarity_api <- function(x) {
