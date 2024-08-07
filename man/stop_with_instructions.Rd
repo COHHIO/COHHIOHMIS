@@ -2,13 +2,15 @@
 % Please edit documentation in R/00_functions.R
 \name{stop_with_instructions}
 \alias{stop_with_instructions}
-\title{Stop daily update with an informative error}
+\title{Stop Daily Update with an Informative Error}
 \usage{
 stop_with_instructions(..., error = FALSE)
 }
 \arguments{
-\item{...}{Error Messages to print to the console}
+\item{...}{Additional messages to include in the error or warning. These messages will be concatenated and presented to the user.}
+
+\item{error}{\code{(logical)} If \code{TRUE}, stops execution and throws an error. If \code{FALSE}, issues a warning instead. Default is \code{FALSE}.}
 }
 \description{
-Throws an error in 00_daily_update.R with additional details
+Throws an error with additional details, or issues a warning if \code{error} is set to \code{FALSE}. The error message instructs the user to contact support for help.
 }

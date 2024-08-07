@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_DataQuality_utils.R
 \name{served_in_date_range}
 \alias{served_in_date_range}
-\title{Create the data.frame of Clients to Check \code{served_in_date_range}}
+\title{Create the data frame of Clients to Check \code{served_in_date_range}}
 \usage{
 served_in_date_range(
   projects_current_hmis,
@@ -17,25 +17,27 @@ served_in_date_range(
 )
 }
 \arguments{
-\item{projects_current_hmis}{\code{(data.frame)} of Providers to check. See \code{projects_current_hmis}}
+\item{projects_current_hmis}{\code{(data.frame)} A data frame of providers to check. See \code{projects_current_hmis}.}
 
-\item{Enrollment_extra_Client_Exit_HH_CL_AaE}{\code{(data.frame)} Enrollment with all additions from \code{load_export}}
+\item{Enrollment_extra_Client_Exit_HH_CL_AaE}{\code{(data.frame)} Enrollment data with all additions from \code{load_export}.}
 
-\item{Client}{\code{(data.frame)} Client with all additions from \code{load_export}}
+\item{Client}{\code{(data.frame)} Client data with all additions from \code{load_export}.}
 
-\item{Project}{\code{(data.frame)} Project with extras including Regions and GrantType see \code{Pe_add_regions} & \code{Pe_add_GrantType}.}
+\item{Project}{\code{(data.frame)} Project data with extras including Regions and GrantType, see \code{pe_add_regions} & \code{pe_add_GrantType}.}
 
-\item{Inventory}{\code{(data.frame)} Inventory}
+\item{Inventory}{\code{(data.frame)} Inventory data.}
 
-\item{app_env}{\code{(data.frame)} Instead of providing all arguments with NULL defaults,\code{app_env} with all arguments saved internally can be provided.}
+\item{HealthAndDV}{\code{(data.frame)} Health and Domestic Violence data.}
 
-\item{calc}{\code{(list)} of dates from \code{dates}}
+\item{vars}{\code{(list)} A list of variables to include.}
 
-\item{meta_HUDCSV}{\code{(list)} of dates from \code{dates}}
+\item{rm_dates}{\code{(list)} A list containing date ranges with elements \code{calc$data_goes_back_to} and \code{meta_HUDCSV$Export_End}.}
+
+\item{app_env}{\code{(environment)} Instead of providing all arguments with NULL defaults, \code{app_env} with all arguments saved internally can be provided.}
 }
 \value{
-\code{(data.frame)}
+\code{(data.frame)} A data frame of clients served in the specified date range.
 }
 \description{
-Create the data.frame of Clients to Check \code{served_in_date_range}
+Create a data frame of clients served in the specified date range, including various demographic and enrollment details.
 }

@@ -10,12 +10,16 @@ if (file.exists("RmData.Rproj") && interactive()) {
 }
 
 
-#' @title Setup RmData options
+#' @title Setup RmData Options
 #'
-#' @param Clarity \code{(logical)} Does the CoC use Clarity HMIS? **Default** \code{TRUE}
-#' @param ServicePoint \code{(logical)} Does the CoC use ServicePoint HMIS? **Default** \code{FALSE}
+#' @description Configure and/or create the `.Rprofile` file to set options for the RmData package.
 #'
-#' @return Function creates .Rprofile or will modify it in place.
+#' @param Clarity \code{(logical)} Indicates whether the CoC uses Clarity HMIS. **Default** is \code{TRUE}.
+#' @param ServicePoint \code{(logical)} Indicates whether the CoC uses ServicePoint HMIS. **Default** is \code{FALSE}.
+#' @param Clarity_URL \code{(character)} The URL for the Clarity HMIS. **Default** is \code{"https://cohhio.clarityhs.com"}.
+#' @param clients_to_filter \code{(list or NULL)} A list of clients to filter. If \code{NULL}, no filtering is applied.
+#'
+#' @return This function creates or modifies the `.Rprofile` file in the project directory to include HMIS options.
 #' @export
 #'
 #' @examples

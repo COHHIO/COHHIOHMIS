@@ -2,7 +2,7 @@
 % Please edit documentation in R/daily_update_utils.R
 \name{pb_start}
 \alias{pb_start}
-\title{Start a \link[cli]{cli_progress_bar} or \link[shiny]{Progress} based progress bar}
+\title{Start a Progress Bar}
 \usage{
 pb_start(
   name = "Daily Update",
@@ -15,24 +15,23 @@ pb_start(
 )
 }
 \arguments{
-\item{name}{This is typically used as a label, and should be short,
-at most 20 characters.}
+\item{name}{\code{(character)} Name of the progress bar.}
 
-\item{status}{New status string of the progress bar, if not \code{NULL}.}
+\item{status}{\code{(character)} Status message for the progress bar.}
 
-\item{type}{Type of the progress bar. It is used to select a default
-display if \code{format} is not specified. Currently supported types:
-\itemize{
-\item \code{iterator}: e.g. a for loop or a mapping function,
-\item \code{tasks}: a (typically small) number of tasks,
-\item \code{download}: download of one file,
-\item \code{custom}: custom type, \code{format} must not be \code{NULL} for this type.
-}}
+\item{type}{\code{(character)} Type of the progress bar. One of "iterator", "tasks", "download", or "custom".}
 
-\item{total}{\code{(numeric)} \code{max} for \link[shiny]{Progress} & \code{total} for \link[cli]{cli_progress_bar}}
+\item{total}{\code{(numeric)} \code{max} for \link[shiny]{Progress} & \code{total} for \link[cli]{cli_progress_bar}.}
 
-\item{is_shiny}{\code{(logical)} Whether running in a shiny environment}
+\item{is_shiny}{\code{(logical)} Whether running in a shiny environment.}
+
+\item{e}{The environment in which to start the progress bar.}
+
+\item{...}{Additional arguments passed to either \link[shiny]{Progress$new} or \link[cli]{cli_progress_bar}.}
+}
+\value{
+An object of class \code{Progress} if \code{is_shiny} is \code{TRUE}, otherwise a \code{cli_progress_bar} object.
 }
 \description{
-Start a \link[cli]{cli_progress_bar} or \link[shiny]{Progress} based progress bar
+Start a \link[cli]{cli_progress_bar} or \link[shiny]{Progress}-based progress bar.
 }

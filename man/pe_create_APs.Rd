@@ -12,13 +12,17 @@ pe_create_APs(
 )
 }
 \arguments{
-\item{provider_extras}{\code{(data.frame)} provider_extras with Regions, see \code{pe_add_regions}}
+\item{provider_extras}{\code{(data.frame)} provider_extras with Regions, see \code{pe_add_regions}.}
 
-\item{dirs}{}
+\item{ProjectCoC}{\code{(data.frame)} Data frame containing information about the Project Continuum of Care (CoC).}
+
+\item{dirs}{\code{(list)} List of directories used in the function.}
+
+\item{app_env}{\code{(environment)} The application environment, defaults to the result of \code{get_app_env(e = rlang::caller_env())}.}
 }
 \value{
-\code{(data.frame)}
+\code{(data.frame)} A data frame of Coordinated Entry Access Points with Counties & Populations Served.
 }
 \description{
-Create data.frame of Coordinated Entry Access Points with info about the Counties & Populations Served
+Create a data frame of Coordinated Entry Access Points with information about the Counties & Populations Served.
 }

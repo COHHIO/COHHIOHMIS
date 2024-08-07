@@ -2,10 +2,15 @@
 % Please edit documentation in R/daily_update_utils.R
 \name{pb_close.Progress}
 \alias{pb_close.Progress}
-\title{S3 Progress Method pb_close}
+\title{Close a Progress Object}
 \usage{
 \method{pb_close}{Progress}(pbar, e)
 }
+\arguments{
+\item{pbar}{The progress bar object to close.}
+
+\item{e}{The environment in which to close the progress bar.}
+}
 \description{
-S3 Progress Method pb_close
+Closes a progress bar for a \code{Progress} object.
 }

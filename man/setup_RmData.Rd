@@ -2,7 +2,7 @@
 % Please edit documentation in R/init_R6.R
 \name{setup_RmData}
 \alias{setup_RmData}
-\title{Setup RmData options}
+\title{Setup RmData Options}
 \usage{
 setup_RmData(
   Clarity = TRUE,
@@ -12,15 +12,19 @@ setup_RmData(
 )
 }
 \arguments{
-\item{Clarity}{\code{(logical)} Does the CoC use Clarity HMIS? \strong{Default} \code{TRUE}}
+\item{Clarity}{\code{(logical)} Indicates whether the CoC uses Clarity HMIS. \strong{Default} is \code{TRUE}.}
 
-\item{ServicePoint}{\code{(logical)} Does the CoC use ServicePoint HMIS? \strong{Default} \code{FALSE}}
+\item{ServicePoint}{\code{(logical)} Indicates whether the CoC uses ServicePoint HMIS. \strong{Default} is \code{FALSE}.}
+
+\item{Clarity_URL}{\code{(character)} The URL for the Clarity HMIS. \strong{Default} is \code{"https://cohhio.clarityhs.com"}.}
+
+\item{clients_to_filter}{\code{(list or NULL)} A list of clients to filter. If \code{NULL}, no filtering is applied.}
 }
 \value{
-Function creates .Rprofile or will modify it in place.
+This function creates or modifies the \code{.Rprofile} file in the project directory to include HMIS options.
 }
 \description{
-Setup RmData options
+Configure and/or create the \code{.Rprofile} file to set options for the RmData package.
 }
 \examples{
 \dontrun{

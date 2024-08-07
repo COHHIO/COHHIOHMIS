@@ -262,10 +262,14 @@ Project_rm_zz <- function(Project) {
 
 #' @title Add the Corresponding Region for each Project by way of Geocode matching
 #'
-#' @param provider_extras \code{(data.frame)} An extra from the from the Program Descriptor model. See `?clarity_api` for retrieving a Look with this info.
-#' @inheritParams data_quality_tables
+#' @description This function adds a `Regions` column to the `provider_extras` data frame by matching geocodes.
+#' It uses data from the `hud_load` function from the `clarity.looker` package to retrieve region information.
 #'
-#' @return \code{(data.frame)} provider_extras with Regions column
+#' @param provider_extras \code{(data.frame)} An extra from the Program Descriptor model. See `?clarity_api` for retrieving a Look with this info.
+#' @param Regions \code{(data.frame)} Data frame containing region information. Defaults to loading from `clarity.looker::hud_load("Regions", dirs$public)`.
+#' @param dirs \code{(list)} List of directories used in the function, including `dirs$public`.
+#'
+#' @return \code{(data.frame)} `provider_extras` with an additional `Regions` column.
 #' @export
 
 pe_add_regions <- function(provider_extras, Regions = clarity.looker::hud_load("Regions", dirs$public), dirs) {
@@ -303,11 +307,14 @@ pe_add_regions <- function(provider_extras, Regions = clarity.looker::hud_load("
 }
 
 #' @title Add Access Points to Provider_extras
-#' @description Create data.frame of Coordinated Entry Access Points with info about the Counties & Populations Served
-#' @param provider_extras \code{(data.frame)} provider_extras with Regions, see `pe_add_regions`
-#' @param dirs
+#' @description Create a data frame of Coordinated Entry Access Points with information about the Counties & Populations Served.
 #'
-#' @return \code{(data.frame)}
+#' @param provider_extras \code{(data.frame)} provider_extras with Regions, see `pe_add_regions`.
+#' @param ProjectCoC \code{(data.frame)} Data frame containing information about the Project Continuum of Care (CoC).
+#' @param dirs \code{(list)} List of directories used in the function.
+#' @param app_env \code{(environment)} The application environment, defaults to the result of `get_app_env(e = rlang::caller_env())`.
+#'
+#' @return \code{(data.frame)} A data frame of Coordinated Entry Access Points with Counties & Populations Served.
 #' @export
 
 pe_create_APs = function(provider_extras, ProjectCoC, dirs, app_env = get_app_env(e = rlang::caller_env())) {

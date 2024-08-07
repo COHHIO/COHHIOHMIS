@@ -40,11 +40,13 @@ glue_skip_NA <- function(..., str_expr, na = "omit") {
 }
 
 
-# stop_with_instructions ----
-# Wed Mar 24 16:38:01 2021
-#' @title Stop daily update with an informative error
-#' @description Throws an error in 00_daily_update.R with additional details
-#' @param ... Error Messages to print to the console
+#' @title Stop Daily Update with an Informative Error
+#'
+#' @description Throws an error with additional details, or issues a warning if `error` is set to `FALSE`. The error message instructs the user to contact support for help.
+#'
+#' @param ... Additional messages to include in the error or warning. These messages will be concatenated and presented to the user.
+#' @param error \code{(logical)} If \code{TRUE}, stops execution and throws an error. If \code{FALSE}, issues a warning instead. Default is \code{FALSE}.
+#'
 #' @export
 stop_with_instructions <- function(..., error = FALSE) {
   .msgs <- paste0(..., collapse = "\n")

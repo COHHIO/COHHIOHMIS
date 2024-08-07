@@ -1,11 +1,15 @@
 
 
-#' @title Start a \link[cli]{cli_progress_bar} or \link[shiny]{Progress} based progress bar
-#'
-#' @inheritParams cli::cli_progress_bar
-#' @param total \code{(numeric)} `max` for \link[shiny]{Progress} & `total` for \link[cli]{cli_progress_bar}
-#' @param is_shiny \code{(logical)} Whether running in a shiny environment
-#'
+#' @title Start a Progress Bar
+#' @description Start a \link[cli]{cli_progress_bar} or \link[shiny]{Progress}-based progress bar.
+#' @param total \code{(numeric)} `max` for \link[shiny]{Progress} & `total` for \link[cli]{cli_progress_bar}.
+#' @param is_shiny \code{(logical)} Whether running in a shiny environment.
+#' @param name \code{(character)} Name of the progress bar.
+#' @param status \code{(character)} Status message for the progress bar.
+#' @param type \code{(character)} Type of the progress bar. One of "iterator", "tasks", "download", or "custom".
+#' @param e The environment in which to start the progress bar.
+#' @param ... Additional arguments passed to either \link[shiny]{Progress$new} or \link[cli]{cli_progress_bar}.
+#' @return An object of class `Progress` if `is_shiny` is `TRUE`, otherwise a `cli_progress_bar` object.
 #' @export
 
 pb_start <-
@@ -47,12 +51,19 @@ pb_close <- function(pbar, e = rlang::caller_env()) {
   UseMethod("pb_close")
 }
 
-#' @title S3 character Method pb_close
+#' @title Close a Character Progress Bar
+#' @description Closes a progress bar for character input.
+#' @param pbar The progress bar object to close.
+#' @param e The environment in which to close the progress bar.
 #' @export
 pb_close.character <- function(pbar, e) {
   cli::cli_progress_done(pbar, .envir = e)
 }
-#' @title S3 Progress Method pb_close
+
+#' @title Close a Progress Object
+#' @description Closes a progress bar for a `Progress` object.
+#' @param pbar The progress bar object to close.
+#' @param e The environment in which to close the progress bar.
 #' @export
 pb_close.Progress <- function(pbar, e) {
   pbar$close()
@@ -73,6 +84,14 @@ pb_update <- function(pbar, message = NULL, inc = NULL, set = NULL, ..., e = rla
 }
 
 #' @title S3 character Method pb_update
+#' @description Update a \link[cli]{cli_progress_bar} object with a new message, increment, or set value when the progress bar is referenced by its ID.
+#' @param pbar \code{(character)} ID of the progress bar to be updated.
+#' @param message \code{(character)} New message to display with the progress bar.
+#' @param inc \code{(numeric)} Amount to increment the progress bar by.
+#' @param set \code{(numeric)} Value to set the progress bar to.
+#' @param ... Additional arguments passed to the progress bar's update method.
+#' @param e The environment from which to evaluate the function.
+#' @return None. This function is called for its side effects.
 #' @export
 pb_update.character <- function(pbar, message = NULL, inc = NULL, set = NULL, ..., e = rlang::caller_env()) {
   inc_set <- purrr::map_lgl(list(inc = inc, set = set), ~!is.null(.x))
@@ -105,6 +124,14 @@ pb_update.character <- function(pbar, message = NULL, inc = NULL, set = NULL, ..
 }
 
 #' @title S3 Progress Method pb_update
+#' @description Update a \link[shiny]{Progress} object with a new message, increment, or set value.
+#' @param pbar \code{Progress} object to be updated.
+#' @param message \code{(character)} New message to display with the progress bar.
+#' @param inc \code{(numeric)} Amount to increment the progress bar by.
+#' @param set \code{(numeric)} Value to set the progress bar to.
+#' @param ... Additional arguments passed to the progress bar's update method. Typically used for passing "detail".
+#' @param e The environment from which to evaluate the function.
+#' @return None. This function is called for its side effects.
 #' @export
 pb_update.Progress <- function(pbar, message = NULL, inc = NULL, set = NULL, ..., e = rlang::caller_env()) {
   .is_set <- UU::is_legit(set)

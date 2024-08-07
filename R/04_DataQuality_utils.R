@@ -74,18 +74,22 @@ make_vars <- function() {
   vars
 }
 
-#' @title Create the data.frame of Clients to Check `served_in_date_range`
+#' @title Create the data frame of Clients to Check `served_in_date_range`
 #'
-#' @param projects_current_hmis \code{(data.frame)} of Providers to check. See `projects_current_hmis`
-#' @param Enrollment_extra_Client_Exit_HH_CL_AaE \code{(data.frame)} Enrollment with all additions from `load_export`
-#' @param Client \code{(data.frame)} Client with all additions from `load_export`
-#' @param Project \code{(data.frame)} Project with extras including Regions and GrantType see `Pe_add_regions` & `Pe_add_GrantType`.
-#' @param Inventory \code{(data.frame)} Inventory
-#' @param calc \code{(list)} of dates from `dates`
-#' @param meta_HUDCSV \code{(list)} of dates from `dates`
-#' @param app_env \code{(data.frame)} Instead of providing all arguments with NULL defaults,`app_env` with all arguments saved internally can be provided.
+#' @description Create a data frame of clients served in the specified date range, including various demographic and enrollment details.
 #'
-#' @return \code{(data.frame)}
+#' @param projects_current_hmis \code{(data.frame)} A data frame of providers to check. See `projects_current_hmis`.
+#' @param Enrollment_extra_Client_Exit_HH_CL_AaE \code{(data.frame)} Enrollment data with all additions from `load_export`.
+#' @param Client \code{(data.frame)} Client data with all additions from `load_export`.
+#' @param Project \code{(data.frame)} Project data with extras including Regions and GrantType, see `pe_add_regions` & `pe_add_GrantType`.
+#' @param Inventory \code{(data.frame)} Inventory data.
+#' @param HealthAndDV \code{(data.frame)} Health and Domestic Violence data.
+#' @param vars \code{(list)} A list of variables to include.
+#' @param rm_dates \code{(list)} A list containing date ranges with elements `calc$data_goes_back_to` and `meta_HUDCSV$Export_End`.
+#' @param app_env \code{(environment)} Instead of providing all arguments with NULL defaults, `app_env` with all arguments saved internally can be provided.
+#'
+#' @return \code{(data.frame)} A data frame of clients served in the specified date range.
+#' @export
 
 
 served_in_date_range <- function(projects_current_hmis, Enrollment_extra_Client_Exit_HH_CL_AaE = NULL, Client = NULL, Project = NULL, Inventory = NULL, HealthAndDV = NULL, vars, rm_dates = NULL, app_env = get_app_env(e = rlang::caller_env())) {
@@ -2727,6 +2731,7 @@ dq_referrals_on_hh_members_ssvf <- function(served_in_date_range, Referrals, var
 #' @title Create `ssvf_served_in_date_range` for Clients receiving grants from SSVF
 #'
 #' @inherit served_in_date_range params return
+#' @param served_in_date_range \code{(function)} A function that filters clients based on a date range. See `served_in_date_range` for more details.
 #' @export
 
 ssvf_served_in_date_range <- function(Enrollment_extra_Client_Exit_HH_CL_AaE, served_in_date_range, Client, app_env = get_app_env(e = rlang::caller_env())) {

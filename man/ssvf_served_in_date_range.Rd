@@ -12,14 +12,16 @@ ssvf_served_in_date_range(
 )
 }
 \arguments{
-\item{Enrollment_extra_Client_Exit_HH_CL_AaE}{\code{(data.frame)} Enrollment with all additions from \code{load_export}}
+\item{Enrollment_extra_Client_Exit_HH_CL_AaE}{\code{(data.frame)} Enrollment data with all additions from \code{load_export}.}
 
-\item{Client}{\code{(data.frame)} Client with all additions from \code{load_export}}
+\item{served_in_date_range}{\code{(function)} A function that filters clients based on a date range. See \code{served_in_date_range} for more details.}
 
-\item{app_env}{\code{(data.frame)} Instead of providing all arguments with NULL defaults,\code{app_env} with all arguments saved internally can be provided.}
+\item{Client}{\code{(data.frame)} Client data with all additions from \code{load_export}.}
+
+\item{app_env}{\code{(environment)} Instead of providing all arguments with NULL defaults, \code{app_env} with all arguments saved internally can be provided.}
 }
 \value{
-\code{(data.frame)}
+\code{(data.frame)} A data frame of clients served in the specified date range.
 }
 \description{
 Create \code{ssvf_served_in_date_range} for Clients receiving grants from SSVF

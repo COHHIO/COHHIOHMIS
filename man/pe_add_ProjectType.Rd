@@ -7,7 +7,7 @@
 pe_add_ProjectType(provider_extras)
 }
 \arguments{
-\item{provider_extras}{\code{(data.frame)} provider_extras with Regions, see \code{pe_add_regions}}
+\item{provider_extras}{\code{(data.frame)} provider_extras with Regions, see \code{pe_add_regions}.}
 }
 \value{
 \code{(data.frame)}

@@ -11,11 +11,16 @@ pe_add_regions(
 )
 }
 \arguments{
-\item{provider_extras}{\code{(data.frame)} An extra from the from the Program Descriptor model. See \code{?clarity_api} for retrieving a Look with this info.}
+\item{provider_extras}{\code{(data.frame)} An extra from the Program Descriptor model. See \code{?clarity_api} for retrieving a Look with this info.}
+
+\item{Regions}{\code{(data.frame)} Data frame containing region information. Defaults to loading from \code{clarity.looker::hud_load("Regions", dirs$public)}.}
+
+\item{dirs}{\code{(list)} List of directories used in the function, including \code{dirs$public}.}
 }
 \value{
-\code{(data.frame)} provider_extras with Regions column
+\code{(data.frame)} \code{provider_extras} with an additional \code{Regions} column.
 }
 \description{
-Add the Corresponding Region for each Project by way of Geocode matching
+This function adds a \code{Regions} column to the \code{provider_extras} data frame by matching geocodes.
+It uses data from the \code{hud_load} function from the \code{clarity.looker} package to retrieve region information.
 }
