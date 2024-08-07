@@ -53,8 +53,8 @@ Client_redact <- function(Client) {
 
 #' @title Add the UniqueID to the Client export
 #'
-#' @inheritParams data_quality_tables
-#' @param Client_extras \code{(data.frame)} A custom look linking PersonalID & UniqueID
+#' @param Client \code{(data.frame)} A data frame containing client information
+#' @param Client_UniqueIDs \code{(data.frame)} A custom look linking PersonalID & UniqueID
 #' @param app_env
 #'
 #' @return \code{(data.frame)} with UniqueID column

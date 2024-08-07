@@ -11,11 +11,11 @@ Client_add_UniqueID(
 )
 }
 \arguments{
-\item{Client}{\code{(data.frame)} From the HUD CSV Export}
+\item{Client}{\code{(data.frame)} A data frame containing client information}
+
+\item{Client_UniqueIDs}{\code{(data.frame)} A custom look linking PersonalID & UniqueID}
 
 \item{app_env}{}
-
-\item{Client_extras}{\code{(data.frame)} A custom look linking PersonalID & UniqueID}
 }
 \value{
 \code{(data.frame)} with UniqueID column
