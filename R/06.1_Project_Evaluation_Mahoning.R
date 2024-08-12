@@ -1436,14 +1436,14 @@ dplyr::left_join(data_quality_flags, by = "AltProjectName") %>%
     dplyr::select(-HoHDeaths)
 
   # TODO These need to be send somewhere rather than saved
-  readr::write_csv(zero_divisors, fs::path(dirs$random, "zero_divisors_mahoning.csv"))
-
-  readr::write_csv(final_scores %>%
-                     dplyr::select(OrganizationName,
-                                   AltProjectName,
-                                   TotalScore), fs::path(dirs$random, "pe_final_consolidated_projects_mahoning.csv"))
-
-  readr::write_csv(pe_final_scores, fs::path(dirs$random, "pe_final_all_mahoning.csv"))
+  # readr::write_csv(zero_divisors, fs::path(dirs$random, "zero_divisors_mahoning.csv"))
+  #
+  # readr::write_csv(final_scores %>%
+  #                    dplyr::select(OrganizationName,
+  #                                  AltProjectName,
+  #                                  TotalScore), fs::path(dirs$random, "pe_final_consolidated_projects_mahoning.csv"))
+  #
+  # readr::write_csv(pe_final_scores, fs::path(dirs$random, "pe_final_all_mahoning.csv"))
 
   exported_pe <- pe[c("ScoredAtPHEntryMahoning", "LongTermHomelessMahoning", "HomelessHistoryIndexMahoning", "IncreaseIncomeMahoning", "OwnHousingMahoning", "ResPriorMahoning", "BenefitsAtExitMahoning", "ExitsToPHMahoning", "EntriesNoIncomeMahoning")] |>
     {\(x) {rlang::set_names(x, paste0("pe_", snakecase::to_snake_case(names(x))))}}()
