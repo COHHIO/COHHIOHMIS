@@ -510,7 +510,11 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
   # Add HMISParticipation (HMISParticipating column no longer in Project.csv)
   HMISParticipation <- clarity.looker::hud_load("HMISParticipation", dirs$export) |>
     dplyr::select(HMISParticipationID, ProjectID, HMISParticipationType,
-                  HMISParticipationStatusStartDate, HMISParticipationStatusEndDate)
+                  HMISParticipationStatusStartDate, HMISParticipationStatusEndDate) |>
+    dplyr::group_by(ProjectID) |>
+    dplyr::filter(HMISParticipationStatusStartDate == max(HMISParticipationStatusStartDate)) |>
+    dplyr::ungroup()
+
 
   provider_extras <- provider_extras |>
     dplyr::left_join(HMISParticipation, by = "ProjectID") |>
@@ -521,9 +525,13 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
 
 
   .Project <- clarity_api$Project()
+
   Project <- .Project |>
     dplyr::select(-ProjectCommonName) |>
-    {\(x) {dplyr::left_join(x, provider_extras |> dplyr::select(- dplyr::matches("FundingSourceID")) |> dplyr::distinct(ProjectID, .keep_all = TRUE), by = UU::common_names(x, provider_extras))}}()
+    {\(x) {dplyr::left_join(x, provider_extras |>
+                              dplyr::select(- dplyr::matches("FundingSourceID")) |>
+                              dplyr::distinct(ProjectID, .keep_all = TRUE),
+                            by = UU::common_names(x, provider_extras))}}()
   UU::join_check(.Project, Project)
 
   mahoning_projects <- dplyr::filter(ProjectCoC, CoCCode %in% "OH-504") |>

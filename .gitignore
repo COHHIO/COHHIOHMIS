@@ -42,6 +42,7 @@ data/export
 data/extras
 data/SPM_data
 
+inst/extdata/**
 inst/auth
 inst/html
 inst/src/**/*.rds
