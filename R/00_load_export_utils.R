@@ -446,7 +446,8 @@ load_program_lookup <- function(program_lookup) {
     dplyr::distinct(ProgramID, ProgramName, .keep_all = TRUE) |>
     clarity.looker::make_linked_df(ProgramName, type = "program_edit") |>
     clarity.looker::make_linked_df(AgencyName, type = "agency_switch") |>
-    clarity.looker::make_linked_df(AgencyAdministrator, type = "admin")
+    clarity.looker::make_linked_df(AgencyAdministrator, type = "admin") |>
+    dplyr::mutate(ProgramID = as.character(ProgramID))
 
 }
 
@@ -514,7 +515,6 @@ load_project <- function(Regions, ProjectCoC, clarity_api = get_clarity_api(e = 
     dplyr::group_by(ProjectID) |>
     dplyr::filter(HMISParticipationStatusStartDate == max(HMISParticipationStatusStartDate)) |>
     dplyr::ungroup()
-
 
   provider_extras <- provider_extras |>
     dplyr::left_join(HMISParticipation, by = "ProjectID") |>
