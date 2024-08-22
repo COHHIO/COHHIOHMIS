@@ -447,7 +447,8 @@ load_program_lookup <- function(program_lookup) {
     clarity.looker::make_linked_df(ProgramName, type = "program_edit") |>
     clarity.looker::make_linked_df(AgencyName, type = "agency_switch") |>
     clarity.looker::make_linked_df(AgencyAdministrator, type = "admin") |>
-    dplyr::mutate(ProgramID = as.character(ProgramID))
+    dplyr::mutate(ProgramID = as.character(ProgramID),
+                  AgencyID = as.character(AgencyID))
 
 }
 
