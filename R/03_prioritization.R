@@ -29,6 +29,14 @@ if (is_app_env(app_env))
 co_currently_homeless <- co_clients_served |>
     dplyr::filter(is.na(ExitDate) |
                       ExitDate > lubridate::today())
+
+# get household size here, further down undercounts
+household_size <- co_clients_served |>
+  dplyr::group_by(HouseholdID) |>
+  dplyr::mutate(HouseholdSize = length(unique(PersonalID))) |>
+  dplyr::ungroup() |>
+  dplyr::select(PersonalID, HouseholdSize, EnrollmentID)
+
   # get Services Only & Coordinated Entry clients with the most recent LivingSituation as homeless as per email guidance on 2021-12-16T17:58:50-04:00 title: FW: HMIS Data Analyst has invited you to access an application on shinyapps.io
 PID_homeless <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
   dplyr::filter(ProjectType %in% unlist(data_types$Project$ProjectType[c("so", "ce")]) & PersonalID %in% unique(co_currently_homeless$PersonalID) & LivingSituation %in% data_types$CurrentLivingSituation$CurrentLivingSituation$homeless) |>
@@ -165,6 +173,8 @@ extended_disability <- co_currently_homeless |>
 prioritization <- co_currently_homeless |>
   dplyr::left_join(income_data,
                    by = c("PersonalID", "EnrollmentID")) |>
+  dplyr::left_join(household_size,
+                   by = c("PersonalID", "EnrollmentID")) |>
   dplyr::left_join(extended_disability, by = "EnrollmentID") |>
   dplyr::left_join(
     dplyr::select(
@@ -206,7 +216,6 @@ prioritization <- co_currently_homeless |>
   dplyr::ungroup() |>
   dplyr::group_by(HouseholdID) |>
   dplyr::mutate(
-    HouseholdSize = length(unique(PersonalID)),
     IncomeInHH = max(
       dplyr::if_else(IncomeFromAnySource == 1, 100L, IncomeFromAnySource)
     ),
