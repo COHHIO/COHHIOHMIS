@@ -429,7 +429,7 @@ agedIntoChronicity <- prioritization |>
         DateToStreetESSH + lubridate::days(365) > EntryDate &
         !is.na(DateToStreetESSH) &
         DaysHomelessBeforeEntry + DaysHomelessInProject >= 365,
-      "Aged In",
+      "Possibly Chronic",
       ChronicStatus
     )
   ) |>
@@ -494,7 +494,6 @@ prioritization <- prioritization |>
   dplyr::mutate(ChronicStatus = factor(
     ChronicStatus,
     levels = c("Possibly Chronic",
-               "Aged In",
                "Nearly Chronic",
                "Not Chronic")
   ))
