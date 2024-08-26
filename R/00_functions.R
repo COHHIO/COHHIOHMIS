@@ -271,7 +271,7 @@ chronic_determination <- function(.data, aged_in = FALSE) {
                    "MonthsHomelessPastThreeYears", "ExitAdjust", "ProjectType")
 
   chronicity_levels <- if(aged_in) {
-    c("Chronic", "Aged In", "Nearly Chronic", "Not Chronic")}
+    c("Aged In", "Nearly Chronic", "Not Chronic")}
   else {c("Chronic", "Nearly Chronic", "Not Chronic")}
 
   if (all((needed_cols) %in% colnames(.data))) {
@@ -300,10 +300,10 @@ chronic_determination <- function(.data, aged_in = FALSE) {
                           ) &
                             DisablingCondition == 1 &
                             !is.na(DisablingCondition) ~ "Chronic",
-                          ProjectType %in% c(0, 1, 8) &
+                          ProjectType %in% c(0, 1, 6, 8, 14) &
                             lubridate::ymd(DateToStreetESSH) + lubridate::days(365) > lubridate::ymd(EntryDate) &
                             !is.na(DateToStreetESSH) &
-                            DaysHomelessBeforeEntry + DaysHomelessInProject >= 365 ~ "Aged In",
+                            DaysHomelessBeforeEntry + DaysHomelessInProject >= 365 ~ "Possibly Chronic",
                           ((
                             lubridate::ymd(DateToStreetESSH) + lubridate::days(365) <= lubridate::ymd(EntryDate) &
                               !is.na(DateToStreetESSH)
@@ -319,7 +319,7 @@ chronic_determination <- function(.data, aged_in = FALSE) {
                             !is.na(DisablingCondition) ~ "Nearly Chronic",
                           TRUE ~ "Not Chronic"),
                       ChronicStatus = dplyr::case_when(aged_in ~ ChronicStatus,
-                                                       TRUE ~ dplyr::if_else(ChronicStatus == "Aged In",
+                                                       TRUE ~ dplyr::if_else(ChronicStatus == "Possibly Chronic",
                                                                              "Chronic",
                                                                              ChronicStatus)),
                       ChronicStatus = factor(
