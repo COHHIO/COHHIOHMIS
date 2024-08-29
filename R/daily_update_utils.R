@@ -193,12 +193,14 @@ update_data <- function(clarity_api = RmData::get_clarity_api(e = rlang::caller_
 
   .extras_ready <- data_ready(clarity_api$dirs$extras)
 
-
   if (any(UU::`%|0|%`(.extras_ready$needs_update, TRUE))) {
+    start_time <- Sys.time()
     cli::cli_inform(message = cli::col_grey("Updating extras..."))
     clarity_api$get_folder_looks(clarity_api$folders,
                                  .write = TRUE,
                                  path = clarity_api$dirs$extras)
+    end_time <- Sys.time()
+    logger::log_info("Load extras elapsed time:", round(difftime(end_time, start_time, units = "secs"), 2), "seconds")
   }
 }
 

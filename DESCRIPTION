@@ -39,6 +39,7 @@ Imports:
     HMIS,
     janitor,
     knitr,
+    logger,
     lubridate,
     pkgload,
     purrr,
