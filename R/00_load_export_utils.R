@@ -277,6 +277,7 @@ pe_add_regions <- function(provider_extras, Regions = clarity.looker::hud_load("
   geocodes <- clarity.looker::hud_load("geocodes", dirs$public)
   # This should map a county to every geocode
   out <- provider_extras |>
+    dplyr::mutate(Geocode = as.character(Geocode)) |>
     dplyr::left_join(geocodes |> dplyr::select(GeographicCode, County), by = c(Geocode = "GeographicCode")) |>
     dplyr::filter(!Geocode %in% c("000000", "429003", "399018"))
 
