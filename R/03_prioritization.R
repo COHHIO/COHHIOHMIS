@@ -391,6 +391,8 @@ prioritization <- prioritization |>
     by = "PersonalID"
   )
 
+browser()
+
 # Add Additional Chronic Statuses ---------------------------------------------
 
 # adds current days in ES or SH projects to days homeless prior to entry and if
@@ -424,12 +426,12 @@ agedIntoChronicity <- prioritization |>
                                        ),
                                        units = "days"),
     ChronicStatus = dplyr::if_else(
-      ProjectType %in% c(0, 1, 8) &
+      ProjectType %in% c(0, 1, 4, 8, 14) &
         ChronicStatus == "Not Chronic" &
         DateToStreetESSH + lubridate::days(365) > EntryDate &
         !is.na(DateToStreetESSH) &
         DaysHomelessBeforeEntry + DaysHomelessInProject >= 365,
-      "Possibly Chronic",
+      "Possibly Chronic - Aged In",
       ChronicStatus
     )
   ) |>
