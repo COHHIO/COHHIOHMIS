@@ -665,10 +665,12 @@ load_services <- function(Services,
 
 load_referrals <- function(Referrals,
                            app_env = get_app_env(e = rlang::caller_env())) {
+
   Referrals <- Referrals |>
     dplyr::rename_with(.cols = - dplyr::matches("(?:^PersonalID)|^(?:^UniqueID)"), rlang::as_function(~paste0("R_",.x))) |>
     dplyr::mutate(R_ReferringPTC = stringr::str_remove(R_ReferringPTC, "\\s\\(disability required(?: for entry)?\\)$"),
                   R_ReferringPTC = dplyr::if_else(R_ReferringPTC == "Homeless Prevention", "Homelessness Prevention", R_ReferringPTC),
+                  R_ReferringPTC = dplyr::if_else(R_ReferringPTC == "", NA_character_, R_ReferringPTC),
                   R_ReferringPTC = HMIS::hud_translations$`2.02.6 ProjectType`(R_ReferringPTC))
 
   # Full needed for dqu_aps
