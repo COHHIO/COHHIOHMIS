@@ -1842,7 +1842,6 @@ dq_without_spdats <- function(served_in_date_range, Funder, Scores, rm_dates, va
     dplyr::select(dplyr::all_of(vars$we_want))
 
   # HoHs in Shelter without a SPDAT -----------------------------------------
-
   lh_without_spdat <- served_in_date_range |>
     dplyr::filter(is.na(PHTrack) | PHTrack != "Self Resolve" |
                     ExpectedPHDate < lubridate::today()) |>

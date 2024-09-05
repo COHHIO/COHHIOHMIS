@@ -303,7 +303,7 @@ chronic_determination <- function(.data, aged_in = FALSE) {
                           ProjectType %in% c(0, 1, 4, 8, 14) &
                             lubridate::ymd(DateToStreetESSH) + lubridate::days(365) > lubridate::ymd(EntryDate) &
                             !is.na(DateToStreetESSH) &
-                            DaysHomelessBeforeEntry + DaysHomelessInProject >= 365 ~ "Possibly Chronic - Aged In",
+                            DaysHomelessBeforeEntry + DaysHomelessInProject >= 365 ~ "Possibly Chronic",
                           ((
                             lubridate::ymd(DateToStreetESSH) + lubridate::days(365) <= lubridate::ymd(EntryDate) &
                               !is.na(DateToStreetESSH)

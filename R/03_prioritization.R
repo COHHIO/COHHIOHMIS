@@ -391,9 +391,9 @@ prioritization <- prioritization |>
     by = "PersonalID"
   )
 
-browser()
 
 # Add Additional Chronic Statuses ---------------------------------------------
+
 
 # adds current days in ES or SH projects to days homeless prior to entry and if
 # it adds up to 365 or more, it marks the client as AgedIn
@@ -431,7 +431,7 @@ agedIntoChronicity <- prioritization |>
         DateToStreetESSH + lubridate::days(365) > EntryDate &
         !is.na(DateToStreetESSH) &
         DaysHomelessBeforeEntry + DaysHomelessInProject >= 365,
-      "Possibly Chronic - Aged In",
+      "Possibly Chronic",
       ChronicStatus
     )
   ) |>
