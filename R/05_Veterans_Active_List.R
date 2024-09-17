@@ -84,7 +84,9 @@ vet_active <- function(
     dplyr::left_join(VeteranCE |>
                        dplyr::mutate(ExpectedPHDate = dplyr::if_else(ExpectedPHDate == "0000-00-00", NA, ExpectedPHDate)) |>
                        dplyr::mutate_at(dplyr::vars("PersonalID", "UniqueID", "EnrollmentID", "ExpectedPHDate"), as.character),
-                     by = c("PersonalID", "UniqueID", "EnrollmentID", "ExpectedPHDate", "PHTrack")) |>
+                     by = c("PersonalID", "UniqueID", "EnrollmentID", "PHTrack")) |>
+    dplyr::mutate(ExpectedPHDate = dplyr::coalesce(ExpectedPHDate.x, ExpectedPHDate.y)) |>  # Coalesce keeps ExpectedPHDate
+    dplyr::select(-ExpectedPHDate.y, -ExpectedPHDate.x) |>  # Remove intermediate columns
     dplyr::mutate(County = dplyr::if_else(is.na(CountyServed), ProjectCounty, CountyServed)) |>
     dplyr::filter(County %in% bos_counties |
                      County == "Mahoning") |>
