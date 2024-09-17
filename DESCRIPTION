@@ -1,7 +1,7 @@
 Package: RmData
 Title: Data munging dependencies for Rminor & Rminor_elevated
        Shiny apps
-Version: 0.1.6
+Version: 0.1.7
 Authors@R: c(person(given = "Genelle", 
                     family = "Denzin",
                     role = c("aut"), 
