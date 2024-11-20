@@ -23,14 +23,9 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
 
   rm_dates$hc <- append(hc, purrr::map(
     c(psh_started_collecting_move_in_date = "10012017",
-
       began_requiring_spdats = "01012019",
-
       prior_living_situation_required = "10012016",
-
-      no_more_svcs_on_hh_members = "02012019",
-
-      first_vaccine_administered_in_us = "12142020"
+      no_more_svcs_on_hh_members = "02012019"
     ),
     lubridate::mdy
   ))
