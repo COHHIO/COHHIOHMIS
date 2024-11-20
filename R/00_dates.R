@@ -22,10 +22,7 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
     {\(x) {lubridate::interval(x, x + lubridate::years(1) - lubridate::days(1))}}()
 
   rm_dates$hc <- append(hc, purrr::map(
-    c(
-      bos_start_vaccine_data = "02052021",
-
-      psh_started_collecting_move_in_date = "10012017",
+    c(psh_started_collecting_move_in_date = "10012017",
 
       began_collecting_covid_data = "04012020",
 
