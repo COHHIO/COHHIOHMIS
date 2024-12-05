@@ -757,11 +757,11 @@ Enrollment_add_HousingStatus <-
     dplyr::summarise(EnrollmentID = recent_valid(EnrollmentID, as.numeric(EnrollmentID)))
 
   out <- Enrollment_extra_Client_Exit_HH_CL_AaE |>
-    dplyr::filter(EnrollmentID %in% last_enroll$EnrollmentID) |>
-    dplyr::select(!!.cols$sym, dplyr::any_of(.cols$req)) |>
+    # dplyr::filter(EnrollmentID %in% last_enroll$EnrollmentID) |>
+    dplyr::select(!!.cols$sym, dplyr::any_of(.cols$req), EnrollmentID) |>
     dplyr::group_by(!!.cols$sym) |>
     # Get the latest entry
-    dplyr::slice_max(EntryDate, n = 1L) |>
+    # dplyr::slice_max(EntryDate, n = 1L) |>
     # apply human-readable status labels
     dplyr::mutate(PTCStatus = factor(
       dplyr::if_else(
@@ -771,7 +771,6 @@ Enrollment_add_HousingStatus <-
         c("LH",
           "PH")
     ))
-
 
 
   # Create a summary of last referrals & whether they were accepted
@@ -790,7 +789,6 @@ Enrollment_add_HousingStatus <-
     dplyr::mutate(housed = !!.cols$sym %in% .housed[[.cols$grp]])
 
 
-
   if (!all(.cols$ref %in% .nms))
     out <- dplyr::left_join(out,
                             # Remove R_ReferralResult because the computation in Looker is bugged. A person can be simultaneously Accepted & Rejected
@@ -798,7 +796,6 @@ Enrollment_add_HousingStatus <-
                               dplyr::select( - R_ReferralResult) |>
                               dplyr::distinct(R_ReferralID, .keep_all = TRUE),
                             by = UU::common_names(out, Referrals))
-
 
 
   sit_expr = rlang::exprs(
@@ -817,27 +814,14 @@ Enrollment_add_HousingStatus <-
 
   # Referral Situation ----
   # Tue Nov 09 12:49:51 2021
+  out <- out |>
+    dplyr::rename(
+      R_ReferringEnrollmentID = R_EnrollmentID,
+      R_ReferralAcceptedDate = R_DateReferralAccepted,
+      R_ReferredDate = R_DateReferred,
+      R_ReferralCurrentlyOnQueue = R_IsCurrentlyOnQueue
+    )
 
-
-  if ("R_EnrollmentID" %in% colnames(out)) {
-    # Rename the column
-    colnames(out)[colnames(out) == "R_EnrollmentID"] <- "R_ReferringEnrollmentID"
-  }
-
-  if ("R_DateReferralAccepted" %in% colnames(out)) {
-    # Rename the column
-    colnames(out)[colnames(out) == "R_DateReferralAccepted"] <- "R_ReferralAcceptedDate"
-  }
-
-  if ("R_DateReferred" %in% colnames(out)) {
-    # Rename the column
-    colnames(out)[colnames(out) == "R_DateReferred"] <- "R_ReferredDate"
-  }
-
-  if ("R_IsCurrentlyOnQueue" %in% colnames(out)) {
-    # Rename the column
-    colnames(out)[colnames(out) == "R_IsCurrentlyOnQueue"] <- "R_ReferralCurrentlyOnQueue"
-  }
 
   out <- dplyr::mutate(
     out |> dplyr::mutate(ProjectType = as.character(ProjectType)),
@@ -889,15 +873,15 @@ Enrollment_add_HousingStatus <-
   ) |>
     dplyr::select(- dplyr::any_of(c(.cols$req, "UniqueID")))
 
-
   out <-
     dplyr::left_join(
       Enrollment_extra_Client_Exit_HH_CL_AaE,
       dplyr::select(out,-PTCStatus),
-      by = c(.cols$grp, "EnrollmentID" = "R_ReferringEnrollmentID")
+      by = c(.cols$grp, "EnrollmentID" = "EnrollmentID")
     ) |>
     dplyr::select(PersonalID, HousingStatus, Situation, dplyr::everything()) |>
     dplyr::distinct()
+
   return(out)
 }
 
