@@ -1,13 +1,33 @@
-#' @include app_dependencies.R
-if (file.exists("RmData.Rproj") && interactive()) {
-  if (!exists("cl_api")) {
-    pkgload::load_all("../clarity.looker")
-    .GlobalEnv$cl_api <- clarity.looker::clarity_api$new(file.path("inst","vault","Looker.ini"))
-  }
+#' #' @include app_dependencies.R
+#' if (file.exists("RmData.Rproj") && interactive()) {
+#'   if (!exists("cl_api")) {
+#'     pkgload::load_all("../clarity.looker")
+#'     .GlobalEnv$cl_api <- clarity.looker::clarity_api$new(file.path("inst","vault","Looker.ini"))
+#'   }
+#'
+#'   if (!exists("rm_env"))
+#'     .GlobalEnv$rm_env <- app_env$new()
+#' }
 
-  if (!exists("rm_env"))
-    .GlobalEnv$rm_env <- app_env$new()
+#' @include app_dependencies.R
+.onLoad <- function(libname, pkgname) {
+  if (file.exists("RmData.Rproj") && interactive()) {
+    # Initialize cl_api if not already available
+    if (!exists("cl_api", envir = .GlobalEnv)) {
+      # Ensure the required package is loaded
+      if (!requireNamespace("clarity.looker", quietly = TRUE)) {
+        stop("clarity.looker package is required but not installed.")
+      }
+      .GlobalEnv$cl_api <- clarity.looker::clarity_api$new(file.path("inst", "vault", "Looker.ini"))
+    }
+
+    # Initialize rm_env if not already available
+    if (!exists("rm_env", envir = .GlobalEnv)) {
+      .GlobalEnv$rm_env <- app_env$new()
+    }
+  }
 }
+
 
 
 #' @title Setup RmData Options
