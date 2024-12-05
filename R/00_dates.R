@@ -2,7 +2,6 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
                   app_env = get_app_env(e = rlang::caller_env()),
                   error = FALSE
 ) {
-
   force(app_env)
   force(clarity_api)
   rm_dates <- list()
@@ -77,7 +76,7 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
 
 
   #  Check recency of Extras ----
-  # Mon Aug 09 17:09:43 2021
+
   extras_last_update <- UU::last_updated(dirs$extras, path = TRUE)
 
   extra_info <- list(missing = setdiff(names(clarity.looker::folder_looks(clarity_api$folders$`HUD Extras`)), UU::ext(basename(names(extras_last_update)), strip = TRUE)),
@@ -92,7 +91,6 @@ dates <- function(clarity_api = get_clarity_api(e = rlang::caller_env()),
     }
   })
   # Gather Dependencies ----
-  # Mon Aug 09 17:09:52 2021
   gc()
   app_env$gather_deps(rm_dates)
 }
