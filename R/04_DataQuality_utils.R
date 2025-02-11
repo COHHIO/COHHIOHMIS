@@ -456,7 +456,34 @@ dq_hh_no_hoh <- function(served_in_date_range, vars, guidance = NULL, app_env = 
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
-
+#' @title Find clients that are active with HoH exit
+#' @inherit data_quality_tables params return
+#' @family Clarity Checks
+#' @family DQ: Household Checks
+#' @export
+dq_hh_active_client_no_hoh <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
+) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
+  served_in_date_range |>
+    dplyr::group_by(HouseholdID) |>
+    dplyr::mutate(
+      is_HoH = (RelationshipToHoH == 1),
+      # First find if the HoH has an exit date in this household
+      HoH_has_exited = any(is_HoH & !is.na(ExitDate), na.rm = TRUE)
+    ) |>
+    dplyr::filter(
+      !is_HoH,  # Not the HoH
+      HoH_has_exited == TRUE,  # HoH has exited
+      is.na(ExitDate)  # Member is still active (no exit date)
+    ) |>
+    dplyr::mutate(
+      Issue = "Client remains active after Head of Household's exit",
+      Type = "High Priority",
+      Guidance = guidance$hh_no_hoh
+    ) |>
+    dplyr::select(HouseholdID, ExitDate, RelationshipToHoH, UniqueID, dplyr::all_of(vars$we_want))
+}
 
 
 
@@ -1321,6 +1348,8 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
               ProjectType == 12 &
                 (!LivingSituation %in% c(3, 410, 411, 335, 336, 314, 419:423, 428, 431, 435, 436) |
                    PreviousStreetESSH != 0 )
+                #
+                # Previous living situation is in (101, 116, 118)
             ) |
             (ProjectType %in% c(8, 4) & # Safe Haven and Outreach
                LivingSituation != 116) # unsheltered only
