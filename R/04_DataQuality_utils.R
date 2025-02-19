@@ -482,7 +482,7 @@ dq_hh_active_client_no_hoh <- function(served_in_date_range, vars, guidance = NU
       Type = "High Priority",
       Guidance = guidance$hh_no_hoh
     ) |>
-    dplyr::select(HouseholdID, ExitDate, RelationshipToHoH, UniqueID, dplyr::all_of(vars$we_want))
+    dplyr::select(dplyr::all_of(vars$we_want))
 }
 
 
