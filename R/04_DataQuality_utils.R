@@ -465,7 +465,6 @@ dq_hh_active_client_no_hoh <- function(served_in_date_range, vars, guidance = NU
 ) {
   if (is_app_env(app_env))
     app_env$set_parent(missing_fmls())
-  browser()
 
   served_in_date_range |>
     # For each HouseholdID, get both HoH status indicators
@@ -481,30 +480,20 @@ dq_hh_active_client_no_hoh <- function(served_in_date_range, vars, guidance = NU
         is.na(ExitDate) &  # Member is still active
         # Either no active HoH OR HoH has exited
         (!has_active_HoH | HoH_has_exited == TRUE)
-    ) |> View()
+    ) |>
     # Add issue details
     dplyr::mutate(
-      Issue = case_when(
+      Issue = dplyr::case_when(
         (!has_active_HoH | HoH_has_exited == TRUE) ~ "Client remains active after Head of Household's exit",
         TRUE ~ NA_character_
       ),
       Type = "High Priority",
       Guidance = guidance$hh_no_hoh
     ) |>
-    # # Select final columns
-    # dplyr::select(
-    #   dplyr::all_of(vars$we_want)
-    # ) |>
+    # Select final columns
     dplyr::select(
-      HouseholdID,
-      PersonalID,
-      UniqueID,
-      EntryDate,
-      ExitDate,
-      RelationshipToHoH
-    ) |>
-    dplyr::arrange(HouseholdID, PersonalID, UniqueID) |> View()
-    dplyr::arrange(HouseholdID, PersonalID, UniqueID)
+      dplyr::all_of(vars$we_want)
+    )
 }
 
 
