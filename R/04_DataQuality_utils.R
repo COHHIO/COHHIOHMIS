@@ -441,13 +441,10 @@ dq_hh_no_hoh <- function(served_in_date_range, vars, guidance = NULL, app_env = 
     app_env$set_parent(missing_fmls())
   served_in_date_range |>
     dplyr::group_by(HouseholdID) |>
-    dplyr::summarise(hasHoH = dplyr::if_else(min(RelationshipToHoH) != 1,
-                                             FALSE,
-                                             TRUE),
-                     PersonalID = min(PersonalID)) |>
-    dplyr::filter(hasHoH == FALSE) |>
-    dplyr::ungroup() |>
-    dplyr::left_join(served_in_date_range, by = c("PersonalID", "HouseholdID")) |>
+    dplyr::summarise(hasHoH = any(RelationshipToHoH == 1)) |>
+    dplyr::filter(!hasHoH) |>
+    dplyr::select(HouseholdID) |>
+    dplyr::inner_join(served_in_date_range, by = "HouseholdID") |>
     dplyr::mutate(
       Issue = "No Head of Household",
       Type = "High Priority",
