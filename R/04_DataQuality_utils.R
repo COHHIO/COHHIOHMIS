@@ -453,7 +453,45 @@ dq_hh_no_hoh <- function(served_in_date_range, vars, guidance = NULL, app_env = 
     dplyr::select(dplyr::all_of(vars$we_want))
 }
 
+#' @title Find clients that are active with HoH exit
+#' @inherit data_quality_tables params return
+#' @family Clarity Checks
+#' @family DQ: Household Checks
+#' @export
+dq_hh_active_client_no_hoh <- function(served_in_date_range, vars, guidance = NULL, app_env = get_app_env(e = rlang::caller_env())
+) {
+  if (is_app_env(app_env))
+    app_env$set_parent(missing_fmls())
 
+  served_in_date_range |>
+    # For each HouseholdID, get both HoH status indicators
+    dplyr::group_by(HouseholdID) |>
+    dplyr::mutate(
+      has_active_HoH = any(RelationshipToHoH == 1, na.rm = TRUE),
+      is_HoH = (RelationshipToHoH == 1),
+      HoH_has_exited = any(is_HoH & !is.na(ExitDate), na.rm = TRUE)
+    ) |>
+    # Filter for either case
+    dplyr::filter(
+      !is_HoH &  # Not a HoH
+        is.na(ExitDate) &  # Member is still active
+        # Either no active HoH OR HoH has exited
+        (!has_active_HoH | HoH_has_exited == TRUE)
+    ) |>
+    # Add issue details
+    dplyr::mutate(
+      Issue = dplyr::case_when(
+        (!has_active_HoH | HoH_has_exited == TRUE) ~ "Client remains active after Head of Household's exit or deletion",
+        TRUE ~ NA_character_
+      ),
+      Type = "High Priority",
+      Guidance = guidance$hh_no_hoh
+    ) |>
+    # Select final columns
+    dplyr::select(
+      dplyr::all_of(vars$we_want)
+    )
+}
 
 
 
