@@ -484,7 +484,7 @@ dq_hh_active_client_no_hoh <- function(served_in_date_range, vars, guidance = NU
     # Add issue details
     dplyr::mutate(
       Issue = dplyr::case_when(
-        (!has_active_HoH | HoH_has_exited == TRUE) ~ "Client remains active after Head of Household's exit",
+        (!has_active_HoH | HoH_has_exited == TRUE) ~ "Client remains active after Head of Household's exit or deletion",
         TRUE ~ NA_character_
       ),
       Type = "High Priority",
