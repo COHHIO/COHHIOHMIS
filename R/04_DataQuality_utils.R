@@ -441,13 +441,10 @@ dq_hh_no_hoh <- function(served_in_date_range, vars, guidance = NULL, app_env = 
     app_env$set_parent(missing_fmls())
   served_in_date_range |>
     dplyr::group_by(HouseholdID) |>
-    dplyr::summarise(hasHoH = dplyr::if_else(min(RelationshipToHoH) != 1,
-                                             FALSE,
-                                             TRUE),
-                     PersonalID = min(PersonalID)) |>
-    dplyr::filter(hasHoH == FALSE) |>
-    dplyr::ungroup() |>
-    dplyr::left_join(served_in_date_range, by = c("PersonalID", "HouseholdID")) |>
+    dplyr::summarise(hasHoH = any(RelationshipToHoH == 1)) |>
+    dplyr::filter(!hasHoH) |>
+    dplyr::select(HouseholdID) |>
+    dplyr::inner_join(served_in_date_range, by = "HouseholdID") |>
     dplyr::mutate(
       Issue = "No Head of Household",
       Type = "High Priority",
@@ -1329,7 +1326,9 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
         AgeAtEntry > 17 &
         EntryDate > rm_dates$hc$check_eligibility_back_to &
         (ProjectType %in% c(3, 4, 8, 9, 10, 12, 13) |
-           (ProjectType == 2 & (is.na(GrantType) | GrantType != "RHY"))) &
+           (
+             ProjectType == 2 & (is.na(GrantType) | GrantType != "RHY")
+           )) &
         (
           (ProjectType %in% c(2, 3, 9, 10, 13) &
              # PTCs that require LH status
@@ -1355,13 +1354,8 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
                      )
                  )
              )) |
-            (
-              ProjectType == 12 &
-                (!LivingSituation %in% c(3, 410, 411, 335, 336, 314, 419:423, 428, 431, 435, 436) |
-                   PreviousStreetESSH != 0 )
-                #
-                # Previous living situation is in (101, 116, 118)
-            ) |
+            (ProjectType == 12 &
+               LivingSituation %in% c(116, 101, 118)) |
             (ProjectType %in% c(8, 4) & # Safe Haven and Outreach
                LivingSituation != 116) # unsheltered only
         )
