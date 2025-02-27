@@ -1288,7 +1288,9 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
         AgeAtEntry > 17 &
         EntryDate > rm_dates$hc$check_eligibility_back_to &
         (ProjectType %in% c(3, 4, 8, 9, 10, 12, 13) |
-           (ProjectType == 2 & (is.na(GrantType) | GrantType != "RHY"))) &
+           (
+             ProjectType == 2 & (is.na(GrantType) | GrantType != "RHY")
+           )) &
         (
           (ProjectType %in% c(2, 3, 9, 10, 13) &
              # PTCs that require LH status
@@ -1314,11 +1316,8 @@ dq_check_eligibility <- function(served_in_date_range, mahoning_projects, vars, 
                      )
                  )
              )) |
-            (
-              ProjectType == 12 &
-                (!LivingSituation %in% c(3, 410, 411, 335, 336, 314, 419:423, 428, 431, 435, 436) |
-                   PreviousStreetESSH != 0 )
-            ) |
+            (ProjectType == 12 &
+               LivingSituation %in% c(116, 101, 118)) |
             (ProjectType %in% c(8, 4) & # Safe Haven and Outreach
                LivingSituation != 116) # unsheltered only
         )
